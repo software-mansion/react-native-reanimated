@@ -48,6 +48,8 @@ export interface InAppBoundary {
   processCpuUs: number;
   processPerformanceCpuUs: number;
   processClusterSwitches: number;
+  instructionReadStartNs: number;
+  instructionReadEndNs: number;
   processInstructions: number;
   processCycles: number;
   footprintReadStartNs: number;
@@ -118,6 +120,7 @@ export interface EpochUpdates {
 export interface EpochCounters {
   window: EpochWindow;
   counterSpans: Record<CpuCounter, TimeSpan>;
+  instructionSpan: TimeSpan;
   cpu: EpochCpu;
   cpuUncertainty: Record<CpuCounter, number>;
   counterCores: Record<CpuCounter, number>;
@@ -126,6 +129,7 @@ export interface EpochCounters {
   processClockRate: number | null;
   processInstructionsPerCycle: number | null;
   processInstructionRate: number;
+  threadSumExcess: number;
   mountBatchCount: number;
 }
 
@@ -133,6 +137,11 @@ export interface EpochReading extends EpochCounters {
   updates: EpochUpdates | null;
   memory: number;
   windowMemoryDelta: number;
+}
+
+interface ReadFields {
+  startNs: keyof InAppBoundary;
+  endNs: keyof InAppBoundary;
 }
 
 export const SAMPLE_LINE_PREFIX = 'SAMPLE ';
@@ -148,7 +157,7 @@ export const THERMAL_STATES = [
 
 export const CPU_COUNTERS = ['uiThread', 'jsThread', 'process'] as const;
 
-const SAMPLE_FORMAT = 4;
+const SAMPLE_FORMAT = 5;
 
 const NANOSECONDS_PER_MS = 1e6;
 
@@ -159,6 +168,8 @@ const NANOSECONDS_PER_SECOND = 1e9;
 const COUNTER_DELTA_ERROR_US = 2;
 
 const MAXIMUM_WINDOW_UNCERTAINTY = 0.001;
+
+const MINIMUM_PROCESS_SHARE_OF_THREADS = 0.5;
 
 const CYCLES_PER_US_PER_GHZ = 1e3;
 
@@ -174,11 +185,7 @@ const EPOCH_SECONDS = /^\d+(\.\d+)?$/;
 
 const COUNTER_FIELDS: Record<
   CpuCounter,
-  {
-    startNs: keyof InAppBoundary;
-    endNs: keyof InAppBoundary;
-    valueUs: keyof InAppBoundary;
-  }
+  ReadFields & { valueUs: keyof InAppBoundary }
 > = {
   uiThread: {
     startNs: 'uiReadStartNs',
@@ -197,6 +204,11 @@ const COUNTER_FIELDS: Record<
   },
 };
 
+const INSTRUCTION_READ: ReadFields = {
+  startNs: 'instructionReadStartNs',
+  endNs: 'instructionReadEndNs',
+};
+
 const READ_ORDER = [
   'uiReadStartNs',
   'uiReadEndNs',
@@ -204,6 +216,8 @@ const READ_ORDER = [
   'jsReadEndNs',
   'processReadStartNs',
   'processReadEndNs',
+  'instructionReadStartNs',
+  'instructionReadEndNs',
   'footprintReadStartNs',
   'footprintReadEndNs',
   'signpostStartNs',
@@ -234,6 +248,8 @@ export const IN_APP_BOUNDARY: Check = shape({
   processCpuUs: anInteger,
   processPerformanceCpuUs: anInteger,
   processClusterSwitches: anInteger,
+  instructionReadStartNs: anInteger,
+  instructionReadEndNs: anInteger,
   processInstructions: anInteger,
   processCycles: anInteger,
   footprintReadStartNs: anInteger,
@@ -365,14 +381,17 @@ export function readEpochCounters(
 ): EpochCounters {
   checkCounters(start, end, index);
   const window = epochWindow(start, end, index);
-  const counterSpans = mapCounters((counter) => ({
-    startNs: readMidpoint(start, counter),
-    endNs: readMidpoint(end, counter),
-  }));
-  for (const counter of CPU_COUNTERS) {
-    if (!(spanLength(counterSpans[counter]) > 0)) {
+  const counterSpans = mapCounters((counter) =>
+    readSpan(start, end, COUNTER_FIELDS[counter])
+  );
+  const instructionSpan = readSpan(start, end, INSTRUCTION_READ);
+  for (const [name, span] of [
+    ...Object.entries(counterSpans),
+    ['instructions', instructionSpan],
+  ] as const) {
+    if (!(spanLength(span) > 0)) {
       throw new ToolError(
-        `Epoch ${index}: the reads of the counter ${counter} are not in time order`
+        `Epoch ${index}: the reads of the counter ${name} are not in time order`
       );
     }
   }
@@ -386,7 +405,7 @@ export function readEpochCounters(
   const uiThreadCpu = perSecond('uiThread');
   const jsThreadCpu = perSecond('jsThread');
   const processCpu = perSecond('process');
-  checkProcessSum(start, end, index);
+  checkProcessUnit(start, end, index);
   checkPerformanceCoreTime(start, end, index);
   const counterCores = mapCounters((counter) =>
     counter === 'process' ? cpuCount : 1
@@ -394,6 +413,7 @@ export function readEpochCounters(
   return {
     window,
     counterSpans,
+    instructionSpan,
     cpu: {
       uiThreadCpu,
       jsThreadCpu,
@@ -411,7 +431,8 @@ export function readEpochCounters(
     counterCores,
     performanceCoreShare: performanceCoreShare(start, end),
     clusterSwitches: end.processClusterSwitches - start.processClusterSwitches,
-    ...processInstructionCounts(start, end, counterSpans.process),
+    ...processInstructionCounts(start, end, instructionSpan),
+    threadSumExcess: threadSumExcess(start, end),
     mountBatchCount: end.mounts - start.mounts,
   };
 }
@@ -443,7 +464,7 @@ export function appStates(sample: InAppSample): AppState[] {
 export function boundaryReadSpan(boundary: InAppBoundary): TimeSpan {
   return {
     startNs: boundary.uiReadStartNs,
-    endNs: boundary.processReadEndNs,
+    endNs: boundary.instructionReadEndNs,
   };
 }
 
@@ -551,27 +572,44 @@ function epochWindow(
   return { startNs, endNs, seconds: lengthNs / NANOSECONDS_PER_SECOND };
 }
 
-// The process count covers at least the time from the end of its start read
-// to the start of its end read. A thread count can also have the time from the
-// start of its start read to the end of the process start read. One thread
-// runs on one core at most, so that time is the limit for each thread.
-function checkProcessSum(
+function checkProcessUnit(
   start: InAppBoundary,
   end: InAppBoundary,
   index: number
 ) {
-  const delta = (field: keyof InAppBoundary) =>
-    (end[field] as number) - (start[field] as number);
-  const threadsUs = delta('uiThreadCpuUs') + delta('jsThreadCpuUs');
+  const processUs = end.processCpuUs - start.processCpuUs;
+  const threadsUs = threadsDeltaUs(start, end);
+  if (processUs < MINIMUM_PROCESS_SHARE_OF_THREADS * threadsUs) {
+    throw new ToolError(
+      `Epoch ${index}: the process CPU time (${processUs} µs) is less than ${MINIMUM_PROCESS_SHARE_OF_THREADS * 100}% of the sum of the main thread and the JS thread (${threadsUs} µs). A counter read gives a wrong unit or a wrong thread.`
+    );
+  }
+}
+
+// The process count covers at least the time from the end of its start read
+// to the start of its end read. A thread count can also have the time from the
+// start of its start read to the end of the process start read. One thread
+// runs on one core at most, so that time is the limit for each thread.
+function threadSumExcess(start: InAppBoundary, end: InAppBoundary): number {
   const allowedUs =
     (start.processReadEndNs - start.uiReadStartNs) / 1e3 +
     (start.processReadEndNs - start.jsReadStartNs) / 1e3 +
     CPU_COUNTERS.length * COUNTER_DELTA_ERROR_US;
-  if (delta('processCpuUs') < threadsUs - allowedUs) {
-    throw new ToolError(
-      `Epoch ${index}: the process CPU time (${delta('processCpuUs')} µs) is less than the sum of the main thread and the JS thread (${threadsUs} µs) by more than the read delay and the counter resolution (${allowedUs} µs). A counter read gives a wrong unit or a wrong thread.`
-    );
-  }
+  return Math.max(
+    0,
+    threadsDeltaUs(start, end) -
+      (end.processCpuUs - start.processCpuUs) -
+      allowedUs
+  );
+}
+
+function threadsDeltaUs(start: InAppBoundary, end: InAppBoundary): number {
+  return (
+    end.uiThreadCpuUs -
+    start.uiThreadCpuUs +
+    end.jsThreadCpuUs -
+    start.jsThreadCpuUs
+  );
 }
 
 function checkPerformanceCoreTime(
@@ -692,8 +730,21 @@ function mapCounters<T>(
   };
 }
 
-function readMidpoint(boundary: InAppBoundary, counter: CpuCounter): number {
-  const { startNs, endNs } = COUNTER_FIELDS[counter];
+function readSpan(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  fields: ReadFields
+): TimeSpan {
+  return {
+    startNs: readMidpoint(start, fields),
+    endNs: readMidpoint(end, fields),
+  };
+}
+
+function readMidpoint(
+  boundary: InAppBoundary,
+  { startNs, endNs }: ReadFields
+): number {
   return ((boundary[startNs] as number) + (boundary[endNs] as number)) / 2;
 }
 

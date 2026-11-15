@@ -121,7 +121,7 @@ describe('parseSampleLine', () => {
     );
     assert.throws(
       () => parseSampleLine(JSON.stringify({ format: 1 }), PLAN),
-      /SAMPLE\.format must be one of 4[\s\S]*SAMPLE\.boundaries must be a list/
+      /SAMPLE\.format must be one of 5[\s\S]*SAMPLE\.boundaries must be a list/
     );
   });
 
@@ -172,7 +172,7 @@ describe('parseSampleLine', () => {
     );
     assert.throws(
       () => withStart({ footprintReadStartNs: 19_000 }),
-      /Boundary 0 of the SAMPLE line: footprintReadStartNs \(19000 ns\) is before processReadEndNs \(20000 ns\)/
+      /Boundary 0 of the SAMPLE line: footprintReadStartNs \(19000 ns\) is before instructionReadEndNs \(20000 ns\)/
     );
     assert.throws(
       () =>
@@ -221,7 +221,11 @@ describe('readEpoch', () => {
     assert.deepEqual(reading.counterSpans, {
       uiThread: { startNs: 2_500, endNs: 10_000_002_500 },
       jsThread: { startNs: 7_500, endNs: 10_000_007_500 },
-      process: { startNs: 15_000, endNs: 10_000_015_000 },
+      process: { startNs: 12_500, endNs: 10_000_012_500 },
+    });
+    assert.deepEqual(reading.instructionSpan, {
+      startNs: 17_500,
+      endNs: 10_000_017_500,
     });
     assert.deepEqual(reading.cpu, {
       uiThreadCpu: 350,
@@ -288,7 +292,7 @@ describe('readEpoch', () => {
     assertClose(cpuUncertainty.jsThread, (2_500 + 2_500 + 2_000) / 1e6 / 10);
     assertClose(
       cpuUncertainty.process,
-      ((5_000 + 5_000) * 6 + 2_000) / 1e6 / 10
+      ((2_500 + 2_500) * 6 + 2_000) / 1e6 / 10
     );
   });
 
@@ -395,22 +399,17 @@ describe('readEpoch', () => {
     );
   });
 
-  it('allows the process time to be less than the two threads by the read delay at the start and the resolution', () => {
-    const allowedUs = 20 + 15 + 6;
-    const reading = readEpoch(
-      withEnd({ processCpuUs: 2_000_000 + 3_520_000 - allowedUs }),
-      0,
-      60
-    );
-    assert.ok(reading.cpu.otherThreadsCpu < 0);
+  it('stores the excess of the two threads over the process beyond the read delay and the resolution, and stops only at a gross error', () => {
+    const threadsUs = 3_520_000;
+    const allowedUs = 15 + 10 + 6;
+    const excessOf = (processUs: number) =>
+      readEpoch(withEnd({ processCpuUs: 2_000_000 + processUs }), 0, 60)
+        .threadSumExcess;
+    assert.equal(excessOf(threadsUs - allowedUs), 0);
+    assert.equal(excessOf(threadsUs - allowedUs - 100), 100);
     assert.throws(
-      () =>
-        readEpoch(
-          withEnd({ processCpuUs: 2_000_000 + 3_520_000 - allowedUs - 1 }),
-          0,
-          60
-        ),
-      /the process CPU time \(3519958 µs\) is less than the sum of the main thread and the JS thread \(3520000 µs\) by more than the read delay and the counter resolution \(41 µs\)/
+      () => excessOf(threadsUs / 2 - 1),
+      /Epoch 0: the process CPU time \(1759999 µs\) is less than 50% of the sum of the main thread and the JS thread \(3520000 µs\)\. A counter read gives a wrong unit or a wrong thread\./
     );
   });
 
@@ -424,6 +423,8 @@ describe('readEpoch', () => {
                 {
                   ...START_BOUNDARY,
                   processReadEndNs: 10_000_000,
+                  instructionReadStartNs: 10_000_000,
+                  instructionReadEndNs: 10_000_000,
                   footprintReadStartNs: 10_000_000,
                   footprintReadEndNs: 10_001_000,
                   signpostStartNs: 10_002_000,

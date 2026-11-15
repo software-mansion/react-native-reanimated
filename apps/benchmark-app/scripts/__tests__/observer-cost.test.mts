@@ -17,6 +17,7 @@ function samples(
       return {
         block,
         collector,
+        processInstructionRate: 0.42 * factor,
         uiThreadCpu: base * factor,
         jsThreadCpu: 2 * factor,
         otherThreadsCpu: 1,
@@ -51,7 +52,13 @@ describe('observerCosts', () => {
     );
     assert.deepEqual(
       costs.map((cost) => cost.metric),
-      ['uiThreadCpu', 'jsThreadCpu', 'processCpu', 'memory']
+      [
+        'processInstructionRate',
+        'uiThreadCpu',
+        'jsThreadCpu',
+        'processCpu',
+        'memory',
+      ]
     );
     const memory = costOf(costs, 'memory');
     assert.equal(memory.medianEndpoints, 40_000);

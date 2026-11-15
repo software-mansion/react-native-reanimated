@@ -36,12 +36,23 @@ export interface MetricDefinition {
   limits: string;
 }
 
+export interface EqualWorkCheck {
+  metric: ComparedMetric;
+  marks: readonly ComparedMetric[];
+}
+
+export interface Diagnostic {
+  metric: string;
+  unit: string;
+}
+
 export type PlatformCommand =
   | 'run'
   | 'memory'
   | 'sample'
   | 'crosscheck'
-  | 'observer-cost';
+  | 'observer-cost'
+  | 'known-work';
 
 export type PlatformOption =
   | 'trace-processor'
@@ -66,6 +77,8 @@ export interface PlatformDefinition {
   verdictMetrics: readonly ComparedMetric[];
   advisoryMetrics: readonly ComparedMetric[];
   verdictsNeedValidation: boolean;
+  equalWork: EqualWorkCheck | null;
+  diagnostics: readonly Diagnostic[];
   measurementRevision: number;
   frameSource: FrameSource;
   metricDefinitions: readonly MetricDefinition[];

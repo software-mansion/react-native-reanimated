@@ -570,7 +570,7 @@ describe('parseArguments', () => {
         applicationId: 'com.x',
         scenario: 'idle-cost',
         load: undefined,
-        blocks: 5,
+        blocks: 10,
         noiseLimits: 'limits.json',
         outputDir: VALIDATION_DIR,
       }
@@ -609,40 +609,61 @@ describe('parseArguments', () => {
     assert.deepEqual(
       parseArguments([
         'validation-record',
-        '--crosscheck',
-        'c1',
-        '--crosscheck',
-        'c2',
+        '--known-work',
+        'k1',
         '--observer-cost',
         'o1',
+        '--observer-cost',
+        'o2',
       ]),
       {
         command: 'validation-record',
-        crosschecks: ['c1', 'c2'],
-        observerCosts: ['o1'],
+        knownWorks: ['k1'],
+        observerCosts: ['o1', 'o2'],
+        crosschecks: [],
         earlierCrosschecks: [],
       }
     );
     assert.deepEqual(
       parseArguments([
         'validation-record',
-        '--crosscheck',
-        'c1',
+        '--known-work',
+        'k1',
         '--observer-cost',
         'o1',
+        '--crosscheck',
+        'c1',
         '--earlier-crosscheck',
         'e1',
       ]),
       {
         command: 'validation-record',
-        crosschecks: ['c1'],
+        knownWorks: ['k1'],
         observerCosts: ['o1'],
+        crosschecks: ['c1'],
         earlierCrosschecks: ['e1'],
       }
     );
     assert.throws(
-      () => parseArguments(['validation-record', '--crosscheck', 'c1']),
+      () => parseArguments(['validation-record', '--known-work', 'k1']),
       /--observer-cost is required/
+    );
+  });
+
+  it('reads the known-work command of iOS', () => {
+    assert.deepEqual(
+      parseArguments(['known-work', '--udid', 'U1', '--package', 'com.x']),
+      {
+        command: 'known-work',
+        device: { platform: 'ios', id: 'U1' },
+        applicationId: 'com.x',
+        outputDir: VALIDATION_DIR,
+      }
+    );
+    assert.throws(
+      () =>
+        parseArguments(['known-work', '--serial', 'S1', '--package', 'com.x']),
+      /The known-work command is not supported on android/
     );
   });
 

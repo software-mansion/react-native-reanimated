@@ -212,6 +212,7 @@ async function takeCollectorSample(
       app,
       sample: {
         collector,
+        processInstructionRate: reading.processInstructionRate,
         ...reading.cpu,
         memory: reading.memory,
         windowSeconds: reading.window.seconds,
@@ -245,7 +246,7 @@ function observerCostReport(costs: readonly ObserverCost[]): string {
   return `${[
     '# Observer cost of the in-app collector',
     '',
-    'Median of the samples with only the counter reads (endpoints) and with the full collector (full): ms/s for the CPU metrics, kB for `memory`. The interval is the 95% bootstrap interval of the relative difference of the medians; the bootstrap draws whole blocks. `passed`: the interval is inside the allowed band (one quarter of the noise limit). `failed`: the interval is fully outside it. `not validated`: the interval crosses a bound, the metric has no noise limit, the test has fewer than 5 blocks, or the relative difference is not defined because a sample with only the counter reads has the value 0 or less (no difference and no interval).',
+    'Median of the samples with only the counter reads (endpoints) and with the full collector (full): 10^9 instructions for each s for `processInstructionRate`, ms/s for the CPU metrics, kB for `memory`. The interval is the 95% bootstrap interval of the relative difference of the medians; the bootstrap draws whole blocks. `passed`: the interval is inside the allowed band (one quarter of the noise limit). `failed`: the interval is fully outside it. `not validated`: the interval crosses a bound, the metric has no noise limit, the test has fewer than 5 blocks, or the relative difference is not defined because a sample with only the counter reads has the value 0 or less (no difference and no interval).',
     '',
     '| Metric | Endpoints | Full | Difference | Interval | Noise limit | Allowed | Outcome |',
     `|${' --- |'.repeat(8)}`,

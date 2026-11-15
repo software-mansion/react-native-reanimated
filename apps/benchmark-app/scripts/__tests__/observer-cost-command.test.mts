@@ -36,7 +36,7 @@ const RECORD: NoiseLimitsRecord = {
   sources: [],
   scenarios: { [SCENARIO]: { version: 1, load: 80 } },
   limits: {
-    [SCENARIO]: { uiThreadCpu: 0.08, jsThreadCpu: 0.08 },
+    [SCENARIO]: { processInstructionRate: 0.08 },
   },
 };
 
@@ -88,8 +88,9 @@ describe('observerCostCommand', () => {
     assert.deepEqual(
       result.costs?.map((cost) => [cost.metric, cost.outcome]),
       [
-        ['uiThreadCpu', 'passed'],
-        ['jsThreadCpu', 'passed'],
+        ['processInstructionRate', 'passed'],
+        ['uiThreadCpu', 'not validated'],
+        ['jsThreadCpu', 'not validated'],
         ['processCpu', 'not validated'],
         ['memory', 'not validated'],
       ]

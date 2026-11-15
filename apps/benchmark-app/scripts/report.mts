@@ -4,7 +4,12 @@ import type { ExpectationResult } from './expectations.mts';
 import { COMPARED_METRICS, COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric, MetricUnit } from './metrics.mts';
 import type { NoiseLimitsRecord } from './noise-limits-record.mts';
-import type { DeviceState, PlatformDefinition } from './platform.mts';
+import type {
+  DeviceState,
+  Diagnostic,
+  EqualWorkCheck,
+  PlatformDefinition,
+} from './platform.mts';
 import { finiteNumber, scenariosWithoutData } from './results.mts';
 import type { MeasurementResult, RunResult, Segment } from './results.mts';
 import { SAMPLE_INVALID_CAUSES, SAMPLE_STEPS } from './samples.mts';
@@ -49,6 +54,14 @@ export function renderReport(result: RunResult): string {
     '',
     verdictsSection(result),
     '',
+    ...(definition.diagnostics.length > 0
+      ? [
+          '## Diagnostics',
+          '',
+          diagnosticsSection(result, definition.diagnostics),
+          '',
+        ]
+      : []),
     '## Metric definitions',
     '',
     metricDefinitionsSection(definition, result.measurementRevision),
@@ -245,6 +258,8 @@ function expectationsSection(
 function verdictsSection(result: RunResult): string {
   const definition = PLATFORM_DEFINITIONS[result.platform];
   const shares = shareMetrics(definition);
+  const { equalWork } = definition;
+  const otherWork = scenariosWithOtherWork(result, equalWork);
   const limits = [
     ...(result.status === 'done'
       ? []
@@ -263,6 +278,7 @@ function verdictsSection(result: RunResult): string {
         ]
       : []),
     'A row with "no verdict" is advisory: it has no noise limit, and the expectations do not use it.',
+    ...(equalWork ? [equalWorkText(equalWork)] : []),
     ...(definition.verdictsNeedValidation
       ? [
           'A row with "unvalidated" has no verdict, and an expectation that selects its metric is not decided.',
@@ -296,7 +312,15 @@ function verdictsSection(result: RunResult): string {
         'Interval',
         'Verdict',
       ],
-      rows.map((row) => comparisonCells(row, result.noiseLimits))
+      rows.map((row) =>
+        comparisonCells(
+          row,
+          result.noiseLimits,
+          otherWork.has(row.scenario) &&
+            equalWork !== null &&
+            equalWork.marks.includes(row.metric)
+        )
+      )
     ),
     ...(hasFallback
       ? [
@@ -305,6 +329,27 @@ function verdictsSection(result: RunResult): string {
         ]
       : []),
   ].join('\n');
+}
+
+function scenariosWithOtherWork(
+  result: RunResult,
+  check: EqualWorkCheck | null
+): Set<string> {
+  return new Set(
+    result.advisoryRows
+      .filter(
+        (row) =>
+          check !== null &&
+          row.metric === check.metric &&
+          hasComparison(row) &&
+          (row.interval.low > 0 || row.interval.high < 0)
+      )
+      .map((row) => row.scenario)
+  );
+}
+
+function equalWorkText({ metric, marks }: EqualWorkCheck): string {
+  return `A row of ${marks.join(', ')} has the mark "work differs" when the 95% interval of the ${metric} difference of its scenario does not include 0. The verdict stays.`;
 }
 
 function validityText(result: RunResult): string {
@@ -346,8 +391,10 @@ function hasComparison(
 
 function comparisonCells(
   row: VerdictRow | AdvisoryRow,
-  noiseLimits: NoiseLimitsRecord | null
+  noiseLimits: NoiseLimitsRecord | null,
+  otherWork: boolean
 ): string[] {
+  const workMark = otherWork ? ' (work differs)' : '';
   const place = [row.scenario, row.metric, `${row.samplesA}/${row.samplesB}`];
   const unvalidated = 'unvalidated' in row && row.unvalidated === true;
   if (!hasComparison(row)) {
@@ -357,7 +404,7 @@ function comparisonCells(
       '-',
       '-',
       '-',
-      unvalidated ? 'unvalidated (no data)' : 'no verdict (no data)',
+      `${unvalidated ? 'unvalidated (no data)' : 'no verdict (no data)'}${workMark}`,
     ];
   }
   return [
@@ -366,11 +413,13 @@ function comparisonCells(
     formatValue(row.medianB, row.metric),
     formatDifference(row),
     formatInterval(row),
-    'verdict' in row
-      ? verdictCell(row, noiseLimits)
-      : unvalidated
-        ? 'unvalidated'
-        : 'no verdict',
+    `${
+      'verdict' in row
+        ? verdictCell(row, noiseLimits)
+        : unvalidated
+          ? 'unvalidated'
+          : 'no verdict'
+    }${workMark}`,
   ];
 }
 
@@ -396,6 +445,13 @@ function formatValue(value: number, metric: ComparedMetric): string {
       return `${(finite * 100).toFixed(1)}% of ${shareOf}`;
     case 'kB':
       return `${Math.round(finite)} kB`;
+    case 'Ginstr/s':
+      return `${finite.toFixed(4)} ${unit}`;
+    case 'GHz':
+    case 'instr/cycle':
+      return `${finite.toFixed(3)} ${unit}`;
+    case 'count':
+      return finite.toFixed(1);
     default:
       return `${finite.toFixed(2)} ${unit}`;
   }
@@ -436,6 +492,43 @@ function formatInterval(row: MetricComparison): string {
       ? formatPercent(value, true)
       : formatSigned(value, row.metric);
   return `${format(row.interval.low)} to ${format(row.interval.high)}`;
+}
+
+function diagnosticsSection(
+  result: RunResult,
+  diagnostics: readonly Diagnostic[]
+): string {
+  const outcomes = [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+  ];
+  return [
+    'Stored values that show a measurement condition. They are not verdicts and not invalid causes. The metric definitions explain them.',
+    '',
+    table(
+      ['Scenario', 'Value', 'Accepted samples', 'Samples above 0', 'Largest'],
+      outcomes.flatMap((outcome) =>
+        diagnostics.map(({ metric, unit }) => {
+          const values = outcome.samples.flatMap((sample) => {
+            const value =
+              sample.valid && sample.accepted
+                ? new Map(Object.entries(sample.metrics)).get(metric)
+                : undefined;
+            return typeof value === 'number' ? [value] : [];
+          });
+          return [
+            outcome.scenario,
+            metric,
+            String(values.length),
+            String(values.filter((value) => value > 0).length),
+            values.length === 0
+              ? '-'
+              : `${Math.max(...values).toFixed(1)} ${unit}`,
+          ];
+        })
+      )
+    ),
+  ].join('\n');
 }
 
 function metricDefinitionsSection(

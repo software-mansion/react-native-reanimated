@@ -16,10 +16,12 @@ export const START_BOUNDARY: InAppBoundary = {
   jsReadEndNs: 10_000,
   jsThreadCpuUs: 500_000,
   processReadStartNs: 10_000,
-  processReadEndNs: 20_000,
+  processReadEndNs: 15_000,
   processCpuUs: 2_000_000,
   processPerformanceCpuUs: 1_200_000,
   processClusterSwitches: 400,
+  instructionReadStartNs: 15_000,
+  instructionReadEndNs: 20_000,
   processInstructions: 10_000_000_000,
   processCycles: 5_000_000_000,
   footprintReadStartNs: 20_000,
@@ -45,10 +47,12 @@ export const END_BOUNDARY: InAppBoundary = {
   jsReadEndNs: 10_000_010_000,
   jsThreadCpuUs: 520_000,
   processReadStartNs: 10_000_010_000,
-  processReadEndNs: 10_000_020_000,
+  processReadEndNs: 10_000_015_000,
   processCpuUs: 5_530_000,
   processPerformanceCpuUs: 4_024_000,
   processClusterSwitches: 550,
+  instructionReadStartNs: 10_000_015_000,
+  instructionReadEndNs: 10_000_020_000,
   processInstructions: 20_590_000_000,
   processCycles: 10_295_000_000,
   footprintReadStartNs: 10_000_020_000,
@@ -83,6 +87,7 @@ export const IOS_SAMPLE_METRICS: Omit<IosSampleMetrics, 'coldStart'> = {
   processClockRate: 1.5,
   processInstructionsPerCycle: 2,
   processInstructionRate: 1.059,
+  threadSumExcess: 0,
   mountBatchCount: 600,
   memory: 40300,
   windowMemoryDelta: 300,
@@ -143,7 +148,7 @@ export function sampleText(
   sample: InAppSample = inAppSample(),
   error: string | null = null
 ): string {
-  return JSON.stringify({ format: 4, error, ...sample });
+  return JSON.stringify({ format: 5, error, ...sample });
 }
 
 export function sampleLine(sample: InAppSample = inAppSample()): string {

@@ -390,6 +390,7 @@ function runMetrics(
     processClockRate: reading.processClockRate,
     processInstructionsPerCycle: reading.processInstructionsPerCycle,
     processInstructionRate: reading.processInstructionRate,
+    threadSumExcess: reading.threadSumExcess,
     mountBatchCount: reading.mountBatchCount,
     memory: reading.memory,
     windowMemoryDelta: reading.windowMemoryDelta,

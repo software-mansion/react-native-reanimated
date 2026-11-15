@@ -27,35 +27,42 @@ const IN_APP_STATE: Record<keyof AppState | 'refreshRate', Check> = {
 };
 
 const CPU_LIMIT =
-  'Kernel-charged CPU time: it includes the interrupt time that the kernel charges to the running thread, also interrupt handling on its core that is not app work. So it is more than the `Running` time of Instruments; the cross-check compares it with `Running` plus `Interrupted` of `thread-state`. In an A/B comparison both variants are measured the same way, but equal methods do not prove equal background interrupt load: a change of interrupt time can come from library work, and the counters alone do not show the cause. Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core. `performanceCoreShare` gives the core type for the whole process only.';
+  'Kernel-charged CPU time: it includes the interrupt time that the kernel charges to the running thread, also interrupt handling on its core that is not app work. So it is more than the `Running` time of Instruments; the cross-check compares it with `Running` plus `Interrupted` of `thread-state`. In an A/B comparison both variants are measured the same way, but equal methods do not prove equal background interrupt load: a change of interrupt time can come from library work, and the counters alone do not show the cause. Microsecond resolution. CPU time does not show the core type or the clock rate: the same work takes more time on an efficiency core and at a lower clock rate. `performanceCoreShare` and `processClockRate` show the core type and the clock rate for the whole process only. No verdict, because the system chooses the clock rate.';
 
 const PROCESS_COUNTER_LIMIT =
   'It includes the threads that ended in the window. The kernel adds the CPU time of a thread to its thread counter and to the process counter at the same events: a context switch, and a kernel entry or exit when the kernel counts user and system time apart. A thread that is on a core at a read is counted to its last such event.';
 
 const INSTRUCTION_COUNT_LIMIT =
-  'XNU sums the instructions and the cycles of the task counters for each core (`task_inspect` in `osfmk/kern/task.c`), so they include the threads that ended in the window. Without CPU counters in the kernel (`CONFIG_PERVASIVE_CPI`), `task_inspect` fails, and the sampler stops with an error. Stored only.';
+  'For the whole process, with no value for each thread: XNU sums the instructions and the cycles of the task counters for each core (`task_inspect` in `osfmk/kern/task.c`), so they include the threads that ended in the window, and the kernel and interrupt instructions while a thread of the process is on a core. Without CPU counters in the kernel (`CONFIG_PERVASIVE_CPI`), `task_inspect` fails, and the sampler stops with an error.';
 
 const UPDATE_LIMIT =
   'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments: the cross-check only compares the median and the 95th percentile with that table. No verdict.';
 
 export const IOS_DEFINITION: PlatformDefinition = {
   name: 'ios',
-  commands: ['run', 'sample', 'crosscheck', 'observer-cost'],
+  commands: ['run', 'sample', 'crosscheck', 'observer-cost', 'known-work'],
   options: { 'sign-command': 'required for run', validation: 'optional' },
   segmentColumns: [],
   deviceState: shape(DEVICE_STATE),
   inAppState: shape(IN_APP_STATE),
-  verdictMetrics: ['uiThreadCpu', 'jsThreadCpu'],
+  verdictMetrics: ['processInstructionRate'],
   advisoryMetrics: [
     'uiUpdateDurationMedian',
     'uiUpdateDurationP95',
     'missedDisplayLinkCallbacks',
+    'mountBatchCount',
+    'uiThreadCpu',
+    'jsThreadCpu',
+    'processClockRate',
+    'processInstructionsPerCycle',
     'performanceCoreShare',
     'memory',
     'coldStart',
   ],
   verdictsNeedValidation: true,
-  measurementRevision: 5,
+  equalWork: { metric: 'mountBatchCount', marks: ['processInstructionRate'] },
+  diagnostics: [{ metric: 'threadSumExcess', unit: 'µs' }],
+  measurementRevision: 6,
   frameSource: 'refreshes',
   metricDefinitions: [
     {
@@ -113,7 +120,15 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         'The process: `total_user + total_system` of `task_info(TASK_POWER_INFO_V2)`, in whole µs. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than the sum of the two threads by more than the read delay and the counter resolution is a tool error. This limit can also stop a correct sample: when a thread has such an event between its start read and the process start read, the process start value gets time that the thread value does not have. ${CPU_LIMIT}`,
+      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than half of the sum of the two threads is a tool error (a wrong unit or a wrong thread); a smaller shortfall is \`threadSumExcess\`. ${CPU_LIMIT}`,
+    },
+    {
+      names: ['threadSumExcess'],
+      unit: 'µs',
+      source:
+        'The sum of the deltas of the main thread and the JS thread, minus the delta of the process, minus the read delay and the counter resolution: the time from the start of each thread read to the end of the process start read, and 2 µs for each of the three counters. 0 when the result is less than 0.',
+      interval: WINDOW,
+      limits: `A value above 0 is not a tool error. ${PROCESS_COUNTER_LIMIT} When a thread has such an event between its start read and the process start read, the process start value gets time that the thread value does not have. The report gives the count of the samples with a value above 0 and the largest value.`,
     },
     {
       names: ['performanceCoreShare'],
@@ -133,28 +148,12 @@ export const IOS_DEFINITION: PlatformDefinition = {
         'It includes the threads that ended in the window. It does not show how long a thread ran on each core type.',
     },
     {
-      names: ['processClockRate'],
-      unit: 'GHz',
-      source:
-        '`Δ cycles` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` divided by `Δ (total_user + total_system)` of `task_info(TASK_POWER_INFO_V2)`: the mean clock rate of the cores while the process ran. The app makes the two calls one after the other in the read bracket of the process counters.',
-      interval: WINDOW,
-      limits: `${INSTRUCTION_COUNT_LIMIT} The mean of all core types and of all threads of the process. \`null\` when the process has no CPU time in the window.`,
-    },
-    {
-      names: ['processInstructionsPerCycle'],
-      unit: 'instructions for each cycle',
-      source:
-        '`Δ instructions / Δ cycles` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)`',
-      interval: WINDOW,
-      limits: `${INSTRUCTION_COUNT_LIMIT} The mean of all core types and of all threads of the process. \`null\` when the process has no cycles in the window.`,
-    },
-    {
       names: ['processInstructionRate'],
       unit: '10^9 instructions for each s',
       source:
-        '`Δ instructions` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` over the seconds between the midpoints of the two reads of the process counters on the monotonic clock',
+        '`Δ instructions` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` over the seconds between the midpoints of the two reads of this counter on the monotonic clock. The app reads it in its own read bracket, after the process CPU time.',
       interval: WINDOW,
-      limits: `${INSTRUCTION_COUNT_LIMIT} For the whole process. A thread that waits in a loop also adds instructions.`,
+      limits: `An instruction-count change, not a performance verdict. ${INSTRUCTION_COUNT_LIMIT} It does not include the render server, the GPU, cache misses and waits. A change of the clock rate or of the core type gets no verdict: see \`processClockRate\` and \`performanceCoreShare\`. Fewer frames or fewer mounts give fewer instructions; the report marks the row "work differs" when the 95% interval of the \`mountBatchCount\` difference does not include 0. A thread that waits in a loop adds instructions. The verdict bootstrap draws single samples, not blocks. One sample of the fast mode of the iPhone 14 (a median UI update of 1.43 ms in \`layout-animations\`, against about 3.9 ms) had the usual instruction rate and a 1.57 times higher clock rate. Its shorter UI update is not fully explained.`,
     },
     {
       names: ['mountBatchCount'],
@@ -162,7 +161,24 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         'Calls of `didMountComponentsWithRootTag:` of an `RCTSurfacePresenterObserver` of the app, for all surfaces. React Native calls it after each `RCTPerformMountInstructions`.',
       interval: WINDOW,
-      limits: 'The work check of a scenario uses it.',
+      limits:
+        'The work check of a scenario uses it. The report shows it next to `processInstructionRate`. No verdict.',
+    },
+    {
+      names: ['processClockRate'],
+      unit: 'GHz',
+      source:
+        '`Δ cycles` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` divided by `Δ (total_user + total_system)` of `task_info(TASK_POWER_INFO_V2)`: an estimate of the mean clock rate of the cores while the process ran.',
+      interval: WINDOW,
+      limits: `An estimate: the cycles and the CPU time come from two kernel calls in two read brackets. ${INSTRUCTION_COUNT_LIMIT} The mean of all core types and of all threads of the process. \`null\` when the process has no CPU time in the window. No verdict.`,
+    },
+    {
+      names: ['processInstructionsPerCycle'],
+      unit: 'instructions for each cycle',
+      source:
+        '`Δ instructions / Δ cycles` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)`',
+      interval: WINDOW,
+      limits: `${INSTRUCTION_COUNT_LIMIT} The mean of all core types and of all threads of the process. \`null\` when the process has no cycles in the window. No verdict.`,
     },
     {
       names: ['memory'],

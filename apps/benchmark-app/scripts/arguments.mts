@@ -96,9 +96,17 @@ export interface CrosscheckOptions {
 
 export interface ValidationRecordOptions {
   command: 'validation-record';
-  crosschecks: string[];
+  knownWorks: string[];
   observerCosts: string[];
+  crosschecks: string[];
   earlierCrosschecks: string[];
+}
+
+export interface KnownWorkOptions {
+  command: 'known-work';
+  device: DeviceTarget;
+  applicationId: string;
+  outputDir: string;
 }
 
 export interface ObserverCostOptions {
@@ -121,6 +129,7 @@ export type Command =
   | SampleOptions
   | CrosscheckOptions
   | ObserverCostOptions
+  | KnownWorkOptions
   | ValidationRecordOptions
   | { command: 'help' };
 
@@ -128,7 +137,7 @@ type Values = Record<string, string | string[] | boolean | undefined>;
 
 const DEFAULT_BLOCKS = 5;
 
-const DEFAULT_OBSERVER_COST_BLOCKS = MINIMUM_BLOCKS;
+const DEFAULT_OBSERVER_COST_BLOCKS = 10;
 
 export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run --config <file.json> <device> [--blocks ${DEFAULT_BLOCKS}] [--noise-limits <file.json>] [--validation <file.json>] [--output-dir <dir>] [--keep-traces] [--trace-processor <path>] [--sign-command <path>]
@@ -139,10 +148,11 @@ export const USAGE = `Usage:
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts sample <device> --package <application id> --scenario <name> [--load <integer>] [--keep-trace] [--trace-processor <path>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts crosscheck --udid <UDID> --package <application id> --scenario <name> --epochs <load>:<full|endpoints>:<seconds>[,...] [--load <integer>] [--output-dir <dir>]
   node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts observer-cost --udid <UDID> --package <application id> --scenario <name> [--blocks ${DEFAULT_OBSERVER_COST_BLOCKS}] [--noise-limits <file.json>] [--load <integer>] [--output-dir <dir>]
-  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --crosscheck <folder> [--crosscheck <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...] [--earlier-crosscheck <folder> ...]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts known-work --udid <UDID> --package <application id> [--output-dir <dir>]
+  node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts validation-record --known-work <folder> [--known-work <folder> ...] --observer-cost <folder> [--observer-cost <folder> ...] [--crosscheck <folder> ...] [--earlier-crosscheck <folder> ...]
 
-<device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only. The crosscheck and observer-cost commands validate the in-app collector of iOS and support iOS only.
---trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>. Its uiThreadCpu and jsThreadCpu get a verdict only with a matching --validation <file.json>, and memory is advisory on iOS.
+<device> is --serial <adb serial> for Android or --udid <UDID> for iOS. The memory command supports Android only. The known-work, observer-cost and crosscheck commands validate the in-app collector of iOS and support iOS only.
+--trace-processor, --keep-traces and --keep-trace are for Android only. An iOS run needs --sign-command <path>. Its processInstructionRate gets a verdict only with a matching --validation <file.json>. The other iOS metrics have no verdict.
 
 Scenarios: ${SCENARIOS.join(', ')}
 Validation scenarios (crosscheck only): ${VALIDATION_SCENARIOS.join(', ')}
@@ -230,9 +240,16 @@ const CROSSCHECK_OPTIONS: ParseArgsOptionsConfig = {
 };
 
 const VALIDATION_RECORD_OPTIONS: ParseArgsOptionsConfig = {
-  crosscheck: { type: 'string', multiple: true },
+  'known-work': { type: 'string', multiple: true },
   'observer-cost': { type: 'string', multiple: true },
+  crosscheck: { type: 'string', multiple: true },
   'earlier-crosscheck': { type: 'string', multiple: true },
+};
+
+const KNOWN_WORK_OPTIONS: ParseArgsOptionsConfig = {
+  ...COMMON_OPTIONS,
+  package: { type: 'string' },
+  'output-dir': { type: 'string' },
 };
 
 const OBSERVER_COST_OPTIONS: ParseArgsOptionsConfig = {
@@ -337,12 +354,22 @@ export function parseArguments(argv: string[]): Command {
       outputDir: validationDirOf(values),
     };
   }
+  if (command === 'known-work') {
+    const { values } = parseOptions(rest, KNOWN_WORK_OPTIONS);
+    return {
+      command,
+      device: platformTarget(values, 'known-work'),
+      applicationId: required(values, 'package'),
+      outputDir: validationDirOf(values),
+    };
+  }
   if (command === 'validation-record') {
     const { values } = parseOptions(rest, VALIDATION_RECORD_OPTIONS);
     return {
       command,
-      crosschecks: requiredList(values, 'crosscheck'),
+      knownWorks: optionalList(values, 'known-work'),
       observerCosts: requiredList(values, 'observer-cost'),
+      crosschecks: optionalList(values, 'crosscheck'),
       earlierCrosschecks: optionalList(values, 'earlier-crosscheck'),
     };
   }

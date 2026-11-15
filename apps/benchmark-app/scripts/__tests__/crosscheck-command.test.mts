@@ -156,7 +156,7 @@ function steadyRecording(): TraceExports {
 }
 
 describe('crosscheckCommand', () => {
-  it('writes a result that the reader accepts and that a validation record uses', async () => {
+  it('writes a result that the reader accepts and that a validation record keeps as a source with no gate', async () => {
     const { result } = crosscheck(
       {
         lines: [
@@ -201,28 +201,22 @@ describe('crosscheckCommand', () => {
       path.join(TEST_ROOT.root, 'observer-costs'),
       identityOf(source.result)
     );
-    const record = buildValidationRecord(
-      [source],
-      [
+    const record = buildValidationRecord({
+      knownWorks: [],
+      observerCosts: [
         writeObserverCost('idle', 'idle-cost'),
         writeObserverCost('loaded', 'worklet-styles-transform'),
-      ].map(readObserverCostResult)
-    );
-    const gates = record.metrics.uiThreadCpu?.gates ?? [];
-    assert.ok(
-      gates
-        .filter((gate) => gate.source === source.folder)
-        .every((gate) => gate.outcome === 'passed')
-    );
+      ].map(readObserverCostResult),
+      crosschecks: [source],
+    });
+    assert.deepEqual(record.sources.crosschecks, [source]);
+    const gates = record.metrics.processInstructionRate?.gates ?? [];
+    assert.ok(gates.every((gate) => gate.source !== source.folder));
     assert.deepEqual(
       gates
         .filter((gate) => gate.outcome !== 'passed')
         .map((gate) => gate.gate),
-      [
-        'at least 2 cross-check recordings (here 1)',
-        'a cross-check of a benchmark scenario with `full` and `endpoints` epochs of one load',
-        'a cross-check of `crosscheck-load` with the loads idle, ui-stall, js-load, render-heavy',
-      ]
+      ['a known-work test']
     );
     const file = path.join(TEST_ROOT.root, 'validation.json');
     fs.writeFileSync(file, JSON.stringify(record));

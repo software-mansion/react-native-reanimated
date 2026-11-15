@@ -183,7 +183,7 @@ function run(
 
 function writeValidationRecord(
   change: Partial<ValidationIdentity> = {},
-  jsThreadCpu: 'passed' | 'not validated' = 'passed'
+  instructions: 'passed' | 'not validated' = 'passed'
 ): string {
   const directory = path.join(TEST_ROOT.root, 'validation-sources');
   fs.rmSync(directory, { recursive: true, force: true });
@@ -194,7 +194,7 @@ function writeValidationRecord(
   const built = record(undefined, [
     writeObserverCost('idle', 'idle-cost'),
     writeObserverCost('loaded', 'css', (metric) =>
-      metric === 'jsThreadCpu' ? jsThreadCpu : 'passed'
+      metric === 'processInstructionRate' ? instructions : 'passed'
     ),
   ]);
   fs.writeFileSync(VALIDATION_FILE, JSON.stringify(built));
@@ -249,11 +249,15 @@ describe('an iOS run', () => {
         'unvalidated' in row && row.unvalidated === true,
       ]),
       [
-        ['uiThreadCpu', true],
-        ['jsThreadCpu', true],
+        ['processInstructionRate', true],
         ['uiUpdateDurationMedian', false],
         ['uiUpdateDurationP95', false],
         ['missedDisplayLinkCallbacks', false],
+        ['mountBatchCount', false],
+        ['uiThreadCpu', false],
+        ['jsThreadCpu', false],
+        ['processClockRate', false],
+        ['processInstructionsPerCycle', false],
         ['performanceCoreShare', false],
         ['memory', false],
         ['coldStart', false],
@@ -274,11 +278,11 @@ describe('an iOS run', () => {
     );
     assert.match(
       report,
-      /\| css \| uiThreadCpu \| 2\/2 \| .* \| unvalidated \|/
+      /\| css \| processInstructionRate \| 2\/2 \| .* \| unvalidated \|/
     );
   });
 
-  it('gives a verdict only for the metrics that a matching validation record validates', async () => {
+  it('gives no verdict for a metric that the matching validation record does not validate', async () => {
     assert.equal(
       await run(
         createFake(),
@@ -288,17 +292,14 @@ describe('an iOS run', () => {
       1
     );
     const result = readResult(onlyRunFolder(TEST_ROOT));
-    assert.deepEqual(
-      result.verdictRows.map((row) => row.metric),
-      ['uiThreadCpu']
-    );
+    assert.deepEqual(result.verdictRows, []);
     assert.deepEqual(result.validity, {
-      validated: ['uiThreadCpu'],
-      reason: 'the validation record does not validate jsThreadCpu',
+      validated: [],
+      reason: 'the validation record does not validate processInstructionRate',
     });
     assert.ok(
       result.advisoryRows.some(
-        (row) => row.metric === 'jsThreadCpu' && 'unvalidated' in row
+        (row) => row.metric === 'processInstructionRate' && 'unvalidated' in row
       )
     );
     assert.ok(
@@ -437,9 +438,9 @@ describe('an iOS run', () => {
     const folder = onlyRunFolder(TEST_ROOT);
     const file = path.join(folder, 'result.json');
     const stored = JSON.parse(fs.readFileSync(file, 'utf8'));
-    const [source, ...rest] = stored.validation.sources.crosschecks;
+    const [source, ...rest] = stored.validation.sources.knownWorks;
     const result = { ...source.result, appBuild: 'WRONG BUILD' };
-    stored.validation.sources.crosschecks = [
+    stored.validation.sources.knownWorks = [
       {
         ...source,
         result,
@@ -457,7 +458,7 @@ describe('an iOS run', () => {
         createFake().context,
         createFake().dependencies
       ),
-      /result\.validation: the source .*steady is not of the setup of the record: app build sources -> WRONG BUILD/
+      /result\.validation: the source .*known-work is not of the setup of the record: app build sources -> WRONG BUILD/
     );
   });
 
@@ -504,7 +505,7 @@ describe('an iOS run', () => {
     assert.equal(result.status, 'done');
     assert.deepEqual(
       result.verdictRows.map((row) => row.metric),
-      ['uiThreadCpu', 'jsThreadCpu']
+      ['processInstructionRate']
     );
   });
 });

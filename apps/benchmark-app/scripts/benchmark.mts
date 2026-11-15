@@ -6,6 +6,7 @@ import { TOOL_ERROR_EXIT_CODE } from './command-context.mts';
 import type { CommandContext } from './command-context.mts';
 import { crosscheckCommand } from './crosscheck-command.mts';
 import { ToolError } from './errors.mts';
+import { knownWorkCommand } from './known-work-command.mts';
 import { memoryCommand, memoryResumeCommand } from './memory.mts';
 import { noiseLimitsCommand } from './noise-limits.mts';
 import { observerCostCommand } from './observer-cost-command.mts';
@@ -73,6 +74,8 @@ async function runParsedCommand(
       return crosscheckCommand(command, context);
     case 'observer-cost':
       return observerCostCommand(command, context);
+    case 'known-work':
+      return knownWorkCommand(command, context);
     case 'validation-record':
       return validationRecordCommand(command);
   }

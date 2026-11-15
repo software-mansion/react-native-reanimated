@@ -2,7 +2,16 @@ import type { Comparison } from './statistics.mts';
 
 export type ComparedMetric = (typeof COMPARED_METRICS)[number];
 
-export type MetricUnit = 'ms' | 'Mcycles' | 'share' | 'ms/s' | 'kB';
+export type MetricUnit =
+  | 'ms'
+  | 'Mcycles'
+  | 'share'
+  | 'ms/s'
+  | 'kB'
+  | 'Ginstr/s'
+  | 'GHz'
+  | 'instr/cycle'
+  | 'count';
 
 export interface ComparisonRule {
   unit: MetricUnit;
@@ -56,6 +65,7 @@ export interface IosSampleMetrics extends CommonSampleMetrics {
   processClockRate: number | null;
   processInstructionsPerCycle: number | null;
   processInstructionRate: number;
+  threadSumExcess: number;
 }
 
 export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
@@ -71,8 +81,12 @@ export const COMPARED_METRICS = [
   'uiUpdateDurationP95',
   'jankyFrames',
   'missedDisplayLinkCallbacks',
+  'processInstructionRate',
+  'mountBatchCount',
   'uiThreadCpu',
   'jsThreadCpu',
+  'processClockRate',
+  'processInstructionsPerCycle',
   'performanceCoreShare',
   'memory',
   'coldStart',
@@ -89,8 +103,12 @@ export const NULL_ALLOWED: {
   uiUpdateDurationP95: true,
   jankyFrames: false,
   missedDisplayLinkCallbacks: true,
+  processInstructionRate: false,
+  mountBatchCount: false,
   uiThreadCpu: false,
   jsThreadCpu: false,
+  processClockRate: true,
+  processInstructionsPerCycle: true,
   performanceCoreShare: true,
   memory: false,
   coldStart: false,
@@ -109,8 +127,12 @@ export const COMPARISON_RULES: Record<ComparedMetric, ComparisonRule> = {
   uiUpdateDurationP95: relative('ms'),
   jankyFrames: absoluteShare('frames'),
   missedDisplayLinkCallbacks: absoluteShare('display refreshes'),
+  processInstructionRate: relative('Ginstr/s'),
+  mountBatchCount: relative('count'),
   uiThreadCpu: relative('ms/s'),
   jsThreadCpu: relative('ms/s'),
+  processClockRate: relative('GHz'),
+  processInstructionsPerCycle: relative('instr/cycle'),
   performanceCoreShare: absoluteShare('process CPU time'),
   memory: relative('kB'),
   coldStart: relative('ms'),

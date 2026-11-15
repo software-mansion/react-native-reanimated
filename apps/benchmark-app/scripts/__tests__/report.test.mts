@@ -345,12 +345,98 @@ describe('renderReport', () => {
       )
     );
     const rows = ios
+      .slice(ios.indexOf('## Verdicts'), ios.indexOf('## Diagnostics'))
       .split('\n')
       .filter((line) => line.startsWith('| worklet-styles-transform |'));
     assert.deepEqual(
       rows.map((line) => line.split(' | ')[1]),
       ['uiThreadCpu', 'coldStart']
     );
+  });
+
+  it('marks the instruction row "work differs" when the interval of the mount count difference excludes 0, and keeps its verdict', () => {
+    const mounts = (scenario: string, low: number, high: number) => {
+      const {
+        pValue: _p,
+        passesFalseDiscovery: _f,
+        noiseLimit: _n,
+        verdict: _v,
+        ...compared
+      } = row({
+        scenario: scenario as VerdictRow['scenario'],
+        metric: 'mountBatchCount',
+        medianA: 600,
+        medianB: 612,
+        difference: 0.02,
+        interval: { low, high },
+      });
+      return { ...compared, hasData: true as const };
+    };
+    const ios = renderReport({
+      ...RESULT,
+      platform: 'ios',
+      verdictRows: [
+        row({ metric: 'processInstructionRate', medianA: 0.42, medianB: 0.43 }),
+        row({
+          scenario: 'sticky-header',
+          metric: 'processInstructionRate',
+          medianA: 0.6,
+          medianB: 0.6,
+          verdict: 'no change found',
+        }),
+      ],
+      advisoryRows: [
+        mounts('worklet-styles-transform', 0.01, 0.03),
+        mounts('sticky-header', -0.01, 0.03),
+      ],
+    });
+    assert.ok(
+      ios.includes(
+        '| worklet-styles-transform | processInstructionRate | 10/10 | 0.4200 Ginstr/s | 0.4300 Ginstr/s | -31% | -33% to -29% | better (work differs) |'
+      )
+    );
+    assert.ok(
+      ios.includes(
+        '| sticky-header | processInstructionRate | 10/10 | 0.6000 Ginstr/s | 0.6000 Ginstr/s | -31% | -33% to -29% | no change found |'
+      )
+    );
+    assert.ok(
+      ios.includes(
+        '| worklet-styles-transform | mountBatchCount | 10/10 | 600.0 | 612.0 | +2% | +1% to +3% | no verdict |'
+      )
+    );
+    assert.ok(
+      ios.includes(
+        'A row of processInstructionRate has the mark "work differs" when the 95% interval of the mountBatchCount difference of its scenario does not include 0. The verdict stays.'
+      )
+    );
+  });
+
+  it('gives the diagnostics of the platform for the accepted samples of each scenario', () => {
+    const accepted = (threadSumExcess: number) =>
+      sample({
+        scenario: 'worklet-styles-transform',
+        valid: true,
+        accepted: true,
+        metrics: { threadSumExcess },
+      } as Partial<Recorded>);
+    const ios = renderReport({
+      ...RESULT,
+      platform: 'ios',
+      scenarios: [
+        {
+          scenario: 'worklet-styles-transform',
+          samples: [accepted(0), accepted(120.5), sample({})],
+          failed: null,
+        },
+      ],
+    });
+    assert.ok(
+      ios.includes(
+        '| worklet-styles-transform | threadSumExcess | 2 | 1 | 120.5 µs |'
+      )
+    );
+    assert.ok(!renderReport(RESULT).includes('## Diagnostics'));
   });
 
   it('defines each metric of the platform of the run', () => {
@@ -373,7 +459,11 @@ describe('renderReport', () => {
     );
     assert.match(
       section,
-      /\| `uiThreadCpu` \| ms for each s \| .* \| with a validation record \|/
+      /\| `processInstructionRate` \| 10\^9 instructions for each s \| .* \| with a validation record \|/
+    );
+    assert.match(
+      section,
+      /\| `uiThreadCpu` \| ms for each s \| .* \| no verdict, shown \|/
     );
   });
 

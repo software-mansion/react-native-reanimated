@@ -20,9 +20,24 @@ import type {
 } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
 import { IN_APP_BOUNDARY, readOrderProblems } from './in-app-sample.mts';
-import type { InAppBoundary, SamplePlan } from './in-app-sample.mts';
+import type {
+  InAppBoundary,
+  SampledEpoch,
+  SamplePlan,
+} from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import type { IosToolVersions } from './ios-device.mts';
+import {
+  KNOWN_WORK_INSTRUCTIONS_PER_UNIT,
+  KNOWN_WORK_PLAN,
+  KNOWN_WORK_TOLERANCE,
+  deriveKnownWork,
+} from './known-work.mts';
+import type {
+  KnownWorkDerivation,
+  KnownWorkEpoch,
+  KnownWorkGate,
+} from './known-work.mts';
 import {
   BLOCK_ORDER,
   MINIMUM_BLOCKS,
@@ -79,6 +94,19 @@ export interface CrosscheckResult extends ValidationSource {
   trace: string;
 }
 
+export interface KnownWorkResult extends ValidationSource {
+  plan: SamplePlan;
+  cpuCount: number;
+  reportedThermalState: number;
+  appBoundaries: InAppBoundary[];
+  sampledEpochs: SampledEpoch[];
+  instructionsPerUnit: number;
+  tolerance: number;
+  thermalState: number;
+  epochs: KnownWorkEpoch[];
+  gates: KnownWorkGate[];
+}
+
 export interface ObserverCostResult extends ValidationSource {
   blocks: number;
   noiseLimitsFile: string | null;
@@ -115,11 +143,13 @@ export interface StoredSource<R> {
   result: R;
 }
 
-export const VALIDATION_SOURCE_FORMAT_VERSION = 4;
+export const VALIDATION_SOURCE_FORMAT_VERSION = 5;
 
 export const CROSSCHECK_RESULT_FILE = 'crosscheck.json';
 
 export const OBSERVER_COST_RESULT_FILE = 'observer-cost.json';
+
+export const KNOWN_WORK_RESULT_FILE = 'known-work.json';
 
 const NUMBER_OR_NULL = nullable(aNumber);
 
@@ -248,6 +278,7 @@ const OBSERVER_COST_SHAPE: Check = shape({
     shape({
       block: anInteger,
       collector: oneOf(['full', 'endpoints']),
+      processInstructionRate: aNumber,
       uiThreadCpu: aNumber,
       jsThreadCpu: aNumber,
       otherThreadsCpu: aNumber,
@@ -271,6 +302,50 @@ const OBSERVER_COST_SHAPE: Check = shape({
   ),
 });
 
+const KNOWN_WORK_SHAPE: Check = shape({
+  ...SOURCE,
+  plan: shape({
+    epochs: listOf(shape(PLANNED_EPOCH)),
+    start: oneOf(['ready', 'notification']),
+  }),
+  cpuCount: aPositiveNumber,
+  reportedThermalState: anInteger,
+  appBoundaries: listOf(IN_APP_BOUNDARY),
+  sampledEpochs: listOf(
+    shape({
+      ...PLANNED_EPOCH,
+      work: shape({ own: anInteger, other: anInteger }),
+    })
+  ),
+  instructionsPerUnit: anInteger,
+  tolerance: aNumber,
+  thermalState: anInteger,
+  epochs: listOf(
+    shape({
+      index: anInteger,
+      load: aString,
+      plannedUnits: anInteger,
+      units: anInteger,
+      otherUnits: anInteger,
+      seconds: aNumber,
+      instructions: anInteger,
+      loadInstructions: NUMBER_OR_NULL,
+      processInstructionRate: aNumber,
+      processClockRate: NUMBER_OR_NULL,
+      performanceCoreShare: NUMBER_OR_NULL,
+    })
+  ),
+  gates: listOf(
+    shape({
+      name: aString,
+      measured: NUMBER_OR_NULL,
+      expected: aNumber,
+      tolerance: aNumber,
+      passes: aBoolean,
+    })
+  ),
+});
+
 const CROSSCHECK_RESULT = completeResult(
   CROSSCHECK_SHAPE,
   crosscheckGaps,
@@ -281,6 +356,12 @@ const OBSERVER_COST_RESULT = completeResult(
   OBSERVER_COST_SHAPE,
   observerCostGaps,
   observerCostConflicts
+);
+
+const KNOWN_WORK_RESULT = completeResult(
+  KNOWN_WORK_SHAPE,
+  knownWorkGaps,
+  knownWorkConflicts
 );
 
 const EARLIER_VALUE = shape({
@@ -323,6 +404,8 @@ export const STORED_EARLIER_CROSSCHECK = storedSource(EARLIER_CROSSCHECK);
 
 export const STORED_OBSERVER_COST = storedSource(OBSERVER_COST_RESULT);
 
+export const STORED_KNOWN_WORK = storedSource(KNOWN_WORK_RESULT);
+
 export function writeCrosscheckResult(
   folder: string,
   result: CrosscheckResult
@@ -337,6 +420,10 @@ export function writeObserverCostResult(
   writeJson(path.join(folder, OBSERVER_COST_RESULT_FILE), result);
 }
 
+export function writeKnownWorkResult(folder: string, result: KnownWorkResult) {
+  writeJson(path.join(folder, KNOWN_WORK_RESULT_FILE), result);
+}
+
 export function readCrosscheckResult(
   folder: string
 ): StoredSource<CrosscheckResult> {
@@ -347,6 +434,12 @@ export function readObserverCostResult(
   folder: string
 ): StoredSource<ObserverCostResult> {
   return readSource(folder, OBSERVER_COST_RESULT_FILE, OBSERVER_COST_RESULT);
+}
+
+export function readKnownWorkResult(
+  folder: string
+): StoredSource<KnownWorkResult> {
+  return readSource(folder, KNOWN_WORK_RESULT_FILE, KNOWN_WORK_RESULT);
 }
 
 export function readEarlierCrosscheck(
@@ -398,6 +491,15 @@ export function derivedObserverCosts(
       )
     );
   return observerCosts(result.samples, noiseLimits);
+}
+
+export function derivedKnownWork(result: KnownWorkResult): KnownWorkDerivation {
+  return deriveKnownWork({
+    cpuCount: result.cpuCount,
+    reportedThermalState: result.reportedThermalState,
+    appBoundaries: result.appBoundaries,
+    epochs: result.sampledEpochs,
+  });
 }
 
 export function completeBlocks(samples: readonly CollectorSample[]): number {
@@ -655,6 +757,57 @@ function observerCostConflicts(result: ObserverCostResult): string[] {
           `the stored cost of ${cost.metric} does not follow from the samples and its noise limit`,
         ]
   );
+}
+
+function knownWorkGaps(result: KnownWorkResult): string[] {
+  const problems: string[] = [];
+  if (!isDeepStrictEqual(result.plan, KNOWN_WORK_PLAN)) {
+    problems.push('its plan is not the known-work plan of this driver');
+  }
+  const planned = result.plan.epochs;
+  const sameEpochs =
+    result.sampledEpochs.length === planned.length &&
+    result.sampledEpochs.every(
+      (epoch, i) =>
+        epoch.load === planned[i].load &&
+        epoch.collector === planned[i].collector &&
+        epoch.seconds === planned[i].seconds
+    );
+  if (!sameEpochs) {
+    problems.push('its sampled epochs are not its planned epochs');
+  }
+  if (result.appBoundaries.length !== planned.length + 1) {
+    problems.push(
+      `it has ${result.appBoundaries.length} app boundaries for ${planned.length + 1} boundaries`
+    );
+  }
+  return problems;
+}
+
+function knownWorkConflicts(result: KnownWorkResult): string[] {
+  const problems: string[] = [...readOrderProblems(result.appBoundaries)];
+  if (
+    result.instructionsPerUnit !== KNOWN_WORK_INSTRUCTIONS_PER_UNIT ||
+    result.tolerance !== KNOWN_WORK_TOLERANCE
+  ) {
+    problems.push(
+      'its instruction count for each unit or its tolerance is not the value of this driver'
+    );
+  }
+  let derived: KnownWorkDerivation;
+  try {
+    derived = derivedKnownWork(result);
+  } catch (error) {
+    return [...problems, (error as Error).message];
+  }
+  for (const key of ['thermalState', 'epochs', 'gates'] as const) {
+    if (!isDeepStrictEqual(derived[key], result[key])) {
+      problems.push(
+        `the stored field ${key} does not follow from its evidence`
+      );
+    }
+  }
+  return problems;
 }
 
 function writeJson(file: string, value: unknown) {

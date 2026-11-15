@@ -2,9 +2,7 @@ import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import type { ValidationRecordOptions } from './arguments.mts';
-import { WORK_LOADS } from './crosscheck.mts';
 import { ToolError } from './errors.mts';
-import type { Collector } from './in-app-sample.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { readJson } from './json-file.mts';
 import type { ComparedMetric } from './metrics.mts';
@@ -17,19 +15,22 @@ import { isScenario } from './scenarios.mts';
 import {
   STORED_CROSSCHECK,
   STORED_EARLIER_CROSSCHECK,
+  STORED_KNOWN_WORK,
   STORED_OBSERVER_COST,
   completeBlocks,
-  derivedCrosscheck,
+  derivedKnownWork,
   derivedObserverCosts,
   identityDifferences,
   identityOf,
   readCrosscheckResult,
   readEarlierCrosscheck,
+  readKnownWorkResult,
   readObserverCostResult,
 } from './validation-sources.mts';
 import type {
   CrosscheckResult,
   EarlierCrosscheck,
+  KnownWorkResult,
   ObserverCostResult,
   StoredSource,
   ValidationIdentity,
@@ -57,18 +58,10 @@ export interface MetricValidation {
   gates: GateResult[];
 }
 
-interface CrosscheckSummary {
+interface KnownWorkSummary {
   folder: string;
-  trace: string;
-  scenario: string;
   thermalState: number;
-  loadsRan: boolean;
-  epochs: {
-    load: string;
-    collector: Collector;
-    uiThreadCpu: boolean;
-    jsThreadCpu: boolean;
-  }[];
+  gates: { name: string; passes: boolean }[];
 }
 
 interface ObserverCostSummary {
@@ -79,12 +72,13 @@ interface ObserverCostSummary {
 }
 
 export interface ValidationSources {
-  crosschecks: StoredSource<CrosscheckResult>[];
+  knownWorks: StoredSource<KnownWorkResult>[];
   observerCosts: StoredSource<ObserverCostResult>[];
+  crosschecks: StoredSource<CrosscheckResult>[];
 }
 
 interface SourceSummaries {
-  crosschecks: CrosscheckSummary[];
+  knownWorks: KnownWorkSummary[];
   observerCosts: ObserverCostSummary[];
 }
 
@@ -100,15 +94,11 @@ export interface MetricValidity {
   reason: string | null;
 }
 
-export const VALIDATION_FORMAT_VERSION = 4;
+export const VALIDATION_FORMAT_VERSION = 5;
 
-const MINIMUM_CROSSCHECKS = 2;
-
-const LOAD_SCENARIO = 'crosscheck-load';
+const INSTRUCTION_METRIC: ComparedMetric = 'processInstructionRate';
 
 const IDLE_SCENARIO = 'idle-cost';
-
-const CROSSCHECK_LOADS = ['idle', ...WORK_LOADS];
 
 const OUTCOME = oneOf(['passed', 'failed', 'not validated']);
 
@@ -119,8 +109,9 @@ const RECORD_SHAPE: Check = shape({
   measurementRevision: anInteger,
   appBuild: aString,
   sources: shape({
-    crosschecks: listOf(STORED_CROSSCHECK),
+    knownWorks: listOf(STORED_KNOWN_WORK),
     observerCosts: listOf(STORED_OBSERVER_COST),
+    crosschecks: listOf(STORED_CROSSCHECK),
   }),
   earlierCrosschecks: listOf(STORED_EARLIER_CROSSCHECK),
   metrics: valuesOf(
@@ -146,23 +137,21 @@ export const VALIDATION_RECORD: Check = (value, label, problems) => {
   }
 };
 
-const CROSSCHECK_CPU_FIELDS: Partial<
-  Record<ComparedMetric, 'uiThreadCpu' | 'jsThreadCpu'>
-> = {
-  uiThreadCpu: 'uiThreadCpu',
-  jsThreadCpu: 'jsThreadCpu',
-};
-
 export function validationRecordCommand(
   options: ValidationRecordOptions
 ): number {
   const record = buildValidationRecord(
-    options.crosschecks.map((folder) =>
-      readCrosscheckResult(path.resolve(folder))
-    ),
-    options.observerCosts.map((folder) =>
-      readObserverCostResult(path.resolve(folder))
-    ),
+    {
+      knownWorks: options.knownWorks.map((folder) =>
+        readKnownWorkResult(path.resolve(folder))
+      ),
+      observerCosts: options.observerCosts.map((folder) =>
+        readObserverCostResult(path.resolve(folder))
+      ),
+      crosschecks: options.crosschecks.map((folder) =>
+        readCrosscheckResult(path.resolve(folder))
+      ),
+    },
     options.earlierCrosschecks.map((folder) =>
       readEarlierCrosscheck(path.resolve(folder))
     )
@@ -172,15 +161,10 @@ export function validationRecordCommand(
 }
 
 export function buildValidationRecord(
-  crosschecks: readonly StoredSource<CrosscheckResult>[],
-  observerCosts: readonly StoredSource<ObserverCostResult>[],
+  sources: ValidationSources,
   earlierCrosschecks: readonly StoredSource<EarlierCrosscheck>[] = []
 ): ValidationRecord {
-  const identity = commonIdentity([...crosschecks, ...observerCosts]);
-  const sources: ValidationSources = {
-    crosschecks: [...crosschecks],
-    observerCosts: [...observerCosts],
-  };
+  const identity = commonIdentity(allSources(sources));
   throwProblems(
     'The validation record cannot be made',
     repeatedSources(sources)
@@ -278,13 +262,21 @@ function recordProblems(record: ValidationRecord): string[] {
   ];
 }
 
-function repeatedSources({
-  crosschecks,
-  observerCosts,
-}: ValidationSources): string[] {
+function allSources(
+  sources: ValidationSources
+): StoredSource<ValidationIdentity>[] {
+  return [
+    ...sources.knownWorks,
+    ...sources.observerCosts,
+    ...sources.crosschecks,
+  ];
+}
+
+function repeatedSources(sources: ValidationSources): string[] {
   const repeated = (values: readonly string[]) =>
     values.filter((value, i) => values.indexOf(value) !== i);
-  const all = [...crosschecks, ...observerCosts];
+  const all = allSources(sources);
+  const { crosschecks } = sources;
   const duplicates = [
     ...repeated(all.map(({ folder }) => folder)),
     ...repeated(all.map(({ sha256 }) => sha256)),
@@ -298,7 +290,7 @@ function repeatedSources({
 }
 
 function sourcesOfOtherSetups(record: ValidationRecord): string[] {
-  return [...record.sources.crosschecks, ...record.sources.observerCosts]
+  return allSources(record.sources)
     .map(({ folder, result }) => ({
       folder,
       differences: identityDifferences(identityOf(record), identityOf(result)),
@@ -352,8 +344,8 @@ function metricValidation(
 ): MetricValidation {
   const gates = [
     ...coverageGates(summaries),
-    ...summaries.crosschecks.flatMap((summary) =>
-      crosscheckGates(metric, summary)
+    ...summaries.knownWorks.flatMap((summary) =>
+      knownWorkGates(metric, summary)
     ),
     ...summaries.observerCosts.map((summary) =>
       observerCostGate(metric, summary)
@@ -368,28 +360,20 @@ function metricValidation(
 
 function summariesOf(sources: ValidationSources): SourceSummaries {
   return {
-    crosschecks: sources.crosschecks.map(crosscheckSummary),
+    knownWorks: sources.knownWorks.map(knownWorkSummary),
     observerCosts: sources.observerCosts.map(observerCostSummary),
   };
 }
 
-function crosscheckSummary({
+function knownWorkSummary({
   folder,
   result,
-}: StoredSource<CrosscheckResult>): CrosscheckSummary {
-  const { thermalState, epochs, verdict } = derivedCrosscheck(result);
+}: StoredSource<KnownWorkResult>): KnownWorkSummary {
+  const { thermalState, gates } = derivedKnownWork(result);
   return {
     folder,
-    trace: path.resolve(result.trace),
-    scenario: result.scenario,
     thermalState,
-    loadsRan: verdict.loadsRan,
-    epochs: epochs.map((epoch) => ({
-      load: epoch.load,
-      collector: epoch.collector,
-      uiThreadCpu: epoch.uiThreadCpu.passes,
-      jsThreadCpu: epoch.jsThreadCpu.passes,
-    })),
+    gates: gates.map(({ name, passes }) => ({ name, passes })),
   };
 }
 
@@ -408,7 +392,7 @@ function observerCostSummary({
 }
 
 function coverageGates({
-  crosschecks,
+  knownWorks,
   observerCosts,
 }: SourceSummaries): GateResult[] {
   const gate = (name: string, covered: boolean): GateResult => ({
@@ -417,18 +401,7 @@ function coverageGates({
     outcome: covered ? 'passed' : 'not validated',
   });
   return [
-    gate(
-      `at least ${MINIMUM_CROSSCHECKS} cross-check recordings (here ${crosschecks.length})`,
-      crosschecks.length >= MINIMUM_CROSSCHECKS
-    ),
-    gate(
-      'a cross-check of a benchmark scenario with `full` and `endpoints` epochs of one load',
-      crosschecks.some(isSteadyCrosscheck)
-    ),
-    gate(
-      `a cross-check of \`${LOAD_SCENARIO}\` with the loads ${CROSSCHECK_LOADS.join(', ')}`,
-      crosschecks.some(isLoadsCrosscheck)
-    ),
+    gate('a known-work test', knownWorks.length > 0),
     gate(
       `an observer-cost test of \`${IDLE_SCENARIO}\``,
       observerCosts.some(({ scenario }) => scenario === IDLE_SCENARIO)
@@ -442,55 +415,25 @@ function coverageGates({
   ];
 }
 
-function isSteadyCrosscheck({ scenario, epochs }: CrosscheckSummary): boolean {
-  const collectors = new Set(epochs.map(({ collector }) => collector));
-  return (
-    isScenario(scenario) &&
-    new Set(epochs.map(({ load }) => load)).size === 1 &&
-    collectors.has('full') &&
-    collectors.has('endpoints')
-  );
-}
-
-function isLoadsCrosscheck({ scenario, epochs }: CrosscheckSummary): boolean {
-  const loads = new Set(epochs.map(({ load }) => load));
-  return (
-    scenario === LOAD_SCENARIO &&
-    CROSSCHECK_LOADS.every((load) => loads.has(load))
-  );
-}
-
-function crosscheckGates(
+function knownWorkGates(
   metric: ComparedMetric,
-  source: CrosscheckSummary
+  source: KnownWorkSummary
 ): GateResult[] {
   const gate = (name: string, outcome: ValidationOutcome) => ({
     source: source.folder,
-    gate: `${source.scenario}: ${name}`,
+    gate: `known-work: ${name}`,
     outcome,
   });
-  const common = [
-    gate(
-      `the result has ${source.epochs.length} epoch results`,
-      source.epochs.length > 0 ? 'passed' : 'not validated'
-    ),
+  if (metric !== INSTRUCTION_METRIC) {
+    return [gate(`no known-work test measures ${metric}`, 'not validated')];
+  }
+  return [
     gate(
       'the thermal state stayed Nominal',
       source.thermalState === 0 ? 'passed' : 'not validated'
     ),
-  ];
-  const field = CROSSCHECK_CPU_FIELDS[metric];
-  if (field === undefined) {
-    return [gate(`no cross-check measures ${metric}`, 'not validated')];
-  }
-  return [
-    ...common,
-    gate('the planned loads ran', source.loadsRan ? 'passed' : 'failed'),
-    ...source.epochs.map((epoch, index) =>
-      gate(
-        `epoch ${index} (${epoch.load}, ${epoch.collector}): ${metric} against \`thread-state\``,
-        epoch[field] ? 'passed' : 'failed'
-      )
+    ...source.gates.map(({ name, passes }) =>
+      gate(name, passes ? 'passed' : 'failed')
     ),
   ];
 }

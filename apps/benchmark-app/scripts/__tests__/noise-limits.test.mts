@@ -104,6 +104,10 @@ function outcome(
             uiUpdateDurationMedian: 5,
             uiUpdateDurationP95: 7,
             missedDisplayLinkCallbacks: 0,
+            processInstructionRate: 0.42,
+            mountBatchCount: 600,
+            processClockRate: 0.8,
+            processInstructionsPerCycle: 1.9,
             performanceCoreShare: 0.5,
             ...metricsOf(variant, i),
           },
@@ -410,15 +414,15 @@ describe('validateNoiseLimitsRecord', () => {
           platform: 'ios',
           limits: {
             nope: {},
-            css: { coldStart: 0.1, memory: 1, jsThreadCpu: -1 },
+            css: { coldStart: 0.1, uiThreadCpu: 1, processInstructionRate: -1 },
           },
         }),
       (error: Error) =>
         [
           'unknown scenario "nope"',
           '"coldStart" is not a verdict metric of the platform',
-          '"memory" is not a verdict metric of the platform',
-          'css.jsThreadCpu must be a number of 0 or more',
+          '"uiThreadCpu" is not a verdict metric of the platform',
+          'css.processInstructionRate must be a number of 0 or more',
         ].every((part) => error.message.includes(part))
     );
   });

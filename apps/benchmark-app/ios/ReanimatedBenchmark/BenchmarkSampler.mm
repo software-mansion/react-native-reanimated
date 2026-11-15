@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "EndpointReader.h"
+#import "KnownWorkLoad.h"
 #import "MountCounter.h"
 #import "UiStallLoad.h"
 #import "UpdateRecorder.h"
@@ -60,7 +61,7 @@ const double UiStallMilliseconds = 6;
 
 const CFStringRef StartNotification = CFSTR("com.reanimatedbenchmark.start-epochs");
 
-const int SampleFormat = 4;
+const int SampleFormat = 5;
 
 const double UpdateCapacityFactor = 2;
 
@@ -89,6 +90,7 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
   UpdateRecorder *_updateRecorder;
   MountCounter *_mountCounter;
   UiStallLoad *_uiStallLoad;
+  KnownWorkLoad *_knownWorkLoad;
   std::unique_ptr<EpochWork[]> _work;
   std::vector<Boundary> _boundaries;
   long _maxThermal;
@@ -138,6 +140,7 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
   }
   _work = std::make_unique<EpochWork[]>(_epochs.size());
   [self prepareUiStallLoad];
+  [self prepareKnownWorkLoad];
   _boundaries.reserve(_epochs.size() + 1);
 }
 
@@ -148,6 +151,17 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
       __weak BenchmarkSampler *weakSelf = self;
       _uiStallLoad = [[UiStallLoad alloc] initWithBusyMilliseconds:UiStallMilliseconds
                                                             onUnit:^{ [weakSelf noteWorkOfLoad:UiStallLoadName]; }];
+      return;
+    }
+  }
+}
+
+- (void)prepareKnownWorkLoad
+{
+  for (const Epoch &epoch : _epochs) {
+    if ([KnownWorkLoad isKnownWorkLoad:epoch.load]) {
+      __weak BenchmarkSampler *weakSelf = self;
+      _knownWorkLoad = [[KnownWorkLoad alloc] initWithOnUnit:^(NSString *load) { [weakSelf noteWorkOfLoad:load]; }];
       return;
     }
   }
@@ -236,13 +250,21 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
                   object:nil
                    queue:NSOperationQueue.mainQueue
               usingBlock:^(NSNotification *notification) { [weakSelf noteThermalState]; }];
+  Boundary warmUp{};
+  if (NSString *error = [self readBoundary:warmUp]) {
+    [self endWithError:error];
+    return;
+  }
   [self crossBoundary:0];
 }
 
 - (void)crossBoundary:(size_t)index
 {
   Boundary boundary{};
-  NSString *error = [self readBoundary:boundary] ?: _updateRecorder.error;
+  [_knownWorkLoad stopCounting];
+  NSString *readError = [self readBoundary:boundary];
+  [_knownWorkLoad finish];
+  NSString *error = readError ?: _updateRecorder.error ?: _knownWorkLoad.error;
   if (error != nil) {
     [self endWithError:error];
     return;
@@ -324,12 +346,16 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
     [_uiStallLoad stop];
   }
   _currentEpoch = static_cast<int>(index);
+  if ([KnownWorkLoad isKnownWorkLoad:epoch.load]) {
+    [_knownWorkLoad startLoad:epoch.load];
+  }
 }
 
 - (void)endWithError:(nullable NSString *)error
 {
   [_updateRecorder stop];
   [_uiStallLoad stop];
+  [_knownWorkLoad finish];
   [NSNotificationCenter.defaultCenter removeObserver:_thermalObserver];
   _currentEpoch = static_cast<int>(_epochs.size());
   [self reportWithError:error ?: _updateRecorder.error];
@@ -392,8 +418,10 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
       @"processCpuUs" : @(boundary.cpu.process.value.cpuUs),
       @"processPerformanceCpuUs" : @(boundary.cpu.process.value.performanceCpuUs),
       @"processClusterSwitches" : @(boundary.cpu.process.value.clusterSwitches),
-      @"processInstructions" : @(boundary.cpu.process.value.instructions),
-      @"processCycles" : @(boundary.cpu.process.value.cycles),
+      @"instructionReadStartNs" : @([self sinceOrigin:boundary.cpu.instructions.startNs]),
+      @"instructionReadEndNs" : @([self sinceOrigin:boundary.cpu.instructions.endNs]),
+      @"processInstructions" : @(boundary.cpu.instructions.value.instructions),
+      @"processCycles" : @(boundary.cpu.instructions.value.cycles),
       @"footprintReadStartNs" : @([self sinceOrigin:boundary.footprintReadStartNs]),
       @"footprintReadEndNs" : @([self sinceOrigin:boundary.footprintReadEndNs]),
       @"footprintKb" : @(boundary.footprintKb),

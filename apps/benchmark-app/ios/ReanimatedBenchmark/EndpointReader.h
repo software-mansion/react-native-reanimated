@@ -13,10 +13,13 @@ struct ThreadHandle {
   uint64_t id;
 };
 
-struct ProcessCounters {
+struct ProcessTimes {
   uint64_t cpuUs;
   uint64_t performanceCpuUs;
   uint64_t clusterSwitches;
+};
+
+struct InstructionCounts {
   uint64_t instructions;
   uint64_t cycles;
 };
@@ -31,7 +34,8 @@ struct CounterRead {
 struct CpuReading {
   CounterRead<uint64_t> uiThread;
   CounterRead<uint64_t> jsThread;
-  CounterRead<ProcessCounters> process;
+  CounterRead<ProcessTimes> process;
+  CounterRead<InstructionCounts> instructions;
 };
 
 uint64_t monotonicNs();

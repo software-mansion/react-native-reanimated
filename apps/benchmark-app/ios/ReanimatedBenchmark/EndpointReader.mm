@@ -15,11 +15,9 @@ std::optional<std::string> bracketed(CounterRead<Value> &counter, Read read);
 
 std::optional<std::string> readThreadCpuUs(const ThreadHandle &thread, const char *role, uint64_t &cpuUs);
 
-std::optional<std::string> readProcessCounters(ProcessCounters &counters);
+std::optional<std::string> readProcessTimes(ProcessTimes &times);
 
-std::optional<std::string> readProcessTimes(ProcessCounters &counters);
-
-std::optional<std::string> readProcessInstructionCounts(ProcessCounters &counters);
+std::optional<std::string> readInstructionCounts(InstructionCounts &counts);
 
 const mach_timebase_info_data_t &timebase();
 
@@ -75,7 +73,10 @@ std::optional<std::string> CpuReader::read(CpuReading &reading) const
           reading.jsThread, [this](uint64_t &value) { return readThreadCpuUs(jsThread_, "JS thread", value); })) {
     return error;
   }
-  return bracketed(reading.process, readProcessCounters);
+  if (auto error = bracketed(reading.process, readProcessTimes)) {
+    return error;
+  }
+  return bracketed(reading.instructions, readInstructionCounts);
 }
 
 namespace {
@@ -118,15 +119,7 @@ std::optional<std::string> readThreadCpuUs(const ThreadHandle &thread, const cha
   return std::nullopt;
 }
 
-std::optional<std::string> readProcessCounters(ProcessCounters &counters)
-{
-  if (auto error = readProcessTimes(counters)) {
-    return error;
-  }
-  return readProcessInstructionCounts(counters);
-}
-
-std::optional<std::string> readProcessTimes(ProcessCounters &counters)
+std::optional<std::string> readProcessTimes(ProcessTimes &times)
 {
   task_power_info_v2_data_t info;
   mach_msg_type_number_t count = TASK_POWER_INFO_V2_COUNT;
@@ -134,23 +127,23 @@ std::optional<std::string> readProcessTimes(ProcessCounters &counters)
   if (result != KERN_SUCCESS) {
     return failure("task_info(TASK_POWER_INFO_V2)", "process", result);
   }
-  counters.cpuUs = ticksToUs(info.cpu_energy.total_user + info.cpu_energy.total_system);
-  counters.performanceCpuUs = ticksToUs(info.task_ptime);
-  counters.clusterSwitches = info.task_pset_switches;
+  times.cpuUs = ticksToUs(info.cpu_energy.total_user + info.cpu_energy.total_system);
+  times.performanceCpuUs = ticksToUs(info.task_ptime);
+  times.clusterSwitches = info.task_pset_switches;
   return std::nullopt;
 }
 
-std::optional<std::string> readProcessInstructionCounts(ProcessCounters &counters)
+std::optional<std::string> readInstructionCounts(InstructionCounts &counts)
 {
-  task_inspect_basic_counts_data_t counts;
+  task_inspect_basic_counts_data_t basic;
   mach_msg_type_number_t count = TASK_INSPECT_BASIC_COUNTS_COUNT;
   kern_return_t result =
-      task_inspect(mach_task_self(), TASK_INSPECT_BASIC_COUNTS, reinterpret_cast<task_inspect_info_t>(&counts), &count);
+      task_inspect(mach_task_self(), TASK_INSPECT_BASIC_COUNTS, reinterpret_cast<task_inspect_info_t>(&basic), &count);
   if (result != KERN_SUCCESS) {
     return failure("task_inspect(TASK_INSPECT_BASIC_COUNTS)", "process", result);
   }
-  counters.instructions = counts.instructions;
-  counters.cycles = counts.cycles;
+  counts.instructions = basic.instructions;
+  counts.cycles = basic.cycles;
   return std::nullopt;
 }
 

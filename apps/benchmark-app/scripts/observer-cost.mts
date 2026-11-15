@@ -9,6 +9,7 @@ export type ValidationOutcome = 'passed' | 'failed' | 'not validated';
 export interface CollectorSample extends EpochCpu {
   block: number;
   collector: Collector;
+  processInstructionRate: number;
   memory: number;
   windowSeconds: number;
 }
@@ -31,6 +32,7 @@ interface Block {
 }
 
 export const OBSERVER_COST_METRICS = [
+  'processInstructionRate',
   'uiThreadCpu',
   'jsThreadCpu',
   'processCpu',

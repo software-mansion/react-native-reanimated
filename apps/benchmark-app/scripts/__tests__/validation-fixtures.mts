@@ -14,7 +14,18 @@ import type {
   EpochEvidence,
   FootprintComparison,
 } from '../crosscheck.mts';
-import type { Collector, InAppBoundary } from '../in-app-sample.mts';
+import type {
+  Collector,
+  InAppBoundary,
+  SampledEpoch,
+} from '../in-app-sample.mts';
+import {
+  KNOWN_WORK_INSTRUCTIONS_PER_UNIT,
+  KNOWN_WORK_PLAN,
+  KNOWN_WORK_TOLERANCE,
+  KNOWN_WORK_UNITS,
+  deriveKnownWork,
+} from '../known-work.mts';
 import {
   BLOCK_ORDER,
   OBSERVER_COST_METRICS,
@@ -26,12 +37,15 @@ import type { ValidationRecord } from '../validation-record.mts';
 import {
   VALIDATION_SOURCE_FORMAT_VERSION,
   readCrosscheckResult,
+  readKnownWorkResult,
   readObserverCostResult,
   writeCrosscheckResult,
+  writeKnownWorkResult,
   writeObserverCostResult,
 } from '../validation-sources.mts';
 import type {
   CrosscheckResult,
+  KnownWorkResult,
   ObserverCostResult,
   ValidationIdentity,
 } from '../validation-sources.mts';
@@ -66,6 +80,15 @@ const MOUNTS_PER_EPOCH = 150;
 
 const ZERO_CLOCK = { offsetNs: 0, uncertaintyNs: 0, spreadNs: 0 };
 
+const IDLE_INSTRUCTIONS_PER_SECOND = 50_000_000;
+
+const KNOWN_WORK_UNITS_OF: Record<string, number> = {
+  'known-work': KNOWN_WORK_UNITS,
+  'known-work-double': 2 * KNOWN_WORK_UNITS,
+  'known-work-background': KNOWN_WORK_UNITS,
+  'known-work-ended': KNOWN_WORK_UNITS,
+};
+
 export function crosscheckEpochs(
   plan: Plan,
   traceUiThreadCpu = 350
@@ -93,6 +116,8 @@ export function appBoundaries(count: number): InAppBoundary[] {
       processReadStartNs: at(300),
       processReadEndNs: at(350),
       processCpuUs: 2_000_000 + boundary * 882_500,
+      instructionReadStartNs: at(400),
+      instructionReadEndNs: at(450),
       footprintReadStartNs: at(500),
       footprintReadEndNs: at(600),
       signpostStartNs: at(700),
@@ -153,6 +178,58 @@ function epochEvidence(
     uiUpdateDurationMedian: null,
     uiUpdateDurationP95: null,
   };
+}
+
+export function knownWorkEpochs(): SampledEpoch[] {
+  return KNOWN_WORK_PLAN.epochs.map((epoch) => ({
+    ...epoch,
+    work: { own: KNOWN_WORK_UNITS_OF[epoch.load] ?? 0, other: 0 },
+  }));
+}
+
+export function knownWorkBoundaries(
+  extraInstructions: (load: string) => number = () => 0
+): InAppBoundary[] {
+  const starts = [0];
+  for (const epoch of KNOWN_WORK_PLAN.epochs) {
+    starts.push((starts.at(-1) ?? 0) + epoch.seconds * 1e9);
+  }
+  let instructions = 10_000_000_000;
+  return starts.map((startNs, boundary) => {
+    const previous = KNOWN_WORK_PLAN.epochs[boundary - 1];
+    if (previous) {
+      instructions +=
+        IDLE_INSTRUCTIONS_PER_SECOND * previous.seconds +
+        (KNOWN_WORK_UNITS_OF[previous.load] ?? 0) *
+          KNOWN_WORK_INSTRUCTIONS_PER_UNIT +
+        extraInstructions(previous.load);
+    }
+    const at = (ns: number) => startNs + ns;
+    const seconds = startNs / 1e9;
+    return {
+      ...START_BOUNDARY,
+      uiReadStartNs: at(100),
+      uiReadEndNs: at(150),
+      uiThreadCpuUs: 1_000_000 + Math.round(seconds * 100_000),
+      jsReadStartNs: at(200),
+      jsReadEndNs: at(250),
+      jsThreadCpuUs: 500_000 + Math.round(seconds * 2_000),
+      processReadStartNs: at(300),
+      processReadEndNs: at(350),
+      processCpuUs: 2_000_000 + Math.round(seconds * 600_000),
+      processPerformanceCpuUs: 1_200_000,
+      instructionReadStartNs: at(400),
+      instructionReadEndNs: at(450),
+      processInstructions: instructions,
+      processCycles: 5_000_000_000 + Math.round(seconds * 1_000_000_000),
+      footprintReadStartNs: at(500),
+      footprintReadEndNs: at(600),
+      signpostStartNs: at(700),
+      signpostEndNs: at(700),
+      mounts: 10,
+      updates: 0,
+    };
+  });
 }
 
 function footprintRows(
@@ -225,6 +302,35 @@ export function validationSources(
     return folder;
   };
 
+  const writeKnownWork = (
+    name: string,
+    extraInstructions?: (load: string) => number,
+    change: Partial<KnownWorkResult> = {}
+  ): string => {
+    const folder = path.join(directory, name);
+    fs.mkdirSync(folder, { recursive: true });
+    const evidence = {
+      cpuCount: CPU_COUNT,
+      reportedThermalState: change.reportedThermalState ?? 0,
+      appBoundaries: knownWorkBoundaries(extraInstructions),
+      epochs: knownWorkEpochs(),
+    };
+    writeKnownWorkResult(folder, {
+      ...source,
+      scenario: 'crosscheck-load',
+      plan: KNOWN_WORK_PLAN,
+      cpuCount: evidence.cpuCount,
+      reportedThermalState: evidence.reportedThermalState,
+      appBoundaries: evidence.appBoundaries,
+      sampledEpochs: evidence.epochs,
+      instructionsPerUnit: KNOWN_WORK_INSTRUCTIONS_PER_UNIT,
+      tolerance: KNOWN_WORK_TOLERANCE,
+      ...deriveKnownWork(evidence),
+      ...change,
+    });
+    return folder;
+  };
+
   const writeObserverCost = (
     name: string,
     scenario: string,
@@ -245,6 +351,11 @@ export function validationSources(
         BLOCK_ORDER.map((collector) => ({
           block,
           collector,
+          processInstructionRate: value(
+            'processInstructionRate',
+            0.42,
+            collector
+          ),
           uiThreadCpu: value('uiThreadCpu', 100, collector),
           jsThreadCpu: value('jsThreadCpu', 2, collector),
           otherThreadsCpu: 1,
@@ -271,19 +382,18 @@ export function validationSources(
   };
 
   const record = (
-    crosschecks: string[] = [
-      writeCrosscheck('steady', STEADY_PLAN),
-      writeCrosscheck('loads', LOADS_PLAN),
-    ],
+    knownWorks: string[] = [writeKnownWork('known-work')],
     observerCosts: string[] = [
       writeObserverCost('idle', 'idle-cost'),
       writeObserverCost('loaded', 'worklet-styles-transform'),
-    ]
+    ],
+    crosschecks: string[] = []
   ): ValidationRecord =>
-    buildValidationRecord(
-      crosschecks.map(readCrosscheckResult),
-      observerCosts.map(readObserverCostResult)
-    );
+    buildValidationRecord({
+      knownWorks: knownWorks.map(readKnownWorkResult),
+      observerCosts: observerCosts.map(readObserverCostResult),
+      crosschecks: crosschecks.map(readCrosscheckResult),
+    });
 
-  return { writeCrosscheck, writeObserverCost, record };
+  return { writeCrosscheck, writeKnownWork, writeObserverCost, record };
 }

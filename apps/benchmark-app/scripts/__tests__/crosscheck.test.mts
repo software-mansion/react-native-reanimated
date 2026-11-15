@@ -181,7 +181,7 @@ describe('traceSpans', () => {
         counters: {
           uiThread: { startNs: 3_500, endNs: 10_000_003_500 },
           jsThread: { startNs: 8_500, endNs: 10_000_008_500 },
-          process: { startNs: 16_000, endNs: 10_000_016_000 },
+          process: { startNs: 13_500, endNs: 10_000_013_500 },
         },
       },
     ]);
