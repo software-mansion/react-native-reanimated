@@ -70,6 +70,8 @@ NSString *parseEpochs(NSString *text, std::vector<Epoch> &epochs);
 
 void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, const void *, CFDictionaryRef);
 
+NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
+
 } // namespace
 
 @implementation BenchmarkSampler {
@@ -424,6 +426,28 @@ void startNotified(CFNotificationCenterRef, void *observer, CFNotificationName, 
 
 namespace {
 
+NSString *parseEpochs(NSString *text, std::vector<Epoch> &epochs)
+{
+  for (NSString *item in [text componentsSeparatedByString:@","]) {
+    if (NSString *error = parseEpoch(item, epochs)) {
+      return error;
+    }
+  }
+  return nil;
+}
+
+void startNotified(
+    CFNotificationCenterRef center,
+    void *observer,
+    CFNotificationName name,
+    const void *,
+    CFDictionaryRef)
+{
+  CFNotificationCenterRemoveObserver(center, observer, name, nullptr);
+  BenchmarkSampler *sampler = (__bridge BenchmarkSampler *)observer;
+  dispatch_async(dispatch_get_main_queue(), ^{ [sampler beginPlan]; });
+}
+
 NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs)
 {
   NSArray<NSString *> *parts = [text componentsSeparatedByString:@":"];
@@ -446,28 +470,6 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs)
   }
   epochs.push_back({parts[0], collector, seconds});
   return nil;
-}
-
-NSString *parseEpochs(NSString *text, std::vector<Epoch> &epochs)
-{
-  for (NSString *item in [text componentsSeparatedByString:@","]) {
-    if (NSString *error = parseEpoch(item, epochs)) {
-      return error;
-    }
-  }
-  return nil;
-}
-
-void startNotified(
-    CFNotificationCenterRef center,
-    void *observer,
-    CFNotificationName name,
-    const void *,
-    CFDictionaryRef)
-{
-  CFNotificationCenterRemoveObserver(center, observer, name, nullptr);
-  BenchmarkSampler *sampler = (__bridge BenchmarkSampler *)observer;
-  dispatch_async(dispatch_get_main_queue(), ^{ [sampler beginPlan]; });
 }
 
 } // namespace
