@@ -392,6 +392,8 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
       @"processCpuUs" : @(boundary.cpu.process.value.cpuUs),
       @"processPerformanceCpuUs" : @(boundary.cpu.process.value.performanceCpuUs),
       @"processClusterSwitches" : @(boundary.cpu.process.value.clusterSwitches),
+      @"processInstructions" : @(boundary.cpu.process.value.instructions),
+      @"processCycles" : @(boundary.cpu.process.value.cycles),
       @"footprintReadStartNs" : @([self sinceOrigin:boundary.footprintReadStartNs]),
       @"footprintReadEndNs" : @([self sinceOrigin:boundary.footprintReadEndNs]),
       @"footprintKb" : @(boundary.footprintKb),

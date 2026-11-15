@@ -32,6 +32,9 @@ const CPU_LIMIT =
 const PROCESS_COUNTER_LIMIT =
   'It includes the threads that ended in the window. The kernel adds the CPU time of a thread to its thread counter and to the process counter at the same events: a context switch, and a kernel entry or exit when the kernel counts user and system time apart. A thread that is on a core at a read is counted to its last such event.';
 
+const INSTRUCTION_COUNT_LIMIT =
+  'XNU sums the instructions and the cycles of the task counters for each core (`task_inspect` in `osfmk/kern/task.c`), so they include the threads that ended in the window. Without CPU counters in the kernel (`CONFIG_PERVASIVE_CPI`), `task_inspect` fails, and the sampler stops with an error. Stored only.';
+
 const UPDATE_LIMIT =
   'It does not include the event handling before the display link callbacks, a manual commit after the update, the render server, the GPU and the display. It is not the same quantity as the `hitches-updates` table of Instruments: the cross-check only compares the median and the 95th percentile with that table. No verdict.';
 
@@ -128,6 +131,30 @@ export const IOS_DEFINITION: PlatformDefinition = {
       interval: WINDOW,
       limits:
         'It includes the threads that ended in the window. It does not show how long a thread ran on each core type.',
+    },
+    {
+      names: ['processClockRate'],
+      unit: 'GHz',
+      source:
+        '`Δ cycles` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` divided by `Δ (total_user + total_system)` of `task_info(TASK_POWER_INFO_V2)`: the mean clock rate of the cores while the process ran. The app makes the two calls one after the other in the read bracket of the process counters.',
+      interval: WINDOW,
+      limits: `${INSTRUCTION_COUNT_LIMIT} The mean of all core types and of all threads of the process. \`null\` when the process has no CPU time in the window.`,
+    },
+    {
+      names: ['processInstructionsPerCycle'],
+      unit: 'instructions for each cycle',
+      source:
+        '`Δ instructions / Δ cycles` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)`',
+      interval: WINDOW,
+      limits: `${INSTRUCTION_COUNT_LIMIT} The mean of all core types and of all threads of the process. \`null\` when the process has no cycles in the window.`,
+    },
+    {
+      names: ['processInstructionRate'],
+      unit: '10^9 instructions for each s',
+      source:
+        '`Δ instructions` of `task_inspect(TASK_INSPECT_BASIC_COUNTS)` over the seconds between the midpoints of the two reads of the process counters on the monotonic clock',
+      interval: WINDOW,
+      limits: `${INSTRUCTION_COUNT_LIMIT} For the whole process. A thread that waits in a loop also adds instructions.`,
     },
     {
       names: ['mountBatchCount'],

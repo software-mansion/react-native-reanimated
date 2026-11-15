@@ -17,6 +17,10 @@ std::optional<std::string> readThreadCpuUs(const ThreadHandle &thread, const cha
 
 std::optional<std::string> readProcessCounters(ProcessCounters &counters);
 
+std::optional<std::string> readProcessTimes(ProcessCounters &counters);
+
+std::optional<std::string> readProcessInstructionCounts(ProcessCounters &counters);
+
 const mach_timebase_info_data_t &timebase();
 
 std::string failure(const char *call, const char *role, kern_return_t result);
@@ -116,6 +120,14 @@ std::optional<std::string> readThreadCpuUs(const ThreadHandle &thread, const cha
 
 std::optional<std::string> readProcessCounters(ProcessCounters &counters)
 {
+  if (auto error = readProcessTimes(counters)) {
+    return error;
+  }
+  return readProcessInstructionCounts(counters);
+}
+
+std::optional<std::string> readProcessTimes(ProcessCounters &counters)
+{
   task_power_info_v2_data_t info;
   mach_msg_type_number_t count = TASK_POWER_INFO_V2_COUNT;
   kern_return_t result = task_info(mach_task_self(), TASK_POWER_INFO_V2, reinterpret_cast<task_info_t>(&info), &count);
@@ -125,6 +137,20 @@ std::optional<std::string> readProcessCounters(ProcessCounters &counters)
   counters.cpuUs = ticksToUs(info.cpu_energy.total_user + info.cpu_energy.total_system);
   counters.performanceCpuUs = ticksToUs(info.task_ptime);
   counters.clusterSwitches = info.task_pset_switches;
+  return std::nullopt;
+}
+
+std::optional<std::string> readProcessInstructionCounts(ProcessCounters &counters)
+{
+  task_inspect_basic_counts_data_t counts;
+  mach_msg_type_number_t count = TASK_INSPECT_BASIC_COUNTS_COUNT;
+  kern_return_t result =
+      task_inspect(mach_task_self(), TASK_INSPECT_BASIC_COUNTS, reinterpret_cast<task_inspect_info_t>(&counts), &count);
+  if (result != KERN_SUCCESS) {
+    return failure("task_inspect(TASK_INSPECT_BASIC_COUNTS)", "process", result);
+  }
+  counters.instructions = counts.instructions;
+  counters.cycles = counts.cycles;
   return std::nullopt;
 }
 

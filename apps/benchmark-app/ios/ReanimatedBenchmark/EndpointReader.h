@@ -17,6 +17,8 @@ struct ProcessCounters {
   uint64_t cpuUs;
   uint64_t performanceCpuUs;
   uint64_t clusterSwitches;
+  uint64_t instructions;
+  uint64_t cycles;
 };
 
 template <typename Value>

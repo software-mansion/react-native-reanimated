@@ -48,6 +48,8 @@ export interface InAppBoundary {
   processCpuUs: number;
   processPerformanceCpuUs: number;
   processClusterSwitches: number;
+  processInstructions: number;
+  processCycles: number;
   footprintReadStartNs: number;
   footprintReadEndNs: number;
   footprintKb: number;
@@ -121,6 +123,9 @@ export interface EpochCounters {
   counterCores: Record<CpuCounter, number>;
   performanceCoreShare: number | null;
   clusterSwitches: number;
+  processClockRate: number | null;
+  processInstructionsPerCycle: number | null;
+  processInstructionRate: number;
   mountBatchCount: number;
 }
 
@@ -154,6 +159,10 @@ const NANOSECONDS_PER_SECOND = 1e9;
 const COUNTER_DELTA_ERROR_US = 2;
 
 const MAXIMUM_WINDOW_UNCERTAINTY = 0.001;
+
+const CYCLES_PER_US_PER_GHZ = 1e3;
+
+const INSTRUCTIONS_PER_GIGA = 1e9;
 
 const CADENCE_TOLERANCE = 0.25;
 
@@ -207,6 +216,8 @@ const COUNTERS = [
   'processCpuUs',
   'processPerformanceCpuUs',
   'processClusterSwitches',
+  'processInstructions',
+  'processCycles',
   'mounts',
   'updates',
 ] as const satisfies readonly (keyof InAppBoundary)[];
@@ -223,6 +234,8 @@ export const IN_APP_BOUNDARY: Check = shape({
   processCpuUs: anInteger,
   processPerformanceCpuUs: anInteger,
   processClusterSwitches: anInteger,
+  processInstructions: anInteger,
+  processCycles: anInteger,
   footprintReadStartNs: anInteger,
   footprintReadEndNs: anInteger,
   footprintKb: anInteger,
@@ -398,6 +411,7 @@ export function readEpochCounters(
     counterCores,
     performanceCoreShare: performanceCoreShare(start, end),
     clusterSwitches: end.processClusterSwitches - start.processClusterSwitches,
+    ...processInstructionCounts(start, end, counterSpans.process),
     mountBatchCount: end.mounts - start.mounts,
   };
 }
@@ -583,6 +597,25 @@ function performanceCoreShare(
   return processUs > 0
     ? (end.processPerformanceCpuUs - start.processPerformanceCpuUs) / processUs
     : null;
+}
+
+function processInstructionCounts(
+  start: InAppBoundary,
+  end: InAppBoundary,
+  span: TimeSpan
+): Pick<
+  EpochCounters,
+  'processClockRate' | 'processInstructionsPerCycle' | 'processInstructionRate'
+> {
+  const cpuUs = end.processCpuUs - start.processCpuUs;
+  const cycles = end.processCycles - start.processCycles;
+  const instructions = end.processInstructions - start.processInstructions;
+  return {
+    processClockRate: cpuUs > 0 ? cycles / cpuUs / CYCLES_PER_US_PER_GHZ : null,
+    processInstructionsPerCycle: cycles > 0 ? instructions / cycles : null,
+    processInstructionRate:
+      instructions / spanSeconds(span) / INSTRUCTIONS_PER_GIGA,
+  };
 }
 
 function epochUpdates(

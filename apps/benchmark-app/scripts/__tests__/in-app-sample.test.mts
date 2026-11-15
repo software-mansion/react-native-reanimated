@@ -103,6 +103,10 @@ describe('parseSampleLine', () => {
         reading.performanceCoreShare <= 1
     );
     assert.ok(reading.clusterSwitches >= 0);
+    assert.ok(
+      reading.processClockRate !== null && reading.processClockRate > 0
+    );
+    assert.ok(reading.processInstructionRate > 0);
     assert.deepEqual(sample.epochs[0].work, { own: 0, other: 0 });
   });
 
@@ -240,6 +244,29 @@ describe('readEpoch', () => {
     assert.equal(reading.clusterSwitches, 150);
   });
 
+  it('gives the clock rate, the instructions per cycle and the instruction rate of the process from the process counter reads', () => {
+    const reading = readEpoch(parsed(), 0, 60);
+    assertClose(reading.processClockRate, 5_295_000_000 / 3_530_000 / 1e3);
+    assertClose(reading.processInstructionsPerCycle, 2);
+    assertClose(reading.processInstructionRate, 10_590_000_000 / 10 / 1e9);
+  });
+
+  it('gives no clock rate without process CPU time and no instructions per cycle without cycles', () => {
+    const reading = readEpoch(
+      withEnd({
+        uiThreadCpuUs: START_BOUNDARY.uiThreadCpuUs,
+        jsThreadCpuUs: START_BOUNDARY.jsThreadCpuUs,
+        processCpuUs: START_BOUNDARY.processCpuUs,
+        processPerformanceCpuUs: START_BOUNDARY.processPerformanceCpuUs,
+        processCycles: START_BOUNDARY.processCycles,
+      }),
+      0,
+      60
+    );
+    assert.equal(reading.processClockRate, null);
+    assert.equal(reading.processInstructionsPerCycle, null);
+  });
+
   it('gives no performance-core share when the process has no CPU time in the window', () => {
     const reading = readEpoch(
       withEnd({
@@ -338,6 +365,14 @@ describe('readEpoch', () => {
     assert.throws(
       () => readEpoch(withEnd({ processClusterSwitches: 399 }), 0, 60),
       /Epoch 0: the counter processClusterSwitches goes down from 400 to 399/
+    );
+    assert.throws(
+      () => readEpoch(withEnd({ processInstructions: 9_999_999_999 }), 0, 60),
+      /Epoch 0: the counter processInstructions goes down from 10000000000 to 9999999999/
+    );
+    assert.throws(
+      () => readEpoch(withEnd({ processCycles: 4_999_999_999 }), 0, 60),
+      /Epoch 0: the counter processCycles goes down from 5000000000 to 4999999999/
     );
   });
 

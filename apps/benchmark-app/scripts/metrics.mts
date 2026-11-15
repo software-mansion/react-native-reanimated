@@ -53,6 +53,9 @@ export interface IosSampleMetrics extends CommonSampleMetrics {
   missedDisplayLinkCallbacks: number | null;
   performanceCoreShare: number | null;
   clusterSwitches: number;
+  processClockRate: number | null;
+  processInstructionsPerCycle: number | null;
+  processInstructionRate: number;
 }
 
 export type SampleMetrics = AndroidSampleMetrics | IosSampleMetrics;
