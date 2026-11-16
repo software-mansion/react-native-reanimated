@@ -1472,7 +1472,7 @@ void LayoutAnimationsProxy::ensureCarrierOverlay(
   {
     auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
     overlay.tag = sharedTransitionManager_->nextOverlayTag_;
-    sharedTransitionManager_->nextOverlayTag_ += 2;
+    sharedTransitionManager_->nextOverlayTag_ -= 10;
   }
   overlay.props =
       descriptor.cloneProps(propsParserContext, nullptr, RawProps(folly::dynamic::object("pointerEvents", "none")));
