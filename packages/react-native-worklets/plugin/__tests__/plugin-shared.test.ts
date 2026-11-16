@@ -499,8 +499,7 @@ describe.each([
       {
         name: 'progress animation and withCallback',
         input: html`<script>
-          new SharedTransition()
-            .duration(800)
+          SharedTransition.duration(800)
             .progressAnimation((values, progress) => ({ opacity: progress }))
             .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION)
             .withCallback((finished) => {});
