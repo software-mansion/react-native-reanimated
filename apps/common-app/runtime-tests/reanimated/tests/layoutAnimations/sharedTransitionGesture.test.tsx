@@ -306,6 +306,156 @@ describe('Back gesture to a screen with tabs', () => {
   });
 });
 
+// The screen below holds two pages that are both in the window, like a pager. The first page was on screen.
+function PagerScreens({
+  stage,
+  extraMounted = false,
+}: {
+  stage: 'below' | 'pushed' | 'popped';
+  extraMounted?: boolean;
+}) {
+  const targetScreen = useTestRef('pagerTargetScreen');
+  const sourceScreen = useTestRef('pagerSourceScreen');
+  const shownPage = useTestRef('pagerShownPage');
+  const otherPage = useTestRef('pagerOtherPage');
+  const source = useTestRef('pagerSource');
+  return (
+    <View style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        onAppear={() => notify('pager-target-appeared')}
+        enabled
+        activityState={2}
+        style={styles.screen}>
+        <View style={styles.pages}>
+          <View style={styles.page}>
+            <SharedTransitionBoundary isActive={stage !== 'pushed'}>
+              <Animated.View
+                ref={shownPage}
+                sharedTransitionTag="pager-photo"
+                sharedTransitionStyle={transition}
+                style={styles.target}
+              />
+              {extraMounted && <PagerExtra />}
+            </SharedTransitionBoundary>
+          </View>
+          <View style={styles.page}>
+            <SharedTransitionBoundary isActive={false}>
+              <Animated.View
+                ref={otherPage}
+                sharedTransitionTag="pager-photo"
+                sharedTransitionStyle={transition}
+                style={styles.hiddenTabTarget}
+              />
+            </SharedTransitionBoundary>
+          </View>
+        </View>
+      </Screen>
+      {stage !== 'popped' && (
+        <Screen
+          ref={sourceScreen}
+          onAppear={() => notify('pager-source-appeared')}
+          enabled
+          activityState={2}
+          style={styles.screen}>
+          <SharedTransitionBoundary isActive={stage === 'pushed'}>
+            <Animated.View
+              ref={source}
+              sharedTransitionTag="pager-photo"
+              sharedTransitionStyle={transition}
+              style={styles.source}
+            />
+          </SharedTransitionBoundary>
+        </Screen>
+      )}
+    </View>
+  );
+}
+
+function PagerExtra() {
+  const extra = useTestRef('pagerExtra');
+  return (
+    <Animated.View
+      ref={extra}
+      sharedTransitionTag="pager-extra"
+      sharedTransitionStyle={transition}
+      style={styles.child}
+    />
+  );
+}
+
+describe('Back gesture to a screen with two pages in the window', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('moves the view to the page that was on screen', async () => {
+    const tags = await pushOverPager();
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.5,
+      false,
+      false
+    );
+    await expectCarrier(tags.source, 105);
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      1,
+      false,
+      false
+    );
+    await render(<PagerScreens stage="popped" />);
+    await expectEventually(() => opacityOf('pagerShownPage')).toBe(1);
+  });
+
+  gestureTest(
+    'shows a view that the screen mounts during the gesture',
+    async () => {
+      const tags = await pushOverPager();
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await render(<PagerScreens stage="pushed" extraMounted />);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        1,
+        false,
+        false
+      );
+      await render(<PagerScreens stage="popped" extraMounted />);
+      await expectEventually(() => opacityOf('pagerExtra')).toBe(1);
+    }
+  );
+});
+
+async function pushOverPager() {
+  await mockAnimationTimer({ autoAdvance: false });
+  await render(<PagerScreens stage="below" />);
+  await waitForNotification('pager-source-appeared');
+  await waitForNotification('pager-target-appeared');
+  await render(<PagerScreens stage="pushed" />);
+  await waitForFrames(3);
+  await advanceAnimationTimer(30000);
+  await expectEventually(() => opacityOf('pagerShownPage')).toBe(0);
+  const tags = {
+    targetScreen: getTestComponent('pagerTargetScreen').getTag(),
+    source: getTestComponent('pagerSource').getTag(),
+  };
+  await observer().emitScreenTransitionProgress(
+    tags.targetScreen,
+    0,
+    false,
+    false
+  );
+  return tags;
+}
+
+async function opacityOf(name: string) {
+  return (await getTestComponent(name).getMountedViewProps())?.opacity;
+}
+
 describe('Deferred native progress callbacks', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
   gestureTest.each([
@@ -929,6 +1079,8 @@ const styles = StyleSheet.create({
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: { width: 150, height: 150, backgroundColor: '#2277dd' },
   hiddenTabTarget: { width: 240, height: 240, backgroundColor: '#22aa55' },
+  pages: { flexDirection: 'row' },
+  page: { width: 300 },
   child: { width: 20, height: 15, backgroundColor: '#ffffff' },
   nestedOuterSource: { width: 100, height: 100, backgroundColor: '#dd5522' },
   nestedOuterTarget: {

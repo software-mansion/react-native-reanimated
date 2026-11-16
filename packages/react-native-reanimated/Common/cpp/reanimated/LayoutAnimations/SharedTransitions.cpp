@@ -114,6 +114,32 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::s
   return result;
 }
 
+// A back gesture shows the boundary that was on top when the screen was covered, for example the page of a pager.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findRevealedBoundary(const std::shared_ptr<LightNode> &screen) const {
+  if (const auto it = coveredTopBoundaries_.find(screen->current.tag); it != coveredTopBoundaries_.end()) {
+    const auto boundary = it->second.lock();
+    if (isLightNodeMapped(boundary) && !boundary->isExiting() && isInSubtree(boundary, screen) &&
+        !isOffWindow(boundary)) {
+      return boundary;
+    }
+  }
+  return findBoundaryGuess(screen);
+}
+
+void LayoutAnimationsProxy::rememberCoveredTopBoundary(
+    const std::shared_ptr<LightNode> &beforeTopScreen,
+    const std::shared_ptr<LightNode> &afterTopScreen) const {
+  if (beforeTopScreen == afterTopScreen || !isLightNodeMapped(beforeTopScreen)) {
+    return;
+  }
+  for (auto screen = findParentRNSScreen(beforeTopScreen); screen; screen = findParentRNSScreen(screen)) {
+    if (afterTopScreen && isInSubtree(afterTopScreen, screen)) {
+      return;
+    }
+    coveredTopBoundaries_[screen->current.tag] = beforeTopScreen;
+  }
+}
+
 void LayoutAnimationsProxy::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
@@ -292,7 +318,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
 
   if (transition_->state == TransitionState::START) {
     const auto beforeTopScreen = topScreen_;
-    const auto afterTopScreen = findBoundaryGuess(transition_->targetScreen);
+    const auto afterTopScreen = findRevealedBoundary(transition_->targetScreen);
     if (!transition_->sourceScreen || !transition_->targetScreen ||
         transition_->sourceScreen->current.tag == transition_->targetScreen->current.tag || !beforeTopScreen ||
         !isInSubtree(beforeTopScreen, transition_->sourceScreen) || !afterTopScreen ||
@@ -2369,6 +2395,7 @@ std::unordered_set<Tag> LayoutAnimationsProxy::viewTagsKeptHidden() const {
   return tags;
 }
 
+// A view on the top screen stays hidden only while a run or the uncommitted screen pop moves it.
 void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) const {
   if (sharedElements_.empty()) {
     return;
@@ -2380,11 +2407,21 @@ void LayoutAnimationsProxy::queuePendingRestores(TransactionMeta &transaction) c
     for (const auto &[node, restoreDeferred] : element.hiddenViews) {
       const auto nameIt = tagToName.find(node->current.tag);
       if (restoreDeferred || nameIt == tagToName.end() || nameIt->second != sharedTag ||
-          !hasSharedViewInLayoutRoot(sharedTag, node, tagToName, tagsBySharedTag)) {
+          !hasSharedViewInLayoutRoot(sharedTag, node, tagToName, tagsBySharedTag) ||
+          (isOnTopScreen(node) && !isInSharedTransition(node))) {
         transaction.restoreRequests.push_back({sharedTag, node});
       }
     }
   }
+}
+
+bool LayoutAnimationsProxy::isOnTopScreen(const std::shared_ptr<LightNode> &node) const {
+  for (auto current = node; current && !current->isExiting(); current = current->parent.lock()) {
+    if (current == topScreen_) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool LayoutAnimationsProxy::isInSharedTransition(const std::shared_ptr<LightNode> &node) const {

@@ -277,6 +277,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
         "Active boundary changed without setting activeBoundaryMayHaveChanged_");
     auto afterTopScreen = activeBoundaryMayHaveChanged_ ? findActiveBoundary(root) : topScreen_;
     activeBoundaryMayHaveChanged_ = false;
+    rememberCoveredTopBoundary(beforeTopScreen, afterTopScreen);
     topScreen_ = afterTopScreen;
     if (afterTopScreen) {
       if (collectsSharedElements) {
@@ -396,6 +397,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     }
   }
   forgetHiddenView(node->current.tag);
+  coveredTopBoundaries_.erase(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   visibleScreens_.erase(node->current.tag);
   if (node == topScreen_) {
