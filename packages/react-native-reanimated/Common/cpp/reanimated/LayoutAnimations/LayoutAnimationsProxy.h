@@ -137,6 +137,12 @@ struct RestoreRequest {
 struct HiddenView {
   std::shared_ptr<LightNode> node;
   bool restoreDeferred = false;
+  bool hiddenAtMount = false;
+};
+
+struct InsertedSharedView {
+  SharedTag sharedTag;
+  std::shared_ptr<LightNode> node;
 };
 
 // A view in hiddenViews stays at opacity 0 until it is restored or removed,
@@ -220,6 +226,7 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
   std::vector<RestoreRequest> restoreRequests;
+  std::vector<InsertedSharedView> insertedSharedViews;
   // the place in filteredMutations of the first Remove of a screen that React Native Screens snapshots
   std::optional<size_t> screenSnapshotRemoval;
   std::unordered_map<Tag, Tag> staleSnapshots;
@@ -669,7 +676,14 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       bool landed) const;
   bool hasUnqueuedCarrierFrame(Tag tag) const;
   std::optional<SharedTag> findSharedTag(const ShadowView &view) const;
-  void hideInSharedElement(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &node) const;
+  void hideInSharedElement(
+      const SharedTag &sharedTag,
+      const std::shared_ptr<LightNode> &node,
+      bool hiddenAtMount = false) const;
+  void hideInsertedSharedViewsBesideTheirTag(TransactionMeta &transaction, const PropsParserContext &propsParserContext)
+      const;
+  bool isSharedTagShownOrMoved(const SharedTag &sharedTag, const std::shared_ptr<LightNode> &except) const;
+  bool isSharedTagMoved(const SharedTag &sharedTag) const;
   RestoreRequest withShownEndpoint(const RestoreRequest &request) const;
   bool showHiddenView(const RestoreRequest &request) const;
   void deferRestore(const RestoreRequest &request) const;
