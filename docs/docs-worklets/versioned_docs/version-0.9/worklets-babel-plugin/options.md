@@ -103,7 +103,7 @@ Enable this option to silence such false warnings.
 
 Defaults to `false`.
 
-This option turns off the source map generation for worklets. Mostly used for testing purposes.
+This option turns off the source map generation for worklet functions. Mostly used for testing purposes.
 
 <Badges version="0.7.0">
 ### disableWorkletClasses
@@ -120,19 +120,19 @@ Serializables](../memory/registerCustomSerializable.mdx).
 
 Defaults to an empty array.
 
-This is a list of Babel plugins that will be used when transforming worklets' code with Worklets Babel Plugin.
+This is a list of Babel plugins that will be used when transforming worklet functions' code with Worklets Babel Plugin.
 
 ### extraPresets
 
 Defaults to an empty array.
 
-This is a list of Babel presets that will be used when transforming worklets' code with Worklets Babel Plugin.
+This is a list of Babel presets that will be used when transforming worklet functions' code with Worklets Babel Plugin.
 
 ### globals
 
 Defaults to an empty array.
 
-This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet requires them. For instance:
+This is a list of identifiers (objects) that will not be copied to the UI thread if a worklet function requires them. For instance:
 
 ```tsx
 const someReference = 5;
@@ -142,7 +142,7 @@ function foo() {
 }
 ```
 
-In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet from failing. But, consider this:
+In this example, `someReference` is not accessible on the UI thread. Consequently, we must copy it there, ensuring correct scoping, to keep the worklet function from failing. But, consider this:
 
 ```tsx
 function bar() {
@@ -201,7 +201,7 @@ This option comes in handy for Web apps. Because Babel ordinarily doesn't get in
 
 Defaults to `false`.
 
-This option dictates the passed file location for a worklet's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
+This option dictates the passed file location for a worklet function's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
 <Badges version="0.8.0">
 ### strictGlobal
@@ -213,9 +213,9 @@ We highly recommend enabling this option as it will be enabled by default in the
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklets. You can read more about closures and global scoping [here](../fundamentals/closures.mdx#global-scoping).
+This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](../fundamentals/closures.mdx#global-scoping).
 
-With this option disabled, accessing global variables inside worklets will lead to capturing them from the scheduler scope:
+With this option disabled, accessing global variables inside worklet functions will lead to capturing them from the scheduler scope:
 
 ```tsx
 global.something = 10;
@@ -226,7 +226,7 @@ function setOnUI() {
 }
 ```
 
-When you enable `strictGlobal`, accessing a global variable inside a worklet will result in accessing it directly from the global scope of the worklet runtime:
+When you enable `strictGlobal`, accessing a global variable inside a worklet function will result in accessing it directly from the global scope of the worklet runtime:
 
 ```tsx
 global.something = 10;
@@ -237,7 +237,7 @@ function setOnUI() {
 }
 ```
 
-To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet:
+To actually access the global variable from another runtime you must assign it to a local variable and use it in the worklet function:
 
 ```tsx
 global.something = 10;

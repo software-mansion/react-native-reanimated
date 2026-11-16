@@ -85,9 +85,9 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
       continue;
     }
 
-    const auto updates = it->second.computeStyle(true);
+    auto updates = it->second.computeStyle(true);
     if (!updates.empty()) {
-      addUpdatesToBatch(it->second.getShadowNodeFamily(), updates);
+      addUpdatesToBatch(it->second.getShadowNodeFamily(), std::move(updates));
     }
   }
 

@@ -141,8 +141,11 @@ const TestimonialList = () => {
       </div>
       <div className={styles.dotsContainer}>
         {renderedItems.map((_, idx) => (
-          <span
+          <button
             key={idx}
+            type="button"
+            aria-label={`Show testimonials ${idx + 1} of ${renderedItems.length}`}
+            aria-current={idx === activeIndex}
             className={clsx(
               styles.dot,
               idx === activeIndex && styles.activeDot

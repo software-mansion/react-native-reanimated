@@ -155,7 +155,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
   void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
 
-  jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags);
+  jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered);
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -208,8 +208,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   std::function<std::string()> createRegistriesLeakCheck();
 
   void commitUpdates(const std::unordered_map<SurfaceId, PropsMap> &propsMapBySurface);
-  void applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch);
-  void writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch);
+  void applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch);
+  void writeSynchronousPropsToViews(UpdatesBatch synchronousUpdatesBatch);
 #ifdef ANDROID
   SynchronousPropsReader makeSynchronousPropsReader();
   folly::dynamic readSynchronousProps(Tag tag);
@@ -232,6 +232,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   RequestRenderFunction requestRender_;
+  RequestRenderFunction requestNativeRender_;
   bool isAnimationRunning_{false};
 
   CallbackId animationBackendCallbackId_{0};
@@ -249,6 +250,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshot_;
   ReadMountedViewPropsFunction readMountedViewProps_;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
+  NativeViewPlacementFunction nativeViewPlacement_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
@@ -264,6 +267,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   const SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction_;
   const PreserveMountedTagsFunction filterUnmountedTagsFunction_;
+  const ReleaseViewTransitionsFunction releaseViewTransitions_;
   const std::shared_ptr<SynchronousWritesTracker> synchronousWritesTracker_;
 
 #ifdef ANDROID

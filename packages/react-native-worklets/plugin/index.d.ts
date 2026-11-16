@@ -3,7 +3,7 @@ export interface PluginOptions {
    * Enables the [Bundle
    * Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/).
    *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#bundle-mode}
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#bundlemode}
    *
    * - Defaults to `false`.
    */
@@ -29,7 +29,7 @@ export interface PluginOptions {
   disableSourceMaps?: boolean;
   /**
    * Disables [Worklet Classes
-   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/#experimental-worklet-classes).
+   * support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/#deprecated-worklet-classes).
    * You might need to disable this feature when using [Custom
    * Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable/).
    *

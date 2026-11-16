@@ -125,11 +125,15 @@ const config = {
           sidebarCollapsible: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-reanimated',
-          lastVersion: 'current',
+          lastVersion: '4.x',
           versions: {
             current: {
-              label: '4.x',
+              label: 'Unreleased',
+              path: 'unreleased',
+              banner: 'unreleased',
+              noIndex: true,
             },
+            '4.x': { label: '4.x' },
           },
         },
         theme: {
@@ -446,6 +450,43 @@ const config = {
           {
             from: '/docs/next/category/css-animations',
             to: '/docs/category/css-animations',
+          },
+          {
+            from: [
+              '/docs/category/reanimated-babel-plugin',
+              '/docs/reanimated-babel-plugin/about',
+              '/docs/reanimated-babel-plugin/plugin-options',
+            ],
+            to: '/docs/guides/migration-from-3.x#renamed-react-native-reanimatedplugin',
+          },
+          {
+            from: '/docs/category/threading',
+            to: '/docs/guides/migration-from-3.x#worklet-specific-functions-should-be-imported-from-react-native-worklets',
+          },
+          {
+            from: '/docs/threading/runOnJS',
+            to: '/docs/guides/migration-from-3.x#runonjs',
+          },
+          {
+            from: '/docs/threading/runOnUI',
+            to: '/docs/guides/migration-from-3.x#runonui',
+          },
+          {
+            from: '/docs/threading/runOnRuntime',
+            to: '/docs/guides/migration-from-3.x#runonruntime',
+          },
+          {
+            from: '/docs/threading/createWorkletRuntime',
+            to: '/docs/guides/migration-from-3.x#moved-without-changes-to-the-api',
+          },
+          { from: '/docs/guides/debugging', to: '/docs/category/debugging' },
+          {
+            from: '/docs/scroll/useScrollViewOffset',
+            to: '/docs/scroll/useScrollOffset',
+          },
+          {
+            from: '/docs/utilities/useAnimatedGestureHandler',
+            to: '/docs/fundamentals/handling-gestures',
           },
         ],
       }),

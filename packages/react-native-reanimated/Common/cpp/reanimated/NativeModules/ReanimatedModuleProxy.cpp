@@ -15,6 +15,7 @@
 #include <reanimated/Fabric/updates/SynchronousPropNames.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy_Legacy.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/NativeModules/SynchronousPropsBufferSerializer.h>
@@ -78,6 +79,15 @@ constexpr bool shouldUseSynchronousUpdatesInPerformOperations() {
 }
 #endif
 
+// An Android draw pass writes props synchronously also when the static flag is off.
+constexpr bool hasSynchronousPropsWrites() {
+#ifdef ANDROID
+  return true;
+#else
+  return shouldUseSynchronousUpdatesInPerformOperations();
+#endif
+}
+
 std::shared_ptr<SynchronousWritesTracker> makeSynchronousWritesTracker() {
   if constexpr (
       shouldUseSynchronousUpdatesInPerformOperations() && !StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
@@ -92,6 +102,11 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
       return false;
     }
 #ifdef ANDROID
+    // A null value unsets the prop. The Android synchronous path can't express that (it reads every
+    // value as a number or string), so it goes through the shadow tree commit, which resets the prop.
+    if (value.isNull()) {
+      return false;
+    }
     // The Android synchronous path serializes color props into an int buffer via `value.asInt()`,
     // so non-numeric color values (e.g. PlatformColor) must fall back to the shadow tree commit path.
     const bool isColorProp = keyStr.find("Color") != std::string::npos;
@@ -150,6 +165,21 @@ std::pair<UpdatesBatch, UpdatesBatch> partitionUpdates(UpdatesBatch &&updatesBat
   return {std::move(synchronousUpdatesBatch), std::move(shadowTreeUpdatesBatch)};
 }
 
+// A smaller end makes the fade-out target opacity too large for the animation math.
+constexpr double kMinFadeOutEnd = 1e-6;
+
+double fadeOutEnd(jsi::Runtime &rt, const jsi::Object &contentFade) {
+  const auto value = contentFade.getProperty(rt, "fadeOutEnd");
+  if (!value.isNumber()) {
+    return 1;
+  }
+  const auto end = value.asNumber();
+  if (!(end > 0 && end <= 1)) {
+    return 1;
+  }
+  return std::max(end, kMinFadeOutEnd);
+}
+
 } // namespace
 
 ReanimatedModuleProxy::ReanimatedModuleProxy(
@@ -171,6 +201,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 #ifdef __APPLE__
       forceScreenSnapshot_(platformDepMethodsHolder.forceScreenSnapshotFunction),
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
+      setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
+      nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
@@ -203,6 +235,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       synchronouslyUpdateUIPropsFunction_(platformDepMethodsHolder.synchronouslyUpdateUIPropsFunction),
 #ifdef ANDROID
       filterUnmountedTagsFunction_(platformDepMethodsHolder.filterUnmountedTagsFunction),
+      releaseViewTransitions_(platformDepMethodsHolder.releaseViewTransitionsFunction),
 #endif // ANDROID
       synchronousWritesTracker_(makeSynchronousWritesTracker()),
       subscribeForKeyboardEventsFunction_(platformDepMethodsHolder.subscribeForKeyboardEvents),
@@ -226,6 +259,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  requestNativeRender_ = platformDepMethodsHolder.requestRender;
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Backend path: callbacks are drained later inside runGrandCallback under
     // the manager lock; no wrap needed here.
@@ -497,10 +531,34 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
       batchItem.config = extractSerializable(
           rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
     }
+    const auto sharedCallback = item.getProperty(rt, "sharedTransitionCallback");
+    if (!sharedCallback.isUndefined()) {
+      batchItem.sharedTransitionCallback = extractSerializable(
+          rt,
+          sharedCallback,
+          "[Reanimated] Shared transition callback must be serializable.",
+          Serializable::ValueType::ObjectType);
+    }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
+      if (!sharedTag.isString()) {
+        throw std::runtime_error("[Reanimated] `sharedTransitionTag` must be a string.");
+      }
       batchItem.sharedTransitionTag = sharedTag.asString(rt).utf8(rt);
     }
+    if (const auto contentFade = item.getProperty(rt, "sharedTransitionContentFade"); contentFade.isObject()) {
+      const auto contentFadeObject = contentFade.asObject(rt);
+      batchItem.sharedTransitionContentFade = SharedTransitionContentFade{
+          .fadeIn = extractSerializable(
+              rt,
+              contentFadeObject.getProperty(rt, "fadeIn"),
+              "[Reanimated] Shared transition content fade-in must be an object.",
+              Serializable::ValueType::ObjectType),
+          .fadeOutEnd = fadeOutEnd(rt, contentFadeObject),
+      };
+    }
+    const auto followsTarget = item.getProperty(rt, "sharedTransitionFollowsTarget");
+    batchItem.sharedTransitionFollowsTarget = followsTarget.isBool() && followsTarget.getBool();
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -671,7 +729,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -681,15 +739,14 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi:
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
-  std::unordered_set<Tag> viewTags;
-  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
-  }
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
+  return animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, [&](const Tag viewTag) {
+        return isViewRegisteredFunction.call(rt, viewTag).asBool();
+      });
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -738,35 +795,21 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (eventType == "onTransitionProgress") {
+    std::optional<SurfaceId> surfaceId;
+    if (layoutAnimationsProxyRegistry_ && eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
       auto closing = static_cast<bool>(payload.getProperty(uiRuntime, "closing").asNumber());
       auto goingForward = static_cast<bool>(payload.getProperty(uiRuntime, "goingForward").asNumber());
-
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
-      if (!surfaceId) {
-        return false;
-      }
+      surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
+    } else if (layoutAnimationsProxyRegistry_ && eventType == "onGestureCancel") {
+      surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
+    }
+    if (surfaceId) {
       uiManager_->getShadowTreeRegistry().visit(
           *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
-    } else if (eventType == "onGestureCancel") {
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
-      if (!surfaceId) {
-        return false;
-      }
-      uiManager_->getShadowTreeRegistry().visit(
-          *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
     }
   }
 
@@ -893,7 +936,7 @@ void ReanimatedModuleProxy::performOperations() {
   }
 
   if constexpr (shouldUseSynchronousUpdatesInPerformOperations()) {
-    applySynchronousUpdates(synchronousUpdatesBatch);
+    applySynchronousUpdates(std::move(synchronousUpdatesBatch));
   }
 
   if (updatesRegistryManager_->shouldReanimatedSkipCommit()) {
@@ -1116,7 +1159,7 @@ bool ReanimatedModuleProxy::handleEventAndFlush(
   return handled;
 }
 
-void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchronousUpdatesBatch) {
+void ReanimatedModuleProxy::applySynchronousUpdates(UpdatesBatch synchronousUpdatesBatch) {
   if (layoutAnimationsProxyRegistry_ && !synchronousUpdatesBatch.empty()) {
     layoutAnimationsProxyRegistry_->applySynchronousProps(
         synchronousUpdatesBatch, DynamicFeatureFlags::getFlag("TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS"));
@@ -1124,10 +1167,15 @@ void ReanimatedModuleProxy::applySynchronousUpdates(const UpdatesBatch &synchron
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onSynchronousWrite(synchronousUpdatesBatch);
   }
-  writeSynchronousPropsToViews(synchronousUpdatesBatch);
+  writeSynchronousPropsToViews(std::move(synchronousUpdatesBatch));
 }
 
-void ReanimatedModuleProxy::writeSynchronousPropsToViews(const UpdatesBatch &synchronousUpdatesBatch) {
+void ReanimatedModuleProxy::writeSynchronousPropsToViews(UpdatesBatch synchronousUpdatesBatch) {
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_) {
+      layoutAnimationsProxyRegistry_->composeSynchronousProps(synchronousUpdatesBatch);
+    }
+  }
 #ifdef ANDROID
   if (!synchronousUpdatesBatch.empty()) {
     serializeSynchronousPropsToBuffers(
@@ -1261,7 +1309,6 @@ jsi::Value ReanimatedModuleProxy::measure(jsi::Runtime &rt, const jsi::Value &sh
 
 void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &uiManager) {
   uiManager_ = uiManager;
-  viewStylesRepository_->setUIManager(uiManager_);
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
@@ -1285,13 +1332,13 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
     strongThis->requestFlushRegistry();
   };
 
-  // TODO: with the animation backend we still need a way to handleNodeRemovals,
-  // for now we leave this to leak the memory, a fix will come in a follow-up
+  // TODO: move node removal handling into the animation backend, so that it does not need this mount hook
   mountHook_ = std::make_shared<ReanimatedMountHook>(
       uiManager_,
       updatesRegistryManager_,
       mountedRootsRegistry_,
       layoutAnimationsProxyRegistry_,
+      layoutAnimationsManager_,
       synchronousWritesTracker_,
       request);
 
@@ -1300,6 +1347,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
       updatesRegistryManager_,
       mountedRootsRegistry_,
       layoutAnimationsProxyRegistry_,
+      layoutAnimationsManager_,
       synchronousWritesTracker_);
 }
 
@@ -1338,17 +1386,43 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       componentDescriptorRegistry,
       scheduler->getContextContainer(),
       getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+      uiRuntime_,
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      [weakThis = weak_from_this()](std::function<void()> callback) {
+        if (const auto strongThis = weakThis.lock()) {
+          scheduleOnUI(strongThis->uiScheduler_, [weakThis, callback = std::move(callback)]() mutable {
+            if (const auto strongThis = weakThis.lock()) {
+              strongThis->requestNativeRender_([callback = std::move(callback)](const double) { callback(); });
+            }
+          });
+        }
+      },
+      // A proxy calls this with the proxy mutex held.
+      [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis || !hasSynchronousPropsWrites()) {
+          return std::nullopt;
+        }
+        auto lock = strongThis->updatesRegistryManager_->lock();
+        const auto opacity = strongThis->updatesRegistryManager_->getRegistryProp(tag, "opacity");
+        if (opacity && opacity->isNull()) {
+          return defaultViewOpacity();
+        }
+        return opacity && opacity->isNumber() ? std::optional(opacity->asDouble()) : std::nullopt;
+      },
 #ifdef ANDROID
       filterUnmountedTagsFunction_,
+      releaseViewTransitions_,
       jsInvoker_,
       keepsSynchronousPropsInReinserts ? makeSynchronousPropsReader() : nullptr,
 #endif
 #ifdef __APPLE__
       forceScreenSnapshot_,
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
+      setSharedTransitionOverlay_,
+      nativeViewPlacement_,
 #endif
   };
 

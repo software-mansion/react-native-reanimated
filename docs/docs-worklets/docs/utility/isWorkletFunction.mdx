@@ -1,33 +1,22 @@
 ---
 sidebar_position: 42 # Use alphabetical order
+title: isWorkletFunction
 ---
 
-# isWorkletFunction
+import * as ApiIsWorkletFunctionSnippet from './_examples/apiIsWorkletFunction';
+import ApiIsWorkletFunctionSource from '!!raw-loader!./_examples/apiIsWorkletFunction';
 
-`isWorkletFunction` checks if a function is a worklet function. It only works with Worklets Babel plugin enabled. Unless you are doing something with internals of Worklets you shouldn't need to use this function.
+<Badges version="0.1.0">
+  # isWorkletFunction
+</Badges>
+
+`isWorkletFunction` checks if a function is a worklet function. It only works with Worklets Babel plugin enabled. Unless you are doing something with internals of the Worklets library you shouldn't need to use this function.
 
 ## Reference
 
-```javascript
-import { isWorkletFunction } from 'react-native-worklets';
+Both checks run on the RN Runtime. Checking a function doesn't execute it or schedule it on another thread.
 
-const workletFunction = () => {
-  'worklet';
-  return 1;
-};
-
-const isWorklet = isWorkletFunction(workletFunction);
-
-console.log(isWorklet); // true
-
-const nonWorkletFunction = () => {
-  return 1;
-};
-
-const isNonWorkletFunction = isWorkletFunction(nonWorkletFunction);
-
-console.log(isNonWorkletFunction); // false
-```
+<ThreadingSimulation module={ApiIsWorkletFunctionSnippet} source={ApiIsWorkletFunctionSource} uiRuntime={false}/>
 
 <details>
   <summary>Type definitions</summary>
@@ -87,7 +76,7 @@ A function to check if it is a worklet function.
 
 ### Remarks
 
-- Do not call it before the worklet is declared, as it will always return `false` then.
+- Do not call it before the worklet function is declared, as it will always return `false` then.
 
   ```ts
   isWorkletFunction(myWorklet); // Will always return false.

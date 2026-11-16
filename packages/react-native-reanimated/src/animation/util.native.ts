@@ -1,10 +1,9 @@
 'use strict';
 import {
-  createSerializable,
   isWorkletFunction,
   RuntimeKind,
   scheduleOnUI,
-  serializableMappingCache,
+  setSerializableMapping,
 } from 'react-native-worklets';
 
 import type {
@@ -25,9 +24,8 @@ export {
   recognizePrefixSuffix,
 } from './utilCommon';
 
-const IN_STYLE_UPDATER_UI = createSerializable({ current: false });
 // is-tree-shakable-suppress
-serializableMappingCache.set(IN_STYLE_UPDATER, IN_STYLE_UPDATER_UI);
+setSerializableMapping(IN_STYLE_UPDATER, { current: false });
 
 export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory

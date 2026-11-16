@@ -37,6 +37,19 @@ void UpdatesRegistry::mergeInto(const Tag tag, folly::dynamic &target) const {
   target.update(it->second.second);
 }
 
+std::optional<folly::dynamic> UpdatesRegistry::getProp(const Tag tag, const char *propName) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  auto it = updatesRegistry_.find(tag);
+  if (it == updatesRegistry_.cend()) {
+    return std::nullopt;
+  }
+  const auto *value = it->second.second.get_ptr(propName);
+  if (!value) {
+    return std::nullopt;
+  }
+  return *value;
+}
+
 #ifdef ANDROID
 void UpdatesRegistry::mergeInto(const Tag tag, folly::dynamic &target, const PropNamePredicate isIncluded) const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -194,34 +207,46 @@ UpdatesBatch UpdatesRegistry::getPendingUpdates() {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flushUpdatesToRegistry(updatesBatch_);
 
+  // Only the views updated since the last flush, each once with its merged registry props.
   UpdatesBatch updatesBatch;
-  for (const auto &[tag, pair] : updatesRegistry_) {
-    const auto &[shadowNodeFamily, props] = pair;
-    updatesBatch.emplace_back(shadowNodeFamily, props);
+  std::unordered_set<Tag> collectedTags;
+  for (const auto &[shadowNodeFamily, _] : updatesBatch_) {
+    const auto tag = shadowNodeFamily->getTag();
+    if (!collectedTags.insert(tag).second) {
+      continue;
+    }
+    const auto it = updatesRegistry_.find(tag);
+    if (it != updatesRegistry_.end()) {
+      updatesBatch.emplace_back(it->second.first, it->second.second);
+    }
   }
   return updatesBatch;
 }
 
-void UpdatesRegistry::collectProps(PropsMap &propsMap) {
+void UpdatesRegistry::collectProps(PropsMap &propsMap) const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
-  auto copiedRegistry = updatesRegistry_;
-  for (const auto &[tag, pair] : copiedRegistry) {
+  for (const auto &[tag, pair] : updatesRegistry_) {
     const auto &[shadowNodeFamily, props] = pair;
-    const auto it = propsMap.find(shadowNodeFamily);
-
-    if (it == propsMap.cend()) {
-      auto propsVector = std::vector<folly::dynamic>{};
-      propsVector.emplace_back(props);
-      propsMap.emplace(shadowNodeFamily, propsVector);
-    } else {
-      it->second.push_back(props);
-    }
+    propsMap[shadowNodeFamily].push_back(props);
   }
 }
 
 void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props) {
   updatesBatch_.emplace_back(shadowNodeFamily, props);
+}
+
+void UpdatesRegistry::addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic &&props) {
+  updatesBatch_.emplace_back(shadowNodeFamily, std::move(props));
+}
+
+std::unordered_set<Tag> UpdatesRegistry::getPendingTags() const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  std::unordered_set<Tag> pendingTags;
+  for (const auto &[shadowNodeFamily, _] : updatesBatch_) {
+    pendingTags.insert(shadowNodeFamily->getTag());
+  }
+  return pendingTags;
 }
 
 void UpdatesRegistry::setInUpdatesRegistry(

@@ -1,0 +1,2277 @@
+#!/usr/bin/env node
+
+import { execFile, spawn } from 'node:child_process';
+import type {
+  ChildProcess,
+  ExecFileException,
+  ExecFileOptions,
+} from 'node:child_process';
+import fs from 'node:fs';
+import http from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import net from 'node:net';
+import os from 'node:os';
+import path from 'node:path';
+import { WebSocketServer } from 'ws';
+import type { WebSocket } from 'ws';
+
+import type {
+  DeviceMessage,
+  DoneMessage,
+  ErrorMessage,
+  HelloMessage,
+  LogMessage,
+  ReloadMessage,
+  RunSummary,
+  ServerMessage,
+  SuiteFinishedMessage,
+  TestFailure,
+} from '../../common-app/runtime-tests/ReJest/utils/remoteProtocol.ts';
+import {
+  findRunningAvd,
+  parseAvdName,
+  readySerials,
+  resolveAndroidDevice as resolveAndroidTarget,
+} from './android-device.mts';
+import type { AdbDevice, AndroidTools } from './android-device.mts';
+import { reloadRepeatsSuites, selectSuites } from './runtime-tests-suites.mts';
+
+interface Sanitizer {
+  buildArgs: string[];
+  launchEnv: Record<string, string>;
+  runtimePrefix: string;
+}
+
+type ReceivedMessage = Partial<DeviceMessage>;
+
+interface CommandResult {
+  stdout: string;
+  stderr: string;
+}
+
+type CommandError = Error & { stdout?: string; stderr?: string };
+
+interface IOSCrashReport {
+  name: string;
+  file: string;
+  mtimeMs: number;
+}
+
+interface IpsFrame {
+  imageIndex?: number;
+  imageOffset?: number;
+  symbol?: string;
+  symbolLocation?: number;
+}
+
+interface IpsPayload {
+  exception?: unknown;
+  termination?: unknown;
+  asi?: unknown;
+  usedImages?: { name?: string }[];
+  lastExceptionBacktrace?: unknown;
+  faultingThread?: number;
+  threads?: { name?: string; queue?: string; frames?: IpsFrame[] }[];
+}
+
+interface SimctlDevice {
+  name: string;
+  udid: string;
+  state: string;
+}
+
+const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
+const PLATFORMS = ['ios', 'android'];
+const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
+const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
+const ANDROID_APP_ID = 'com.fabricexample';
+
+const projectRoot = path.resolve(import.meta.dirname, '..');
+const iosDir = path.join(projectRoot, 'ios');
+const androidDir = path.join(projectRoot, 'android');
+const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
+const CRASH_REPORT_DIR = path.join(projectRoot, 'crash-reports');
+// -enable*Sanitizer alone does not reach the Pods project on CI (the built
+// products carried no -fsanitize flags), so each build setting is also forced
+// as a command-line override, which applies to every target.
+const SANITIZERS: Record<string, Sanitizer> = {
+  thread: {
+    buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
+    launchEnv: {
+      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
+    },
+    runtimePrefix: 'libclang_rt.tsan',
+  },
+  address: {
+    buildArgs: [
+      '-enableAddressSanitizer',
+      'YES',
+      'ENABLE_ADDRESS_SANITIZER=YES',
+      '-enableUndefinedBehaviorSanitizer',
+      'YES',
+      'ENABLE_UNDEFINED_BEHAVIOR_SANITIZER=YES',
+    ],
+    launchEnv: {
+      SIMCTL_CHILD_ASAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'asan')}`,
+      SIMCTL_CHILD_UBSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'ubsan')} print_stacktrace=1`,
+    },
+    runtimePrefix: 'libclang_rt.asan',
+  },
+};
+
+const args = parseArgs(process.argv.slice(2));
+
+if (args.help) {
+  printUsage();
+  process.exit(0);
+}
+
+const LIBRARY = String(args.library ?? '').toLowerCase();
+const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
+const METRO_PORT = Number(args['metro-port'] ?? 8081);
+const CONFIGURATION =
+  typeof args.configuration === 'string'
+    ? args.configuration
+    : 'DebugRuntimeTests';
+const IS_RELEASE = CONFIGURATION.startsWith('Release');
+// Release builds have no Metro; the app then reports to port 8082.
+const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
+const WS_URL = `ws://127.0.0.1:${PORT}`;
+const ONLY =
+  typeof args.only === 'string'
+    ? args.only
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    : null;
+const CONNECT_TIMEOUT_MS = Number(args['connect-timeout'] ?? 600) * 1000;
+const IDLE_TIMEOUT_MS = Number(args['idle-timeout'] ?? 600) * 1000;
+const AFTER_SUITE =
+  typeof args['after-suite'] === 'string' ? args['after-suite'] : null;
+const SHOULD_LAUNCH = args.launch === true || args.launch === '';
+const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
+const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
+const SIMULATOR =
+  typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
+const UDID = typeof args.udid === 'string' ? args.udid : null;
+const SERIAL = typeof args.serial === 'string' ? args.serial : null;
+const AVD = typeof args.avd === 'string' ? args.avd : null;
+const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
+const CI_REPORT = process.env.RUNTIME_TESTS_CI_REPORT !== '0';
+const GITHUB_ACTIONS = CI_REPORT && process.env.GITHUB_ACTIONS === 'true';
+const GITHUB_STEP_SUMMARY = CI_REPORT
+  ? (process.env.GITHUB_STEP_SUMMARY ?? '')
+  : '';
+const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})`;
+const MAX_ANNOTATIONS = 10;
+const STEP_SUMMARY_LIMIT_BYTES = 1024 * 1024;
+
+if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
+  console.error(
+    `[runtime-tests] --library must be one of: ${LIBRARIES.join(', ')} (got: ${LIBRARY || 'nothing'})`
+  );
+  process.exit(1);
+}
+
+if (!PLATFORMS.includes(PLATFORM)) {
+  console.error(
+    `[runtime-tests] --platform must be one of: ${PLATFORMS.join(', ')} (got: ${PLATFORM})`
+  );
+  process.exit(1);
+}
+
+if (SANITIZER && !SANITIZERS[SANITIZER]) {
+  console.error(
+    `[runtime-tests] --sanitizer supports only: ${Object.keys(SANITIZERS).join(', ')}`
+  );
+  process.exit(1);
+}
+
+if (SANITIZER && PLATFORM !== 'ios') {
+  console.error('[runtime-tests] --sanitizer is only supported on iOS');
+  process.exit(1);
+}
+
+if (BUILD_ONLY && PLATFORM !== 'ios') {
+  console.error('[runtime-tests] --build-only is only supported on iOS');
+  process.exit(1);
+}
+
+if (BUILD_ONLY && SHOULD_LAUNCH) {
+  console.error(
+    '[runtime-tests] --build-only cannot be combined with --launch'
+  );
+  process.exit(1);
+}
+
+let client: WebSocket | null = null;
+const serverStartedAt = Date.now();
+let runStartedAt = 0;
+let exitCode = 1;
+let runFinished = false;
+let connectTimer: ReturnType<typeof setTimeout> | null = null;
+let idleTimer: ReturnType<typeof setTimeout> | null = null;
+let metroChild: ChildProcess | null = null;
+let androidSerial: string | null = null;
+let iosUdid: string | null = null;
+let crashDiagnosticsPromise: Promise<void> | null = null;
+let afterSuiteChain: Promise<void> = Promise.resolve();
+let afterSuiteRunning = false;
+let afterSuitePending = false;
+let resumeFromSuite: string | null = null;
+let reloadInProgress = false;
+let lastResumeSuite: string | null = null;
+let selectedSuites: string[] = [];
+const resultsBeforeReload: Omit<RunSummary, 'durationMs'> = {
+  passed: 0,
+  failed: 0,
+  skipped: 0,
+  failedTests: [],
+  failures: [],
+};
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+// UTF-8 payload with multi-byte characters, used by the networking runtime
+// tests to detect any Latin-1 / mojibake decoding path.
+const ECHO_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
+
+const MAX_REQUEST_BODY_BYTES = 32 * 1024 * 1024;
+
+/**
+ * Plain-HTTP endpoints served on the same port as the WebSocket harness. The
+ * networking runtime tests fetch these instead of external services.
+ */
+function handleEchoRequest(req: IncomingMessage, res: ServerResponse) {
+  req.on('error', () => {});
+  res.on('error', () => {});
+  const chunks: Buffer[] = [];
+  let received = 0;
+  req.on('data', (chunk: Buffer) => {
+    received += chunk.length;
+    if (received > MAX_REQUEST_BODY_BYTES) {
+      res.writeHead(413, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('request body too large');
+      req.destroy();
+      return;
+    }
+    chunks.push(chunk);
+  });
+  req.on('end', () => {
+    if (res.writableEnded) {
+      return;
+    }
+    try {
+      routeEchoRequest(req, res, Buffer.concat(chunks));
+    } catch (error) {
+      if (!res.headersSent) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      }
+      res.end(`bad request: ${errorMessage(error)}`);
+    }
+  });
+}
+
+function routeEchoRequest(
+  req: IncomingMessage,
+  res: ServerResponse,
+  body: Buffer
+) {
+  const url = new URL(
+    req.url ?? '/',
+    `http://${req.headers.host ?? 'localhost'}`
+  );
+  switch (url.pathname) {
+    case '/echo/text': {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(ECHO_TEXT);
+      return;
+    }
+    case '/echo/json': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify({ id: 1, title: ECHO_TEXT, completed: false }));
+      return;
+    }
+    case '/echo/binary': {
+      const size = clampInteger(
+        url.searchParams.get('size'),
+        1024,
+        0,
+        16 * 1024 * 1024
+      );
+      const bytes = Buffer.alloc(size);
+      for (let i = 0; i < size; i++) {
+        bytes[i] = i % 256;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/octet-stream',
+        'Content-Length': String(size),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/body': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(
+        JSON.stringify({
+          method: req.method,
+          contentType: req.headers['content-type'] ?? null,
+          contentLength: req.headers['content-length'] ?? null,
+          byteLength: body.byteLength,
+          body: body.toString('utf8'),
+          bytes: Array.from(body.subarray(0, 64)),
+        })
+      );
+      return;
+    }
+    case '/echo/delay': {
+      const ms = clampInteger(url.searchParams.get('ms'), 1000, 0, 60000);
+      setTimeout(() => {
+        if (res.destroyed || res.writableEnded) {
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('delayed');
+      }, ms).unref();
+      return;
+    }
+    case '/echo/slow-body': {
+      const ms = clampInteger(url.searchParams.get('ms'), 1000, 0, 60000);
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('start');
+      setTimeout(() => {
+        if (res.destroyed || res.writableEnded) {
+          return;
+        }
+        res.end('end');
+      }, ms).unref();
+      return;
+    }
+    case '/echo/status': {
+      const code = clampInteger(url.searchParams.get('code'), 200, 200, 599);
+      res.writeHead(code, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end(`status ${code}`);
+      return;
+    }
+    case '/echo/redirect': {
+      const to = url.searchParams.get('to') ?? '/echo/json';
+      const code = clampInteger(url.searchParams.get('code'), 302, 300, 399);
+      if (!isAllowedRedirectTarget(to)) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('redirect target must be an /echo/ path on this server');
+        return;
+      }
+      res.writeHead(code, { Location: to });
+      res.end();
+      return;
+    }
+    case '/echo/headers': {
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Dup': ['one', 'two'],
+        'X-MiXeD': 'value',
+      });
+      res.end('headers');
+      return;
+    }
+    case '/echo/set-cookie': {
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Set-Cookie': 'worklets_sid=1; Path=/',
+      });
+      res.end('cookie set');
+      return;
+    }
+    case '/echo/echo-headers': {
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify(req.headersDistinct ?? req.headers));
+      return;
+    }
+    case '/echo/utf8-cases': {
+      const cases: Record<string, number[]> = {
+        replacement: [0x61, 0xff, 0x62],
+        'valid-prefix': [0xe1, 0x80, 0x41],
+        truncated: [0xe2, 0x9c],
+        overlong: [0xc0, 0xaf],
+        surrogate: [0xed, 0xa0, 0x80],
+        'bom-utf8': [0xef, 0xbb, 0xbf, 0x63, 0x61, 0x66, 0xc3, 0xa9],
+        'bom-utf16le': [0xff, 0xfe, 0x68, 0x00, 0x69, 0x00],
+        'bom-utf16be': [0xfe, 0xff, 0x00, 0x68, 0x00, 0x69],
+        'utf16le-surrogate-pair': [0xff, 0xfe, 0x3d, 0xd8, 0x84, 0xde],
+        'utf16le-lone-surrogate': [0xff, 0xfe, 0x3d, 0xd8, 0x69, 0x00],
+        'utf16le-odd-length': [0xff, 0xfe, 0x68, 0x00, 0x69],
+        'four-byte': [0xf0, 0x9f, 0xa6, 0x84],
+      };
+      const name = url.searchParams.get('case') ?? 'replacement';
+      const bytes = Buffer.from(cases[name] ?? cases.replacement);
+      const charset = url.searchParams.get('charset');
+      res.writeHead(200, {
+        'Content-Type': `text/plain${charset !== null ? `; charset=${charset}` : ''}`,
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/shift-jis': {
+      const malformed = url.searchParams.get('malformed') !== null;
+      const bytes = Buffer.from(
+        malformed ? [0x93, 0xfa, 0x96, 0x7b, 0x81] : [0x93, 0xfa, 0x96, 0x7b]
+      );
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=shift_jis',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/chunked': {
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.write('chunk-one');
+      res.end('chunk-two');
+      return;
+    }
+    case '/echo/invalid-utf8': {
+      // 'a', a lone 0xFF, 'b' - decodes to "a�b" under the Encoding
+      // Standard and to "aÿb" under a Latin-1 fallback.
+      const bytes = Buffer.from([0x61, 0xff, 0x62]);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    case '/echo/latin1': {
+      // 0x92 is U+2019 in windows-1252 and a C1 control in true ISO-8859-1.
+      const bytes = Buffer.from([0x92]);
+      res.writeHead(200, {
+        'Content-Type': 'text/plain; charset=iso-8859-1',
+        'Content-Length': String(bytes.length),
+      });
+      res.end(bytes);
+      return;
+    }
+    default: {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('not found');
+    }
+  }
+}
+
+/**
+ * Redirect targets are caller-supplied, so only paths on this server are
+ * allowed. A loopback alias is permitted as well, so a test can exercise a
+ * genuine cross-origin redirect against the same process.
+ */
+function isAllowedRedirectTarget(to: string): boolean {
+  if (to.startsWith('/echo/')) {
+    return true;
+  }
+  let target;
+  try {
+    target = new URL(to);
+  } catch {
+    return false;
+  }
+  return (
+    target.protocol === 'http:' &&
+    ['localhost', '127.0.0.1'].includes(target.hostname) &&
+    target.port === String(PORT) &&
+    target.pathname.startsWith('/echo/')
+  );
+}
+
+function clampInteger(
+  raw: string | null,
+  fallback: number,
+  min: number,
+  max: number
+): number {
+  const value = Number(raw);
+  if (raw === null || raw === '' || !Number.isFinite(value)) {
+    return fallback;
+  }
+  return Math.min(Math.max(Math.trunc(value), min), max);
+}
+
+const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
+
+const httpServer = http.createServer(handleEchoRequest);
+const wss = new WebSocketServer({ server: httpServer });
+
+httpServer.on('error', (error) => {
+  if ((error as NodeJS.ErrnoException).code === 'EADDRINUSE') {
+    console.error(
+      `[runtime-tests] port ${PORT} is already in use — is another runtime-tests server (or Metro) running there? Stop it or pass --port.`
+    );
+  } else {
+    console.error(`[runtime-tests] server error: ${error.message}`);
+  }
+  process.exit(1);
+});
+
+wss.on('error', (error) => {
+  console.error(`[runtime-tests] websocket error: ${error.message}`);
+});
+
+process.on('uncaughtException', (error) => {
+  console.error(`[runtime-tests] uncaught exception: ${errorMessage(error)}`);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error(`[runtime-tests] unhandled rejection: ${errorMessage(reason)}`);
+  process.exit(1);
+});
+
+httpServer.listen(PORT, HOST, () => {
+  console.log(
+    `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
+  );
+});
+if (ONLY) {
+  console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
+}
+
+function armConnectTimer() {
+  if (client) {
+    return;
+  }
+  connectTimer = setTimeout(() => {
+    console.error(
+      `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
+    );
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `No device connected within ${CONNECT_TIMEOUT_MS / 1000}s. See the crash diagnostics in the log.`
+    );
+    void failWithDiagnostics(1);
+  }, CONNECT_TIMEOUT_MS);
+}
+
+if (!SHOULD_LAUNCH && !BUILD_ONLY) {
+  armConnectTimer();
+}
+
+wss.on('connection', (socket) => {
+  if (client) {
+    console.warn(
+      '[runtime-tests] rejecting extra client; one already connected'
+    );
+    socket.close();
+    return;
+  }
+  client = socket;
+  clearTimer('connect');
+  console.log('[runtime-tests] device connected');
+
+  resetIdleTimer();
+
+  socket.on('message', (raw) => {
+    resetIdleTimer();
+    let msg: ReceivedMessage;
+    try {
+      msg = JSON.parse(raw.toString());
+    } catch (error) {
+      console.warn(
+        '[runtime-tests] failed to parse message:',
+        errorMessage(error)
+      );
+      return;
+    }
+    handleMessage(msg);
+  });
+
+  socket.on('close', () => {
+    if (reloadInProgress) {
+      reloadInProgress = false;
+      client = null;
+      console.log(
+        '[runtime-tests] device is reloading, waiting for it to reconnect'
+      );
+      armConnectTimer();
+      return;
+    }
+    if (!runFinished && runStartedAt > 0) {
+      console.error('');
+      console.error('========================================');
+      console.error(
+        '[runtime-tests] device disconnected mid-run without sending `done`.'
+      );
+      if (PLATFORM === 'android') {
+        console.error(
+          '[runtime-tests] The app most likely crashed — see the crash diagnostics of the selected Android device below.'
+        );
+      } else {
+        console.error(
+          '[runtime-tests] The app most likely crashed — see the crash report search below.'
+        );
+      }
+      console.error(
+        '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
+      );
+      console.error('========================================');
+      githubAnnotation(
+        'error',
+        RUN_LABEL,
+        'The app disconnected mid-run without sending `done`, most likely it crashed. See the crash diagnostics in the log.'
+      );
+      void failWithDiagnostics(exitCode);
+      return;
+    }
+    console.log('[runtime-tests] device disconnected');
+    shutdown(exitCode);
+  });
+
+  socket.on('error', (error) => {
+    console.error('[runtime-tests] socket error:', error.message);
+  });
+});
+
+function handleMessage(msg: ReceivedMessage) {
+  switch (msg.type) {
+    case 'hello':
+      onHello(msg);
+      break;
+    case 'log':
+      onLog(msg);
+      break;
+    case 'suiteFinished':
+      onSuiteFinished(msg);
+      break;
+    case 'reload':
+      onReload(msg);
+      break;
+    case 'done':
+      onDone(msg);
+      break;
+    case 'error':
+      onError(msg);
+      break;
+    default:
+      console.warn(`[runtime-tests] unknown message type: ${msg.type}`);
+  }
+}
+
+function onHello(msg: Partial<HelloMessage>) {
+  const suites = msg.suites ?? [];
+  const declared = suites.map((s) => s.name);
+  const deviceLibrary = String(msg.library ?? '').toLowerCase();
+  console.log(
+    `[runtime-tests] hello from ${msg.platform} ${msg.platformVersion} (${deviceLibrary}), ${declared.length} suites declared: ${declared.join(', ')}`
+  );
+
+  if (deviceLibrary !== LIBRARY) {
+    console.error(
+      `[runtime-tests] the app is running the ${deviceLibrary || 'unknown'} entry point but this server expects ${LIBRARY}.`
+    );
+    console.error(
+      '[runtime-tests] Relaunch via --launch (which sets RUNTIME_TESTS_LIBRARY) or restart the app with the right entry point.'
+    );
+    send({ type: 'error', message: `Library mismatch: ${deviceLibrary}` });
+    shutdown(1);
+    return;
+  }
+
+  const unknown = (ONLY ?? []).filter((name) => !declared.includes(name));
+  if (unknown.length > 0) {
+    console.error(
+      `[runtime-tests] unknown suite name(s): ${unknown.join(', ')}`
+    );
+    console.error(`[runtime-tests] available suites: ${declared.join(', ')}`);
+    send({ type: 'error', message: `Unknown suites: ${unknown.join(', ')}` });
+    shutdown(1);
+    return;
+  }
+
+  selectedSuites = selectSuites(suites, ONLY);
+  let only = ONLY;
+  if (resumeFromSuite !== null) {
+    only = suitesToResume();
+    if (!only) {
+      return;
+    }
+    console.log(
+      `[runtime-tests] resuming after reload with: ${only.join(', ')}`
+    );
+    resumeFromSuite = null;
+  } else {
+    runStartedAt = Date.now();
+  }
+  send({
+    type: 'start',
+    ...(only ? { only } : {}),
+  });
+  console.log('[runtime-tests] start sent, running tests…');
+}
+
+function suitesToResume(): string[] | null {
+  const index = selectedSuites.indexOf(String(resumeFromSuite));
+  if (index === -1) {
+    console.error(
+      `[runtime-tests] cannot resume from suite '${resumeFromSuite}', it was not selected for this run.`
+    );
+    send({
+      type: 'error',
+      message: `Unknown resume suite: ${resumeFromSuite}`,
+    });
+    shutdown(1);
+    return null;
+  }
+  return selectedSuites.slice(index);
+}
+
+function onReload(msg: Partial<ReloadMessage>) {
+  resultsBeforeReload.passed += Number(msg.passed ?? 0);
+  resultsBeforeReload.failed += Number(msg.failed ?? 0);
+  resultsBeforeReload.skipped += Number(msg.skipped ?? 0);
+  resultsBeforeReload.failedTests.push(...(msg.failedTests ?? []));
+  resultsBeforeReload.failures.push(...collectFailures(msg));
+  const requestedSuite = String(msg.resumeFromSuite ?? '');
+  if (!requestedSuite) {
+    console.error(
+      '[runtime-tests] the device requested a reload without a suite to resume from.'
+    );
+    send({ type: 'error', message: 'Reload request without resumeFromSuite' });
+    shutdown(1);
+    return;
+  }
+  if (reloadRepeatsSuites(selectedSuites, lastResumeSuite, requestedSuite)) {
+    console.error(
+      `[runtime-tests] the device requested a reload that resumes from suite '${requestedSuite}', but the run already resumed from suite '${lastResumeSuite}'. Suite '${requestedSuite}' already ran in this run and would report its results twice, so the run stops.`
+    );
+    send({
+      type: 'error',
+      message: `Reload resumes from suite ${requestedSuite}, which is not after the previous resume suite ${lastResumeSuite}`,
+    });
+    shutdown(1);
+    return;
+  }
+  lastResumeSuite = requestedSuite;
+  resumeFromSuite = requestedSuite;
+  reloadInProgress = true;
+  console.log(
+    `[runtime-tests] device requested a reload, the run resumes from suite '${resumeFromSuite}'`
+  );
+  send({ type: 'reloadAccepted' });
+}
+
+function onLog(msg: Partial<LogMessage>) {
+  const logArgs = Array.isArray(msg.args) ? msg.args : [];
+  const line = logArgs.join(' ');
+  switch (msg.level) {
+    case 'warn':
+      console.warn(line);
+      break;
+    case 'error':
+      console.error(line);
+      break;
+    default:
+      console.log(line);
+  }
+}
+
+function onSuiteFinished(msg: Partial<SuiteFinishedMessage>) {
+  if (!AFTER_SUITE || runStartedAt === 0 || runFinished) {
+    return;
+  }
+  if (afterSuiteRunning) {
+    afterSuitePending = true;
+    return;
+  }
+  afterSuiteChain = runAfterSuiteCommand(AFTER_SUITE, String(msg.name ?? ''));
+}
+
+function runAfterSuiteCommand(
+  command: string,
+  suiteName: string
+): Promise<void> {
+  afterSuiteRunning = true;
+  afterSuitePending = false;
+  return new Promise((resolve) => {
+    let finished = false;
+    const onFinished = (outcome: string) => {
+      if (finished) {
+        return;
+      }
+      finished = true;
+      afterSuiteRunning = false;
+      if (outcome) {
+        console.warn(
+          `[runtime-tests] --after-suite command ${outcome} (after suite: ${suiteName})`
+        );
+      }
+      resolve(
+        afterSuitePending ? runAfterSuiteCommand(command, suiteName) : undefined
+      );
+    };
+    const child = spawn(command, {
+      shell: true,
+      stdio: ['ignore', 'inherit', 'inherit'],
+    });
+    child.on('error', (error) =>
+      onFinished(`failed to start: ${error.message}`)
+    );
+    child.on('exit', (code, signal) =>
+      onFinished(code === 0 ? '' : `exited with ${signal ?? `code ${code}`}`)
+    );
+  });
+}
+
+function onDone(msg: Partial<DoneMessage>) {
+  msg.passed = Number(msg.passed ?? 0) + resultsBeforeReload.passed;
+  msg.failed = Number(msg.failed ?? 0) + resultsBeforeReload.failed;
+  msg.skipped = Number(msg.skipped ?? 0) + resultsBeforeReload.skipped;
+  const failures = [...resultsBeforeReload.failures, ...collectFailures(msg)];
+  msg.failedTests = [
+    ...resultsBeforeReload.failedTests,
+    ...(msg.failedTests ?? []),
+  ];
+  const elapsed = ((Date.now() - runStartedAt) / 1000).toFixed(1);
+  console.log('');
+  console.log('========================================');
+  console.log(`[runtime-tests] ${LIBRARY} run finished in ${elapsed}s`);
+  console.log(
+    `[runtime-tests] passed: ${msg.passed}, failed: ${msg.failed}, skipped: ${msg.skipped}`
+  );
+  if (Number(msg.failed) > 0) {
+    console.log('[runtime-tests] Failed tests:');
+    for (const failure of failures) {
+      console.log(`  • ${failureTitle(failure)}`);
+      for (const error of failure.errors) {
+        console.log(`      ${firstLine(error)}`);
+      }
+    }
+  } else {
+    console.log('[runtime-tests] All tests passed!');
+  }
+  console.log('========================================');
+  reportRunToGitHub(msg, failures);
+  exitCode = Number(msg.failed) > 0 ? 1 : 0;
+  runFinished = true;
+  if (client) {
+    client.close();
+  } else {
+    shutdown(exitCode);
+  }
+}
+
+function collectFailures(msg: Partial<RunSummary>): TestFailure[] {
+  if (Array.isArray(msg.failures)) {
+    return msg.failures.map((failure) => ({
+      suite: String(failure.suite ?? ''),
+      name: String(failure.name ?? ''),
+      errors: Array.isArray(failure.errors) ? failure.errors.map(String) : [],
+    }));
+  }
+  const names = Array.isArray(msg.failedTests) ? msg.failedTests : [];
+  return names.map((name) => ({ suite: '', name: String(name), errors: [] }));
+}
+
+function failureTitle(failure: TestFailure): string {
+  return failure.suite ? `${failure.suite} › ${failure.name}` : failure.name;
+}
+
+function firstLine(text: string): string {
+  return stripAnsi(text).split('\n')[0].trim();
+}
+
+function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+}
+
+function reportRunToGitHub(msg: Partial<RunSummary>, failures: TestFailure[]) {
+  const counts = `${msg.failed} failed, ${msg.passed} passed, ${msg.skipped} skipped`;
+  const annotated = failures.slice(
+    0,
+    failures.length > MAX_ANNOTATIONS ? MAX_ANNOTATIONS - 1 : MAX_ANNOTATIONS
+  );
+  for (const failure of annotated) {
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      [failureTitle(failure), ...failure.errors.map(firstLine)].join('\n')
+    );
+  }
+  if (annotated.length < failures.length) {
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `${failures.length - annotated.length} more failed test(s), see the job summary`
+    );
+  }
+
+  if (failures.length === 0) {
+    appendGitHubStepSummary(`### ✅ ${RUN_LABEL}: ${counts}`, []);
+    return;
+  }
+  appendGitHubStepSummary(
+    `### ❌ ${RUN_LABEL}: ${counts}`,
+    failures.map(failureSummarySection)
+  );
+}
+
+function failureSummarySection(failure: TestFailure): string {
+  const lines = [`- **${failureTitle(failure)}**`];
+  if (failure.errors.length > 0) {
+    const text = failure.errors
+      .map((error) => stripAnsi(error).trimEnd())
+      .join('\n');
+    const fence = '`'.repeat(Math.max(3, longestBacktickRun(text) + 1));
+    lines.push('', `  ${fence}`);
+    for (const line of text.split('\n')) {
+      lines.push(`  ${line}`);
+    }
+    lines.push(`  ${fence}`, '');
+  }
+  return lines.join('\n');
+}
+
+function longestBacktickRun(text: string): number {
+  let longest = 0;
+  for (const run of text.match(/`+/g) ?? []) {
+    longest = Math.max(longest, run.length);
+  }
+  return longest;
+}
+
+function githubAnnotation(
+  level: 'error' | 'warning',
+  title: string,
+  message: string
+) {
+  if (!GITHUB_ACTIONS) {
+    return;
+  }
+  const escapeData = (value: string) =>
+    value.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  const escapeProperty = (value: string) =>
+    escapeData(value).replace(/:/g, '%3A').replace(/,/g, '%2C');
+  console.log(
+    `::${level} title=${escapeProperty(title)}::${escapeData(message)}`
+  );
+}
+
+function appendGitHubStepSummary(heading: string, sections: string[]) {
+  if (!GITHUB_STEP_SUMMARY) {
+    return;
+  }
+  try {
+    const room = STEP_SUMMARY_LIMIT_BYTES - stepSummarySize();
+    const parts = sections.length > 0 ? [heading, ''] : [heading];
+    let bytes = Buffer.byteLength(`${parts.join('\n')}\n\n`);
+    for (const [index, section] of sections.entries()) {
+      const note = `_${sections.length - index} more failed test(s) not shown, see the log._`;
+      const sectionBytes = Buffer.byteLength(`\n${section}`);
+      const noteBytes = Buffer.byteLength(`\n${note}`);
+      if (bytes + sectionBytes + noteBytes > room) {
+        parts.push(note);
+        bytes += noteBytes;
+        break;
+      }
+      parts.push(section);
+      bytes += sectionBytes;
+    }
+    if (bytes > room) {
+      console.warn(
+        '[runtime-tests] the job summary is full, the result of this run is only in the log'
+      );
+      return;
+    }
+    fs.appendFileSync(GITHUB_STEP_SUMMARY, `${parts.join('\n')}\n\n`);
+  } catch (error) {
+    console.warn(
+      `[runtime-tests] could not write the job summary: ${errorMessage(error)}`
+    );
+  }
+}
+
+function stepSummarySize(): number {
+  try {
+    return fs.statSync(GITHUB_STEP_SUMMARY).size;
+  } catch {
+    return 0;
+  }
+}
+
+function onError(msg: Partial<ErrorMessage>) {
+  console.error(`[runtime-tests] device reported error: ${msg.message}`);
+  if (msg.stack) {
+    console.error(msg.stack);
+  }
+  githubAnnotation(
+    'error',
+    RUN_LABEL,
+    `The app reported an error instead of finishing the run: ${msg.message}`
+  );
+  exitCode = 1;
+  runFinished = true;
+  if (client) {
+    client.close();
+  } else {
+    shutdown(exitCode);
+  }
+}
+
+function send(payload: ServerMessage) {
+  if (client && client.readyState === client.OPEN) {
+    client.send(JSON.stringify(payload));
+  }
+}
+
+function resetIdleTimer() {
+  clearTimer('idle');
+  idleTimer = setTimeout(() => {
+    console.error(
+      `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
+    );
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `No traffic from the app for ${IDLE_TIMEOUT_MS / 1000}s, the run is stuck. See the crash diagnostics in the log.`
+    );
+    void failWithDiagnostics(1);
+  }, IDLE_TIMEOUT_MS);
+}
+
+function clearTimer(which: 'connect' | 'idle') {
+  if (which === 'connect' && connectTimer) {
+    clearTimeout(connectTimer);
+    connectTimer = null;
+  }
+  if (which === 'idle' && idleTimer) {
+    clearTimeout(idleTimer);
+    idleTimer = null;
+  }
+}
+
+function printSanitizerReports() {
+  if (!SANITIZER || BUILD_ONLY) {
+    return;
+  }
+  let files: string[] = [];
+  try {
+    files = fs.readdirSync(SANITIZER_REPORT_DIR);
+  } catch {
+    return;
+  }
+  if (files.length === 0) {
+    console.log('[runtime-tests] no sanitizer reports were produced');
+    return;
+  }
+  // Reports accumulate across the runs of a session and are printed by the
+  // step that fails on them, so only point at them here.
+  console.error(
+    `[runtime-tests] ${files.length} sanitizer report file(s) in ${SANITIZER_REPORT_DIR}: ${files.join(', ')}`
+  );
+}
+
+async function failWithDiagnostics(code: number) {
+  clearTimer('connect');
+  clearTimer('idle');
+  try {
+    await dumpCrashDiagnostics();
+  } catch (error) {
+    console.error(
+      `[runtime-tests] crash diagnostics failed: ${errorMessage(error)}`
+    );
+  } finally {
+    shutdown(code);
+  }
+}
+
+function dumpCrashDiagnostics(): Promise<void> {
+  if (BUILD_ONLY) {
+    return Promise.resolve();
+  }
+  crashDiagnosticsPromise ??= (async () => {
+    if (PLATFORM === 'android') {
+      await dumpAndroidCrashDiagnostics();
+    } else if (PLATFORM === 'ios') {
+      await dumpIOSCrashDiagnostics();
+    }
+  })();
+  return crashDiagnosticsPromise;
+}
+
+async function dumpIOSCrashDiagnostics() {
+  if (process.platform !== 'darwin') {
+    const remoteUdid = process.env.RUNTIME_TESTS_REMOTE_UDID;
+    if (remoteUdid) {
+      await dumpRemoteIOSCrashDiagnostics(remoteUdid);
+    } else {
+      console.error(
+        '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
+      );
+    }
+    return;
+  }
+  const udid = iosUdid ?? UDID;
+  if (!udid) {
+    console.error(
+      '[runtime-tests] no selected iOS simulator for crash reports (pass --udid to select one)'
+    );
+    return;
+  }
+  const reportsDir = path.join(
+    os.homedir(),
+    'Library',
+    'Logs',
+    'DiagnosticReports'
+  );
+  console.error(
+    `[runtime-tests] looking for FabricExample crash reports of ${udid} in ${reportsDir}…`
+  );
+  let reports: IOSCrashReport[] = [];
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    reports = findFreshIOSCrashReports(reportsDir, udid);
+    if (reports.length > 0) {
+      await sleep(3000);
+      reports = findFreshIOSCrashReports(reportsDir, udid);
+      break;
+    }
+  }
+  if (reports.length === 0) {
+    console.error(
+      '[runtime-tests] no fresh crash reports (the app may have hung or been killed without crashing)'
+    );
+    return;
+  }
+  printIOSCrashReports(reports);
+}
+
+async function dumpRemoteIOSCrashDiagnostics(udid: string) {
+  console.error(
+    `[runtime-tests] fetching FabricExample crash reports from the remote simulator ${udid}…`
+  );
+  let reports: IOSCrashReport[] = [];
+  for (let attempt = 0; attempt < 10 && reports.length === 0; attempt++) {
+    await sleep(3000);
+    const reportsDir = await fetchRemoteIOSCrashReports(udid);
+    reports = reportsDir ? findFreshRemoteIOSCrashReports(reportsDir) : [];
+  }
+  await archiveRemoteIOSLogs(udid);
+  if (reports.length === 0) {
+    console.error(
+      '[runtime-tests] no fresh crash reports on the remote simulator (the app may have hung or been killed without crashing)'
+    );
+    return;
+  }
+  printIOSCrashReports(reports);
+}
+
+async function fetchRemoteIOSCrashReports(
+  udid: string
+): Promise<string | null> {
+  try {
+    const { stdout } = await run(
+      'sim-remote',
+      ['logs', udid, '--kind', 'crash', '--process', 'FabricExample'],
+      { timeout: 120_000 }
+    );
+    return stdout.split('\n')[0].trim() || null;
+  } catch (error) {
+    console.error(
+      `[runtime-tests] sim-remote logs failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+    return null;
+  }
+}
+
+function findFreshRemoteIOSCrashReports(reportsDir: string): IOSCrashReport[] {
+  return listFilesRecursively(reportsDir)
+    .filter((file) => {
+      const name = path.basename(file);
+      return (
+        name.startsWith('FabricExample') &&
+        (name.endsWith('.ips') || name.endsWith('.crash'))
+      );
+    })
+    .map((file) => ({
+      name: path.basename(file),
+      file,
+      mtimeMs: iosCrashReportTimeMs(file),
+    }))
+    .filter(
+      (report) => report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000
+    )
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+async function archiveRemoteIOSLogs(udid: string) {
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  const archive = path.join(
+    CRASH_REPORT_DIR,
+    `ios-remote-logs-${LIBRARY}.tar.gz`
+  );
+  try {
+    await run(
+      'sim-remote',
+      [
+        'logs',
+        udid,
+        '--process',
+        'FabricExample',
+        '--last',
+        '15m',
+        '--archive',
+        archive,
+      ],
+      { timeout: 300_000 }
+    );
+    console.error(
+      `[runtime-tests] crash reports and logs of the remote simulator saved to ${archive}`
+    );
+  } catch (error) {
+    console.error(
+      `[runtime-tests] could not archive the remote simulator logs: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
+function listFilesRecursively(dir: string): string[] {
+  let entries: fs.Dirent[] = [];
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  return entries.flatMap((entry) => {
+    const file = path.join(dir, entry.name);
+    return entry.isDirectory() ? listFilesRecursively(file) : [file];
+  });
+}
+
+function iosCrashReportTimeMs(file: string): number {
+  const timestamp = Date.parse(
+    String(readIOSCrashReportHeader(file).timestamp).replace(
+      /^(\S+) (\S+) ([+-]\d{2})(\d{2})$/,
+      '$1T$2$3:$4'
+    )
+  );
+  return Number.isNaN(timestamp) ? fs.statSync(file).mtimeMs : timestamp;
+}
+
+function readIOSCrashReportHeader(file: string): { timestamp?: string } {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf8').split('\n')[0]);
+  } catch {
+    return {};
+  }
+}
+
+function printIOSCrashReports(reports: { name: string; file: string }[]) {
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  for (const report of reports.slice(0, 3)) {
+    const saved = path.join(CRASH_REPORT_DIR, report.name);
+    fs.copyFileSync(report.file, saved);
+    const text = fs.readFileSync(report.file, 'utf8');
+    console.error(
+      `[runtime-tests] crash report ${report.name} (full report saved to ${saved}):`
+    );
+    console.error(formatIOSCrashReport(text));
+  }
+}
+
+function findFreshIOSCrashReports(
+  reportsDir: string,
+  udid: string
+): IOSCrashReport[] {
+  let names: string[] = [];
+  try {
+    names = fs.readdirSync(reportsDir);
+  } catch {
+    return [];
+  }
+  return names
+    .filter(
+      (name) =>
+        name.startsWith('FabricExample') &&
+        (name.endsWith('.ips') || name.endsWith('.crash'))
+    )
+    .map((name) => {
+      const file = path.join(reportsDir, name);
+      return { name, file, mtimeMs: fs.statSync(file).mtimeMs };
+    })
+    .filter(
+      (report) =>
+        report.mtimeMs >= (runStartedAt || serverStartedAt) - 60_000 &&
+        isCrashReportOfSimulator(report.file, udid)
+    )
+    .sort((a, b) => b.mtimeMs - a.mtimeMs);
+}
+
+function isCrashReportOfSimulator(file: string, udid: string): boolean {
+  return fs
+    .readFileSync(file, 'utf8')
+    .replaceAll('\\/', '/')
+    .includes(`/CoreSimulator/Devices/${udid}/`);
+}
+
+function formatIOSCrashReport(text: string): string {
+  const newlineIndex = text.indexOf('\n');
+  let payload: IpsPayload;
+  try {
+    payload = JSON.parse(text.slice(newlineIndex + 1));
+  } catch {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      return headLines(text, 200);
+    }
+  }
+  const lines: string[] = [];
+  if (payload.exception) {
+    lines.push(`exception: ${JSON.stringify(payload.exception)}`);
+  }
+  if (payload.termination) {
+    lines.push(`termination: ${JSON.stringify(payload.termination)}`);
+  }
+  if (payload.asi) {
+    lines.push(`abort messages: ${JSON.stringify(payload.asi)}`);
+  }
+  const images = payload.usedImages ?? [];
+  const formatFrame = (frame: IpsFrame): string => {
+    const image = images[frame.imageIndex ?? -1] ?? {};
+    const location = frame.symbol
+      ? `${frame.symbol} + ${frame.symbolLocation ?? 0}`
+      : `0x${(frame.imageOffset ?? 0).toString(16)}`;
+    return `${image.name ?? '?'}  ${location}`;
+  };
+  const lastExceptionBacktrace: IpsFrame[] = Array.isArray(
+    payload.lastExceptionBacktrace
+  )
+    ? payload.lastExceptionBacktrace
+    : [];
+  if (lastExceptionBacktrace.length > 0) {
+    lines.push('last exception backtrace:');
+    lastExceptionBacktrace.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  const faultingIndex = payload.faultingThread ?? 0;
+  const thread = (payload.threads ?? [])[faultingIndex];
+  if (thread) {
+    const threadName = thread.name ?? thread.queue ?? '';
+    lines.push(
+      `faulting thread ${faultingIndex}${threadName ? ` (${threadName})` : ''}:`
+    );
+    const frames: IpsFrame[] = thread.frames ?? [];
+    frames.forEach((frame, index) => {
+      lines.push(`  #${String(index).padStart(2)} ${formatFrame(frame)}`);
+    });
+  }
+  if (lines.length === 0) {
+    return headLines(text, 200);
+  }
+  return lines.join('\n');
+}
+
+async function dumpAndroidCrashDiagnostics() {
+  const serial = await crashDiagnosticsSerial();
+  if (!serial) {
+    console.error(
+      '[runtime-tests] no selected Android device available for crash diagnostics (pass --serial or --avd to select one)'
+    );
+    return;
+  }
+  console.error(`[runtime-tests] collecting crash diagnostics from ${serial}…`);
+  fs.mkdirSync(CRASH_REPORT_DIR, { recursive: true });
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+
+  let crashLog = '';
+  let hasCrashLog = false;
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await sleep(3000);
+    crashLog = await readCrashBuffer(serial);
+    hasCrashLog = crashBufferHasContent(crashLog);
+    if (hasCrashLog) {
+      await sleep(3000);
+      crashLog = await readCrashBuffer(serial);
+      break;
+    }
+  }
+  if (hasCrashLog) {
+    const file = path.join(CRASH_REPORT_DIR, `logcat-crash-${stamp}.txt`);
+    fs.writeFileSync(file, crashLog);
+    console.error(`[runtime-tests] logcat crash buffer (saved to ${file}):`);
+    console.error(tailLines(crashLog, 400));
+  } else {
+    console.error(
+      '[runtime-tests] logcat crash buffer is empty (no Java or native crash was recorded)'
+    );
+  }
+  await adbDiag(serial, ['logcat', '-b', 'crash', '-c']).catch(() => {});
+
+  const tombstone = await pullLatestTombstone(serial, stamp);
+  if (tombstone) {
+    console.error(
+      `[runtime-tests] tombstone ${tombstone.name} (saved to ${tombstone.file}):`
+    );
+    console.error(headLines(tombstone.text, 200));
+  }
+
+  const nativeReport = tombstone?.text ?? (hasCrashLog ? crashLog : null);
+  if (nativeReport) {
+    await symbolizeNativeCrash(serial, nativeReport, stamp);
+  }
+}
+
+async function readCrashBuffer(serial: string): Promise<string> {
+  return adbDiag(serial, ['logcat', '-b', 'crash', '-d']).then(
+    ({ stdout }) => stdout,
+    (error) => {
+      console.error(
+        `[runtime-tests] failed to read logcat crash buffer: ${errorMessage(error)}`
+      );
+      return '';
+    }
+  );
+}
+
+function crashBufferHasContent(crashLog: string): boolean {
+  return crashLog
+    .split('\n')
+    .some((line) => line.trim() && !line.startsWith('---------'));
+}
+
+async function pullLatestTombstone(
+  serial: string,
+  stamp: string
+): Promise<{ name: string; text: string; file: string } | null> {
+  const rootOutput = await adbDiag(serial, ['root']).then(
+    ({ stdout, stderr }) => stdout + stderr,
+    (error) => `${errorMessage(error)}`
+  );
+  if (/cannot run as root|error/i.test(rootOutput)) {
+    console.error(
+      `[runtime-tests] adb root unavailable, skipping tombstones: ${rootOutput.trim()}`
+    );
+    return null;
+  }
+  await adbDiag(serial, ['wait-for-device']).catch(() => {});
+  const pullDir = path.join(CRASH_REPORT_DIR, `tombstones-${stamp}`);
+  const pulled = await adbDiag(serial, [
+    'pull',
+    '-a',
+    '/data/tombstones',
+    pullDir,
+  ]).then(
+    () => true,
+    () => false
+  );
+  if (!pulled) {
+    console.error('[runtime-tests] no tombstones directory on the device');
+    return null;
+  }
+  const nestedDir = path.join(pullDir, 'tombstones');
+  const tombstonesDir = fs.existsSync(nestedDir) ? nestedDir : pullDir;
+  let entries: { name: string; mtimeMs: number }[] = [];
+  try {
+    entries = fs
+      .readdirSync(tombstonesDir)
+      .filter((name) => !name.endsWith('.pb'))
+      .map((name) => ({
+        name,
+        mtimeMs: fs.statSync(path.join(tombstonesDir, name)).mtimeMs,
+      }))
+      .sort((a, b) => b.mtimeMs - a.mtimeMs);
+  } catch {
+    entries = [];
+  }
+  if (entries.length === 0) {
+    console.error('[runtime-tests] no tombstones on the device');
+    return null;
+  }
+  const newest = entries[0];
+  const hostBoundary = (runStartedAt || serverStartedAt) - 60_000;
+  const deviceNowMs = await adbDiag(serial, ['shell', 'date', '+%s']).then(
+    ({ stdout }) => Number(stdout.trim()) * 1000,
+    () => NaN
+  );
+  const boundary = Number.isFinite(deviceNowMs)
+    ? deviceNowMs - (Date.now() - hostBoundary)
+    : hostBoundary;
+  if (newest.mtimeMs < boundary) {
+    console.error(
+      `[runtime-tests] newest tombstone (${newest.name}) predates this run — the app died without a native crash dump`
+    );
+    return null;
+  }
+  const file = path.join(tombstonesDir, newest.name);
+  const text = fs.readFileSync(file, 'utf8');
+  await adbDiag(serial, ['shell', 'rm', '-f', '/data/tombstones/*']).catch(
+    () => {}
+  );
+  return { name: newest.name, text, file };
+}
+
+async function symbolizeNativeCrash(
+  serial: string,
+  reportText: string,
+  stamp: string
+) {
+  if (!reportText.includes('*** ***')) {
+    return;
+  }
+  const ndkStack = findNdkStack();
+  if (!ndkStack) {
+    console.error(
+      '[runtime-tests] ndk-stack not found (looked in ANDROID_NDK_HOME and $ANDROID_HOME/ndk), skipping symbolication'
+    );
+    return;
+  }
+  let symDir = findAndroidSymbolsDir();
+  if (!symDir) {
+    console.error(
+      '[runtime-tests] no unstripped libs under android/app/build/intermediates/merged_native_libs, skipping symbolication'
+    );
+    return;
+  }
+  const abi = await adbDiag(serial, [
+    'shell',
+    'getprop',
+    'ro.product.cpu.abi',
+  ]).then(
+    ({ stdout }) => stdout.trim(),
+    () => null
+  );
+  if (abi && fs.existsSync(path.join(symDir, abi))) {
+    symDir = path.join(symDir, abi);
+  }
+  const dumpFile = path.join(CRASH_REPORT_DIR, `native-crash-${stamp}.txt`);
+  fs.writeFileSync(dumpFile, reportText);
+  const stdout = await run(ndkStack, ['-sym', symDir, '-dump', dumpFile], {
+    timeout: 60_000,
+  }).then(
+    (result) => result.stdout,
+    (error) => {
+      printCommandFailure(error);
+      return '';
+    }
+  );
+  if (stdout.trim()) {
+    const file = path.join(
+      CRASH_REPORT_DIR,
+      `native-crash-symbolized-${stamp}.txt`
+    );
+    fs.writeFileSync(file, stdout);
+    console.error(
+      `[runtime-tests] symbolized native stack trace (saved to ${file}):`
+    );
+    console.error(headLines(stdout, 250));
+  }
+}
+
+function adbDiag(serial: string, adbArgs: string[]): Promise<CommandResult> {
+  return adb(serial, adbArgs, { timeout: 30_000 });
+}
+
+function findNdkStack(): string | null {
+  const bin = process.platform === 'win32' ? 'ndk-stack.cmd' : 'ndk-stack';
+  const candidates: string[] = [];
+  if (process.env.ANDROID_NDK_HOME) {
+    candidates.push(path.join(process.env.ANDROID_NDK_HOME, bin));
+  }
+  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  const ndkRoot = sdkRoot ? path.join(sdkRoot, 'ndk') : null;
+  if (ndkRoot && fs.existsSync(ndkRoot)) {
+    const versions = fs.readdirSync(ndkRoot).sort().reverse();
+    for (const version of versions) {
+      candidates.push(path.join(ndkRoot, version, bin));
+    }
+  }
+  return candidates.find((candidate) => fs.existsSync(candidate)) ?? null;
+}
+
+function findAndroidSymbolsDir(): string | null {
+  const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
+  const root = path.join(
+    androidDir,
+    'app',
+    'build',
+    'intermediates',
+    'merged_native_libs',
+    buildType
+  );
+  if (!fs.existsSync(root)) {
+    return null;
+  }
+  const stack = [root];
+  while (stack.length > 0) {
+    const dir = stack.pop();
+    if (!dir) {
+      break;
+    }
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const full = path.join(dir, entry.name);
+      if (entry.name === 'lib') {
+        return full;
+      }
+      stack.push(full);
+    }
+  }
+  return null;
+}
+
+function headLines(text: string, count: number): string {
+  const lines = text.split('\n');
+  if (lines.length <= count) {
+    return text;
+  }
+  return (
+    lines.slice(0, count).join('\n') +
+    `\n[runtime-tests] … ${lines.length - count} more lines in the saved file`
+  );
+}
+
+function tailLines(text: string, count: number): string {
+  const lines = text.split('\n');
+  if (lines.length <= count) {
+    return text;
+  }
+  return (
+    `[runtime-tests] … ${lines.length - count} earlier lines in the saved file\n` +
+    lines.slice(-count).join('\n')
+  );
+}
+
+let shutdownStarted = false;
+
+function shutdown(code: number) {
+  if (shutdownStarted) {
+    return;
+  }
+  shutdownStarted = true;
+  printSanitizerReports();
+  clearTimer('connect');
+  clearTimer('idle');
+  if (metroChild && !metroChild.killed && metroChild.pid !== undefined) {
+    try {
+      process.kill(-metroChild.pid, 'SIGTERM');
+    } catch {
+      try {
+        metroChild.kill('SIGTERM');
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  void exitAfterSuiteCommands(code);
+}
+
+async function exitAfterSuiteCommands(code: number) {
+  await afterSuiteChain;
+  wss.close(() => {
+    httpServer.close(() => {
+      process.exit(code);
+    });
+  });
+  setTimeout(() => process.exit(code), 1000).unref();
+}
+
+function run(
+  cmd: string,
+  cmdArgs: string[],
+  options: ExecFileOptions = {}
+): Promise<CommandResult> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      cmd,
+      cmdArgs,
+      { maxBuffer: 64 * 1024 * 1024, ...options },
+      (error: (ExecFileException & CommandError) | null, stdout, stderr) => {
+        if (error) {
+          error.stdout = stdout;
+          error.stderr = stderr;
+          reject(error);
+        } else {
+          resolve({ stdout, stderr });
+        }
+      }
+    );
+  });
+}
+
+function probeTcp(
+  host: string,
+  port: number,
+  timeoutMs = 500
+): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new net.Socket();
+    const done = (result: boolean) => {
+      socket.destroy();
+      resolve(result);
+    };
+    socket.setTimeout(timeoutMs);
+    socket.once('connect', () => done(true));
+    socket.once('timeout', () => done(false));
+    socket.once('error', () => done(false));
+    socket.connect(port, host);
+  });
+}
+
+function probeMetro(timeoutMs = 1000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const req = http.get(
+      {
+        host: '127.0.0.1',
+        port: METRO_PORT,
+        path: '/status',
+        timeout: timeoutMs,
+      },
+      (res) => {
+        let body = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => {
+          body += chunk;
+        });
+        res.on('end', () => {
+          resolve(body.includes('packager-status:running'));
+        });
+      }
+    );
+    req.on('timeout', () => {
+      req.destroy();
+      resolve(false);
+    });
+    req.on('error', () => resolve(false));
+  });
+}
+
+async function ensureMetroRunning() {
+  if (await probeMetro()) {
+    console.log(
+      `[runtime-tests] Metro already running on :${METRO_PORT}, reusing it`
+    );
+    return;
+  }
+  if (await probeTcp('127.0.0.1', METRO_PORT)) {
+    throw new Error(
+      `Port ${METRO_PORT} is in use but not responding as Metro. Kill the stale process or pass --metro-port.`
+    );
+  }
+  console.log(
+    `[runtime-tests] starting Metro (\`yarn start --port ${METRO_PORT} --reset-cache\`)`
+  );
+  // --reset-cache: a Metro cache produced under a different Bundle Mode
+  // setting serves stale module maps ("Requiring unknown module").
+  // detached: Metro must get its own process group so shutdown can kill the
+  // whole tree — killing just the yarn wrapper orphans the actual Metro process.
+  metroChild = spawn(
+    'yarn',
+    ['start', '--port', String(METRO_PORT), '--reset-cache'],
+    {
+      cwd: projectRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
+    }
+  );
+  metroChild.stdout?.on('data', (chunk) => {
+    process.stdout.write(`[metro] ${chunk}`);
+  });
+  metroChild.stderr?.on('data', (chunk) => {
+    process.stderr.write(`[metro] ${chunk}`);
+  });
+  metroChild.on('exit', (code) => {
+    if (!runFinished) {
+      console.error(`[runtime-tests] Metro exited with code ${code}`);
+    }
+  });
+
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
+    if (await probeMetro()) {
+      console.log(`[runtime-tests] Metro is up on :${METRO_PORT}`);
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`Metro did not respond to /status within 180s`);
+}
+
+async function resolveSimulator() {
+  const { stdout } = await run('xcrun', [
+    'simctl',
+    'list',
+    'devices',
+    'available',
+    '--json',
+  ]);
+  const devices = Object.values(
+    (JSON.parse(stdout) as { devices: Record<string, SimctlDevice[]> }).devices
+  ).flat();
+
+  if (UDID) {
+    const device = devices.find((d) => d.udid === UDID);
+    if (!device) {
+      throw new Error(`No available simulator with UDID ${UDID}`);
+    }
+    return device;
+  }
+
+  const byName = devices.find((d) => d.name === SIMULATOR);
+  if (byName) {
+    return byName;
+  }
+
+  const iphones = devices.filter((d) => d.name.startsWith('iPhone'));
+  const fallback = iphones.find((d) => d.state === 'Booted') ?? iphones[0];
+  if (!fallback) {
+    throw new Error(
+      `No simulator named "${SIMULATOR}" and no iPhone simulators available`
+    );
+  }
+  console.log(
+    `[runtime-tests] simulator "${SIMULATOR}" not found, using "${fallback.name}"`
+  );
+  return fallback;
+}
+
+async function ensureBooted(device: SimctlDevice) {
+  if (device.state !== 'Booted') {
+    console.log(`[runtime-tests] booting ${device.name} (${device.udid})`);
+    await run('xcrun', ['simctl', 'boot', device.udid]).catch((error) => {
+      if (!String(error.stderr).includes('current state: Booted')) {
+        throw error;
+      }
+    });
+  }
+  await run('xcrun', ['simctl', 'bootstatus', device.udid]);
+}
+
+function sanitizerBuildArgs() {
+  return SANITIZER ? SANITIZERS[SANITIZER].buildArgs : [];
+}
+
+async function buildApp() {
+  console.log(
+    `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
+  );
+  await run(
+    'xcodebuild',
+    [
+      '-workspace',
+      'FabricExample.xcworkspace',
+      '-scheme',
+      'DebugRuntimeTests',
+      '-configuration',
+      CONFIGURATION,
+      '-destination',
+      'generic/platform=iOS Simulator',
+      ...sanitizerBuildArgs(),
+      'build',
+    ],
+    { cwd: iosDir }
+  );
+}
+
+async function appPath() {
+  const { stdout } = await run(
+    'xcodebuild',
+    [
+      '-workspace',
+      'FabricExample.xcworkspace',
+      '-scheme',
+      'DebugRuntimeTests',
+      '-configuration',
+      CONFIGURATION,
+      '-destination',
+      'generic/platform=iOS Simulator',
+      ...sanitizerBuildArgs(),
+      '-showBuildSettings',
+      '-json',
+    ],
+    { cwd: iosDir }
+  );
+  const entries: { buildSettings?: Record<string, string> }[] = JSON.parse(
+    stdout.slice(stdout.indexOf('['))
+  );
+  const entry =
+    entries.find(
+      (candidate) =>
+        candidate.buildSettings?.WRAPPER_NAME === 'FabricExample.app'
+    ) ?? entries[0];
+
+  if (!entry?.buildSettings) {
+    throw new Error(`No build settings for configuration ${CONFIGURATION}`);
+  }
+
+  const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
+  return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
+}
+
+async function installAndLaunch(udid: string) {
+  const app = await appPath();
+  if (SANITIZER) {
+    assertSanitizerRuntimeEmbedded(app);
+  }
+  console.log(`[runtime-tests] installing ${app}`);
+  await run('xcrun', ['simctl', 'install', udid, app]);
+
+  await run('xcrun', [
+    'simctl',
+    'spawn',
+    udid,
+    'defaults',
+    'write',
+    BUNDLE_ID,
+    'RCT_jsLocation',
+    `127.0.0.1:${METRO_PORT}`,
+  ]);
+
+  await run('xcrun', ['simctl', 'terminate', udid, BUNDLE_ID]).catch(() => {});
+  if (SANITIZER) {
+    if (!SKIP_BUILD) {
+      fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    }
+    fs.mkdirSync(SANITIZER_REPORT_DIR, { recursive: true });
+  }
+  console.log(
+    `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
+  );
+  await run('xcrun', ['simctl', 'launch', udid, BUNDLE_ID], {
+    env: {
+      ...process.env,
+      SIMCTL_CHILD_RUNTIME_TESTS_LIBRARY: LIBRARY,
+      SIMCTL_CHILD_RUNTIME_TESTS_WS_URL: WS_URL,
+      ...(SANITIZER ? SANITIZERS[SANITIZER].launchEnv : {}),
+    },
+  });
+}
+
+function sdkTool(dir: string, name: string): string {
+  const sdkRoot = process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT;
+  if (sdkRoot) {
+    const candidate = path.join(sdkRoot, dir, name);
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return name;
+}
+
+const ADB = sdkTool('platform-tools', 'adb');
+
+function adb(
+  serial: string,
+  adbArgs: string[],
+  options: ExecFileOptions = {}
+): Promise<CommandResult> {
+  return run(ADB, ['-s', serial, ...adbArgs], options);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function listAndroidDevices(): Promise<AdbDevice[]> {
+  const { stdout } = await run(ADB, ['devices']);
+  return stdout
+    .split('\n')
+    .slice(1)
+    .map((line) => line.trim().split(/\s+/))
+    .filter((parts) => parts.length >= 2)
+    .map(([serial, state]) => ({ serial, state }));
+}
+
+function androidTools(): AndroidTools {
+  const emulatorBin = sdkTool('emulator', 'emulator');
+  return {
+    listDevices: listAndroidDevices,
+    avdName: async (serial) =>
+      parseAvdName((await adb(serial, ['emu', 'avd', 'name'])).stdout),
+    listAvds: async () => {
+      const { stdout } = await run(emulatorBin, ['-list-avds']);
+      return stdout
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line && !/^INFO\s*\|/.test(line));
+    },
+    bootAvd: (avd) => {
+      const child = spawn(
+        emulatorBin,
+        ['-avd', avd, '-no-snapshot-save', '-no-boot-anim', '-no-audio'],
+        { detached: true, stdio: 'ignore' }
+      );
+      child.unref();
+      let exitStatus: string | null = null;
+      child.on('exit', (code, signal) => {
+        exitStatus = String(code ?? signal);
+      });
+      child.on('error', (error) => {
+        exitStatus = error.message;
+      });
+      return () => exitStatus;
+    },
+    isBootCompleted: async (serial) => {
+      const { stdout } = await adb(serial, [
+        'shell',
+        'getprop',
+        'sys.boot_completed',
+      ]).catch(() => ({ stdout: '' }));
+      return stdout.trim() === '1';
+    },
+    sleep,
+    log: (message) => console.log(message),
+  };
+}
+
+function resolveAndroidDevice() {
+  return resolveAndroidTarget({ serial: SERIAL, avd: AVD }, androidTools());
+}
+
+async function crashDiagnosticsSerial() {
+  if (androidSerial) {
+    return androidSerial;
+  }
+  if (SERIAL) {
+    const serials = await readyAndroidSerials();
+    return serials.includes(SERIAL) ? SERIAL : null;
+  }
+  if (AVD) {
+    return findRunningAvd(AVD, await readyAndroidSerials(), androidTools());
+  }
+  return null;
+}
+
+async function readyAndroidSerials() {
+  const devices = await listAndroidDevices().catch((error) => {
+    console.error(`[runtime-tests] adb devices failed: ${errorMessage(error)}`);
+    return [];
+  });
+  return readySerials(devices);
+}
+
+async function buildAndroidApp(serial: string) {
+  const abi = await adb(serial, ['shell', 'getprop', 'ro.product.cpu.abi'])
+    .then(({ stdout }) => stdout.trim())
+    .catch(() => null);
+  console.log(
+    `[runtime-tests] building with gradle (assemble${CONFIGURATION}${abi ? `, ABI ${abi}` : ''})… this can take a while`
+  );
+  const gradleArgs = [`assemble${CONFIGURATION}`];
+  if (!IS_RELEASE) {
+    gradleArgs.push(`-PreactNativeDevServerPort=${METRO_PORT}`);
+  }
+  if (abi) {
+    gradleArgs.push(`-PreactNativeArchitectures=${abi}`);
+  }
+  await run(path.join(androidDir, 'gradlew'), gradleArgs, { cwd: androidDir });
+}
+
+async function installAndLaunchAndroid(serial: string) {
+  const buildType = CONFIGURATION[0].toLowerCase() + CONFIGURATION.slice(1);
+  const apk = path.join(
+    androidDir,
+    'app',
+    'build',
+    'outputs',
+    'apk',
+    buildType,
+    `app-${buildType}.apk`
+  );
+  if (!fs.existsSync(apk)) {
+    throw new Error(`APK not found at ${apk} — run once without --skip-build`);
+  }
+  console.log(`[runtime-tests] installing ${apk}`);
+  await adb(serial, ['install', '-r', apk]);
+
+  for (const port of [METRO_PORT, PORT]) {
+    await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
+      () => {}
+    );
+  }
+
+  console.log(
+    `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
+  );
+  await adb(serial, [
+    'shell',
+    'am',
+    'start',
+    // -S force-stops the app inside am, avoiding the race a separate
+    // `am force-stop` loses against this launch. CLEAR_TASK|NEW_TASK then wipes
+    // the recents task record so its extra-less base intent cannot be restored
+    // instead of this launch (CLEAR_TASK is ignored without NEW_TASK).
+    '-S',
+    '-f',
+    '0x10008000',
+    '-n',
+    `${ANDROID_APP_ID}/.MainActivity`,
+    '--es',
+    'RUNTIME_TESTS_LIBRARY',
+    LIBRARY,
+    '--es',
+    'RUNTIME_TESTS_WS_URL',
+    WS_URL,
+  ]);
+}
+
+if (SHOULD_LAUNCH) {
+  (async () => {
+    if (!IS_RELEASE) {
+      await ensureMetroRunning();
+    }
+    if (PLATFORM === 'android') {
+      const serial = await resolveAndroidDevice();
+      androidSerial = serial;
+      console.log(`[runtime-tests] using Android device ${serial}`);
+      if (!SKIP_BUILD) {
+        await buildAndroidApp(serial);
+      }
+      await installAndLaunchAndroid(serial);
+    } else {
+      const device = await resolveSimulator();
+      iosUdid = device.udid;
+      await ensureBooted(device);
+      if (!SKIP_BUILD) {
+        await buildApp();
+      }
+      await installAndLaunch(device.udid);
+    }
+    armConnectTimer();
+  })().catch((error) => {
+    printCommandFailure(error);
+    shutdown(1);
+  });
+}
+
+function printCommandFailure(error: CommandError) {
+  console.error(`[runtime-tests] ${error.message}`);
+  if (error.stdout) {
+    console.error(String(error.stdout).slice(-20000));
+  }
+  if (error.stderr) {
+    console.error(String(error.stderr).slice(-4000));
+  }
+}
+
+function assertSanitizerRuntimeEmbedded(app: string) {
+  if (!SANITIZER) {
+    return;
+  }
+
+  const prefix = SANITIZERS[SANITIZER].runtimePrefix;
+  const frameworks = path.join(app, 'Frameworks');
+  const embedded =
+    fs.existsSync(frameworks) &&
+    fs.readdirSync(frameworks).some((name) => name.startsWith(prefix));
+  if (!embedded) {
+    throw new Error(
+      `the ${SANITIZER} sanitizer runtime (${prefix}*) is not embedded in ${app} — the build was not instrumented`
+    );
+  }
+  console.log(
+    `[runtime-tests] ${SANITIZER} sanitizer runtime is embedded in the app`
+  );
+}
+
+if (BUILD_ONLY) {
+  (async () => {
+    if (SANITIZER) {
+      fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
+    }
+    await buildApp();
+    if (SANITIZER) {
+      assertSanitizerRuntimeEmbedded(await appPath());
+    }
+    shutdown(0);
+  })().catch((error) => {
+    printCommandFailure(error);
+    shutdown(1);
+  });
+}
+
+process.on('SIGINT', () => shutdown(130));
+process.on('SIGTERM', () => shutdown(143));
+
+function printUsage() {
+  console.log(`Usage: yarn runtime-tests --library <${LIBRARIES.join('|')}> [options]
+
+Builds the runtime tests app, installs it, runs the requested library's test
+suites and reports the results. \`yarn runtime-tests\` implies --launch;
+\`yarn runtime-tests:server\` waits for you to start the app yourself.
+
+Required
+  --library <name>          One of: ${LIBRARIES.join(', ')}.
+
+Target
+  --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
+  --simulator <name>        iOS simulator to boot. Default: iPhone 17.
+  --udid <udid>             iOS simulator to reuse, instead of --simulator.
+                            Needed for crash reports in server mode on macOS.
+  --serial <serial>         Android device already running (see \`adb devices\`).
+                            Pass --serial or --avd when more than one device
+                            is connected.
+  --avd <name>              Android AVD to use when no --serial is given.
+                            Reuses its running emulator or boots it.
+
+Build and run
+  --configuration <name>    Xcode configuration / Gradle build type.
+                            Default: DebugRuntimeTests. Release builds embed
+                            the bundle and run without Metro.
+  --skip-build              Reuse the installed app. Only safe when nothing
+                            native changed - JS is served by Metro.
+  --launch                  Launch the app after installing it.
+  --only <a,b>              Comma separated suite names to run. Suite names come
+                            from the library's suites.ts, for example
+                            "run loop" or "runtimes,memory".
+  --after-suite <command>   Shell command to run each time the app finishes a
+                            describe() suite, e.g. a cloud keepalive ping.
+                            Overlapping runs are coalesced into one pending
+                            call; a failing command only logs a warning.
+
+Ports and timeouts
+  --metro-port <port>       Default: 8081.
+  --port <port>             Reporting WebSocket. Default: --metro-port + 1,
+                            or 8082 for Release builds. Passed to the app at
+                            launch as RUNTIME_TESTS_WS_URL.
+  --connect-timeout <secs>  Wait for the app to connect. Default: 600.
+  --idle-timeout <secs>     Give up after this much silence. Default: 600.
+
+  --help                    Show this message.
+
+Environment
+  RUNTIME_TESTS_CI_REPORT=0 On GitHub Actions the results are also reported
+                            as annotations and in the job summary. Set this
+                            for a run that is expected to fail.`);
+}
+
+function parseArgs(argv: string[]): Record<string, string | true> {
+  const out: Record<string, string | true> = {};
+  for (let i = 0; i < argv.length; i++) {
+    const token = argv[i];
+    if (!token.startsWith('--')) {
+      continue;
+    }
+    const key = token.slice(2);
+    const next = argv[i + 1];
+    if (next === undefined || next.startsWith('--')) {
+      if (!BOOLEAN_FLAGS.has(key)) {
+        console.error(`[runtime-tests] --${key} requires a value`);
+        process.exit(1);
+      }
+      out[key] = true;
+    } else {
+      out[key] = next;
+      i++;
+    }
+  }
+  return out;
+}

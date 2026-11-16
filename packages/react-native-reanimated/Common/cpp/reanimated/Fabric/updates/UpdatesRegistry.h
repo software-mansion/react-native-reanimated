@@ -9,6 +9,7 @@
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -50,6 +51,7 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
+  std::optional<folly::dynamic> getProp(Tag tag, const char *propName) const;
 #ifdef ANDROID
   void mergeInto(Tag tag, folly::dynamic &target, PropNamePredicate isIncluded) const;
 #endif
@@ -81,7 +83,7 @@ class UpdatesRegistry {
       jsi::Runtime &rt,
       jsi::Value &props);
 
-  void collectProps(PropsMap &propsMap);
+  void collectProps(PropsMap &propsMap) const;
   UpdatesBatch getPendingUpdates();
 
  protected:
@@ -98,6 +100,10 @@ class UpdatesRegistry {
 
   /// Assumes the caller already locked the registry.
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic &&props);
+
+  /// Assumes the caller already locked the registry.
+  std::unordered_set<Tag> getPendingTags() const;
 
   /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;

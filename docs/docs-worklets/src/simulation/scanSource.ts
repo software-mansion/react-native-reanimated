@@ -1,0 +1,202 @@
+import { SnippetError } from './errors';
+import type { FnInfo } from './types';
+
+const HEADER_PATTERN =
+  /^\s*(?:export\s+(?:default\s+)?)?function\s*\*\s*([A-Za-z_$][\w$]*)\s*\(/;
+const NATIVE_DIRECTIVE_PATTERN = /^\s*'native';\s*$/;
+const HIDDEN_DIRECTIVE_PATTERN = /^\s*'hidden';\s*$/;
+const WORKLET_DIRECTIVE_PATTERN = /^\s*(['"])worklet\1;\s*(?:\/\/.*)?$/;
+const LOOP_PATTERN = /^\s*(?:for|while)\s*\(/;
+const YIELD_PATTERN =
+  /^\s*(?:(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?|if\s*\(\s*)yield\b/;
+const REGEX_LITERAL_PATTERN =
+  /(^|[=(,:!&|?{}[;+\-*%<>~^]|\b(?:return|yield|typeof|case)\b)\s*\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n])+\/[a-z]*/g;
+const IF_HEADER_PATTERN = /^\s*if\s*\(.*\)\s*\{\s*(?:\/\/.*)?$/;
+
+export function scanSource(source: string): Map<string, FnInfo> {
+  const fns = new Map<string, FnInfo>();
+  const lines = source.split('\n');
+  const stack: { info: FnInfo; depth: number }[] = [];
+
+  lines.forEach((text, index) => {
+    const line = index + 1;
+    const header = HEADER_PATTERN.exec(text);
+    if (header !== null) {
+      const info: FnInfo = {
+        name: header[1],
+        headerLine: line,
+        endLine: line,
+        yieldLines: [],
+        yieldEnds: [],
+        isNative: false,
+        isHidden: false,
+        isWorklet: false,
+        hasLoop: false,
+      };
+      if (fns.has(info.name)) {
+        throw new SnippetError(`duplicate function ${info.name}`, line);
+      }
+      fns.set(info.name, info);
+      const depth = bracketDelta(text, '{', '}');
+      if (depth <= 0) {
+        info.endLine = line;
+      } else {
+        stack.push({ info, depth });
+      }
+      return;
+    }
+    const top = stack[stack.length - 1];
+    if (top === undefined) {
+      if (YIELD_PATTERN.test(text)) {
+        throw new SnippetError('yield outside of a snippet function', line);
+      }
+      return;
+    }
+    const current = top.info;
+    if (YIELD_PATTERN.test(text)) {
+      if ((codeOf(text).match(/\byield\b/g) ?? []).length > 1) {
+        throw new SnippetError(
+          'put each yield on its own line; the simulator tracks one yield per line',
+          line
+        );
+      }
+      current.yieldLines.push(line);
+      current.yieldEnds.push(statementEnd(lines, index));
+    }
+    if (NATIVE_DIRECTIVE_PATTERN.test(text)) {
+      current.isNative = true;
+    }
+    if (HIDDEN_DIRECTIVE_PATTERN.test(text)) {
+      current.isHidden = true;
+    }
+    if (
+      top.depth === 1 &&
+      current.yieldLines.length === 0 &&
+      WORKLET_DIRECTIVE_PATTERN.test(text)
+    ) {
+      current.isWorklet = true;
+    }
+    if (LOOP_PATTERN.test(text)) {
+      current.hasLoop = true;
+    }
+    top.depth += bracketDelta(text, '{', '}');
+    if (top.depth <= 0) {
+      current.endLine = line;
+      stack.pop();
+    }
+  });
+
+  const open = stack[stack.length - 1];
+  if (open !== undefined) {
+    throw new SnippetError(
+      `unterminated function ${open.info.name}`,
+      open.info.headerLine
+    );
+  }
+  return fns;
+}
+
+function statementEnd(lines: string[], startIndex: number): number {
+  if (IF_HEADER_PATTERN.test(lines[startIndex])) {
+    return startIndex + 1;
+  }
+  let depth = 0;
+  for (let index = startIndex; index < lines.length; index++) {
+    const text = lines[index];
+    depth +=
+      bracketDelta(text, '(', ')') +
+      bracketDelta(text, '[', ']') +
+      bracketDelta(text, '{', '}');
+    if (depth <= 0 && /;\s*$/.test(text)) {
+      return index + 1;
+    }
+  }
+  return startIndex + 1;
+}
+
+function bracketDelta(text: string, open: string, close: string): number {
+  let delta = 0;
+  let quote: string | null = null;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (quote !== null) {
+      if (char === '\\') {
+        i++;
+      } else if (char === quote) {
+        quote = null;
+      }
+      continue;
+    }
+    if (char === '/' && text[i + 1] === '/') {
+      break;
+    }
+    if (char === "'" || char === '"' || char === '`') {
+      quote = char;
+    } else if (char === open) {
+      delta++;
+    } else if (char === close) {
+      delta--;
+    }
+  }
+  return delta;
+}
+
+function codeOf(text: string): string {
+  return withoutStrings(text)
+    .replace(REGEX_LITERAL_PATTERN, '$1""')
+    .replace(/\/\/.*$/, '');
+}
+
+function withoutStrings(text: string): string {
+  let result = '';
+  let index = 0;
+  while (index < text.length) {
+    const char = text[index];
+    if (char === "'" || char === '"') {
+      let end = index + 1;
+      while (end < text.length && text[end] !== char) {
+        end += text[end] === '\\' ? 2 : 1;
+      }
+      result += '""';
+      index = end + 1;
+      continue;
+    }
+    if (char === '`') {
+      let end = index + 1;
+      const interpolations: string[] = [];
+      while (end < text.length && text[end] !== '`') {
+        if (text[end] === '\\') {
+          end += 2;
+          continue;
+        }
+        if (text.startsWith('${', end)) {
+          const close = closingBrace(text, end + 1);
+          interpolations.push(withoutStrings(text.slice(end + 2, close)));
+          end = close + 1;
+          continue;
+        }
+        end++;
+      }
+      result += `""${interpolations.map((inner) => ` ${inner} `).join('')}`;
+      index = end + 1;
+      continue;
+    }
+    result += char;
+    index++;
+  }
+  return result;
+}
+
+function closingBrace(text: string, open: number): number {
+  let depth = 0;
+  for (let index = open; index < text.length; index++) {
+    if (text[index] === '{') depth++;
+    if (text[index] === '}') {
+      depth--;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return text.length;
+}

@@ -184,11 +184,11 @@ async function recordColorFrames(
     await waitForAnimationUpdates(RECORDED_FRAMES + 1);
   }
 
+  await stopRecordingAnimationUpdates();
   const frames = toColorFrames(await updatesContainer.getUpdates());
   const nativeFrames = toColorFrames(
     await updatesContainer.getNativeSnapshots()
   );
-  await stopRecordingAnimationUpdates();
   await unmockAnimationTimer();
 
   return { frames, nativeFrames };

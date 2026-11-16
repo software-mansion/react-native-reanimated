@@ -15,8 +15,10 @@
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc --noEmit",
-    "lint": "yarn run --top-level oxfmt --check docs src versioned_docs",
-    "format": "yarn run --top-level oxfmt docs src versioned_docs"
+    "test": "node -r ./scripts/register-simulation.js --test 'src/simulation/**/*.test.ts' 'src/components/ThreadingSimulation/*.test.ts' 'plugins/**/*.test.js'",
+    "trace": "node -r ./scripts/register-simulation.js src/simulation/cli.ts",
+    "lint": "yarn run --top-level oxfmt --check docs plugins src versioned_docs",
+    "format": "yarn run --top-level oxfmt docs plugins src versioned_docs"
   },
   "dependencies": {
     "@babel/core": "7.29.6",
@@ -62,10 +64,10 @@
     "react-dom": "19.1.1",
     "react-native": "0.83.0",
     "react-native-gesture-handler": "2.28.0",
-    "react-native-reanimated": "4.6.0",
+    "react-native-reanimated": "4.8.0-nightly-20261027-bccbb730e",
     "react-native-svg": "15.15.4",
     "react-native-web": "0.21.2",
-    "react-native-worklets": "0.12.1",
+    "react-native-worklets": "0.14.0-nightly-20261028-bccbb730e",
     "source-map": "0.7.4",
     "source-map-loader": "4.0.1",
     "typescript": "5.9.3",
@@ -81,6 +83,12 @@
     "copy-webpack-plugin": "11.0.0",
     "esbuild": "0.28.1",
     "esbuild-register": "3.5.0",
+    "remark-directive": "3.0.1",
+    "remark-gfm": "4.0.1",
+    "remark-mdx": "3.1.1",
+    "remark-parse": "11.0.0",
+    "remark-stringify": "11.0.0",
+    "unified": "11.0.5",
     "webpack-cli": "5.0.1"
   },
   "browserslist": {

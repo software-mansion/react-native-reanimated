@@ -1,7 +1,7 @@
 'use strict';
 
 import type { ReactNode } from 'react';
-import { createElement } from 'react';
+import { createElement, useState } from 'react';
 import type { TextProps } from 'react-native';
 import {
   Animated as AnimatedRN,
@@ -16,6 +16,7 @@ import type {
   AnimationCallback,
   EventHandler,
   EventHandlerProcessed,
+  SharedValue,
   WithDecayConfig,
   WithSpringConfig,
   WithTimingConfig,
@@ -49,6 +50,7 @@ import {
   ScreenTransition as ScreenTransitionPresets,
   SensorType,
   setUpTests,
+  SharedTransitionType,
   SnappySpringConfig,
   SnappySpringConfigWithDuration,
   steps,
@@ -62,6 +64,58 @@ const NOOP = () => {};
 const NOOP_FACTORY = () => NOOP;
 const ID = <T>(t: T) => t;
 const IMMEDIATE_CALLBACK_INVOCATION = <T>(callback: () => T) => callback();
+
+function useMockScrollOffset(
+  _animatedRef: unknown,
+  providedOffset?: SharedValue<number>
+) {
+  return useState(() => providedOffset ?? createMockSharedValue(0))[0];
+}
+
+function createMockSharedValue<Value>(init: Value): SharedValue<Value> {
+  const value = { value: init };
+  return new Proxy(value, {
+    get(target, prop) {
+      if (prop === '_isReanimatedSharedValue') {
+        return true;
+      }
+      if (prop === 'value') {
+        return target.value;
+      }
+      if (prop === 'get') {
+        return () => target.value;
+      }
+      if (prop === 'set') {
+        return (newValue: Value | ((currentValue: Value) => Value)) => {
+          if (typeof newValue === 'function') {
+            target.value = (newValue as (currentValue: Value) => Value)(
+              target.value
+            );
+          } else {
+            target.value = newValue;
+          }
+        };
+      }
+      if (prop === 'modify') {
+        return (modifier?: (currentValue: Value) => Value) => {
+          if (modifier !== undefined) {
+            target.value = modifier(target.value);
+          }
+        };
+      }
+      if (prop === 'addListener' || prop === 'removeListener') {
+        return NOOP;
+      }
+    },
+    set(target, prop: string, newValue) {
+      if (prop === 'value') {
+        target.value = newValue;
+        return true;
+      }
+      return false;
+    },
+  }) as SharedValue<Value>;
+}
 
 const hook = {
   useAnimatedKeyboard: () => ({ height: 0, state: 0 }),
@@ -98,7 +152,14 @@ const hook = {
   useDerivedValue: <Value>(processor: () => Value) => {
     const result = processor();
 
-    return { value: result, get: () => result, _isReanimatedSharedValue: true };
+    return {
+      value: result,
+      get: () => result,
+      modify: NOOP,
+      addListener: NOOP,
+      removeListener: NOOP,
+      _isReanimatedSharedValue: true,
+    };
   },
   useEvent: <
     Event extends object,
@@ -119,43 +180,15 @@ const hook = {
     useWeb: false,
   }),
   useReducedMotion: () => false,
-  useScrollOffset: () => ({ value: 0 }),
-  useScrollViewOffset: () => ({ value: 0 }),
-  useSharedValue: <Value>(init: Value) => {
-    const value = { value: init };
-    return new Proxy(value, {
-      get(target, prop) {
-        if (prop === '_isReanimatedSharedValue') {
-          return true;
-        }
-        if (prop === 'value') {
-          return target.value;
-        }
-        if (prop === 'get') {
-          return () => target.value;
-        }
-        if (prop === 'set') {
-          return (newValue: Value | ((currentValue: Value) => Value)) => {
-            if (typeof newValue === 'function') {
-              target.value = (newValue as (currentValue: Value) => Value)(
-                target.value
-              );
-            } else {
-              target.value = newValue;
-            }
-          };
-        }
-      },
-      set(target, prop: string, newValue) {
-        if (prop === 'value') {
-          target.value = newValue;
-          return true;
-        }
-        return false;
-      },
-    });
-  },
-  useTimestamp: () => ({ value: 0 }),
+  useScrollOffset: useMockScrollOffset,
+  useScrollViewOffset: useMockScrollOffset,
+  useSharedValue: <Value>(init: Value | (() => Value)) =>
+    useState(() =>
+      createMockSharedValue(
+        typeof init === 'function' ? (init as () => Value)() : init
+      )
+    )[0],
+  useTimestamp: () => useState(() => createMockSharedValue(0))[0],
 };
 
 const animation = {
@@ -300,6 +333,10 @@ class BaseAnimationMock {
     return this;
   }
 
+  withTargetValues() {
+    return this;
+  }
+
   easing(_: (t: number) => number) {
     return this;
   }
@@ -320,7 +357,7 @@ class BaseAnimationMock {
     return this;
   }
 
-  overshootClamping(_: number) {
+  overshootClamping(_: boolean) {
     return this;
   }
 
@@ -357,6 +394,47 @@ class BaseAnimationMock {
   }
 }
 
+class SharedTransitionMock extends BaseAnimationMock {
+  fadeContent() {
+    return this;
+  }
+
+  custom() {
+    return this;
+  }
+
+  progressAnimation() {
+    return this;
+  }
+
+  defaultTransitionType() {
+    return this;
+  }
+}
+
+const SharedTransition = withStaticModifiers(SharedTransitionMock);
+
+type Methods = Record<string, (...args: unknown[]) => unknown>;
+
+function withStaticModifiers<Builder extends new () => object>(
+  BuilderClass: Builder
+) {
+  const statics = BuilderClass as unknown as Methods;
+  for (
+    let prototype = BuilderClass.prototype;
+    prototype !== Object.prototype;
+    prototype = Object.getPrototypeOf(prototype)
+  ) {
+    for (const name of Object.getOwnPropertyNames(prototype)) {
+      if (name !== 'constructor' && !(name in BuilderClass)) {
+        statics[name] = (...args) =>
+          (new BuilderClass() as Methods)[name](...args);
+      }
+    }
+  }
+  return BuilderClass;
+}
+
 class NativeEventsManagerMock {
   attachEvents = NOOP;
   detachEvents = NOOP;
@@ -376,7 +454,7 @@ const core = {
   isConfigured: () => false,
   isReanimated3: () => false,
   isWorkletFunction,
-  makeMutable: ID,
+  makeMutable: createMockSharedValue,
   makeShareableCloneRecursive: ID,
   NativeEventsManager: NativeEventsManagerMock,
   ReanimatedLogLevel,
@@ -447,7 +525,8 @@ const layoutReanimation = {
   RotateOutUpLeft: new BaseAnimationMock(),
   RotateOutUpRight: new BaseAnimationMock(),
   SequencedTransition: new BaseAnimationMock(),
-  SharedTransition: new BaseAnimationMock(),
+  SharedTransition,
+  SharedTransitionType,
   SlideInDown: new BaseAnimationMock(),
   SlideInLeft: new BaseAnimationMock(),
   SlideInRight: new BaseAnimationMock(),

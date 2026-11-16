@@ -21,7 +21,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.0",
-    "react-native-screens": "4.27.0",
+    "react-native-screens": "patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch",
     "react-native-web": "0.21.2",
     "react-strict-dom": "0.0.55"
   },

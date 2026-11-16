@@ -35,7 +35,7 @@ describe('PropsRegistryGarbageCollector.syncPropsBackToReact', () => {
     jest.useRealTimers();
   });
 
-  test('asks native only for the views that are registered', () => {
+  test('tells native which views are registered', () => {
     PropsRegistryGarbageCollector.registerView(
       VIEW_TAG,
       createComponent().component
@@ -48,18 +48,30 @@ describe('PropsRegistryGarbageCollector.syncPropsBackToReact', () => {
 
     PropsRegistryGarbageCollector.syncPropsBackToReact();
 
-    expect(getSettledUpdates).toHaveBeenCalledWith([VIEW_TAG]);
+    const [isViewRegistered] = getSettledUpdates.mock.calls[0] as [
+      (viewTag: number) => boolean,
+    ];
+    expect(isViewRegistered(VIEW_TAG)).toBe(true);
+    expect(isViewRegistered(FROZEN_VIEW_TAG)).toBe(false);
   });
 
   test('delivers a settled update to the registered view', () => {
     const { component, syncStylePropsBackToReact } = createComponent();
     PropsRegistryGarbageCollector.registerView(VIEW_TAG, component);
     getSettledUpdates.mockReturnValue([
-      { viewTag: VIEW_TAG, styleProps: { opacity: 0 } },
+      {
+        viewTag: VIEW_TAG,
+        props: { scrollEnabled: false },
+        style: { opacity: 0 },
+        keysLastWrittenByAnimatedStyle: ['opacity'],
+      },
     ]);
 
     PropsRegistryGarbageCollector.syncPropsBackToReact();
 
-    expect(syncStylePropsBackToReact).toHaveBeenCalledWith({ opacity: 0 });
+    expect(syncStylePropsBackToReact).toHaveBeenCalledWith(
+      { scrollEnabled: false },
+      { opacity: 0 }
+    );
   });
 });

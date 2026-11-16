@@ -40,6 +40,11 @@ export function createShareable<
 ): Shareable<TValue, THostDecorated, TGuestDecorated> {
   const { hostDecorator, guestDecorator, initSynchronously } = config || {};
   if (__DEV__) {
+    if (!Number.isSafeInteger(hostRuntimeId) || hostRuntimeId < 0) {
+      throw new Error(
+        `[Worklets] hostRuntimeId must be the runtimeId of a Worklet Runtime, got ${String(hostRuntimeId)}`
+      );
+    }
     if (hostDecorator && !isWorkletFunction(hostDecorator)) {
       throw new Error('[Worklets] hostDecorator must be a worklet function');
     }

@@ -27,6 +27,7 @@ const LAYOUT_ANIMATIONS: &[&str] = &[
     "JumpingTransition",
     "CurvedTransition",
     "EntryExitTransition",
+    "SharedTransition",
 ];
 
 #[rustfmt::skip]
@@ -38,9 +39,12 @@ const LAYOUT_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "randomDelay",
     "getDelay",
     "getDelayFunction",
+    "reduceMotion",
+    "withCallback",
     "easing",
     "rotate",
     "springify",
+    "dampingRatio",
     "damping",
     "mass",
     "stiffness",
@@ -49,6 +53,7 @@ const LAYOUT_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "restDisplacementThreshold",
     "restSpeedThreshold",
     "withInitialValues",
+    "withTargetValues",
     "getAnimationAndConfig",
     "easingX",
     "easingY",
@@ -57,9 +62,13 @@ const LAYOUT_ANIMATION_CHAIN_METHODS: &[&str] = &[
     "entering",
     "exiting",
     "reverse",
+    "fadeContent",
+    "custom",
+    "progressAnimation",
+    "defaultTransitionType",
 ];
 
-pub const LAYOUT_ANIMATION_CALLBACKS: &[&str] = &["withCallback"];
+pub const LAYOUT_ANIMATION_CALLBACKS: &[&str] = &["withCallback", "custom", "progressAnimation"];
 
 pub fn is_layout_animation_callback_method(callee: &Expression<'_>) -> bool {
     let Some((object, name)) = member_property(callee) else {

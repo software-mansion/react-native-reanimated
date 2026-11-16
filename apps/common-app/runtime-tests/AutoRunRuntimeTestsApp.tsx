@@ -2,14 +2,19 @@ import React from 'react';
 import { LogBox, StyleSheet, Text, View } from 'react-native';
 
 import AutoRunRuntimeTestsRunner from './ReJest/AutoRunRuntimeTestsRunner';
-import { deriveWsUrl } from './ReJest/utils/serverUrl';
+import { deriveWsUrl, setWsUrlOverride } from './ReJest/utils/serverUrl';
 import type { RuntimeTestSuite } from './types';
 
 LogBox.ignoreLogs([
   "Deep imports from the 'react-native' package are deprecated",
 ]);
 
-interface AutoRunRuntimeTestsAppProps {
+/** Initial properties the native app passes from its launch settings. */
+export interface AutoRunRootProps {
+  wsUrl?: string;
+}
+
+interface AutoRunRuntimeTestsAppProps extends AutoRunRootProps {
   tests: RuntimeTestSuite[];
   library: string;
   forbidReanimated?: boolean;
@@ -21,7 +26,11 @@ export default function AutoRunRuntimeTestsApp({
   library,
   forbidReanimated,
   warmUp,
+  wsUrl: wsUrlOverride,
 }: AutoRunRuntimeTestsAppProps) {
+  if (wsUrlOverride) {
+    setWsUrlOverride(wsUrlOverride);
+  }
   const wsUrl = deriveWsUrl();
   return (
     <View style={styles.container}>

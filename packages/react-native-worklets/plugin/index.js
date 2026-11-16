@@ -376,7 +376,8 @@ var require_layoutAnimationAutoworkletization = __commonJS({
     ]);
     var LayoutAnimations = /* @__PURE__ */ new Set([
       ...EntryExitAnimations,
-      ...LayoutTransitions
+      ...LayoutTransitions,
+      "SharedTransition"
     ]);
     var BaseAnimationsChainableMethods = /* @__PURE__ */ new Set([
       "build",
@@ -385,12 +386,15 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "getDuration",
       "randomDelay",
       "getDelay",
-      "getDelayFunction"
+      "getDelayFunction",
+      "reduceMotion",
+      "withCallback"
     ]);
     var ComplexAnimationsChainableMethods = /* @__PURE__ */ new Set([
       "easing",
       "rotate",
       "springify",
+      "dampingRatio",
       "damping",
       "mass",
       "stiffness",
@@ -399,6 +403,7 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "restDisplacementThreshold",
       "restSpeedThreshold",
       "withInitialValues",
+      "withTargetValues",
       "getAnimationAndConfig"
     ]);
     var DefaultTransitionChainableMethods = /* @__PURE__ */ new Set([
@@ -410,12 +415,23 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "exiting",
       "reverse"
     ]);
+    var SharedTransitionChainableMethods = /* @__PURE__ */ new Set([
+      "fadeContent",
+      "custom",
+      "progressAnimation",
+      "defaultTransitionType"
+    ]);
     var LayoutAnimationsChainableMethods = /* @__PURE__ */ new Set([
       ...BaseAnimationsChainableMethods,
       ...ComplexAnimationsChainableMethods,
-      ...DefaultTransitionChainableMethods
+      ...DefaultTransitionChainableMethods,
+      ...SharedTransitionChainableMethods
     ]);
-    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set(["withCallback"]);
+    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set([
+      "withCallback",
+      "custom",
+      "progressAnimation"
+    ]);
     function isLayoutAnimationCallback(path) {
       return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isLayoutAnimationCallbackMethod(path.parent.callee);
     }
@@ -476,7 +492,10 @@ var require_autoworkletization = __commonJS({
       "runOnRuntimeAsync",
       "scheduleOnRuntime",
       "runOnRuntimeSyncWithId",
-      "scheduleOnRuntimeWithId"
+      "runOnRuntimeAsyncWithId",
+      "scheduleOnRuntimeWithId",
+      // runtime creation
+      "createWorkletRuntime"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
@@ -500,9 +519,24 @@ var require_autoworkletization = __commonJS({
       ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
       ["runOnRuntimeSyncWithId", [1]],
+      ["runOnRuntimeAsyncWithId", [1]],
       ["scheduleOnRuntimeWithId", [1]],
+      ["createWorkletRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
+    ]);
+    var configPropertiesToWorkletize = /* @__PURE__ */ new Map([
+      ["createWorkletRuntime", { argIndex: 0, keys: ["initializer"] }],
+      [
+        "createShareable",
+        { argIndex: 2, keys: ["hostDecorator", "guestDecorator"] }
+      ],
+      [
+        "registerCustomSerializable",
+        { argIndex: 0, keys: ["determine", "pack", "unpack"] }
+      ],
+      ["withTiming", { argIndex: 1, keys: ["easing"] }],
+      ["useHandler", { argIndex: 0, keys: null }]
     ]);
     function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
@@ -524,6 +558,32 @@ var require_autoworkletization = __commonJS({
       } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
         const args = path.get("arguments");
         addDirectivesToArgs(args, state, true, true);
+      }
+      const configProperties = configPropertiesToWorkletize.get(name);
+      if (configProperties) {
+        addDirectivesToConfigProperties(path.get("arguments")[configProperties.argIndex], configProperties.keys, state);
+      }
+    }
+    function addDirectivesToConfigProperties(config, keys, state) {
+      if (!(config === null || config === void 0 ? void 0 : config.isObjectExpression())) {
+        return;
+      }
+      for (const property of config.get("properties")) {
+        if (!(property.isObjectMethod() || property.isObjectProperty()) || property.node.computed) {
+          continue;
+        }
+        const key = property.node.key;
+        const keyName = (0, types_12.isIdentifier)(key) ? key.name : (0, types_12.isStringLiteral)(key) ? key.value : void 0;
+        if (keyName === void 0 || keys && !keys.includes(keyName)) {
+          continue;
+        }
+        if (property.isObjectMethod()) {
+          if (property.node.kind === "method") {
+            (0, directives_12.addWorkletDirectivesToPath)(property);
+          }
+        } else if (property.isObjectProperty()) {
+          (0, findWorklet_1.forEachWorkletizableFunction)(property.get("value"), state, true, false, directives_12.addWorkletDirectivesToPath);
+        }
       }
     }
     function addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject) {

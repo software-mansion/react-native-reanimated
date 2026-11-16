@@ -3,6 +3,6 @@
   "position": 40,
   "link": {
     "type": "generated-index",
-    "description": "Reference for the threading functions. To choose between scheduleOnUI, runOnUIAsync and runOnUISync, see [Running worklets on the UI runtime](/docs/guides/running-on-the-ui-runtime)."
+    "description": "Reference for the threading functions. To choose between scheduleOnUI, runOnUIAsync and runOnUISync, see [Running worklet functions on the UI runtime](/docs/guides/running-on-the-ui-runtime)."
   }
 }

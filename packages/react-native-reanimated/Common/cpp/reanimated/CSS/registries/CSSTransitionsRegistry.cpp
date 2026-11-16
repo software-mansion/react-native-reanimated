@@ -127,9 +127,9 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
 
     auto &transition = it->second;
-    const auto updates = transition->takeUpdates();
+    auto updates = transition->takeUpdates();
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNodeFamily(), updates);
+      addUpdatesToBatch(transition->getShadowNodeFamily(), std::move(updates));
     }
   }
 
