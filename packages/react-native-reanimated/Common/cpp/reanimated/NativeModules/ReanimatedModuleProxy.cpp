@@ -1003,6 +1003,9 @@ AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
   {
     auto lock = updatesRegistryManager_->lock();
     animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
+    if (animatedPropsRegistry_->hasPendingAnimatedPropsUpdates()) {
+      startBackendIfNeeded();
+    }
   }
   return mutations;
 }
