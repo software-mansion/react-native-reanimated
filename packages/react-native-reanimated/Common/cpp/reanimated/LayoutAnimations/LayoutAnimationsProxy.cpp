@@ -1110,10 +1110,11 @@ void LayoutAnimationsProxy::startEnteringAnimation(
   const auto opacity = getViewProps(newChildShadowView).opacity;
   const auto &parent = node->parent.lock();
   react_native_assert(parent && "Parent node is nullptr");
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = newChildShadowView.tag,
       .type = LayoutAnimationType::ENTERING,
-      .before = newChildShadowView,
+      .before = cloneViewWithoutOpacity(newChildShadowView, propsParserContext),
       .after = newChildShadowView,
       .parentTag = parent->current.tag,
       .opacity = opacity,
