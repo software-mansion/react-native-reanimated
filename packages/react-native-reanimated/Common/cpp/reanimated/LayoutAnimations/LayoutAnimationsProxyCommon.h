@@ -32,7 +32,20 @@ struct ContentOpacityRange {
   double to;
 };
 
+#ifdef ANDROID
+// The last frame of an animation that sends only its changed props to the view. The raw props of the frame are
+// `style` over the raw props of `base`.
+struct SentFrame {
+  Props::Shared base;
+  folly::dynamic style;
+  // False while the props of the current view hold only the props that the frame changed.
+  bool holdsAllRawProps;
+};
+#endif
+
 struct LayoutAnimation {
+  // On Android, the props of currentView can hold only the props that the last frame changed. Read currentView with
+  // LayoutAnimationsProxyCommon::currentViewOf.
   ShadowView finalView, currentView, startView;
   // The props that each frame starts from. When it is null, the frames start from the props of finalView.
   Props::Shared frameProps;
@@ -44,6 +57,9 @@ struct LayoutAnimation {
   std::optional<double> contentOpacity;
   // A built-in timed shared transition interpolates the frame and the transform from startView to finalView.
   std::optional<double> geometryProgress;
+#ifdef ANDROID
+  std::optional<SentFrame> sentFrame;
+#endif
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -205,6 +221,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const PropsParserContext &propsParserContext,
       bool preserveRemovals = false,
       const std::unordered_set<Tag> &preservedTags = {}) const;
+  const ShadowView &currentViewOf(LayoutAnimation &animation) const;
+  ShadowViewMutation frameUpdate(LayoutAnimation &animation, const UpdateValues &frame, bool sendsOnlyChangedProps)
+      const;
   ShadowView cloneViewWithOpacity(
       const ShadowView &shadowView,
       double opacity,
@@ -262,8 +281,12 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #endif
 
   std::optional<SurfaceId> progressSharedTransitionGeometry(Tag tag, const jsi::Object &newStyle) const;
-  Props::Shared cloneFrameProps(const LayoutAnimation &animation, const Props::Shared &base, folly::dynamic props)
-      const;
+  UpdateValues frameValues(
+      const LayoutAnimation &animation,
+      const Props::Shared &base,
+      folly::dynamic style,
+      const Frame &frame,
+      bool animatesOpacity) const;
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
@@ -285,6 +308,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       LayoutAnimationType type,
       const std::shared_ptr<Serializable> &config) const;
 #ifdef ANDROID
+  ShadowViewMutation changedPropsUpdate(LayoutAnimation &animation, const UpdateValues &frame, ShadowView newView)
+      const;
+  void resolveCurrentProps(LayoutAnimation &animation) const;
+  Props::Shared frameProps(const LayoutAnimation &animation, const Props::Shared &base, const folly::dynamic &style)
+      const;
   void restoreOpacityInShadowTree(std::vector<OpacityRestoration> restorations) const;
 #endif
 

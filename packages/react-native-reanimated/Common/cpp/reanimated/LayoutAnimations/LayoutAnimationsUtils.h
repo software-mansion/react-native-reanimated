@@ -46,7 +46,14 @@ struct Frame {
 };
 
 struct UpdateValues {
+#ifdef ANDROID
+  // The props of the frame are `style` over `base`. The pull makes them, because only the pull knows the props that
+  // the view shows.
+  Props::Shared base;
+  folly::dynamic style;
+#else
   Props::Shared newProps;
+#endif
   Frame frame;
   bool animatesOpacity = false;
 };

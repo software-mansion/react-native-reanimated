@@ -151,11 +151,11 @@ void LayoutAnimationsProxy::warnIfSnapshotIsStale(const ShadowView &snapshot, co
 const ShadowView &LayoutAnimationsProxy::mountedView(const std::shared_ptr<LightNode> &node) const {
   const auto tag = node->current.tag;
   if (const auto animationIt = layoutAnimations_.find(tag); animationIt != layoutAnimations_.end()) {
-    return animationIt->second.currentView;
+    return currentViewOf(animationIt->second);
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end()) {
-    return completedAnimationIt->second.animation.currentView;
+    return currentViewOf(completedAnimationIt->second.animation);
   }
   resolveLightNodeProps(node);
   return node->current;
@@ -174,7 +174,7 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     animation.currentView.layoutMetrics.frame.origin += offset;
     animation.startView.layoutMetrics.frame.origin += offset;
     moveLayoutAnimationTarget(tag, animation, newView, offset);
-    return animation.currentView;
+    return currentViewOf(animation);
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
       completedAnimationIt != completedAnimations_.end() && !completedAnimationIt->second.shouldRemove) {
@@ -185,7 +185,7 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
       animation.startView.layoutMetrics.frame.origin += offset;
     }
     moveLayoutAnimationTarget(tag, animation, newView, offset);
-    return animation.currentView;
+    return currentViewOf(animation);
   }
   return pendingCurrentView;
 }
@@ -1258,7 +1258,6 @@ void LayoutAnimationsProxy::tearDown(const std::unordered_set<Tag> &removals, Sh
 void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) const {
   ReanimatedSystraceSection s1("addOngoingAnimations");
   auto &mutations = transaction.filteredMutations;
-  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
@@ -1316,17 +1315,13 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
 
     auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
                                                                          : completedAnimationIt->second.animation;
-    auto newView = layoutAnimation.finalView;
-    newView.props = updateValues.newProps ? updateValues.newProps : layoutAnimation.framePropsBase();
-    updateLayoutMetrics(newView.layoutMetrics, updateValues.frame, layoutAnimation.frameOffset);
-
-    mutations.push_back(
-        layoutAnimation.frameProps || layoutAnimation.type == LayoutAnimationType::EXITING
-            ? createPropsUpdate(layoutAnimation.currentView, newView, layoutAnimation.parentTag, propsParserContext)
-            : ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
-    layoutAnimation.currentView = newView;
+    mutations.push_back(frameUpdate(
+        layoutAnimation,
+        updateValues,
+        layoutAnimation.frameProps || layoutAnimation.type == LayoutAnimationType::EXITING));
     if (layoutAnimation.opacity &&
-        (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
+        (updateValues.animatesOpacity ||
+         getViewProps(layoutAnimation.currentView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
     }
   }
