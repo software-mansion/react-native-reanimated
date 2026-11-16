@@ -112,7 +112,7 @@ describe('parseSanitizerReports', () => {
     assert.equal(reports.length, 1);
     assert.match(
       reports[0].text,
-      /Shadow bytes around the buggy address:\n  0x0001: fa fa 00 00$/
+      /Shadow bytes around the buggy address:\n {2}0x0001: fa fa 00 00$/
     );
   });
 
