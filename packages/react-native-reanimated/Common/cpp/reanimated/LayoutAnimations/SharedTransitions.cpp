@@ -420,9 +420,10 @@ void LayoutAnimationsProxy::handleProgressTransition(
         const auto config = layoutAnimationsManager_->getLayoutAnimationConfig(
             before.tag, LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS);
         const auto sharedTransitionConfig = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
+        const bool endsAtStart = transition_->progress == 1;
         auto &run = startSharedTransitionRun(
             before,
-            clipped ? &transition.clip[BEFORE] : nullptr,
+            clipped && !endsAtStart ? &transition.clip[BEFORE] : nullptr,
             sourceDrawsWithinFrame,
             sharedTag,
             collectedTransition.nodes,
