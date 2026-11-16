@@ -80,12 +80,10 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   }
 
   auto &layoutAnimation = layoutAnimationIt->second;
-  if (newStyle.hasProperty(uiRuntime_, "opacity")) {
-    layoutAnimation.opacity.reset();
-  }
+  const bool animatesOpacity = newStyle.hasProperty(uiRuntime_, "opacity");
 
   auto rawProps = std::make_shared<RawProps>(uiRuntime_, jsi::Value(uiRuntime_, newStyle));
-  if (layoutAnimation.opacity) {
+  if (layoutAnimation.opacity && !animatesOpacity) {
     auto props = (folly::dynamic)*rawProps;
     props["opacity"] = *layoutAnimation.opacity;
     rawProps = std::make_shared<RawProps>(std::move(props));
@@ -97,7 +95,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
 #endif
   auto newProps = componentDescriptorRegistry_->at(layoutAnimation.finalView.componentHandle)
                       .cloneProps(propsParserContext, layoutAnimation.finalView.props, std::move(*rawProps));
-  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle)});
+  updateMap_.insert_or_assign(tag, UpdateValues{newProps, Frame(uiRuntime_, newStyle), animatesOpacity});
 
   return surfaceId_;
 }

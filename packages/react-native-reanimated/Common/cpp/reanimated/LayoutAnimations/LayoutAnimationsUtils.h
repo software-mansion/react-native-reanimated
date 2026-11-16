@@ -44,6 +44,7 @@ struct Frame {
 struct UpdateValues {
   Props::Shared newProps;
   Frame frame;
+  bool animatesOpacity = false;
 };
 
 struct Snapshot {
