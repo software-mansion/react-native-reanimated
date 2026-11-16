@@ -6,6 +6,7 @@ import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
 } from 'react-native-reanimated';
+import { Screen, ScreenContainer } from 'react-native-screens';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
@@ -25,6 +26,7 @@ import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const androidTest = Platform.OS === 'android' ? test : test.skip;
+const iosTest = Platform.OS === 'ios' ? test : test.skip;
 
 function Endpoint({
   name,
@@ -166,6 +168,30 @@ function RetargetScreens({
   );
 }
 
+// The container detaches the screen of the source, like a native stack that hides a covered screen.
+function OffWindowSourceScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.root}>
+      <ScreenContainer style={StyleSheet.absoluteFill}>
+        <Screen enabled activityState={0} style={StyleSheet.absoluteFill}>
+          <SharedTransitionBoundary isActive={!active}>
+            <Endpoint name="source" transition={transition} />
+          </SharedTransitionBoundary>
+        </Screen>
+      </ScreenContainer>
+      <SharedTransitionBoundary isActive={active}>
+        <Endpoint name="target" transition={transition} />
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 function InModal({
   open = true,
   children,
@@ -224,7 +250,7 @@ describe('Shared transitions and Android layout roots', () => {
       await expectEndpoint('source', 60, 0.6);
       await expectEndpoint('target', 150, 0.7);
       await expectEventually(() => results.length).toBe(1);
-      expect(results).toBe([true]);
+      expect(results).toBe([false]);
       await advanceAnimationTimer(1600);
       await expectEndpoint('source', 60, 0.6);
       await expectEndpoint('target', 150, 0.7);
@@ -241,7 +267,7 @@ describe('Shared transitions and Android layout roots', () => {
       await expectEndpoint('source', 60, 0.6);
       await expectEndpoint('target', 150, 0.7);
       await expectEventually(() => results.length).toBe(2);
-      expect(results).toBe([true, true]);
+      expect(results).toBe([false, false]);
     }
   );
 
@@ -301,7 +327,7 @@ describe('Shared transitions and Android layout roots', () => {
       await expectSettledEndpoint('target', 150, 0.7);
       await expectSettledEndpoint('source', 60, 0);
       await expectEventually(() => results.length).toBe(2);
-      expect([...results].sort()).toBe([false, true]);
+      expect(results).toBe([false, false]);
       const restored =
         await getTestComponent('window-source').getMountedViewProps();
       expect(restored?.x).toBe(home?.x, ComparisonMode.PIXEL);
@@ -311,7 +337,7 @@ describe('Shared transitions and Android layout roots', () => {
       await render(screens(false));
       await expectSettledEndpoint('source', 60, 0.6);
       await expectEventually(() => results.length).toBe(3);
-      expect(results[2]).toBe(true);
+      expect(results).toBe([false, false, false]);
     }
   );
 
@@ -645,6 +671,27 @@ describe('Shared transitions inside one Android Modal', () => {
       expect([...results].sort()).toBe([false, true]);
     }
   );
+});
+
+describe('Shared transitions from a source off the window', () => {
+  iosTest('reports false once and shows the target in its place', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const results: boolean[] = [];
+    const transition = recordingTransition(results);
+    await render(
+      <OffWindowSourceScreens active={false} transition={transition} />
+    );
+    await waitForFrames(3);
+    await render(<OffWindowSourceScreens active transition={transition} />);
+    await waitForFrames(3);
+    await expectEndpoint('target', 150, 0.7);
+    await expectEventually(() => results.length).toBe(1);
+    expect(results).toBe([false]);
+    await advanceAnimationTimer(1600);
+    await waitForFrames(3);
+    await expectEndpoint('target', 150, 0.7);
+    expect(results).toBe([false]);
+  });
 });
 
 const SOURCE_IN_MODAL = { x: 40, y: 120 };

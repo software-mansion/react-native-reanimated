@@ -168,7 +168,6 @@ struct ProgressTransition {
   std::vector<ProgressTransitionEndpoint> endpoints;
   double progress = 0;
   bool updated = true;
-  std::vector<std::shared_ptr<Serializable>> progressCallbacks;
 };
 
 // A finished gesture whose hidden source views wait for React to commit the
@@ -271,7 +270,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void skipSharedTransition(
       const SharedTag &sharedTag,
       const CollectedTransition &collected,
-      SharedTransitionDriver driver,
       std::shared_ptr<Serializable> callback,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
@@ -282,10 +280,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &node,
       const std::unordered_map<Tag, SharedTag> &tagToName,
       std::unordered_map<SharedTag, std::vector<Tag>> &tagsBySharedTag) const;
-  void filterSharedTransitionStarts(
-      SharedTransitionDriver driver,
-      TransactionMeta &transaction,
-      const PropsParserContext &propsParserContext) const;
+  void filterSharedTransitionStarts(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
   // removed components whose views are still shown; their shared transition configs are released when they unmap

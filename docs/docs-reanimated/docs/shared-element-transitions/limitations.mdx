@@ -19,7 +19,7 @@ Check these points:
 - Each screen is in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
 - No boundary that is always active is around the boundaries of your screens.
 - The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of the boundary of the screen. A boundary in the header becomes the active boundary instead of the boundary of the screen. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
-- On iOS, both boundaries must use the `UIWindow` of the React Native root view or a modal presented over it. The view does not move to or from a boundary in another window.
+- On iOS, both boundaries must use the `UIWindow` of the React Native root view or a modal presented over it. The view does not move to or from a boundary in another window. The two views show in their own places, and the callback gets `false`.
 - On iOS, the view lands only when the screen of the target is in the window. A transition with a built-in animation starts at once and moves to the place that React Native gives the target until the screen is in the window. If the screen is not in the window when the animation ends and 500 ms have passed since the boundary became active, the view does not land, the two views show in their own places, and the callback gets `false`. A transition with a custom animation or a timed progress animation starts when the screen is in the window. If the screen is not in the window after 500 ms, the transition does not start, and its callback gets `false`. The two views show in their own places. In both cases, a shared view that still moves inside the moving view delays this end until its own transition ends.
 - The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
 
@@ -27,7 +27,7 @@ Check these points:
 
 On Android, a shared view can move between two views in the same React Native `Modal`. The moving view stays in the window of the `Modal`. If the `Modal` closes during the transition, the transition stops, and its callback gets `false`.
 
-A shared view does not move between the screen and a `Modal`, between two different `Modal`s, or to or from a native-overlay sheet. The two views stay visible in their own places. A `Modal` inside another `Modal` counts as a different `Modal`. This limit does not apply to iOS.
+A shared view does not move between the screen and a `Modal`, between two different `Modal`s, or to or from a native-overlay sheet. The two views stay visible in their own places, and the callback gets `false`. A `Modal` inside another `Modal` counts as a different `Modal`. This limit does not apply to iOS.
 
 ## Updates during the transition
 
