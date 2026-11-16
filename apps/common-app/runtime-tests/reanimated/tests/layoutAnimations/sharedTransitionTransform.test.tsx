@@ -221,6 +221,78 @@ function FlippedScrollScreens({
   );
 }
 
+// The source and the target are scroll views. The offset of the source moves its content, not the source.
+function ScrollViewSourceScreens({
+  active,
+  offset,
+  transition,
+}: {
+  active: boolean;
+  offset: number;
+  transition: SharedTransition;
+}) {
+  const list = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
+  useEffect(() => {
+    list.current?.scrollTo({ y: offset, animated: false });
+  }, [offset]);
+  const tag = `scroll-view-source-${offset}`;
+  return (
+    <View>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.ScrollView
+          ref={list}
+          sharedTransitionTag={tag}
+          sharedTransitionStyle={transition}
+          style={{ height: 200 }}>
+          <View style={{ height: 600 }} />
+        </Animated.ScrollView>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.ScrollView
+            sharedTransitionTag={tag}
+            sharedTransitionStyle={transition}
+            style={{ height: 100 }}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+// The source has no size. Its parent moves it 50 points to the right.
+function ZeroSizeSourceScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View>
+      <SharedTransitionBoundary isActive={!active}>
+        <View
+          style={{ width: 100, height: 100, transform: [{ translateX: 50 }] }}>
+          <Animated.View
+            sharedTransitionTag="zero-size-source"
+            sharedTransitionStyle={transition}
+            style={{ width: 0, height: 0 }}
+          />
+        </View>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.View
+            sharedTransitionTag="zero-size-source"
+            sharedTransitionStyle={transition}
+            style={{ width: 40, height: 40, backgroundColor: 'red' }}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
 // The transform of the source applies around its center.
 function sourceCenterYTransition(centers: number[], notification: string) {
   const record = (center: number) => centers.push(center);
@@ -354,6 +426,43 @@ describe('Shared transition transform copying', () => {
       await expectTranslation('transform-target', 40);
     }
   );
+
+  test('starts from a scroll view at its frame for any offset', async () => {
+    const centers: number[] = [];
+    for (const offset of [0, 100]) {
+      const notification = `scroll-view-finished-${offset}`;
+      const transition = sourceCenterYTransition(centers, notification);
+      const props = { offset, transition };
+      await render(null);
+      await render(<ScrollViewSourceScreens {...props} active={false} />);
+      await waitForFrames(3);
+      await render(<ScrollViewSourceScreens {...props} active />);
+      await waitForNotification(notification);
+    }
+    expect(centers.length).toBe(2);
+    expect(centers[1] - centers[0]).toBe(0, ComparisonMode.PIXEL);
+  });
+
+  test('starts from a source without size at the place of its moved parent', async () => {
+    const translations: number[] = [];
+    const record = (translation: number) => translations.push(translation);
+    const finish = () => notify('zero-size-finished');
+    const transition = SharedTransition.custom((values) => {
+      'worklet';
+      scheduleOnRN(record, values.currentTransform.matrix[12]);
+      return { width: withTiming(values.targetWidth, { duration: 100 }) };
+    }).withCallback(() => {
+      'worklet';
+      scheduleOnRN(finish);
+    });
+    await render(
+      <ZeroSizeSourceScreens active={false} transition={transition} />
+    );
+    await waitForFrames(3);
+    await render(<ZeroSizeSourceScreens active transition={transition} />);
+    await waitForNotification('zero-size-finished');
+    expect(translations[0]).toBe(50, ComparisonMode.PIXEL);
+  });
 
   test('starts from a source in a scrolled flipped scroll view', async () => {
     const centers: number[] = [];
