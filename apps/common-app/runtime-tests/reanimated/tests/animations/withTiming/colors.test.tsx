@@ -19,7 +19,7 @@ import {
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
-const COMPONENT_REF_ACTIVE = 'ColorComponentPassive';
+const COMPONENT_REF_ACTIVE = 'ColorComponentActive';
 const COMPONENT_REF_PASSIVE = 'ColorComponentPassive';
 
 const ColorComponent = ({
