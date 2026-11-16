@@ -100,6 +100,9 @@ class UpdatesRegistry {
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
 
   /// Assumes the caller already locked the registry.
+  std::unordered_set<Tag> getPendingTags() const;
+
+  /// Assumes the caller already locked the registry.
   folly::dynamic getUpdatesFromRegistry(const Tag tag) const;
 
   /// Assumes the caller already locked the registry.
