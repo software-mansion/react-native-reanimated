@@ -6,6 +6,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
+#include <atomic>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -37,14 +38,26 @@ struct SharedTransitionManager {
   std::unordered_map<Tag, std::string> nativeIDToName_;
   // Odd tags that end in 7. React gives even tags to views and tags that end in 1 to surfaces.
   Tag nextOverlayTag_{std::numeric_limits<Tag>::max()};
+  // True while a shared transition config exists: set a name before its config, erase it after.
+  std::atomic<bool> hasNames_{false};
+
+  bool hasNames() const {
+    return hasNames_.load(std::memory_order_acquire);
+  }
 
   void setName(const Tag tag, const std::string &name) {
-    eraseName(tag);
+    removeName(tag);
     tagToName_[tag] = name;
     nameToTags_[name].insert(tag);
+    hasNames_.store(true, std::memory_order_release);
   }
 
   void eraseName(const Tag tag) {
+    removeName(tag);
+    hasNames_.store(!tagToName_.empty(), std::memory_order_release);
+  }
+
+  void removeName(const Tag tag) {
     const auto it = tagToName_.find(tag);
     if (it == tagToName_.end()) {
       return;

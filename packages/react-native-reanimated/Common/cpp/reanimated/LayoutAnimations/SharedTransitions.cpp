@@ -253,7 +253,7 @@ void LayoutAnimationsProxy::collectSharedElement(
 }
 
 std::optional<SharedTag> LayoutAnimationsProxy::findSharedTag(const ShadowView &view) const {
-  if (!isViewKind(view)) {
+  if (!isViewKind(view) || !sharedTransitionManager_->hasNames()) {
     return std::nullopt;
   }
   auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
