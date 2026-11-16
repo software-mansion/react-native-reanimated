@@ -119,12 +119,20 @@ struct SharedElement {
   std::vector<HiddenView> hiddenViews;
 };
 
+struct ProgressTransitionEndpoint {
+  SharedTag sharedTag;
+  std::shared_ptr<LightNode> source;
+  std::shared_ptr<LightNode> target;
+  bool targetWasHidden;
+};
+
 // One in-flight back gesture. Created on the first progress event, destroyed
 // when a pull processes its END or CANCELLED state.
 struct ProgressTransition {
   TransitionState state = TransitionState::START;
   std::shared_ptr<LightNode> sourceScreen;
   std::shared_ptr<LightNode> targetScreen;
+  std::vector<ProgressTransitionEndpoint> endpoints;
   double progress = 0;
   bool updated = true;
   std::vector<std::shared_ptr<Serializable>> progressCallbacks;
@@ -132,10 +140,10 @@ struct ProgressTransition {
 
 // A finished gesture whose hidden source views wait for React to commit the
 // navigation. The wait ends when React deletes sourceScreen, or a late cancel
-// sets cancelled and the next pull restores sources.
+// sets cancelled and the next pull restores the endpoint visibility.
 struct UncommittedScreenPop {
   std::shared_ptr<LightNode> sourceScreen;
-  std::vector<RestoreRequest> sources;
+  std::vector<ProgressTransitionEndpoint> endpoints;
   std::vector<std::shared_ptr<Serializable>> progressCallbacks;
   bool cancelled = false;
 };
@@ -331,7 +339,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
-  bool settleUncommittedScreenPop(TransactionMeta &transaction) const;
+  bool settleUncommittedScreenPop(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
+  void restoreCancelledProgressTransition(
+      const std::vector<ProgressTransitionEndpoint> &endpoints,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
   void resolveDeferredSourceScreen() const;
   bool isLightNodeMapped(const std::shared_ptr<LightNode> &node) const;
   void unmapLightNode(const std::shared_ptr<LightNode> &node) const;
