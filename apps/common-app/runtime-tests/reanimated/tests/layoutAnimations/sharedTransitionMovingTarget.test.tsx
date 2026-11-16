@@ -2,10 +2,12 @@ import { PixelRatio, Platform, StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
+  getDynamicFeatureFlag,
   makeMutable,
   SharedTransition,
   SharedTransitionBoundary,
   SharedTransitionType,
+  setDynamicFeatureFlag,
   useAnimatedStyle,
   withTiming,
 } from 'react-native-reanimated';
@@ -32,40 +34,51 @@ import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 describe('Shared transition live target geometry', () => {
-  test('samples ancestor motion without starting a new clock', async () => {
-    const state = counters();
-    const offset = makeMutable(0);
-    const transition = countedTransition(1200, state);
-    await mockAnimationTimer({ autoAdvance: false });
-    await render(<Screens active={false} {...{ transition, offset }} />);
-    await waitForFrames();
-    const stop = await recordStarts(state);
-    try {
-      await render(<Screens active {...{ transition, offset }} />);
-      await waitForFrames(3);
-      expect(state.value.starts).toBe(1);
-      await advanceAnimationTimer(300);
-      offset.value = 100;
-      await waitForFrames(3);
-      await expectTranslation(25);
-      expect((await props('source'))?.width).toBe(45, ComparisonMode.PIXEL);
-      await advanceAnimationTimer(300);
-      offset.value = 200;
-      await waitForFrames(3);
-      await expectTranslation(100);
-      expect((await props('source'))?.width).toBe(60, ComparisonMode.PIXEL);
-      expect(state.value.success).toBe(0);
-      await advanceAnimationTimer(600);
-      await expectEventually(() => state.value.success).toBe(1);
-      await expectEndpoint();
-      await advanceAnimationTimer(1200);
-      expect(state.value.starts).toBe(1);
-      expect(state.value.success).toBe(1);
-      expect(state.value.failure).toBe(0);
-    } finally {
-      await stop();
+  // With synchronous UI props, the parents of the target move without a commit.
+  test.each([[false], [true]] as const)(
+    'samples ancestor motion without starting a new clock, tracking=${0}',
+    async ([tracking]) => {
+      const flag = 'TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS';
+      const previous = getDynamicFeatureFlag(flag);
+      setDynamicFeatureFlag(flag, tracking);
+      try {
+        const state = counters();
+        const offset = makeMutable(0);
+        const transition = countedTransition(1200, state);
+        await mockAnimationTimer({ autoAdvance: false });
+        await render(<Screens active={false} {...{ transition, offset }} />);
+        await waitForFrames();
+        const stop = await recordStarts(state);
+        try {
+          await render(<Screens active {...{ transition, offset }} />);
+          await waitForFrames(3);
+          expect(state.value.starts).toBe(1);
+          await advanceAnimationTimer(300);
+          offset.value = 100;
+          await waitForFrames(3);
+          await expectTranslation(25);
+          expect((await props('source'))?.width).toBe(45, ComparisonMode.PIXEL);
+          await advanceAnimationTimer(300);
+          offset.value = 200;
+          await waitForFrames(3);
+          await expectTranslation(100);
+          expect((await props('source'))?.width).toBe(60, ComparisonMode.PIXEL);
+          expect(state.value.success).toBe(0);
+          await advanceAnimationTimer(600);
+          await expectEventually(() => state.value.success).toBe(1);
+          await expectEndpoint();
+          await advanceAnimationTimer(1200);
+          expect(state.value.starts).toBe(1);
+          expect(state.value.success).toBe(1);
+          expect(state.value.failure).toBe(0);
+        } finally {
+          await stop();
+        }
+      } finally {
+        setDynamicFeatureFlag(flag, previous);
+      }
     }
-  });
+  );
 
   test('keeps completed child props while its target ancestor moves', async () => {
     const state = counters();

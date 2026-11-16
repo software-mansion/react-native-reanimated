@@ -659,7 +659,7 @@ bool LayoutAnimationsProxy::followSharedTransitionTarget(
     SharedTransitionRun &run,
     const PropsParserContext &propsParserContext) const {
   auto *animation = liveGeometryAnimation(run);
-  if (!animation || !isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier()) {
+  if (!animation || !hasLiveTarget(run)) {
     return false;
   }
   bool placedNatively = false;
@@ -711,6 +711,30 @@ bool LayoutAnimationsProxy::followsWithoutRestart(const SharedTransitionRun &run
   return run.followsTarget && run.targetOffWindow &&
       !SharedTransitionValuesFactory::hasAnimatedChanges(
              getViewProps(carrierAnimation(run).finalView), getViewProps(carrierTarget), false);
+}
+
+// A built-in run reads the props of its target and of the parents of its target in each frame.
+void LayoutAnimationsProxy::markViewsFollowedBySharedTransitions() const {
+  synchronousBatch_++;
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    for (const auto &run : activeSharedTransitionRuns()) {
+      if (run.driver != SharedTransitionDriver::TIME || !run.followsTarget || !hasLiveTarget(run)) {
+        continue;
+      }
+      for (auto node = run.target; node; node = node->parent.lock()) {
+        node->followedInSynchronousBatch = synchronousBatch_;
+      }
+    }
+  }
+}
+
+bool LayoutAnimationsProxy::isFollowedBySharedTransition(const LightNode &node) const {
+  return node.followedInSynchronousBatch == synchronousBatch_;
+}
+
+// A carrier shows the frames of its own run, so a run that aims at a carrier does not follow it.
+bool LayoutAnimationsProxy::hasLiveTarget(const SharedTransitionRun &run) const {
+  return isLightNodeMapped(run.target) && !run.target->isExiting() && !run.target->isCarrier();
 }
 
 ShadowView LayoutAnimationsProxy::withGeometryOf(

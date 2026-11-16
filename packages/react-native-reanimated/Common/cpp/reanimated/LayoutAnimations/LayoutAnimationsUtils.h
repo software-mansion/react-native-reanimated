@@ -9,6 +9,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -145,6 +146,7 @@ struct LightNode {
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
+  uint64_t followedInSynchronousBatch = 0;
 
   bool isExiting() const {
     return state != ExitingState::LIVE;
