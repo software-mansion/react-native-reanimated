@@ -106,6 +106,16 @@ describe('parseSanitizerReports', () => {
     );
   });
 
+  it('keeps the shadow bytes that ASAN prints after the summary', () => {
+    const text = `${ASAN_REPORT}Shadow bytes around the buggy address:\n  0x0001: fa fa 00 00\n`;
+    const reports = parseSanitizerReports('asan.3', text);
+    assert.equal(reports.length, 1);
+    assert.match(
+      reports[0].text,
+      /Shadow bytes around the buggy address:\n  0x0001: fa fa 00 00$/
+    );
+  });
+
   it('keeps a file without a report header as one unrecognized report', () => {
     const reports = parseSanitizerReports('tsan.2', 'garbage\n');
     assert.equal(reports.length, 1);

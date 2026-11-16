@@ -102,8 +102,10 @@ export function parseSanitizerReports(
     }
   }
   const tail = current.join('\n').trim();
-  if (REPORT_HEADER.test(tail)) {
+  if (REPORT_HEADER.test(tail) || segments.length === 0) {
     segments.push(tail);
+  } else if (tail.length > 0) {
+    segments[segments.length - 1] += `\n${tail}`;
   }
   const reports = segments.filter((segment) => REPORT_HEADER.test(segment));
   return (reports.length > 0 ? reports : [text.trim()]).map((chunk, index) =>
