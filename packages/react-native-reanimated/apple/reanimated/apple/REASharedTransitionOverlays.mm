@@ -127,6 +127,8 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
 @implementation REASharedTransitionOverlays {
   __weak RCTSurfacePresenter *_surfacePresenter;
   NSMutableDictionary<NSNumber *, NSNumber *> *_overlayTags;
+  // React lays out the overlay at the origin of its parent, so the container carries the frame of the root view.
+  NSMutableDictionary<NSNumber *, UIView *> *_containers;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
@@ -134,6 +136,7 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
   if (self = [super init]) {
     _surfacePresenter = surfacePresenter;
     _overlayTags = [NSMutableDictionary new];
+    _containers = [NSMutableDictionary new];
     // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
     // See `REAPseudoSelectorAttachQueue`.
     [surfacePresenter addObserver:self];
@@ -166,32 +169,56 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
     return;
   }
   [_overlayTags removeObjectForKey:@(surfaceId)];
-  UIView *overlay = [self viewWithTag:tag.integerValue];
-  overlay.layer.zPosition = 0;
-  overlay.accessibilityElementsHidden = NO;
-  [overlay removeFromSuperview];
+  [[self viewWithTag:tag.integerValue] removeFromSuperview];
+  [_containers[@(surfaceId)] removeFromSuperview];
+  [_containers removeObjectForKey:@(surfaceId)];
+}
+
+- (void)willMountComponentsWithRootTag:(NSInteger)rootTag
+{
+  [self attachOverlayForSurfaceId:rootTag];
 }
 
 - (void)didMountComponentsWithRootTag:(NSInteger)rootTag
 {
+  [self attachOverlayForSurfaceId:rootTag];
+}
+
+- (void)attachOverlayForSurfaceId:(NSInteger)surfaceId
+{
   RCTAssertMainQueue();
-  NSNumber *tag = _overlayTags[@(rootTag)];
+  NSNumber *tag = _overlayTags[@(surfaceId)];
   UIView *overlay = tag ? [self viewWithTag:tag.integerValue] : nil;
   if (!overlay) {
     return;
   }
-  UIView *rootView = [self viewWithTag:rootTag];
+  UIView *rootView = [self viewWithTag:surfaceId];
   UIWindow *window = surfaceWindow(rootView);
   if (!window) {
     return;
   }
-  if (overlay.superview != window) {
-    overlay.accessibilityElementsHidden = YES;
-    // UIKit can insert a modal's presentation container after the overlay.
-    overlay.layer.zPosition = 1;
-    [window addSubview:overlay];
+  UIView *container = [self containerForSurfaceId:surfaceId];
+  if (overlay.superview != container) {
+    [container addSubview:overlay];
   }
-  overlay.frame = untransformedFrameInWindow(rootView);
+  if (container.superview != window) {
+    [window addSubview:container];
+  }
+  container.frame = untransformedFrameInWindow(rootView);
+}
+
+- (UIView *)containerForSurfaceId:(NSInteger)surfaceId
+{
+  UIView *container = _containers[@(surfaceId)];
+  if (!container) {
+    container = [UIView new];
+    container.userInteractionEnabled = NO;
+    container.accessibilityElementsHidden = YES;
+    // UIKit can insert a modal's presentation container after the overlay.
+    container.layer.zPosition = 1;
+    _containers[@(surfaceId)] = container;
+  }
+  return container;
 }
 
 - (reanimated::NativeViewPlacement)placementOfViewWithTag:(NSInteger)tag

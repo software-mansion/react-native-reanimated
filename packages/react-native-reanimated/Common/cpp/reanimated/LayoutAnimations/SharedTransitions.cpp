@@ -1592,6 +1592,18 @@ void LayoutAnimationsProxy::ensureCarrierLayer(
 #endif
 }
 
+// React Native Screens snapshots a screen in the mount that removes it. A layer that this mount creates is not in
+// the window for that snapshot, so the layer is created as soon as the surface has a shared view.
+void LayoutAnimationsProxy::prepareCarrierLayerInWindow(
+    TransactionMeta &transaction,
+    const PropsParserContext &propsParserContext) const {
+  if (!keepsCarrierLayerInWindow() || transaction.surfaceDropped || !topScreen_ ||
+      !sharedTransitionManager_->hasNames()) {
+    return;
+  }
+  ensureCarrierLayer(lightNodes_.at(surfaceId_), transaction.filteredMutations, propsParserContext);
+}
+
 // A layer goes with its layout root. A layout root that left the light tree before, inside a removed carrier, took the
 // layer out of the host tree, so only the Delete of the layer is left.
 void LayoutAnimationsProxy::removeCarrierLayersIn(

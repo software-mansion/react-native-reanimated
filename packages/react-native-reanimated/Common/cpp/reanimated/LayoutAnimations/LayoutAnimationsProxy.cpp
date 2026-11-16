@@ -321,6 +321,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     scheduleTransitionLifecycleCleanup();
     retireOrphanedSharedTransitions();
     holdTargetEntering(transaction, propsParserContext);
+    prepareCarrierLayerInWindow(transaction, propsParserContext);
   }
   for (const auto &[node, config] : transaction.entering) {
     startEnteringAnimation(node, config);
