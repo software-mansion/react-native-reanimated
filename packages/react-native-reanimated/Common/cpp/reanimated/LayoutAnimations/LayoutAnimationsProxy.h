@@ -67,7 +67,7 @@ enum class SharedTransitionLifecycle : std::uint8_t {
   FINISHED,
 };
 
-// The carrier is the view that the run animates, moved from its parent to the root for the time of the
+// The carrier is the view that the run animates, moved from its parent to its layout root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
   // The run reports this callback itself: a gesture gives the result, a start that does not leave its hold gets false.
@@ -237,7 +237,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       std::shared_ptr<Serializable> callback,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
-  bool isOutsideSurfaceLayoutRoot(const std::shared_ptr<LightNode> &node) const;
+  bool isLayoutRoot(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> layoutRootOf(const std::shared_ptr<LightNode> &node) const;
+  bool hasSharedViewInLayoutRoot(
+      const SharedTag &sharedTag,
+      const std::shared_ptr<LightNode> &node,
+      const std::unordered_map<Tag, SharedTag> &tagToName,
+      std::unordered_map<SharedTag, std::vector<Tag>> &tagsBySharedTag) const;
   void filterSharedTransitionStarts(
       SharedTransitionDriver driver,
       TransactionMeta &transaction,
@@ -257,6 +263,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<Tag, int> unqueuedBatchTags_;
   // carriers whose last UI-thread frames are not in the mount queue yet
   mutable std::unordered_map<Tag, int> unqueuedCarrierFrames_;
+  // deletes of carriers that left a removed layout root, until their last frames are in the mount queue
+  mutable std::vector<std::pair<Tag, ShadowViewMutationList>> carrierDeletesAfterQueuedFrames_;
 #endif
 
 #ifdef __APPLE__
@@ -407,6 +415,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
   void keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const;
   void releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
+  void removeCarrierBeforeQueuedFrames(const std::shared_ptr<LightNode> &carrier, ShadowViewMutationList &mutations)
+      const;
+  void flushCarrierDeletesAfterQueuedFrames(ShadowViewMutationList &mutations) const;
 #endif
 
   bool defersLayoutAnimationStart(Tag tag) const override;
@@ -454,6 +465,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
   void retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
+  void removeCarriersHostedIn(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainCarrierContent(const std::shared_ptr<LightNode> &node) const;
   bool isRetainedContent(const std::shared_ptr<LightNode> &node) const;
   bool defersSubtreeRemoval(const std::shared_ptr<LightNode> &node) const;
@@ -501,7 +513,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       ShadowViewMutationList &rootMutations) const;
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
-  Tag carrierHostTag() const;
+  Tag carrierHostTag(const std::shared_ptr<LightNode> &node) const;
   void ensureCarrierOverlay(ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext) const;
   NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
   NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;

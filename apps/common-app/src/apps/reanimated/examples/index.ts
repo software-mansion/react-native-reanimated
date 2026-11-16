@@ -53,6 +53,10 @@ const CustomTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/CustomTransition').default as React.FC
   );
+const ModalHostExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalHost').default as React.FC
+  );
 const ModalPresentationsExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ModalPresentations').default as React.FC
@@ -949,6 +953,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  ModalHostExample: {
+    title: '[SET] Inside a Modal',
+    screen: ModalHostExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

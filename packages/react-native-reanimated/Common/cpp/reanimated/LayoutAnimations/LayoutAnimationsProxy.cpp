@@ -433,7 +433,9 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     auto update = ShadowViewMutation::UpdateMutation(
         mounted,
         recreated,
-        node->placement() == CarrierPlacement::AT_ROOT || !parent ? surfaceId_ : parent->current.tag);
+        node->placement() == CarrierPlacement::AT_ROOT ? carrierHostTag(node)
+            : parent                                   ? parent->current.tag
+                                                       : surfaceId_);
     if (node->state == LIVE) {
       mutation = std::move(update);
     } else {
@@ -999,6 +1001,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     if (!transaction.surfaceDropped) {
       moveNestedCarriersOutOf(node, transaction);
     }
+    removeCarriersHostedIn(node, transaction);
     retainRemovedCarriers(node, transaction);
     if (node->presence() == ReactPresence::REMOVED) {
       return;
@@ -1351,6 +1354,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   cleanupPullScheduled_ = false;
   unqueuedBatchTags_.clear();
   unqueuedCarrierFrames_.clear();
+  carrierDeletesAfterQueuedFrames_.clear();
 #endif
 }
 
@@ -1426,6 +1430,11 @@ void LayoutAnimationsProxy::cleanupAnimations(
     cleanupSharedTransitions(transaction, propsParserContext);
   }
   cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedTags);
+#ifdef ANDROID
+  if (flushStructuralMutations) {
+    flushCarrierDeletesAfterQueuedFrames(transaction.filteredMutations);
+  }
+#endif
 }
 
 bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag tag) const {
@@ -1441,6 +1450,11 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
   if (std::ranges::any_of(sharedTransitionRuns_, [this](const auto &entry) {
         const auto &[carrierTag, run] = entry;
         return run.lifecycle == SharedTransitionLifecycle::RETIRING && !hasUnqueuedCarrierFrame(carrierTag);
+      })) {
+    return true;
+  }
+  if (std::ranges::any_of(carrierDeletesAfterQueuedFrames_, [this](const auto &entry) {
+        return !hasUnqueuedCarrierFrame(entry.first);
       })) {
     return true;
   }
@@ -1481,16 +1495,15 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
   for (const auto &mutation : mutations) {
     if (mutation.type == ShadowViewMutation::Remove) {
       const auto tag = mutation.oldChildShadowView.tag;
-      if (mutation.parentTag == surfaceId_) {
-        std::erase(movedToRoot, tag);
-      } else {
+      if (std::erase(movedToRoot, tag) == 0) {
         removedFromParents.insert(tag);
       }
-    } else if (mutation.type == ShadowViewMutation::Insert && mutation.parentTag == surfaceId_) {
+    } else if (mutation.type == ShadowViewMutation::Insert) {
       const auto tag = mutation.newChildShadowView.tag;
       const auto nodeIt = lightNodes_.find(tag);
       if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() &&
-          nodeIt->second->placement() == CarrierPlacement::AT_ROOT) {
+          nodeIt->second->placement() == CarrierPlacement::AT_ROOT &&
+          mutation.parentTag == carrierHostTag(nodeIt->second)) {
         movedToRoot.push_back(tag);
       }
     }
@@ -1600,6 +1613,28 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
         releaseCarriersOfQueuedFrames(tags);
       }
     });
+  });
+}
+
+// React Native 0.86 throws for a padding update of a deleted view. The carrier leaves its layout root before React
+// deletes the root, and its views stay until its frames are in the mount queue.
+void LayoutAnimationsProxy::removeCarrierBeforeQueuedFrames(
+    const std::shared_ptr<LightNode> &carrier,
+    ShadowViewMutationList &mutations) const {
+  const auto tag = carrier->current.tag;
+  ShadowViewMutationList deletes;
+  endAnimationsRecursively(carrier, deletes, mutations);
+  carrierDeletesAfterQueuedFrames_.emplace_back(tag, std::move(deletes));
+}
+
+void LayoutAnimationsProxy::flushCarrierDeletesAfterQueuedFrames(ShadowViewMutationList &mutations) const {
+  std::erase_if(carrierDeletesAfterQueuedFrames_, [&](auto &entry) {
+    auto &[tag, deletes] = entry;
+    if (hasUnqueuedCarrierFrame(tag)) {
+      return false;
+    }
+    std::ranges::move(deletes, std::back_inserter(mutations));
+    return true;
   });
 }
 

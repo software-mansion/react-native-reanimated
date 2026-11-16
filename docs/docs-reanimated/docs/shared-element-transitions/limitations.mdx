@@ -24,7 +24,9 @@ Check these points:
 
 ## Modals and sheets on Android
 
-On Android, a shared view does not move to or from a React Native `Modal` or a native-overlay sheet. This also applies when both views are in the same `Modal`. The two views stay visible in their own places. This limit does not apply to iOS.
+On Android, a shared view can move between two views in the same React Native `Modal`. The moving view stays in the window of the `Modal`. If the `Modal` closes during the transition, the transition stops, and its callback gets `false`.
+
+A shared view does not move between the screen and a `Modal`, between two different `Modal`s, or to or from a native-overlay sheet. The two views stay visible in their own places. A `Modal` inside another `Modal` counts as a different `Modal`. This limit does not apply to iOS.
 
 ## Updates during the transition
 
