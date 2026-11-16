@@ -1,3 +1,4 @@
+import { useEffect, type ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { PixelRatio, StyleSheet, Text, View } from 'react-native';
 import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
@@ -8,6 +9,8 @@ import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
   SharedTransitionType,
+  useAnimatedStyle,
+  useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -306,6 +309,52 @@ function mountedClips() {
     }
     return clips;
   });
+}
+
+function FadingTargetScreens({
+  showTarget,
+  transition,
+}: {
+  showTarget: boolean;
+  transition: SharedTransition;
+}) {
+  const sourceRef = useTestRef('source');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!showTarget}>
+        <View style={styles.parent}>
+          <Animated.View
+            ref={sourceRef}
+            sharedTransitionTag="box"
+            sharedTransitionStyle={transition}
+            style={styles.fill}
+          />
+        </View>
+      </SharedTransitionBoundary>
+      {showTarget && (
+        <SharedTransitionBoundary isActive>
+          <FadingParent>
+            <Animated.View
+              sharedTransitionTag="box"
+              sharedTransitionStyle={transition}
+              style={styles.fill}
+            />
+          </FadingParent>
+        </SharedTransitionBoundary>
+      )}
+    </View>
+  );
+}
+
+function FadingParent({ children }: { children: ReactNode }) {
+  const opacity = useSharedValue(0);
+  useEffect(() => {
+    opacity.value = withTiming(1, { duration: 400 });
+  }, [opacity]);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
+  return (
+    <Animated.View style={[styles.farParent, style]}>{children}</Animated.View>
+  );
 }
 
 async function mountedSourceOpacity() {
@@ -638,6 +687,25 @@ describe('Shared element transition between boundaries', () => {
     await render(<ParentScreens {...props} showTarget />);
     await wait(800);
     expect(await mountedSourceOpacity()).toBeWithinRange(0.5, 0.8);
+
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+  });
+
+  test('follows a target ancestor that fades in', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    await render(
+      <FadingTargetScreens transition={transition} showTarget={false} />
+    );
+    await waitForFrames();
+
+    await render(<FadingTargetScreens transition={transition} showTarget />);
+    await wait(900);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.9, 1);
 
     await waitForNotification('shared-transition-finished');
     expect(finished).toBe([true]);

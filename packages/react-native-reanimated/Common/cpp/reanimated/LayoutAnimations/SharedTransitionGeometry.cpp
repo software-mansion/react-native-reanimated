@@ -20,8 +20,11 @@ std::array<double, 3> transformOriginInPoints(const ShadowView &view);
 double interpolate(double from, double to, double progress);
 } // namespace
 
-SharedTransitionGeometry
-interpolateSharedTransitionGeometry(const ShadowView &start, const ShadowView &target, const double progress) {
+SharedTransitionGeometry interpolateSharedTransitionGeometry(
+    const ShadowView &start,
+    const ShadowView &target,
+    const double progress,
+    const Float baseOpacity) {
   const auto matrix = interpolateMatrix(resolvedMatrix(start), resolvedMatrix(target), progress);
   const auto startOrigin = transformOriginInPoints(start);
   const auto targetOrigin = transformOriginInPoints(target);
@@ -29,12 +32,15 @@ interpolateSharedTransitionGeometry(const ShadowView &start, const ShadowView &t
   for (size_t i = 0; i < startOrigin.size(); ++i) {
     origin.push_back(interpolate(startOrigin[i], targetOrigin[i], progress));
   }
-  return {
-      .frame = interpolateFrame(start, target, progress),
-      .props = folly::dynamic::object(
-          "transform", folly::dynamic::array(folly::dynamic::object("matrix", matrix.toDynamic())))(
-          "transformOrigin", std::move(origin)),
-  };
+  folly::dynamic props =
+      folly::dynamic::object("transform", folly::dynamic::array(folly::dynamic::object("matrix", matrix.toDynamic())))(
+          "transformOrigin", std::move(origin));
+  const auto startOpacity = getViewProps(start).opacity;
+  const auto targetOpacity = getViewProps(target).opacity;
+  if (startOpacity != targetOpacity || baseOpacity != targetOpacity) {
+    props["opacity"] = std::clamp(interpolate(startOpacity, targetOpacity, progress), 0.0, 1.0);
+  }
+  return {.frame = interpolateFrame(start, target, progress), .props = std::move(props)};
 }
 
 namespace {

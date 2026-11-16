@@ -120,6 +120,8 @@ struct SharedTransitionRun {
   bool restoreCarrierOnFinish = false;
   std::optional<CarrierClip> clip;
   bool sourceDrawsWithinFrame = false;
+  // The opacity of the ancestors of the target that the end of the run has. A built-in run follows its changes.
+  Float targetAncestorOpacity = 1;
 
   bool holdsStart() const {
     return targetOffWindow && !followsTarget;
@@ -645,7 +647,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const SharedTransitionRun &run,
       const PropsParserContext &propsParserContext,
       bool &placedNatively,
-      AncestorClip *clip = nullptr) const;
+      AncestorClip *clip = nullptr,
+      Float *ancestorOpacity = nullptr) const;
   AncestorClip fitTargetClip(const SharedTransitionRun &run, const ShadowView &target, const AncestorClip &clip) const;
   bool followsClipTarget(SharedTransitionRun &run, const AncestorClip &clip) const;
   void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;

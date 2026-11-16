@@ -766,9 +766,11 @@ export class SharedTransition
         }
         return delayFunction(delay, animation(target, config));
       };
-      // The native side moves the clip with the geometry.
+      // The native side moves the clip and the opacity with the geometry.
       const isGeometry = (key: string) =>
-        GEOMETRY_KEYS.includes(key) || CLIP_KEYS.includes(key);
+        GEOMETRY_KEYS.includes(key) ||
+        CLIP_KEYS.includes(key) ||
+        key === 'opacity';
       const changed = getChangedStyles(values);
       const nonGeometry = changed.filter(({ key }) => !isGeometry(key));
       const hasGeometryChanges = changed.some(({ key }) => isGeometry(key));

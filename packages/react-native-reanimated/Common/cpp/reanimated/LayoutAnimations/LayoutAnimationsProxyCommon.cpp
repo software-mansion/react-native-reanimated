@@ -70,6 +70,12 @@ bool isCarrierKey(const std::string &name) {
   return name == kContentOpacity || std::ranges::find(kClipKeys, name) != kClipKeys.end();
 }
 
+SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation) {
+  const auto baseOpacity = std::static_pointer_cast<const ViewProps>(animation.framePropsBase())->opacity;
+  return interpolateSharedTransitionGeometry(
+      animation.startView, animation.finalView, *animation.geometryProgress, baseOpacity);
+}
+
 ShadowView withProps(ShadowView view, const Props::Shared &props) {
   view.props = props;
   return view;
@@ -256,8 +262,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGe
   if (animation->opacity && !animatesOpacity) {
     style["opacity"] = *animation->opacity;
   }
-  auto geometry =
-      interpolateSharedTransitionGeometry(animation->startView, animation->finalView, *animation->geometryProgress);
+  auto geometry = interpolateGeometryOf(*animation);
   style.update(geometry.props);
   updateMap_.insert_or_assign(
       tag, frameValues(*animation, animation->framePropsBase(), std::move(style), geometry.frame, animatesOpacity));
@@ -267,8 +272,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGe
 // Without a frame that waits for a pull, the frame on screen is the base.
 void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, LayoutAnimation &animation) const {
   react_native_assert(animation.geometryProgress && "The animation does not interpolate the geometry");
-  auto geometry =
-      interpolateSharedTransitionGeometry(animation.startView, animation.finalView, *animation.geometryProgress);
+  auto geometry = interpolateGeometryOf(animation);
   const auto pending = updateMap_.find(tag);
 #ifdef ANDROID
   if (pending != updateMap_.end()) {

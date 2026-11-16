@@ -670,17 +670,25 @@ bool LayoutAnimationsProxy::followSharedTransitionTarget(
   }
   bool placedNatively = false;
   AncestorClip clip;
-  const auto target =
-      targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, placedNatively, &clip), propsParserContext);
+  Float ancestorOpacity = 1;
+  auto target = targetInCarrierSpace(
+      run, targetOnScreen(run, propsParserContext, placedNatively, &clip, &ancestorOpacity), propsParserContext);
   run.targetPlacedNatively = placedNatively;
   const bool clipMoved = run.clip && run.clip->range.to != clip;
   if (clipMoved) {
     run.clip->range.to = clip;
   }
   const auto &finalView = animation->finalView;
+  // Only the ancestors change the opacity at the end of the run. A nested carrier is drawn by its ancestors.
+  if (run.carrier->placement() == CarrierPlacement::NESTED || ancestorOpacity == run.targetAncestorOpacity) {
+    target = cloneViewWithOpacity(target, getViewProps(finalView).opacity, propsParserContext);
+  } else {
+    run.targetAncestorOpacity = ancestorOpacity;
+  }
   if (finalView.layoutMetrics == target.layoutMetrics &&
       getViewProps(finalView).transform == getViewProps(target).transform &&
-      getViewProps(finalView).transformOrigin == getViewProps(target).transformOrigin) {
+      getViewProps(finalView).transformOrigin == getViewProps(target).transformOrigin &&
+      getViewProps(finalView).opacity == getViewProps(target).opacity) {
     if (clipMoved && animation->geometryProgress) {
       writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
     }
@@ -761,6 +769,7 @@ ShadowView LayoutAnimationsProxy::withGeometryOf(
   auto rawProps = view.props->rawProps;
   rawProps["transform"] = target.props->rawProps.getDefault("transform", nullptr);
   rawProps["transformOrigin"] = target.props->rawProps.getDefault("transformOrigin", nullptr);
+  rawProps["opacity"] = getViewProps(target).opacity;
   result.props = componentDescriptorRegistry_->at(view.componentHandle)
                      .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
 #else
@@ -768,6 +777,7 @@ ShadowView LayoutAnimationsProxy::withGeometryOf(
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(result.props));
   viewProps->transform = getViewProps(target).transform;
   viewProps->transformOrigin = getViewProps(target).transformOrigin;
+  viewProps->opacity = getViewProps(target).opacity;
 #endif
   return result;
 }
@@ -2041,6 +2051,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           config->animation,
           restartContentFade(run),
           moveClipTo(run, transition.clip[AFTER]));
+      run.targetAncestorOpacity = transition.ancestorOpacity[AFTER];
     }
     finishCoveredSharedTransitions(afterTopScreen, transaction, propsParserContext);
   } else if (!mutations.empty()) {
@@ -2123,6 +2134,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto &clipAfter = transition.clip[AFTER];
       if (phase == LayoutAnimationPhase::QUEUED) {
         run.followsTarget = run.configFollowsTarget;
+        run.targetAncestorOpacity = transition.ancestorOpacity[AFTER];
         updateLayoutAnimationTarget(
             carrierTag,
             carrierAfter,
@@ -2136,6 +2148,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           (leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter) ||
           !followsClipTarget(run, clipAfter)) {
         run.followsTarget = followsTarget;
+        run.targetAncestorOpacity = transition.ancestorOpacity[AFTER];
         startSharedTransition(
             run.carrier,
             carrierViewOnScreen(run),
@@ -3267,7 +3280,8 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
     const SharedTransitionRun &run,
     const PropsParserContext &propsParserContext,
     bool &placedNatively,
-    AncestorClip *clip) const {
+    AncestorClip *clip,
+    Float *ancestorOpacity) const {
   resolveLightNodeProps(run.target);
   auto target = run.target->current;
   auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
@@ -3277,14 +3291,17 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
   target.layoutMetrics.frame.origin = absolutePositions[0];
   overrideTransform(
       target, parseParentTransforms(ancestors, absolutePositions, placement.outsideReactParent), propsParserContext);
-  Float ancestorOpacity = 1;
+  Float opacity = 1;
   AncestorClip ancestorClip;
-  parseAncestorOpacityAndClip(ancestors, absolutePositions, ancestorOpacity, ancestorClip);
-  if (ancestorOpacity != 1) {
-    target = cloneViewWithOpacity(target, getViewProps(target).opacity * ancestorOpacity, propsParserContext);
+  parseAncestorOpacityAndClip(ancestors, absolutePositions, opacity, ancestorClip);
+  if (opacity != 1) {
+    target = cloneViewWithOpacity(target, getViewProps(target).opacity * opacity, propsParserContext);
   }
   if (clip) {
     *clip = fitTargetClip(run, target, ancestorClip);
+  }
+  if (ancestorOpacity) {
+    *ancestorOpacity = opacity;
   }
   return target;
 }
