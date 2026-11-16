@@ -1,5 +1,32 @@
 # Changelog
 
+## 4.7.2 — 2026-11-16
+
+### 🐛 Bug fixes
+
+- Fix a crash in layout animations when React Native's `LayoutAnimation` removes a view in the same frame in which React inserts a view into the same parent. ([#11025](https://github.com/software-mansion/react-native-reanimated/pull/11025) by [@pawicao](https://github.com/pawicao))
+- Stop animated style updates that arrive in the frames after a view unmounts from leaving stale entries in the props registry. ([#10958](https://github.com/software-mansion/react-native-reanimated/pull/10958) by [@tjzel](https://github.com/tjzel))
+- Fixed a crash when a view with an exiting animation is shown again while React Native's `LayoutAnimation` still animates its removal. ([#10916](https://github.com/software-mansion/react-native-reanimated/pull/10916) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix Mac Catalyst builds failing with ambiguous `Rect` and `Point` types by importing UIKit and AppKit mutually exclusively. ([#10907](https://github.com/software-mansion/react-native-reanimated/pull/10907) by [@theeket](https://github.com/theeket))
+- Fix a view revealed by a Suspense boundary (e.g. `react-freeze`) showing a stale animated value for a frame when `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS` is enabled. ([#10874](https://github.com/software-mansion/react-native-reanimated/pull/10874) by [@piaskowyk](https://github.com/piaskowyk))
+- Fix the Jest resolver resolving web implementations for some modules of packages that peer-depend on Reanimated when installed with pnpm. ([#10821](https://github.com/software-mansion/react-native-reanimated/pull/10821) by [@ryanlntn](https://github.com/ryanlntn))
+- Fix settled `boxShadow` and `backgroundImage` values that reach React in the native format when both `useAnimatedProps` and `useAnimatedStyle` write them on one view. ([#10819](https://github.com/software-mansion/react-native-reanimated/pull/10819) by [@pawicao](https://github.com/pawicao))
+- Defer sync of settled props until pending updates reach the registry. ([#10819](https://github.com/software-mansion/react-native-reanimated/pull/10819) by [@pawicao](https://github.com/pawicao))
+- Fix layout animation frames that mounted on Android before the React commit they follow, which left a moved view with an `entering` animation at its old frame. ([#10817](https://github.com/software-mansion/react-native-reanimated/pull/10817) by [@pawicao](https://github.com/pawicao))
+- Fix entering animations that only transform the view, such as `ZoomIn`, leaving the view invisible on Android when React Native diffs props with `enablePropsUpdateReconciliationAndroid`. ([#10812](https://github.com/software-mansion/react-native-reanimated/pull/10812) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix views with an `entering` animation that stayed invisible on Android when the only frame of the animation, for example with Reduce Motion, arrived before the view was mounted. ([#10811](https://github.com/software-mansion/react-native-reanimated/pull/10811) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix a view with an `entering` animation that kept its mount-time frame on Android when its layout changed before the animation started. ([#10808](https://github.com/software-mansion/react-native-reanimated/pull/10808) by [@pawicao](https://github.com/pawicao))
+- Fix `Unable to find viewState` warnings on Android when a view that flattened while its child was exiting unflattens again before the exit ends. ([#10795](https://github.com/software-mansion/react-native-reanimated/pull/10795) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix `Unable to find viewState` warnings on Android when a layout animation updates a view in the frame before an exit animation in its subtree removes it. ([#10794](https://github.com/software-mansion/react-native-reanimated/pull/10794) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Fix settled values of props that `useAnimatedProps` returns only after mount being reset by the next React render. ([#10736](https://github.com/software-mansion/react-native-reanimated/pull/10736) by [@pawicao](https://github.com/pawicao))
+- Fix text losing its trailing word on Android after animating `fontSize`, `letterSpacing` or `lineHeight` with `useAnimatedStyle` or `useAnimatedProps`. ([#10729](https://github.com/software-mansion/react-native-reanimated/pull/10729) by [@tshmieldev](https://github.com/tshmieldev))
+
+### 💡 Others
+
+- Let runtime tests read the frame and opacity of mounted views when `RUNTIME_TEST_FLAG` is enabled. ([#10739](https://github.com/software-mansion/react-native-reanimated/pull/10739) by [@bartlomiejbloniarz](https://github.com/bartlomiejbloniarz))
+- Bump the example apps and dev dependencies to React Native 0.88.0-rc.3. ([#10738](https://github.com/software-mansion/react-native-reanimated/pull/10738) by [@pawicao](https://github.com/pawicao))
+- Bump the example apps and dev dependencies to React Native 0.88.0-rc.2 and move the iOS example app to the UIScene lifecycle. ([#10650](https://github.com/software-mansion/react-native-reanimated/pull/10650) by [@pawicao](https://github.com/pawicao))
+
 ## 4.7.1 — 2026-10-02
 
 ### 🐛 Bug fixes
