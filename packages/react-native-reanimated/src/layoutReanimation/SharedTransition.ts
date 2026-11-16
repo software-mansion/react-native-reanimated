@@ -595,7 +595,6 @@ export class SharedTransition
       this.durationV ??= DEFAULT_DURATION;
     }
     const [animation, config] = this.getAnimationAndConfig();
-    const callback = this.callbackV;
     const delay = this.getDelay();
     const customAnimationFactory = this.customAnimationFactory;
     const progressAnimation = this.getStyleProgressAnimation();
@@ -621,7 +620,6 @@ export class SharedTransition
             progressAnimation,
             () => delayFunction(delay, animation(1, config))
           ),
-          callback,
         };
       };
     }
@@ -646,7 +644,6 @@ export class SharedTransition
         return {
           initialValues: getCustomInitialStyle(values, animations),
           animations: delayedAnimations,
-          callback,
         };
       };
     }
@@ -716,7 +713,6 @@ export class SharedTransition
           sharedTransitionGeometryProgress: geometryClock ? 0 : 1,
         },
         animations,
-        callback,
       };
     };
   };

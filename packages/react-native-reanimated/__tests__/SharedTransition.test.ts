@@ -102,6 +102,31 @@ describe('SharedTransition', () => {
     });
   });
 
+  describe('callback', () => {
+    test.each([
+      ['a built-in', new SharedTransition()],
+      [
+        'a custom',
+        SharedTransition.custom(() => {
+          'worklet';
+          return {};
+        }),
+      ],
+      [
+        'a timed progress',
+        SharedTransition.defaultTransitionType(
+          SharedTransitionType.PROGRESS_ANIMATION
+        ),
+      ],
+    ])(
+      'leaves the callback of %s animation to the native run',
+      (_, builder) => {
+        const animation = runLayoutAnimation(builder.withCallback(jest.fn()));
+        expect(animation).not.toHaveProperty('callback');
+      }
+    );
+  });
+
   describe('transparent colors', () => {
     const TRANSPARENT = 'rgba(0, 0, 0, 0)';
     const BLUE = 'rgba(34, 119, 221, 1)';

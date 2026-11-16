@@ -79,7 +79,6 @@ describe('Shared transition live target geometry', () => {
       await render(<Screens active nested {...{ transition, offset }} />);
       await waitForFrames(3);
       await advanceAnimationTimer(600);
-      await expectEventually(() => state.value.success).toBe(1);
       await expectChildEnd();
       const baseline = await translation();
       for (const value of [100, 200]) {
@@ -93,11 +92,12 @@ describe('Shared transition live target geometry', () => {
         expect((await props('targetOuter'))?.opacity).toBe(0);
       }
       expect(state.value.starts).toBe(2);
-      expect(state.value.success).toBe(1);
+      expect(state.value.success).toBe(0);
       expect(state.value.failure).toBe(0);
       await advanceAnimationTimer(1800);
       await expectEndpoint();
-      expect(state.value.success).toBe(1);
+      await expectEventually(() => state.value.success).toBe(1);
+      expect(state.value.failure).toBe(0);
       expect(state.value.starts).toBe(2);
     } finally {
       await stop();
@@ -183,7 +183,7 @@ describe('Shared transition live target geometry', () => {
         );
         await waitForFrames(3);
         expect(state.value.starts).toBe(index + 1);
-        expect(state.value.failure).toBe(index);
+        expect(state.value.failure).toBe(0);
         expect(state.value.success).toBe(0);
         await advanceAnimationTimer(300);
         const expectedWidth = width + (targetWidth - width) * fraction;
@@ -197,7 +197,7 @@ describe('Shared transition live target geometry', () => {
       );
       await waitForFrames(3);
       expect(state.value.starts).toBe(4);
-      expect(state.value.failure).toBe(3);
+      expect(state.value.failure).toBe(0);
       expect(state.value.success).toBe(0);
       await advanceAnimationTimer(600);
       await expectEventually(() => state.value.success).toBe(1);
@@ -209,7 +209,7 @@ describe('Shared transition live target geometry', () => {
       expect(getTestComponent('target').getTag()).toBe(targetTag);
       await advanceAnimationTimer(5000);
       expect(state.value.starts).toBe(4);
-      expect(state.value.failure).toBe(3);
+      expect(state.value.failure).toBe(0);
       expect(state.value.success).toBe(1);
     } finally {
       await stop();

@@ -364,9 +364,9 @@ void LayoutAnimationsProxy::handleProgressTransition(
             config,
             SharedTransitionDriver::GESTURE,
             sharedTransitionConfig ? sharedTransitionConfig->contentFade : std::nullopt,
+            sharedTransitionConfig ? sharedTransitionConfig->callback : nullptr,
             transaction,
             propsParserContext);
-        run.progressCallback = sharedTransitionConfig ? sharedTransitionConfig->callback : nullptr;
         restartContentFade(run);
 
         const auto target = targetInCarrierSpace(run, after, propsParserContext);
@@ -387,11 +387,9 @@ void LayoutAnimationsProxy::handleProgressTransition(
   }
   if (transition_->state == TransitionState::END || transition_->state == TransitionState::CANCELLED) {
     auto progressCallbacks = std::move(transition_->progressCallbacks);
-    if (transition_->state == TransitionState::END && transition_->sourceScreen) {
-      for (auto &run : activeSharedTransitionRuns()) {
-        if (run.driver == SharedTransitionDriver::GESTURE && run.progressCallback) {
-          progressCallbacks.push_back(std::exchange(run.progressCallback, nullptr));
-        }
+    for (auto &run : activeSharedTransitionRuns()) {
+      if (run.driver == SharedTransitionDriver::GESTURE && run.callback) {
+        progressCallbacks.push_back(std::exchange(run.callback, nullptr));
       }
     }
     for (auto &[_, run] : sharedTransitionRuns_) {
@@ -459,9 +457,9 @@ void LayoutAnimationsProxy::applyProgressAnimations() {
   }
 }
 
-void LayoutAnimationsProxy::finishProgressCallback(SharedTransitionRun &run) const {
-  if (auto callback = std::exchange(run.progressCallback, nullptr)) {
-    scheduleSharedTransitionCallback(std::move(callback), false);
+void LayoutAnimationsProxy::finishCallback(SharedTransitionRun &run, const bool finished) const {
+  if (auto callback = std::exchange(run.callback, nullptr)) {
+    scheduleSharedTransitionCallback(std::move(callback), finished);
   }
 }
 
@@ -692,11 +690,12 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
     const std::shared_ptr<Serializable> &config,
     const SharedTransitionDriver driver,
     const std::optional<SharedTransitionContentFade> &contentFade,
+    std::shared_ptr<Serializable> callback,
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   auto *run = activeSharedTransitionRun(sharedTag);
   if (run) {
-    finishProgressCallback(*run);
+    finishCallback(*run, false);
     const auto &oldTarget = run->target;
     if (oldTarget != nodes[BEFORE] && oldTarget != nodes[AFTER]) {
       transaction.restoreRequests.push_back({sharedTag, oldTarget});
@@ -750,6 +749,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->config = config;
+  run->callback = std::move(callback);
   run->driver = driver;
   run->targetOffWindow = false;
   if (run->carrier->placement() == CarrierPlacement::NESTED && !keepsNesting(run->carrier, run->target)) {
@@ -1364,7 +1364,7 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
 
 void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run) const {
   react_native_assert(run.lifecycle == SharedTransitionLifecycle::ACTIVE && "The run already retires");
-  finishProgressCallback(run);
+  finishCallback(run, false);
   run.lifecycle = SharedTransitionLifecycle::RETIRING;
 }
 
@@ -1425,7 +1425,7 @@ void LayoutAnimationsProxy::removeFromParent(
   }
   carrierPlacements_.tearDown(node);
   if (carried) {
-    finishProgressCallback(*carried);
+    finishCallback(*carried, false);
     carried->lifecycle = SharedTransitionLifecycle::FINISHED;
   }
   if (parent) {
@@ -1571,6 +1571,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           config->animation,
           SharedTransitionDriver::TIME,
           config->contentFade,
+          config->callback,
           transaction,
           propsParserContext);
 
@@ -1583,7 +1584,6 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           ownCarrierView(target, run.carrier, propsParserContext).props,
           config->animation,
           restartContentFade(run));
-      oweCallbackOfHeldStart(run, config->callback);
     }
     finishCoveredSharedTransitions(afterTopScreen, transaction, propsParserContext);
   } else if (!mutations.empty()) {
@@ -1615,7 +1615,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         continue;
       }
       auto animation = run.config;
-      auto callback = run.progressCallback;
+      auto callback = run.callback;
       if (layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
         const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
         if (!config) {
@@ -1626,6 +1626,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       const bool targetChanged = run.target != afterNode;
       if (targetChanged) {
+        finishCallback(run, false);
+        run.callback = std::move(callback);
         waitForTargetWindow(run, afterNode);
         transaction.restoreRequests.push_back({sharedTag, run.target});
         if (!afterNode->isCarrier()) {
@@ -1665,9 +1667,6 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             ownCarrierView(target, run.carrier, propsParserContext).props,
             animation,
             restartContentFade(run));
-      }
-      if (targetChanged) {
-        oweCallbackOfHeldStart(run, std::move(callback));
       }
     }
   }
@@ -1977,7 +1976,7 @@ void LayoutAnimationsProxy::finishSharedTransition(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext,
     const bool landed) const {
-  finishProgressCallback(run);
+  finishCallback(run, landed);
   finishNestedSharedTransitions(run.carrier, transaction, propsParserContext, landed);
   const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
   // A gesture-driven run leaves its source to the screen pop.
@@ -2665,16 +2664,6 @@ void LayoutAnimationsProxy::waitForTargetWindow(SharedTransitionRun &run, const 
   run.targetWindowDeadline = std::chrono::steady_clock::now() + kTargetWindowWait;
 }
 
-// The animation reports the callback when it starts, and a held start can end before that.
-void LayoutAnimationsProxy::oweCallbackOfHeldStart(SharedTransitionRun &run, std::shared_ptr<Serializable> callback)
-    const {
-  if (run.driver != SharedTransitionDriver::TIME) {
-    return;
-  }
-  const bool held = run.targetOffWindow && hasPendingLayoutAnimation(run.carrier->current.tag);
-  run.progressCallback = held ? std::move(callback) : nullptr;
-}
-
 // Ends the run that still flies between the views of the shared tag, without landing.
 void LayoutAnimationsProxy::endSharedTransitionOf(
     const SharedTag &sharedTag,
@@ -2743,7 +2732,6 @@ void LayoutAnimationsProxy::followOffWindowTargets(
       continue;
     }
     run.targetOffWindow = false;
-    oweCallbackOfHeldStart(run, nullptr);
     if (!targetMapped || targetOffWindow) {
       continue;
     }
