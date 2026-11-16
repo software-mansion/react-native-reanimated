@@ -560,6 +560,80 @@ void LayoutAnimationsProxy::filterSharedTransitionStarts(
   });
 }
 
+// A built-in timed transition aims at the target as it is now. A commit or a synchronous update can move the target.
+bool LayoutAnimationsProxy::followSharedTransitionTargets(
+    const PropsParserContext &propsParserContext,
+    const bool onlyPlacedNatively) const {
+  bool moved = false;
+  for (auto &run : activeSharedTransitionRuns()) {
+    auto *animation = liveGeometryAnimation(run);
+    if (!animation || !isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier() ||
+        (onlyPlacedNatively && !run.targetPlacedNatively.value_or(true) && !run.targetOffWindow)) {
+      continue;
+    }
+    bool placedNatively = false;
+    const auto target =
+        targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, placedNatively), propsParserContext);
+    run.targetPlacedNatively = placedNatively;
+    const auto &finalView = animation->finalView;
+    if (finalView.layoutMetrics == target.layoutMetrics &&
+        getViewProps(finalView).transform == getViewProps(target).transform &&
+        getViewProps(finalView).transformOrigin == getViewProps(target).transformOrigin) {
+      continue;
+    }
+    animation->finalView = withGeometryOf(finalView, target, propsParserContext);
+    writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
+    moved = true;
+  }
+  return moved;
+}
+
+void LayoutAnimationsProxy::followTargetsPlacedNatively() const {
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+    if (followSharedTransitionTargets(propsParserContext, true)) {
+      schedulePullOnNextFrame();
+    }
+  }
+}
+
+// A completed carrier that waits to land follows its target too.
+LayoutAnimation *LayoutAnimationsProxy::liveGeometryAnimation(const SharedTransitionRun &run) const {
+  const auto tag = run.carrier->current.tag;
+  if (run.driver != SharedTransitionDriver::TIME || layoutAnimationPhase(tag) == LayoutAnimationPhase::QUEUED) {
+    return nullptr;
+  }
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag);
+             it != completedAnimations_.end() && !it->second.shouldRemove) {
+    animation = &it->second.animation;
+  }
+  return animation && animation->geometryProgress ? animation : nullptr;
+}
+
+ShadowView LayoutAnimationsProxy::withGeometryOf(
+    const ShadowView &view,
+    const ShadowView &target,
+    const PropsParserContext &propsParserContext) const {
+  auto result = view;
+  result.layoutMetrics = target.layoutMetrics;
+#ifdef ANDROID
+  auto rawProps = view.props->rawProps;
+  rawProps["transform"] = target.props->rawProps.getDefault("transform", nullptr);
+  rawProps["transformOrigin"] = target.props->rawProps.getDefault("transformOrigin", nullptr);
+  result.props = componentDescriptorRegistry_->at(view.componentHandle)
+                     .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
+#else
+  result.props = componentDescriptorRegistry_->at(view.componentHandle).cloneProps(propsParserContext, view.props, {});
+  auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(result.props));
+  viewProps->transform = getViewProps(target).transform;
+  viewProps->transformOrigin = getViewProps(target).transformOrigin;
+#endif
+  return result;
+}
+
 void LayoutAnimationsProxy::overrideTransform(
     ShadowView &shadowView,
     const std::optional<Transform> &transform,
@@ -680,11 +754,15 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
 }
 
 bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
-  const auto &previousTarget = carrierAnimation(run).finalView;
-  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics) {
+  const auto &animation = carrierAnimation(run);
+  const auto &previousTarget = animation.finalView;
+  const bool followsGeometry = animation.geometryProgress.has_value();
+  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics &&
+      !(followsGeometry && completedAnimations_.contains(run.carrier->current.tag))) {
     return true;
   }
-  return SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(previousTarget), getViewProps(carrierTarget)) &&
+  return SharedTransitionValuesFactory::hasAnimatedChanges(
+             getViewProps(previousTarget), getViewProps(carrierTarget), !followsGeometry) &&
       waitsForCoveringRun(run, viewsHiddenByContinuingRuns());
 }
 
@@ -1058,8 +1136,28 @@ void LayoutAnimationsProxy::moveNestedCarriersOutOf(
     if (run.carrier->placement() == CarrierPlacement::NESTED && isLinkedInSubtree(run.carrier, node) &&
         !isInSubtree(carrierAncestorOf(run.carrier), node)) {
       moveNestedCarrierToRoot(run, transaction.filteredMutations, propsParserContext);
+      if (restartsAtRoot(run)) {
+        const auto target = targetOnScreen(run, propsParserContext);
+        startSharedTransition(
+            run.carrier,
+            carrierAnimation(run).currentView,
+            asCarrierView(target, run.carrier, propsParserContext),
+            ownCarrierView(target, run.carrier, propsParserContext).props,
+            run.config,
+            restartContentFade(run));
+      }
     }
   }
+}
+
+// A running built-in transition interpolates from a start in the space of the moving parent, so a carrier that moves
+// to the root starts again from its frame on screen.
+bool LayoutAnimationsProxy::restartsAtRoot(const SharedTransitionRun &run) const {
+  const auto tag = run.carrier->current.tag;
+  if (layoutAnimationPhase(tag) != LayoutAnimationPhase::RUNNING) {
+    return false;
+  }
+  return layoutAnimations_.at(tag).geometryProgress.has_value();
 }
 
 // A carrier that changes its frame space keeps its target, shifted by the offset between the spaces.
@@ -1518,7 +1616,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         run.config = animation;
       }
       adjustForNativePlacement(collectedTransition, AFTER);
-      if (run.carrier->placement() == CarrierPlacement::NESTED && !keepsNesting(run.carrier, run.target)) {
+      const bool leavesMovingParent =
+          run.carrier->placement() == CarrierPlacement::NESTED && !keepsNesting(run.carrier, run.target);
+      if (leavesMovingParent) {
         moveNestedCarrierToRoot(run, transaction.filteredMutations, propsParserContext);
       }
       overrideTransform(after, transition.transform[AFTER], propsParserContext);
@@ -1531,7 +1631,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             ownCarrierView(target, run.carrier, propsParserContext).props,
             run.config,
             restartContentFade(run));
-      } else if (targetEndChanged(run, carrierAfter)) {
+      } else if ((leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter)) {
         startSharedTransition(
             run.carrier,
             carrierAnimation(run).currentView,
@@ -2554,11 +2654,20 @@ void LayoutAnimationsProxy::endSharedTransitionOf(
 ShadowView LayoutAnimationsProxy::targetOnScreen(
     const SharedTransitionRun &run,
     const PropsParserContext &propsParserContext) const {
+  bool placedNatively = false;
+  return targetOnScreen(run, propsParserContext, placedNatively);
+}
+
+ShadowView LayoutAnimationsProxy::targetOnScreen(
+    const SharedTransitionRun &run,
+    const PropsParserContext &propsParserContext,
+    bool &placedNatively) const {
   resolveLightNodeProps(run.target);
   auto target = run.target->current;
   auto absolutePositions = getAbsolutePositionsForRootPathView(run.target, false);
   const auto ancestors = collectAncestors(run.target, false);
   const auto ancestor = findAncestorOutsideReactParent(ancestors, true);
+  placedNatively = ancestor.has_value();
   if (ancestor) {
     moveBelowAncestor(*ancestor, absolutePositions);
   }

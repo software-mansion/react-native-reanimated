@@ -173,10 +173,7 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
     animation.startView.layoutMetrics.frame.origin += offset;
-    if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
-      animation.frameOffset += offset;
-    }
-    animation.finalView = newView;
+    moveLayoutAnimationTarget(tag, animation, newView, offset);
     return animation.currentView;
   }
   if (const auto completedAnimationIt = completedAnimations_.find(tag);
@@ -184,13 +181,38 @@ std::optional<ShadowView> LayoutAnimationsProxy::reparentLayoutAnimation(
     auto &animation = completedAnimationIt->second.animation;
     animation.parentTag = parentTag;
     animation.currentView.layoutMetrics.frame.origin += offset;
+    if (animation.geometryProgress) {
+      animation.startView.layoutMetrics.frame.origin += offset;
+    }
+    moveLayoutAnimationTarget(tag, animation, newView, offset);
+    return animation.currentView;
+  }
+  return pendingCurrentView;
+}
+
+// A frame that waits for a pull keeps its place on screen.
+void LayoutAnimationsProxy::moveLayoutAnimationTarget(
+    const Tag tag,
+    LayoutAnimation &animation,
+    const ShadowView &newView,
+    const react::Point offset) const {
+  if (!animation.geometryProgress) {
     if (animation.type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
       animation.frameOffset += offset;
     }
     animation.finalView = newView;
-    return animation.currentView;
+    return;
   }
-  return pendingCurrentView;
+  animation.finalView.layoutMetrics = newView.layoutMetrics;
+  if (const auto pending = updateMap_.find(tag); pending != updateMap_.end()) {
+    auto &frame = pending->second.frame;
+    if (frame.x) {
+      *frame.x += offset.x;
+    }
+    if (frame.y) {
+      *frame.y += offset.y;
+    }
+  }
 }
 
 // MARK: MountingOverrideDelegate
@@ -219,6 +241,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
   auto &filteredMutations = transaction.filteredMutations;
   const bool flushStructuralMutations = shouldFlushStructuralMutations();
+  const bool commits = !mutations.empty();
 
   reconcileContradictedRemovals(mutations, transaction, propsParserContext);
 
@@ -315,6 +338,11 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (commits) {
+      followSharedTransitionTargets(propsParserContext, false);
+    }
+  }
   addOngoingAnimations(transaction);
 
   cleanupAnimations(transaction, propsParserContext, flushStructuralMutations);
@@ -858,6 +886,7 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
   ReanimatedSystraceSection s("applySynchronousProps");
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const bool hasRecords = hasLayoutAnimationRecords();
+  bool updatesLightTree = false;
 
   for (const auto &[shadowNodeFamily, props] : updatesBatch) {
     if (shadowNodeFamily->getSurfaceId() != surfaceId_) {
@@ -901,6 +930,13 @@ void LayoutAnimationsProxy::applySynchronousProps(const UpdatesBatch &updatesBat
 #else
     node->current.props = mergeSynchronousProps(node->current, props);
 #endif
+    updatesLightTree = true;
+  }
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+    if (updatesLightTree && followSharedTransitionTargets(propsParserContext, false)) {
+      schedulePullOnNextFrame();
+    }
   }
 }
 

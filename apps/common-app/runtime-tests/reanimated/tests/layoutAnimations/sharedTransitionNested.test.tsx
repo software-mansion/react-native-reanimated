@@ -490,7 +490,7 @@ describe('Nested shared transitions', () => {
     await expectAllShownAtTargets();
   });
 
-  test('retargets a retained inner carrier while it waits to land', async () => {
+  test('keeps a completed retained carrier at its current target while it waits to land', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} removeSource />);
     await waitForFrames();
@@ -512,7 +512,7 @@ describe('Nested shared transitions', () => {
         'worklet';
         const inner = global._obtainMountedViewProps(innerTag, false);
         return (
-          !!inner && inner.width > 61 && inner.width < 89 && inner.opacity === 1
+          !!inner && Math.abs(inner.width - 90) < 0.5 && inner.opacity === 1
         );
       })
     ).toBe(true);
@@ -664,7 +664,7 @@ describe('Nested shared transitions', () => {
     await expectAllShownAtTargets();
   });
 
-  test('moves the waiting inner view when its target changes', async () => {
+  test('keeps the completed inner view at its current target', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     await render(<Screens active={false} transitions={retargetTransitions} />);
     await waitForFrames();
@@ -674,11 +674,14 @@ describe('Nested shared transitions', () => {
     await advanceAnimationTimer(retargetInnerDuration);
     await waitForNotification('inner-finished');
     await expectInnerViewPhase('completed');
-    const stopRecording = recordInnerViewProp('width');
     await render(
       <Screens active innerSize={90} transitions={retargetTransitions} />
     );
     await waitForFrames(3);
+    await expectInnerViewToReach(
+      'width',
+      (width) => Math.abs(width - 90) < 0.5
+    );
     await advanceAnimationTimer(retargetInnerDuration / 2);
     await advanceAnimationTimer(retargetInnerDuration / 2);
     const endSample = await expectInnerViewToReach(
@@ -689,9 +692,6 @@ describe('Nested shared transitions', () => {
       !!endSample?.inner && Math.abs(endSample.inner.height - 90) < 0.5
     ).toBe(true);
     expect(endSample?.inner?.opacity).toBe(1);
-    const widths = stopRecording();
-    expect(widths.some((width) => width > 61 && width < 89)).toBe(true);
-
     await advanceAnimationTimer(retargetOuterDuration);
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();

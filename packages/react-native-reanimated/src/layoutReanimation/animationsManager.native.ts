@@ -149,7 +149,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         // When layout animation is requested, but a previous one is still running, we merge
         // new layout animation targets into the ongoing animation
         const previousAnimation = currentAnimationForTag.get(tag);
-        if (previousAnimation) {
+        if (
+          previousAnimation &&
+          type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        ) {
           currentAnimation = { ...previousAnimation, ...style.animations };
         }
         currentAnimationForTag.set(tag, currentAnimation);

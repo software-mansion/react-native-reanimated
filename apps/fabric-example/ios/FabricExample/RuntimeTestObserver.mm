@@ -84,6 +84,24 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)observeLocationOnScreen:(NSInteger)tag
+                        resolve:(RCTPromiseResolveBlock)resolve
+                         reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+    if (view.window == nil) {
+      resolve((id)kCFNull);
+      return;
+    }
+    const CGPoint anchor = view.layer.anchorPoint;
+    const CGPoint untransformedOrigin = {
+        view.center.x - view.bounds.size.width * anchor.x, view.center.y - view.bounds.size.height * anchor.y};
+    const CGPoint origin = [view.superview convertPoint:untransformedOrigin toView:nil];
+    resolve(@{@"x" : @(origin.x), @"y" : @(origin.y)});
+  });
+}
+
 - (void)observeTransform:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -93,7 +111,15 @@ RCT_EXPORT_MODULE()
       return;
     }
     CALayer *layer = view.layer.presentationLayer ?: view.layer;
-    resolve(@{@"width" : @(layer.bounds.size.width), @"translateX" : @(layer.transform.m41)});
+    const CATransform3D t = layer.transform;
+    resolve(@{
+      @"width" : @(layer.bounds.size.width),
+      @"translateX" : @(t.m41),
+      @"matrix" : @[
+        @(t.m11), @(t.m12), @(t.m13), @(t.m14), @(t.m21), @(t.m22), @(t.m23), @(t.m24),
+        @(t.m31), @(t.m32), @(t.m33), @(t.m34), @(t.m41), @(t.m42), @(t.m43), @(t.m44)
+      ]
+    });
   });
 }
 
