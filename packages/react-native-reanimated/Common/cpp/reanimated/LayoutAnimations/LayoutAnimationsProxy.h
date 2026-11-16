@@ -81,6 +81,11 @@ struct SharedTransitionRun {
   std::shared_ptr<Serializable> config;
   // The view that gave config. A run that keeps its target takes the config changes of this view.
   std::shared_ptr<LightNode> configSource;
+  // The animation of config aims at the current geometry of the target.
+  bool configFollowsTarget = false;
+  // The queued or started animation of the carrier aims at the current geometry of the target, so it does not wait for
+  // the target window.
+  bool followsTarget = false;
   SharedTransitionDriver driver = SharedTransitionDriver::TIME;
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
@@ -90,6 +95,10 @@ struct SharedTransitionRun {
   std::optional<bool> targetPlacedNatively;
   std::chrono::steady_clock::time_point targetWindowDeadline;
   bool restoreCarrierOnFinish = false;
+
+  bool holdsStart() const {
+    return targetOffWindow && !followsTarget;
+  }
 };
 
 // The first reason, in this order, why a run does not land in a pull.
@@ -346,8 +355,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<Serializable> &config) const;
   void applyProgressAnimations();
   bool followSharedTransitionTargets(const PropsParserContext &propsParserContext, bool onlyPlacedNatively) const;
+  bool followSharedTransitionTarget(SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
+  bool carriesRunningRun(const SharedTransitionRun &run) const;
   void followTargetsPlacedNatively() const override;
   LayoutAnimation *liveGeometryAnimation(const SharedTransitionRun &run) const;
+  bool followsWithoutRestart(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   ShadowView
   withGeometryOf(const ShadowView &view, const ShadowView &target, const PropsParserContext &propsParserContext) const;
   void handleProgressTransition(

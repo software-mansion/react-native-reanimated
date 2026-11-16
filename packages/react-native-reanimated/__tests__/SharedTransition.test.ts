@@ -449,6 +449,44 @@ describe('SharedTransition', () => {
   });
 });
 
+describe('SharedTransition followsTarget', () => {
+  const progressAnimation = () => {
+    'worklet';
+    return {};
+  };
+
+  test.each([
+    ['the default animation', new SharedTransition(), true],
+    [
+      'a spring with a delay',
+      SharedTransition.springify().delay(100).fadeContent(),
+      true,
+    ],
+    [
+      'a progress animation for the screen gesture',
+      SharedTransition.progressAnimation(progressAnimation),
+      true,
+    ],
+    [
+      'a custom animation',
+      SharedTransition.custom(() => {
+        'worklet';
+        return {};
+      }),
+      false,
+    ],
+    [
+      'a timed progress animation',
+      SharedTransition.progressAnimation(
+        progressAnimation
+      ).defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION),
+      false,
+    ],
+  ])('%s follows the target: %p', (_name, transition, followsTarget) => {
+    expect(transition.followsTarget()).toBe(followsTarget);
+  });
+});
+
 describe('SharedTransition with fadeContent', () => {
   const FADING_VALUES = {
     ...VALUES,

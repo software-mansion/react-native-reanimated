@@ -571,7 +571,7 @@ void LayoutAnimationsProxy::filterSharedTransitionStarts(
     const auto &target = collected.nodes[AFTER];
     // The carrier of a run shows its target until it lands. A held start that goes back to its source ends.
     const auto *activeRun = activeSharedTransitionRun(sharedTag);
-    const bool reversesHeldStart = activeRun && activeRun->source == target && activeRun->targetOffWindow &&
+    const bool reversesHeldStart = activeRun && activeRun->source == target && activeRun->holdsStart() &&
         hasPendingLayoutAnimation(activeRun->carrier->current.tag);
     const bool continuesRun = activeRun && activeRun->target == source && !reversesHeldStart;
     const bool sourceOffWindow = !continuesRun && isOffWindow(source);
@@ -590,26 +590,35 @@ bool LayoutAnimationsProxy::followSharedTransitionTargets(
     const bool onlyPlacedNatively) const {
   bool moved = false;
   for (auto &run : activeSharedTransitionRuns()) {
-    auto *animation = liveGeometryAnimation(run);
-    if (!animation || !isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier() ||
-        (onlyPlacedNatively && !run.targetPlacedNatively.value_or(true) && !run.targetOffWindow)) {
-      continue;
+    if (!onlyPlacedNatively || run.targetPlacedNatively.value_or(true) || run.targetOffWindow) {
+      moved = followSharedTransitionTarget(run, propsParserContext) || moved;
     }
-    bool placedNatively = false;
-    const auto target =
-        targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, placedNatively), propsParserContext);
-    run.targetPlacedNatively = placedNatively;
-    const auto &finalView = animation->finalView;
-    if (finalView.layoutMetrics == target.layoutMetrics &&
-        getViewProps(finalView).transform == getViewProps(target).transform &&
-        getViewProps(finalView).transformOrigin == getViewProps(target).transformOrigin) {
-      continue;
-    }
-    animation->finalView = withGeometryOf(finalView, target, propsParserContext);
-    writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
-    moved = true;
   }
   return moved;
+}
+
+bool LayoutAnimationsProxy::followSharedTransitionTarget(
+    SharedTransitionRun &run,
+    const PropsParserContext &propsParserContext) const {
+  auto *animation = liveGeometryAnimation(run);
+  if (!animation || !isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier()) {
+    return false;
+  }
+  bool placedNatively = false;
+  const auto target =
+      targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, placedNatively), propsParserContext);
+  run.targetPlacedNatively = placedNatively;
+  const auto &finalView = animation->finalView;
+  if (finalView.layoutMetrics == target.layoutMetrics &&
+      getViewProps(finalView).transform == getViewProps(target).transform &&
+      getViewProps(finalView).transformOrigin == getViewProps(target).transformOrigin) {
+    return false;
+  }
+  animation->finalView = withGeometryOf(finalView, target, propsParserContext);
+  if (animation->geometryProgress) {
+    writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
+  }
+  return true;
 }
 
 void LayoutAnimationsProxy::followTargetsPlacedNatively() const {
@@ -634,7 +643,16 @@ LayoutAnimation *LayoutAnimationsProxy::liveGeometryAnimation(const SharedTransi
              it != completedAnimations_.end() && !it->second.shouldRemove) {
     animation = &it->second.animation;
   }
-  return animation && animation->geometryProgress ? animation : nullptr;
+  return animation && (animation->geometryProgress || run.followsTarget) ? animation : nullptr;
+}
+
+// The platform gives a target that is not in its window yet its frame in later commits. A run that follows its target
+// takes that frame without a restart.
+bool LayoutAnimationsProxy::followsWithoutRestart(const SharedTransitionRun &run, const ShadowView &carrierTarget)
+    const {
+  return run.followsTarget && run.targetOffWindow &&
+      !SharedTransitionValuesFactory::hasAnimatedChanges(
+             getViewProps(carrierAnimation(run).finalView), getViewProps(carrierTarget), false);
 }
 
 ShadowView LayoutAnimationsProxy::withGeometryOf(
@@ -759,6 +777,8 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   run->target = nodes[AFTER];
   run->config = config;
   run->configSource = nodes[BEFORE];
+  run->configFollowsTarget = false;
+  run->followsTarget = false;
   run->callback = std::move(callback);
   run->driver = driver;
   run->targetOffWindow = false;
@@ -1174,6 +1194,7 @@ void LayoutAnimationsProxy::moveNestedCarriersOutOf(
       moveNestedCarrierToRoot(run, transaction.filteredMutations, propsParserContext);
       if (restartsAtRoot(run)) {
         const auto target = targetOnScreen(run, propsParserContext);
+        run.followsTarget = run.configFollowsTarget;
         startSharedTransition(
             run.carrier,
             carrierAnimation(run).currentView,
@@ -1585,6 +1606,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           transaction,
           propsParserContext);
 
+      run.configFollowsTarget = config->followsTarget;
+      run.followsTarget = config->followsTarget;
       waitForTargetWindow(run, afterNode);
       const auto target = targetInCarrierSpace(run, after, propsParserContext);
       startSharedTransition(
@@ -1626,11 +1649,13 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       }
       const bool targetChanged = run.target != afterNode;
       auto animation = run.config;
+      auto followsTarget = run.configFollowsTarget;
       auto configSource = run.configSource;
       auto callback = run.callback;
       if (!targetChanged) {
         if (const auto config = configOfSource(run)) {
           animation = config->animation;
+          followsTarget = config->followsTarget;
         }
       } else if (layoutRootOf(collectedTransition.nodes[BEFORE]) == host) {
         const auto config = layoutAnimationsManager_->getSharedTransitionConfig(before.tag);
@@ -1638,6 +1663,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           continue;
         }
         animation = config->animation;
+        followsTarget = config->followsTarget;
         configSource = collectedTransition.nodes[BEFORE];
         callback = config->callback;
       }
@@ -1658,6 +1684,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       run.target = afterNode;
       if (phase != LayoutAnimationPhase::QUEUED || targetChanged) {
         run.config = animation;
+        run.configFollowsTarget = followsTarget;
         run.configSource = configSource;
       }
       adjustForNativePlacement(collectedTransition, AFTER);
@@ -1670,13 +1697,17 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       const auto target = targetInCarrierSpace(run, after, propsParserContext);
       const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
       if (phase == LayoutAnimationPhase::QUEUED) {
+        run.followsTarget = run.configFollowsTarget;
         updateLayoutAnimationTarget(
             carrierTag,
             carrierAfter,
             ownCarrierView(target, run.carrier, propsParserContext).props,
             run.config,
             restartContentFade(run));
+      } else if (!targetChanged && !leavesMovingParent && followsWithoutRestart(run, carrierAfter)) {
+        followSharedTransitionTarget(run, propsParserContext);
       } else if ((leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter)) {
+        run.followsTarget = followsTarget;
         startSharedTransition(
             run.carrier,
             carrierAnimation(run).currentView,
@@ -1966,6 +1997,14 @@ bool LayoutAnimationsProxy::landsWithOtherRuns(const SharedTransitionRun &run) c
   return std::ranges::any_of(activeSharedTransitionRuns(), [&](const SharedTransitionRun &nestedRun) {
     return nestedRun.carrier->placement() == CarrierPlacement::NESTED && isCarriedBy(nestedRun.carrier, run.carrier) &&
         runContinues(nestedRun.carrier->current.tag);
+  });
+}
+
+// A run that ends ends the runs that it carries.
+bool LayoutAnimationsProxy::carriesRunningRun(const SharedTransitionRun &run) const {
+  return std::ranges::any_of(activeSharedTransitionRuns(), [&](const SharedTransitionRun &nestedRun) {
+    return nestedRun.carrier->placement() == CarrierPlacement::NESTED && isCarriedBy(nestedRun.carrier, run.carrier) &&
+        layoutAnimationPhase(nestedRun.carrier->current.tag) == LayoutAnimationPhase::RUNNING;
   });
 }
 
@@ -2721,7 +2760,8 @@ ShadowView LayoutAnimationsProxy::targetOnScreen(
   return target;
 }
 
-// A run does not start or land until the target boundary joins the window.
+// A held start does not start, and a run does not land, until the target boundary joins the window. A run that
+// follows its target flies to its end before it stops to wait.
 void LayoutAnimationsProxy::followOffWindowTargets(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
@@ -2738,8 +2778,9 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     const auto placement = targetBoundaryPlacementKind(run.target);
     const bool targetOffWindow = targetMapped && placement == NativeViewPlacement::Kind::OffWindow;
     const bool waitsForWindow = targetOffWindow && !run.target->isExiting();
-    if ((targetMapped && placement == NativeViewPlacement::Kind::DifferentWindow) ||
-        (waitsForWindow && std::chrono::steady_clock::now() >= run.targetWindowDeadline)) {
+    const bool waitEnded = std::chrono::steady_clock::now() >= run.targetWindowDeadline && !carriesRunningRun(run) &&
+        (!run.followsTarget || (!isQueuedOrRunning(layoutAnimationPhase(carrierTag)) && !landsWithOtherRuns(run)));
+    if ((targetMapped && placement == NativeViewPlacement::Kind::DifferentWindow) || (waitsForWindow && waitEnded)) {
       transaction.restoreRequests.push_back({run.sharedTag, run.source});
       finishSharedTransition(run, transaction, propsParserContext, false);
       continue;
@@ -2760,7 +2801,12 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
     const auto frameProps = ownCarrierView(target, run.carrier, propsParserContext).props;
     if (hasPendingLayoutAnimation(carrierTag)) {
+      run.followsTarget = run.configFollowsTarget;
       updateLayoutAnimationTarget(carrierTag, carrierAfter, frameProps, config, restartContentFade(run));
+      continue;
+    }
+    if (run.followsTarget) {
+      followSharedTransitionTarget(run, propsParserContext);
       continue;
     }
     if (!layoutAnimations_.contains(carrierTag) && !completedAnimations_.contains(carrierTag)) {
@@ -2769,6 +2815,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     const auto &animation = carrierAnimation(run);
     if (animation.finalView.layoutMetrics != carrierAfter.layoutMetrics ||
         getViewProps(animation.finalView).transform != getViewProps(carrierAfter).transform) {
+      run.followsTarget = run.configFollowsTarget;
       startSharedTransition(
           run.carrier, animation.currentView, carrierAfter, frameProps, config, restartContentFade(run));
     }

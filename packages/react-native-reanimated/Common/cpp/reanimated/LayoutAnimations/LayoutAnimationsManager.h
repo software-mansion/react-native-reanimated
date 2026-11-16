@@ -47,6 +47,8 @@ struct SharedTransitionConfig {
   std::shared_ptr<Serializable> animation;
   std::optional<SharedTransitionContentFade> contentFade;
   std::shared_ptr<Serializable> callback;
+  // The animation aims at the current geometry of its target in each frame.
+  bool followsTarget = false;
 };
 
 struct LayoutAnimationConfig {
@@ -56,6 +58,7 @@ struct LayoutAnimationConfig {
   std::string sharedTransitionTag;
   std::optional<SharedTransitionContentFade> sharedTransitionContentFade;
   std::shared_ptr<Serializable> sharedTransitionCallback;
+  bool sharedTransitionFollowsTarget = false;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.

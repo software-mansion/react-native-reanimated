@@ -183,6 +183,7 @@ export interface LayoutAnimationBatchItem {
     fadeIn: SerializableRef<EntryExitAnimationFunction>;
     fadeOutEnd: number;
   };
+  sharedTransitionFollowsTarget?: boolean;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;
