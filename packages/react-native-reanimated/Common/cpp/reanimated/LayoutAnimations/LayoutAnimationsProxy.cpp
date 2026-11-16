@@ -288,7 +288,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    followOffWindowTargets(propsParserContext);
+    followOffWindowTargets(transaction, propsParserContext);
     flushSubtreeRemovals(transaction);
     scheduleTransitionLifecycleCleanup();
     retireOrphanedSharedTransitions();
@@ -1614,12 +1614,6 @@ void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag>
   maybeScheduleCleanupPull(false);
 }
 
-// An animation does not start while its frames cannot mount, so that its time does not run out before its
-// first frame shows.
-bool LayoutAnimationsProxy::defersLayoutAnimationStart(const Tag tag) const {
-  return unqueuedBatchTags_.contains(tag);
-}
-
 void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   bool hasHeldFrame = false;
@@ -1640,6 +1634,19 @@ void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &t
   }
 }
 #endif
+
+bool LayoutAnimationsProxy::defersLayoutAnimationStart(const Tag tag) const {
+  const auto run = sharedTransitionRuns_.find(tag);
+  if (run != sharedTransitionRuns_.end() && run->second.lifecycle == SharedTransitionLifecycle::ACTIVE &&
+      run->second.targetOffWindow) {
+    return true;
+  }
+#ifdef ANDROID
+  return unqueuedBatchTags_.contains(tag);
+#else
+  return false;
+#endif
+}
 
 // MARK: Start Animation
 

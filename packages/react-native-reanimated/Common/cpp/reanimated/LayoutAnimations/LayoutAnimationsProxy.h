@@ -70,6 +70,7 @@ enum class SharedTransitionLifecycle : std::uint8_t {
 // The carrier is the view that the run animates, moved from its parent to the root for the time of the
 // run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 struct SharedTransitionRun {
+  // The run reports this callback itself: a gesture gives the result, a start that does not leave its hold gets false.
   std::shared_ptr<Serializable> progressCallback;
   SharedTag sharedTag;
   std::shared_ptr<LightNode> carrier;
@@ -82,6 +83,7 @@ struct SharedTransitionRun {
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
+  std::chrono::steady_clock::time_point targetWindowDeadline;
   bool restoreCarrierOnFinish = false;
 };
 
@@ -390,10 +392,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void maybeScheduleCleanupPull(bool flushedStructuralMutations) const;
   void holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const;
   void releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const;
-  bool defersLayoutAnimationStart(Tag tag) const override;
   void keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const;
   void releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const;
 #endif
+
+  bool defersLayoutAnimationStart(Tag tag) const override;
 
   void hideTransitioningViews(
       BeforeOrAfter index,
@@ -487,13 +490,18 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   int carrierHostIndex(const std::shared_ptr<LightNode> &node) const;
   Tag carrierHostTag() const;
   void ensureCarrierOverlay(ShadowViewMutationList &mutations, const PropsParserContext &propsParserContext) const;
+  NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
+  NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
+  bool isInOtherWindow(const std::shared_ptr<LightNode> &target) const;
+  void waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target) const;
+  void oweCallbackOfHeldStart(SharedTransitionRun &run, std::shared_ptr<Serializable> callback) const;
   void endSharedTransitionOf(
       const SharedTag &sharedTag,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   ShadowView targetOnScreen(const SharedTransitionRun &run, const PropsParserContext &propsParserContext) const;
-  void followOffWindowTargets(const PropsParserContext &propsParserContext) const;
+  void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void followProgressTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;
   const ShadowView &carrierViewOnScreen(const SharedTransitionRun &run) const;

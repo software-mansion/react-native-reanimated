@@ -137,12 +137,12 @@ static UIWindow *surfaceWindow(UIView *rootView)
   if (!view.window || !parent) {
     return {.kind = reanimated::NativeViewPlacement::Kind::OffWindow};
   }
-  if ([view isDescendantOfView:parent]) {
-    return {.kind = reanimated::NativeViewPlacement::Kind::InsideReactParent};
-  }
   UIView *rootView = [self viewWithTag:surfaceId];
   if (view.window != surfaceWindow(rootView)) {
-    return {.kind = reanimated::NativeViewPlacement::Kind::OffWindow};
+    return {.kind = reanimated::NativeViewPlacement::Kind::DifferentWindow};
+  }
+  if ([view isDescendantOfView:parent]) {
+    return {.kind = reanimated::NativeViewPlacement::Kind::InsideReactParent};
   }
   CGPoint viewOrigin = originInWindow(view, !settled);
   UIViewController *presented = view.reactViewController;
