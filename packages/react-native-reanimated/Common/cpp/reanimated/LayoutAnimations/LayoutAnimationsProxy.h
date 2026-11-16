@@ -167,7 +167,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
 
   void reconcileContradictedRemovals(
-      const ShadowViewMutationList &mutations,
+      ShadowViewMutationList &mutations,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
 #ifdef ANDROID
