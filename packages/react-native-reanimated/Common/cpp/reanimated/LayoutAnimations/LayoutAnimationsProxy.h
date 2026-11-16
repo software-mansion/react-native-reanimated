@@ -43,13 +43,26 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
+// The faded view that a pull mounted, and the values that it comes from. The next pull uses it as the old view.
+struct MountedFade {
+  ShadowView source;
+  double ownOpacity;
+  double contentOpacity;
+  ShadowView view;
+};
+
+struct FadedChild {
+  std::shared_ptr<LightNode> node;
+  std::optional<MountedFade> mounted;
+};
+
 // The children of the carrier fade with the progress of the run. When the carrier lands, the children
 // of the target fade in.
 struct ContentFade {
   SharedTransitionContentFade options;
   ContentOpacityRange range;
   double mountedOpacity = 1;
-  std::unordered_map<Tag, std::shared_ptr<LightNode>> fadedChildren;
+  std::unordered_map<Tag, FadedChild> fadedChildren;
 };
 
 // The time of the animation moves the carrier, or the progress of a back gesture moves it.
@@ -325,7 +338,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   double ownOpacity(const std::shared_ptr<LightNode> &node, const ShadowView &animatedView) const;
   void applyContentOpacity(
-      const std::shared_ptr<LightNode> &child,
+      FadedChild &child,
       double fromContentOpacity,
       double toContentOpacity,
       ShadowViewMutationList &mutations,
