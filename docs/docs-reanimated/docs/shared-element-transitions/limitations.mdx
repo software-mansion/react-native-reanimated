@@ -20,6 +20,10 @@ Check these points:
 - The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of the boundary of the screen. A boundary in the header becomes the active boundary instead of the boundary of the screen. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
 - The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](../guides/feature-flags.md#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
 
+## Modals and sheets on Android
+
+On Android, a shared view does not move to or from a React Native `Modal` or a native-overlay sheet. This also applies when both views are in the same `Modal`. The two views stay visible in their own places. This limit does not apply to iOS.
+
 ## Updates during the transition
 
 - Changes that React makes to the props or the layout of the moving view itself wait until the transition ends. Then they show at once, which can look like a jump. This includes changes from React state and from `useAnimatedStyle` updates that go through React. The children of the moving view can update during the move.
