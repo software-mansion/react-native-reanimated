@@ -80,6 +80,8 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
   NSString *_planError;
   std::vector<Epoch> _epochs;
   BOOL _startsOnNotification;
+  BOOL _armed;
+  BOOL _startRequested;
   UIWindowScene *_windowScene;
   ThreadHandle _uiThread;
   ThreadHandle _jsThread;
@@ -125,6 +127,7 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
   _log = os_log_create("com.reanimatedbenchmark", OS_LOG_CATEGORY_DYNAMIC_TRACING);
   UIDevice.currentDevice.batteryMonitoringEnabled = YES;
   _planError = parseEpochs(plan, _epochs) ?: [self readStart:[arguments stringForKey:@"benchmarkStart"]];
+  _work = std::make_unique<EpochWork[]>(_epochs.size());
   if (_planError != nil) {
     return;
   }
@@ -138,10 +141,18 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
     _updateRecorder = [[UpdateRecorder alloc] initWithWindowScene:windowScene capacity:capacity];
     _mountCounter = [MountCounter new];
   }
-  _work = std::make_unique<EpochWork[]>(_epochs.size());
   [self prepareUiStallLoad];
   [self prepareKnownWorkLoad];
   _boundaries.reserve(_epochs.size() + 1);
+  if (_startsOnNotification) {
+    CFNotificationCenterAddObserver(
+        CFNotificationCenterGetDarwinNotifyCenter(),
+        (__bridge const void *)self,
+        startNotified,
+        StartNotification,
+        nullptr,
+        CFNotificationSuspensionBehaviorDeliverImmediately);
+  }
 }
 
 - (void)prepareUiStallLoad
@@ -224,17 +235,18 @@ NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs);
     [self reportWithError:_planError];
     return;
   }
-  if (_startsOnNotification) {
-    CFNotificationCenterAddObserver(
-        CFNotificationCenterGetDarwinNotifyCenter(),
-        (__bridge const void *)self,
-        startNotified,
-        StartNotification,
-        nullptr,
-        CFNotificationSuspensionBehaviorDeliverImmediately);
-    return;
+  _armed = YES;
+  if (!_startsOnNotification || _startRequested) {
+    [self beginPlan];
   }
-  [self beginPlan];
+}
+
+- (void)requestStart
+{
+  _startRequested = YES;
+  if (_armed) {
+    [self beginPlan];
+  }
 }
 
 - (void)beginPlan
@@ -477,7 +489,7 @@ void startNotified(
 {
   CFNotificationCenterRemoveObserver(center, observer, name, nullptr);
   BenchmarkSampler *sampler = (__bridge BenchmarkSampler *)observer;
-  dispatch_async(dispatch_get_main_queue(), ^{ [sampler beginPlan]; });
+  dispatch_async(dispatch_get_main_queue(), ^{ [sampler requestStart]; });
 }
 
 NSString *parseEpoch(NSString *text, std::vector<Epoch> &epochs)
