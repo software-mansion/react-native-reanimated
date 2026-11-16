@@ -43,15 +43,20 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
+  // Created once per call instead of once per view.
+  const auto shadowNodeWrapperName = jsi::PropNameID::forAscii(rt, "shadowNodeWrapper");
+  const auto updatesName = jsi::PropNameID::forAscii(rt, "updates");
+  [[maybe_unused]] const auto isAnimatedPropsName = jsi::PropNameID::forAscii(rt, "isAnimatedProps");
+
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
-    auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
+    auto shadowNodeWrapper = item.getProperty(rt, shadowNodeWrapperName);
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
     if (isUnmounted(shadowNode->getFamily())) {
       continue;
     }
 
-    jsi::Value updates = item.getProperty(rt, "updates");
+    jsi::Value updates = item.getProperty(rt, updatesName);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
       roundTextMetrics(rt, updates);
@@ -62,7 +67,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
       // `collectSettledUpdates` never reads `writeHistories_`.
       if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
-        const bool isAnimatedProps = item.getProperty(rt, "isAnimatedProps").asBool();
+        const bool isAnimatedProps = item.getProperty(rt, isAnimatedPropsName).asBool();
         trackUpdate(shadowNode->getTag(), dynamicUpdates, isAnimatedProps, timestamp);
       }
       addUpdatesToBatch(shadowNode->getFamilyShared(), std::move(dynamicUpdates));
