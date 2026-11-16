@@ -523,7 +523,7 @@ function checkReadOrder(boundaries: readonly InAppBoundary[]) {
   }
 }
 
-function checkUpdates({ updates, boundaries }: InAppSample) {
+function checkUpdates({ updates, boundaries, epochs }: InAppSample) {
   const count = updates.beginNs.length;
   if (updates.endNs.length !== count || updates.modelTimeNs.length !== count) {
     throw new ToolError(
@@ -535,6 +535,14 @@ function checkUpdates({ updates, boundaries }: InAppSample) {
       `The first boundary counts ${boundaries[0].updates} UI updates. The app recorded UI updates before the first epoch.`
     );
   }
+  epochs.forEach(({ collector }, index) => {
+    const recorded = boundaries[index + 1].updates - boundaries[index].updates;
+    if (collector !== 'full' && recorded !== 0) {
+      throw new ToolError(
+        `Epoch ${index}: the app recorded ${recorded} UI updates, but the epoch has the ${collector} collector`
+      );
+    }
+  });
   if (boundaries.at(-1)?.updates !== count) {
     throw new ToolError(
       `The SAMPLE line has ${count} updates, and its last boundary counts ${boundaries.at(-1)?.updates}`

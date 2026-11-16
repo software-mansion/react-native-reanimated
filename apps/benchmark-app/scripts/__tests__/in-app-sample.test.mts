@@ -224,6 +224,22 @@ describe('parseSampleLine', () => {
       /The first boundary counts 1 UI updates\. The app recorded UI updates before the first epoch\./
     );
   });
+
+  it('is a tool error when the app recorded UI updates in an epoch with only the counter reads', () => {
+    const plan: SamplePlan = {
+      epochs: [{ load: 'none', collector: 'endpoints', seconds: 10 }],
+      start: 'ready',
+    };
+    const sample = inAppSample({
+      epochs: [{ ...plan.epochs[0], work: { own: 0, other: 0 } }],
+      boundaries: [START_BOUNDARY, { ...END_BOUNDARY, updates: 1 }],
+      updates: steadyUpdates(1),
+    });
+    assert.throws(
+      () => parseSampleLine(sampleText(sample), plan),
+      /Epoch 0: the app recorded 1 UI updates, but the epoch has the endpoints collector/
+    );
+  });
 });
 
 describe('readEpoch', () => {
