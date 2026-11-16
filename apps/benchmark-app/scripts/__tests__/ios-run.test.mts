@@ -183,7 +183,7 @@ function run(
 
 function writeValidationRecord(
   change: Partial<ValidationIdentity> = {},
-  instructions: 'passed' | 'not validated' = 'passed'
+  instructions: 'passed' | 'failed' = 'passed'
 ): string {
   const directory = path.join(TEST_ROOT.root, 'validation-sources');
   fs.rmSync(directory, { recursive: true, force: true });
@@ -284,11 +284,7 @@ describe('an iOS run', () => {
 
   it('gives no verdict for a metric that the matching validation record does not validate', async () => {
     assert.equal(
-      await run(
-        createFake(),
-        IPHONE,
-        writeValidationRecord({}, 'not validated')
-      ),
+      await run(createFake(), IPHONE, writeValidationRecord({}, 'failed')),
       1
     );
     const result = readResult(onlyRunFolder(TEST_ROOT));

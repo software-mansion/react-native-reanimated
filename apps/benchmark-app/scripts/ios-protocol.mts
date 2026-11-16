@@ -240,6 +240,10 @@ export class RunningIosApp {
     const deadline = this.#clock.now() + limitMs;
     const stopped = untilAborted(stop);
     while (true) {
+      const appFailure = this.#appConsole.failure();
+      if (appFailure !== null) {
+        return { received: false, detail: appFailure };
+      }
       const text = this.#appConsole.sampleText();
       if (text !== null) {
         return { received: true, sample: this.#checkedSample(text) };

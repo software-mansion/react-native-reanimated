@@ -38,6 +38,11 @@ export function variantDifferences(
       a: variants.a?.lockfileSha256 ?? '-',
       b: variants.b?.lockfileSha256 ?? '-',
     },
+    {
+      field: 'app build',
+      a: variants.a?.appBuild ?? '-',
+      b: variants.b?.appBuild ?? '-',
+    },
     ...flagDifferences(
       'reanimated',
       variants.a?.effectiveFlags.reanimated ?? {},

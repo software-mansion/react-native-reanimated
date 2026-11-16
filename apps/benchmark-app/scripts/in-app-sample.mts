@@ -578,28 +578,33 @@ function checkProcessUnit(
   index: number
 ) {
   const processUs = end.processCpuUs - start.processCpuUs;
+  const allowedUs = readAllowanceUs(start);
   const threadsUs = threadsDeltaUs(start, end);
-  if (processUs < MINIMUM_PROCESS_SHARE_OF_THREADS * threadsUs) {
+  if (processUs + allowedUs < MINIMUM_PROCESS_SHARE_OF_THREADS * threadsUs) {
     throw new ToolError(
-      `Epoch ${index}: the process CPU time (${processUs} µs) is less than ${MINIMUM_PROCESS_SHARE_OF_THREADS * 100}% of the sum of the main thread and the JS thread (${threadsUs} µs). The process and thread counters are not consistent.`
+      `Epoch ${index}: the process CPU time (${processUs} µs) and the read allowance (${allowedUs} µs) are less than ${MINIMUM_PROCESS_SHARE_OF_THREADS * 100}% of the sum of the main thread and the JS thread (${threadsUs} µs). The process and thread counters are not consistent.`
     );
   }
+}
+
+function threadSumExcess(start: InAppBoundary, end: InAppBoundary): number {
+  return Math.max(
+    0,
+    threadsDeltaUs(start, end) -
+      (end.processCpuUs - start.processCpuUs) -
+      readAllowanceUs(start)
+  );
 }
 
 // The process count covers at least the time from the end of its start read
 // to the start of its end read. A thread count can also have the time from the
 // start of its start read to the end of the process start read. One thread
 // runs on one core at most, so that time is the limit for each thread.
-function threadSumExcess(start: InAppBoundary, end: InAppBoundary): number {
-  const allowedUs =
+function readAllowanceUs(start: InAppBoundary): number {
+  return (
     (start.processReadEndNs - start.uiReadStartNs) / 1e3 +
     (start.processReadEndNs - start.jsReadStartNs) / 1e3 +
-    CPU_COUNTERS.length * COUNTER_DELTA_ERROR_US;
-  return Math.max(
-    0,
-    threadsDeltaUs(start, end) -
-      (end.processCpuUs - start.processCpuUs) -
-      allowedUs
+    CPU_COUNTERS.length * COUNTER_DELTA_ERROR_US
   );
 }
 

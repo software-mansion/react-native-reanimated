@@ -42,14 +42,34 @@ export class Processes {
       const log = options.logFile
         ? fs.createWriteStream(options.logFile, { flags: 'a' })
         : null;
-      let timedOut = false;
-      const timer = setTimeout(() => {
-        timedOut = true;
-        child.kill('SIGKILL');
-      }, timeoutMs);
+      let failure: ToolError | null = null;
+      let inputError: Error | null = null;
+      const fail = (error: ToolError) => {
+        failure ??= error;
+        signalGroup(child, 'SIGKILL');
+      };
+      const timer = setTimeout(
+        () =>
+          fail(
+            new ToolError(
+              `${commandLine(command, args)} did not finish in ${timeoutMs / 1000} s`
+            )
+          ),
+        timeoutMs
+      );
       let stdout = '';
       let stderr = '';
       const lines = options.onLine && lineSplitter(options.onLine);
+      log?.on('error', (error) =>
+        fail(
+          new ToolError(
+            `Cannot write the log ${options.logFile} of ${commandLine(command, args)}: ${error.message}`
+          )
+        )
+      );
+      child.stdin?.on('error', (error) => {
+        inputError = error;
+      });
       child.stdout?.on('data', (chunk: Buffer) => {
         stdout += chunk.toString();
         lines?.(chunk.toString());
@@ -64,23 +84,34 @@ export class Processes {
         log?.end();
         reject(missingTool(command, error));
       });
+      child.on('exit', () => {
+        if (failure !== null) {
+          child.stdout?.destroy();
+          child.stderr?.destroy();
+        }
+      });
       child.on('close', (code, signal) => {
         clearTimeout(timer);
         log?.end();
-        if (timedOut) {
-          reject(
-            new ToolError(
-              `${commandLine(command, args)} did not finish in ${timeoutMs / 1000} s`
-            )
-          );
-        } else if (code === 0) {
-          resolve({ stdout, stderr });
-        } else {
+        if (failure !== null) {
+          reject(failure);
+        } else if (code !== 0) {
           reject(
             new ToolError(
               `${commandLine(command, args)} failed (${signal ?? `exit ${code}`}):\n${tail(stderr || stdout, 20)}`
             )
           );
+        } else if (
+          options.input !== undefined &&
+          child.stdin?.writableFinished !== true
+        ) {
+          reject(
+            new ToolError(
+              `${commandLine(command, args)} ended before it read all its input${inputError ? `: ${inputError.message}` : ''}`
+            )
+          );
+        } else {
+          resolve({ stdout, stderr });
         }
       });
       if (options.input !== undefined) {
@@ -118,7 +149,7 @@ export class Processes {
     return {
       stop: () => {
         stopped = true;
-        child.kill('SIGTERM');
+        signalGroup(child, 'SIGTERM');
       },
       failure: () => failure,
     };
@@ -126,7 +157,7 @@ export class Processes {
 
   stopAll() {
     for (const child of this.#running) {
-      child.kill('SIGTERM');
+      signalGroup(child, 'SIGTERM');
     }
   }
 
@@ -139,10 +170,24 @@ export class Processes {
       cwd: options.cwd,
       env: options.env ?? process.env,
       stdio: [options.input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
+      detached: true,
     });
     this.#running.add(child);
     child.on('close', () => this.#running.delete(child));
     return child;
+  }
+}
+
+function signalGroup(child: ChildProcess, signal: NodeJS.Signals) {
+  if (child.pid === undefined) {
+    return;
+  }
+  try {
+    process.kill(-child.pid, signal);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+      throw error;
+    }
   }
 }
 

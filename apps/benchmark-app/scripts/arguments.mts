@@ -2,6 +2,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import type { ParseArgsOptionsConfig } from 'node:util';
 
+import { MAXIMUM_BLOCKS } from './config.mts';
 import { PLATFORM_DEFINITIONS } from './definitions.mts';
 import { ToolError } from './errors.mts';
 import { parseEpochs } from './in-app-sample.mts';
@@ -287,7 +288,7 @@ export function parseArguments(argv: string[]): Command {
       config: required(values, 'config'),
       device,
       outputDir: outputDirOf(values),
-      blocks: optionalPositiveInteger(values, 'blocks', DEFAULT_BLOCKS),
+      blocks: runBlocks(values),
       noiseLimits: optionalString(values, 'noise-limits'),
       keepTraces: values['keep-traces'] === true,
       traceProcessor: optionalString(values, 'trace-processor'),
@@ -469,6 +470,16 @@ function outputDirOf(values: Values): string {
   return path.resolve(
     optionalString(values, 'output-dir') ?? DEFAULT_OUTPUT_DIR
   );
+}
+
+function runBlocks(values: Values): number {
+  const blocks = optionalPositiveInteger(values, 'blocks', DEFAULT_BLOCKS);
+  if (blocks > MAXIMUM_BLOCKS) {
+    throw new ToolError(
+      `--blocks must be at most ${MAXIMUM_BLOCKS} for the run command, not ${blocks}`
+    );
+  }
+  return blocks;
 }
 
 function observerCostBlocks(values: Values): number {

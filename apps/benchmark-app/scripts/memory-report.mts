@@ -201,7 +201,7 @@ function seriesSection(launches: Recorded<MemoryLaunch>[]): string {
                 kB(reading.dalvikHeap),
                 kB(reading.graphics),
                 kB(reading.privateOther),
-                kB(reading.totalSwapPss),
+                reading.totalSwapPss === null ? '-' : kB(reading.totalSwapPss),
               ])
             ),
       ].join('\n')

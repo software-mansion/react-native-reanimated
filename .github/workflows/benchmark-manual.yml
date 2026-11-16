@@ -43,7 +43,7 @@ on:
         type: boolean
         default: false
       blocks:
-        description: The number of blocks for each scenario
+        description: The number of blocks for each scenario, from 1 to 50
         required: false
         type: number
         default: 5

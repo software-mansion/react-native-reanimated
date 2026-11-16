@@ -174,6 +174,18 @@ describe('validateConfig', () => {
       /must be a fraction/
     );
   });
+
+  it('rejects a byAtLeast for a metric with an absolute difference', () => {
+    for (const expectation of [
+      { metrics: ['jankyFrames'], is: 'better', byAtLeast: 0.02 },
+      { is: 'better', byAtLeast: 0.02 },
+    ]) {
+      assert.match(
+        problemsOf(config({ expect: [expectation] }), ANDROID_DEFINITION),
+        /config\.expect\[0\]\.byAtLeast is a relative difference, and jankyFrames use an absolute difference/
+      );
+    }
+  });
 });
 
 describe('scenario flags', () => {
@@ -229,6 +241,16 @@ describe('config blocks', () => {
     assert.equal(validated(config()).blocks, undefined);
   });
 
+  it('rejects more than 50 blocks', () => {
+    assert.match(
+      problemsOf(config({ blocks: { css: 51 } })),
+      /config\.blocks\.css must be an integer from 1 to 50/
+    );
+    assert.deepEqual(validated(config({ blocks: { css: 50 } })).blocks, {
+      css: 50,
+    });
+  });
+
   it('rejects a scenario that the run does not measure and a count that is not a positive integer', () => {
     const message = problemsOf(
       config({
@@ -237,8 +259,8 @@ describe('config blocks', () => {
     );
     for (const expected of [
       'config.blocks: "idle-cost" is not a scenario of this run',
-      'config.blocks.css must be a positive integer',
-      'config.blocks.worklet-styles-transform must be a positive integer',
+      'config.blocks.css must be an integer from 1 to 50',
+      'config.blocks.worklet-styles-transform must be an integer from 1 to 50',
     ]) {
       assert.ok(
         message.includes(expected),

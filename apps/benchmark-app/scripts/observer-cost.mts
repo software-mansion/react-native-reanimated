@@ -4,6 +4,8 @@ import type { Interval, ResamplingOptions } from './statistics.mts';
 
 export type ObserverCostMetric = (typeof OBSERVER_COST_METRICS)[number];
 
+export type ObserverCostLimits = Partial<Record<ObserverCostMetric, number>>;
+
 export type ValidationOutcome = 'passed' | 'failed' | 'not validated';
 
 export interface CollectorSample extends EpochCpu {
@@ -57,7 +59,7 @@ const BLOCK_BOOTSTRAP: ResamplingOptions = {
 
 export function observerCosts(
   samples: readonly CollectorSample[],
-  noiseLimits: Partial<Record<ObserverCostMetric, number>>
+  noiseLimits: ObserverCostLimits
 ): ObserverCost[] {
   return OBSERVER_COST_METRICS.map((metric): ObserverCost => {
     const blocks = blocksOf(samples, metric);

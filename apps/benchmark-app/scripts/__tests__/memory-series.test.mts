@@ -97,6 +97,14 @@ describe('parseMeminfo', () => {
     );
   });
 
+  it('gives no total swap PSS when the phone has no swap PSS', () => {
+    const values = parseMeminfo(
+      MEMINFO.replace(/TOTAL SWAP PSS:\s+485/, 'TOTAL SWAP (KB):      485')
+    );
+    assert.equal(values?.totalSwapPss, null);
+    assert.equal(values?.totalPss, 170035);
+  });
+
   it('names the fields that it cannot read', () => {
     assert.throws(
       () => parseMeminfo('Applications Memory Usage (in Kilobytes):'),

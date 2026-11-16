@@ -257,6 +257,18 @@ describe('memoryCommand', () => {
     assert.equal(result.scenarios[0].samples.length, 5);
   });
 
+  it('makes a launch invalid when the app dies during dumpsys gfxinfo, and repeats it', async () => {
+    const { exitCode, result } = await measureMemory({ gfxinfoDiesAt: 1 });
+    assert.equal(exitCode, 0);
+    const [first] = result.scenarios[0].samples;
+    assert.ok(!first.valid && first.cause === 'crash');
+    assert.equal(
+      !first.valid && first.detail,
+      'the app process 100 died during dumpsys gfxinfo'
+    );
+    assert.equal(result.scenarios[0].samples.length, 5);
+  });
+
   it('makes a launch invalid when gfxinfo gives another process', async () => {
     const { outcome } = await failedMemoryTest({ gfxinfoPid: 4321 });
     assert.deepEqual(

@@ -66,6 +66,16 @@ describe('variantDifferences', () => {
     );
   });
 
+  it('lists the app build identity', () => {
+    assert.deepEqual(
+      variantDifferences(CONFIG, {
+        a: built('a'),
+        b: built('b', { appBuild: 'other sources' }),
+      }),
+      [{ field: 'app build', a: 'sources', b: 'other sources' }]
+    );
+  });
+
   it('lists sources, the resolved yarn.lock and build options', () => {
     const config = {
       ...CONFIG,

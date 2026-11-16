@@ -1,6 +1,7 @@
 import { PLATFORM_DEFINITIONS, isPlatformName } from './definitions.mts';
 import { ToolError } from './errors.mts';
 import { readJson } from './json-file.mts';
+import { COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { DeviceIdentity, PlatformName } from './platform.mts';
 import { isScenario } from './scenarios.mts';
@@ -179,11 +180,19 @@ function checkLimits(
         problems.push(
           `${label}.${scenario}: "${metric}" is not a verdict metric of the platform`
         );
-      } else if (typeof limit !== 'number' || !(limit >= 0)) {
+      } else if (!isLimitOf(metric as ComparedMetric, limit)) {
         problems.push(
-          `${label}.${scenario}.${metric} must be a number of 0 or more`
+          `${label}.${scenario}.${metric} must be a finite number of at least the noise floor (${COMPARISON_RULES[metric as ComparedMetric].noiseFloor})`
         );
       }
     }
   }
+}
+
+function isLimitOf(metric: ComparedMetric, limit: unknown): boolean {
+  return (
+    typeof limit === 'number' &&
+    Number.isFinite(limit) &&
+    limit >= COMPARISON_RULES[metric].noiseFloor
+  );
 }

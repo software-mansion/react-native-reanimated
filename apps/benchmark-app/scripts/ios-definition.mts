@@ -120,7 +120,7 @@ export const IOS_DEFINITION: PlatformDefinition = {
       source:
         'The process: `total_user + total_system` of `task_info(TASK_POWER_INFO_V2)`, in whole µs. The other threads: the process minus the main thread and the JS thread.',
       interval: WINDOW,
-      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than half of the sum of the two threads is a tool error (the process and thread counters are not consistent); a smaller shortfall is \`threadSumExcess\`. ${CPU_LIMIT}`,
+      limits: `${PROCESS_COUNTER_LIMIT} A process value that is less than half of the sum of the two threads, after the read allowance of \`threadSumExcess\`, is a tool error (the process and thread counters are not consistent); a smaller shortfall is \`threadSumExcess\`. ${CPU_LIMIT}`,
     },
     {
       names: ['threadSumExcess'],

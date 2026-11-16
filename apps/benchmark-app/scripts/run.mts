@@ -172,7 +172,8 @@ function summarize(result: RunResult) {
     ? metricValidity(
         result.validation ?? null,
         validationIdentityOf(result),
-        definition.verdictMetrics
+        definition.verdictMetrics,
+        result.noiseLimits?.limits ?? {}
       )
     : null;
   const unvalidated = definition.verdictMetrics.filter(

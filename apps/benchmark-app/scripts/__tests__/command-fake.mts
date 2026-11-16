@@ -28,6 +28,7 @@ export interface FakeOptions {
   frameCountAt?: (msAfterStart: number) => number;
   gfxinfoPid?: number;
   gfxinfoNoProcessAt?: number;
+  gfxinfoDiesAt?: number;
   batteryLevelAt?: (time: number) => number;
   diesAtReading?: number;
 }
@@ -203,6 +204,10 @@ export function createFake(testRoot: TestRoot, options: FakeOptions = {}) {
       gfxinfoReads++;
       if (gfxinfoReads === options.gfxinfoNoProcessAt) {
         return `No process found for: ${applicationId}\n`;
+      }
+      if (gfxinfoReads === options.gfxinfoDiesAt) {
+        alive = false;
+        return `** Graphics info for pid ${PID} [${applicationId}] **\nGot a RemoteException while dumping the app ProcessRecord{${applicationId}}\n`;
       }
       const msAfterStart = time - startedAt;
       const frames =

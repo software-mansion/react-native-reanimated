@@ -69,6 +69,7 @@ import {
   anObject,
   both,
   listOf,
+  nullable,
   oneOf,
   shape,
   whenValidSoFar,
@@ -171,7 +172,7 @@ const MEMORY_READING: Record<keyof MemoryReading, Check> = {
   dalvikHeap: aNumber,
   graphics: aNumber,
   privateOther: aNumber,
-  totalSwapPss: aNumber,
+  totalSwapPss: nullable(aNumber),
 };
 
 const MEMORY_LAUNCH = both(
@@ -349,16 +350,14 @@ async function readMemorySeries(
     const seconds = secondsSinceStart();
     const frames = await readFrames(app, device, secondsSinceStart);
     const battery = await device.readBattery();
-    const values = parseMeminfo(meminfo);
-    const ended =
-      app.watch.checkedFailure() ??
-      (await processEnd(device, applicationId, app.pid, 'the memory readings'));
+    const ended = await launchEnd(app, device, 'the memory readings');
     if (ended !== null) {
       return series({ cause: 'crash', detail: ended });
     }
     if (typeof frames === 'string') {
       return series({ cause: 'crash', detail: frames });
     }
+    const values = parseMeminfo(meminfo);
     if (values === null) {
       return series({
         cause: 'crash',
@@ -396,7 +395,16 @@ async function readFrames(
 ): Promise<CountedFrames | string> {
   const output = await device.readGfxinfo(app.request.applicationId);
   const frameSeconds = secondsSinceStart();
-  const counter = checkedFrameCounter(parseGfxinfo(output), app.pid);
+  const parsed = await parsedUnlessEnded(
+    () => parseGfxinfo(output),
+    app,
+    device,
+    'dumpsys gfxinfo'
+  );
+  if (typeof parsed === 'string') {
+    return parsed;
+  }
+  const counter = checkedFrameCounter(parsed, app.pid);
   return typeof counter === 'string'
     ? counter
     : {
@@ -404,6 +412,34 @@ async function readFrames(
         frameCount: counter.frameCount,
         statsSinceNs: counter.statsSinceNs,
       };
+}
+
+async function parsedUnlessEnded<T extends object | null>(
+  parse: () => T,
+  app: RunningApp,
+  device: MemoryDevice,
+  period: string
+): Promise<T | string> {
+  try {
+    return parse();
+  } catch (error) {
+    const ended = await launchEnd(app, device, period);
+    if (ended !== null) {
+      return ended;
+    }
+    throw error;
+  }
+}
+
+async function launchEnd(
+  app: RunningApp,
+  device: MemoryDevice,
+  period: string
+): Promise<string | null> {
+  return (
+    app.watch.checkedFailure() ??
+    (await processEnd(device, app.request.applicationId, app.pid, period))
+  );
 }
 
 function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {

@@ -74,7 +74,7 @@ function order(overrides: Partial<SampleOrder> = {}): SampleOrder {
 
 function createFake(options: FakeOptions = {}) {
   let time = 0;
-  let launchedAt = 0;
+  let launchedAt: number | null = null;
   let ended = false;
   let stopped = false;
   const scriptedLaunches = [...(options.launches ?? [])];
@@ -86,7 +86,11 @@ function createFake(options: FakeOptions = {}) {
     sleep: async (ms) => {
       sleeps.push(ms);
       time += ms;
-      if (options.linesAfter && time - launchedAt >= options.linesAfter.ms) {
+      if (
+        options.linesAfter &&
+        launchedAt !== null &&
+        time - launchedAt >= options.linesAfter.ms
+      ) {
         options.linesAfter.lines.splice(0).forEach(write);
       }
     },
@@ -187,6 +191,20 @@ describe('takeIosSample', () => {
     assert.deepEqual(sample.inAppState, { refreshRate: 60, ...STATE });
     assert.equal(sample.trace, undefined);
     assert.ok(sample.timings.measure !== undefined);
+  });
+
+  it('is a crash when the app writes FAILED and SAMPLE in one poll after READY', async () => {
+    const failed = 'ReanimatedBenchmark: FAILED scenario=css reason=no flag';
+    const { context } = createFake({
+      lines: [LAUNCHED, LAUNCH, READY],
+      linesAfter: { ms: 5000, lines: [failed, SAMPLE] },
+    });
+    const sample = await takeIosSample(order(), context);
+    assert.equal(!sample.valid && sample.cause, 'crash');
+    assert.equal(
+      !sample.valid && sample.detail,
+      'FAILED scenario=css reason=no flag'
+    );
   });
 
   it('is a crash when the app writes FAILED before READY or before its SAMPLE line', async () => {
@@ -335,15 +353,18 @@ describe('takeIosSample', () => {
   });
 
   it('does not accept a READY line that comes at its deadline', async () => {
-    const { context } = createFake({
+    const late = createFake({
       lines: [LAUNCHED, LAUNCH],
-      linesAfter: {
-        ms: MINIMUM_WAIT_MS + READY_TIMEOUT_MS,
-        lines: [READY, SAMPLE],
-      },
+      linesAfter: { ms: READY_TIMEOUT_MS, lines: [READY, SAMPLE] },
     });
-    const sample = await takeIosSample(order(), context);
+    const sample = await takeIosSample(order(), late.context);
     assert.equal(!sample.valid && sample.detail, 'no READY line in 60 s');
+
+    const inTime = createFake({
+      lines: [LAUNCHED, LAUNCH],
+      linesAfter: { ms: READY_TIMEOUT_MS - 1000, lines: [READY, SAMPLE] },
+    });
+    assert.equal((await takeIosSample(order(), inTime.context)).valid, true);
   });
 
   it('is a crash when READY does not come in the time limit', async () => {

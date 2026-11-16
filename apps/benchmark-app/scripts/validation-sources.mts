@@ -47,7 +47,7 @@ import {
 import type {
   CollectorSample,
   ObserverCost,
-  ObserverCostMetric,
+  ObserverCostLimits,
 } from './observer-cost.mts';
 import type { DeviceIdentity } from './platform.mts';
 import {
@@ -482,15 +482,18 @@ export function derivedCrosscheck(
 }
 
 export function derivedObserverCosts(
-  result: ObserverCostResult
+  result: ObserverCostResult,
+  noiseLimits: ObserverCostLimits = storedNoiseLimits(result)
 ): ObserverCost[] {
-  const noiseLimits: Partial<Record<ObserverCostMetric, number>> =
-    Object.fromEntries(
-      (result.costs ?? []).flatMap((cost) =>
-        cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
-      )
-    );
   return observerCosts(result.samples, noiseLimits);
+}
+
+function storedNoiseLimits(result: ObserverCostResult): ObserverCostLimits {
+  return Object.fromEntries(
+    (result.costs ?? []).flatMap((cost) =>
+      cost.noiseLimit === null ? [] : [[cost.metric, cost.noiseLimit]]
+    )
+  );
 }
 
 export function derivedKnownWork(result: KnownWorkResult): KnownWorkDerivation {

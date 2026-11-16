@@ -907,7 +907,7 @@ describe('metricValidity', () => {
         metric === 'processInstructionRate' ? 'failed' : 'passed'
       ),
     ]);
-    assert.deepEqual(metricValidity(built, IDENTITY, METRICS), {
+    assert.deepEqual(metricValidity(built, IDENTITY, METRICS, {}), {
       validated: [],
       reason: 'the validation record does not validate processInstructionRate',
     });
@@ -918,23 +918,45 @@ describe('metricValidity', () => {
           metrics: { processInstructionRate: { validated: true, gates: [] } },
         },
         IDENTITY,
-        METRICS
+        METRICS,
+        {}
       ).validated,
       []
     );
-    assert.deepEqual(metricValidity(record(), IDENTITY, METRICS), {
+    assert.deepEqual(metricValidity(record(), IDENTITY, METRICS, {}), {
       validated: ['processInstructionRate'],
       reason: null,
     });
   });
 
+  it('checks the observer cost against the noise limits of the run', () => {
+    const built = record(undefined, [
+      writeObserverCost('idle', 'idle-cost'),
+      writeObserverCost('loaded', 'worklet-styles-transform', (metric) =>
+        metric === 'processInstructionRate' ? 'failed' : 'passed'
+      ),
+    ]);
+    assert.deepEqual(
+      metricValidity(built, IDENTITY, METRICS, {
+        'worklet-styles-transform': { processInstructionRate: 0.2 },
+      }).validated,
+      ['processInstructionRate']
+    );
+    assert.deepEqual(
+      metricValidity(record(), IDENTITY, METRICS, {
+        'idle-cost': { processInstructionRate: 0.02 },
+      }).validated,
+      ['processInstructionRate']
+    );
+  });
+
   it('validates no metric without a record or for another setup', () => {
     const built = record();
-    assert.deepEqual(metricValidity(null, IDENTITY, METRICS), {
+    assert.deepEqual(metricValidity(null, IDENTITY, METRICS, {}), {
       validated: [],
       reason: 'the run has no validation record',
     });
-    assert.deepEqual(metricValidity(built, null, METRICS), {
+    assert.deepEqual(metricValidity(built, null, METRICS, {}), {
       validated: [],
       reason: 'the builds of the run do not have one app build identity',
     });
@@ -946,7 +968,8 @@ describe('metricValidity', () => {
           device: { ...IDENTITY.device, osBuild: '24B1' },
           appBuild: 'build2',
         },
-        METRICS
+        METRICS,
+        {}
       ),
       {
         validated: [],

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import { readJson } from './json-file.mts';
+import { COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric } from './metrics.mts';
 import type { PlatformDefinition } from './platform.mts';
 import { SCENARIOS, SCENARIO_REQUIREMENTS, isScenario } from './scenarios.mts';
@@ -52,6 +53,8 @@ export interface FileSystem {
 }
 
 export const VARIANT_KEYS: readonly VariantKey[] = ['a', 'b'];
+
+export const MAXIMUM_BLOCKS = 50;
 
 const RUN_FIELDS = ['name', 'a', 'b', 'scenarios', 'blocks', 'expect', 'note'];
 
@@ -340,8 +343,14 @@ function validateBlocks(
       problems.push(
         `config.blocks: "${scenario}" is not a scenario of this run (run: ${runScenarios.join(', ')})`
       );
-    } else if (!Number.isInteger(count) || (count as number) < 1) {
-      problems.push(`config.blocks.${scenario} must be a positive integer`);
+    } else if (
+      !Number.isInteger(count) ||
+      (count as number) < 1 ||
+      (count as number) > MAXIMUM_BLOCKS
+    ) {
+      problems.push(
+        `config.blocks.${scenario} must be an integer from 1 to ${MAXIMUM_BLOCKS}`
+      );
     } else {
       blocks[scenario as Scenario] = count as number;
     }
@@ -411,11 +420,18 @@ function validateExpectation(
   if (byAtLeast !== undefined) {
     if (entry.is !== 'better') {
       problems.push(`${label}.byAtLeast is allowed only with "is": "better"`);
-    } else if (
-      typeof byAtLeast !== 'number' ||
-      !(byAtLeast > 0 && byAtLeast < 1)
-    ) {
-      problems.push(`${label}.byAtLeast must be a fraction between 0 and 1`);
+    } else {
+      if (typeof byAtLeast !== 'number' || !(byAtLeast > 0 && byAtLeast < 1)) {
+        problems.push(`${label}.byAtLeast must be a fraction between 0 and 1`);
+      }
+      const absoluteMetrics = metrics.filter(
+        (metric) => COMPARISON_RULES[metric]?.comparison === 'absolute'
+      );
+      if (absoluteMetrics.length > 0) {
+        problems.push(
+          `${label}.byAtLeast is a relative difference, and ${absoluteMetrics.join(', ')} use an absolute difference. Select only relative metrics in ${label}.metrics.`
+        );
+      }
     }
   }
   return {

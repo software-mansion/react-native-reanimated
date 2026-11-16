@@ -24,6 +24,22 @@ describe('parseArguments', () => {
     );
   });
 
+  it('refuses more than 50 blocks for a run', () => {
+    assert.throws(
+      () =>
+        parseArguments([
+          'run',
+          '--config',
+          'c.json',
+          '--serial',
+          'S1',
+          '--blocks',
+          '51',
+        ]),
+      /--blocks must be at most 50 for the run command, not 51/
+    );
+  });
+
   it('reads all run options', () => {
     const command = parseArguments([
       'run',

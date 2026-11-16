@@ -5,9 +5,11 @@ import type { ValidationRecordOptions } from './arguments.mts';
 import { ToolError } from './errors.mts';
 import { IOS_DEFINITION } from './ios-definition.mts';
 import { readJson } from './json-file.mts';
+import { COMPARISON_RULES } from './metrics.mts';
 import type { ComparedMetric } from './metrics.mts';
 import { MINIMUM_BLOCKS } from './observer-cost.mts';
 import type {
+  ObserverCostLimits,
   ObserverCostMetric,
   ValidationOutcome,
 } from './observer-cost.mts';
@@ -46,6 +48,7 @@ import {
   valuesOf,
 } from './validation.mts';
 import type { Check } from './validation.mts';
+import type { NoiseLimits } from './verdict.mts';
 
 export interface GateResult {
   source: string;
@@ -189,7 +192,8 @@ export function readValidationRecord(file: string): ValidationRecord {
 export function metricValidity(
   record: ValidationRecord | null,
   run: ValidationIdentity | null,
-  candidates: readonly ComparedMetric[]
+  candidates: readonly ComparedMetric[],
+  runNoiseLimits: NoiseLimits
 ): MetricValidity {
   if (record === null) {
     return { validated: [], reason: 'the run has no validation record' };
@@ -207,7 +211,9 @@ export function metricValidity(
       reason: `the validation record does not fit the run: ${differences.join(', ')}`,
     };
   }
-  const validations = metricValidations(record.sources);
+  const validations = metricValidations(record.sources, (scenario) =>
+    runObserverCostLimits(runNoiseLimits, scenario)
+  );
   const validated = candidates.filter(
     (metric) => validations[metric]?.validated === true
   );
@@ -219,6 +225,19 @@ export function metricValidity(
         ? null
         : `the validation record does not validate ${missing.join(', ')}`,
   };
+}
+
+function runObserverCostLimits(
+  runNoiseLimits: NoiseLimits,
+  scenario: string
+): ObserverCostLimits {
+  const limits = isScenario(scenario) ? runNoiseLimits[scenario] : undefined;
+  return Object.fromEntries(
+    IOS_DEFINITION.verdictMetrics.map((metric) => [
+      metric,
+      limits?.[metric] ?? COMPARISON_RULES[metric].noiseFloor,
+    ])
+  );
 }
 
 function commonIdentity(
@@ -327,9 +346,10 @@ function inconsistentMetrics(record: ValidationRecord): string[] {
 }
 
 function metricValidations(
-  sources: ValidationSources
+  sources: ValidationSources,
+  noiseLimitsOf?: (scenario: string) => ObserverCostLimits
 ): Partial<Record<ComparedMetric, MetricValidation>> {
-  const summaries = summariesOf(sources);
+  const summaries = summariesOf(sources, noiseLimitsOf);
   return Object.fromEntries(
     IOS_DEFINITION.verdictMetrics.map((metric) => [
       metric,
@@ -358,10 +378,15 @@ function metricValidation(
   };
 }
 
-function summariesOf(sources: ValidationSources): SourceSummaries {
+function summariesOf(
+  sources: ValidationSources,
+  noiseLimitsOf?: (scenario: string) => ObserverCostLimits
+): SourceSummaries {
   return {
     knownWorks: sources.knownWorks.map(knownWorkSummary),
-    observerCosts: sources.observerCosts.map(observerCostSummary),
+    observerCosts: sources.observerCosts.map((source) =>
+      observerCostSummary(source, noiseLimitsOf?.(source.result.scenario))
+    ),
   };
 }
 
@@ -377,16 +402,19 @@ function knownWorkSummary({
   };
 }
 
-function observerCostSummary({
-  folder,
-  result,
-}: StoredSource<ObserverCostResult>): ObserverCostSummary {
+function observerCostSummary(
+  { folder, result }: StoredSource<ObserverCostResult>,
+  noiseLimits?: ObserverCostLimits
+): ObserverCostSummary {
   return {
     folder,
     scenario: result.scenario,
     blocks: completeBlocks(result.samples),
     outcomes: Object.fromEntries(
-      derivedObserverCosts(result).map((cost) => [cost.metric, cost.outcome])
+      derivedObserverCosts(result, noiseLimits).map((cost) => [
+        cost.metric,
+        cost.outcome,
+      ])
     ),
   };
 }

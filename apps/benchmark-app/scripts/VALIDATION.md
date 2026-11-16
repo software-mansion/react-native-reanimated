@@ -78,7 +78,7 @@ The thermal state of a cross-check is the highest of the state that the app repo
 
 The relative difference is not defined when a sample with only the counter reads has the value 0 or less. Only then are `relativeDifference` and `interval` `null`.
 
-The band of `processInstructionRate` is 0.5% at the noise floor of 2%. Give the test 10 to 20 blocks, so that the interval can be inside the band.
+The band of `processInstructionRate` is 0.5% at the noise floor of 2%. Give the test 10 to 20 blocks, so that the interval can be inside the band. `run` checks the band again with the noise limits of the run, so a later A/A run with tighter limits can make the record not validate the metric.
 
 ## Validation record
 

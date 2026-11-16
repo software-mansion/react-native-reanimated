@@ -9,7 +9,7 @@ export interface MemoryValues {
   dalvikHeap: number;
   graphics: number;
   privateOther: number;
-  totalSwapPss: number;
+  totalSwapPss: number | null;
 }
 
 export interface FrameCounter {
@@ -85,16 +85,21 @@ const STATS_SINCE_PATTERN = /^Stats since: (\d+)ns/m;
 
 const TOTAL_FRAMES_PATTERN = /^Total frames rendered: (\d+)/m;
 
-const MEMINFO_PATTERNS: Record<keyof MemoryValues, RegExp> = {
+type PssField = Exclude<keyof MemoryValues, 'totalSwapPss'>;
+
+const MEMINFO_PATTERNS: Record<PssField, RegExp> = {
   totalPss: /TOTAL PSS:\s+(\d+)/,
   nativeHeap: /^\s*Native Heap\s+(\d+)/m,
   dalvikHeap: /^\s*Dalvik Heap\s+(\d+)/m,
   graphics: /^\s*Graphics:\s+(\d+)/m,
   privateOther: /^\s*Private Other:\s+(\d+)/m,
-  totalSwapPss: /TOTAL SWAP PSS:\s+(\d+)/,
 };
 
-const MEMINFO_FIELDS = Object.keys(MEMINFO_PATTERNS) as (keyof MemoryValues)[];
+const MEMINFO_FIELDS = Object.keys(MEMINFO_PATTERNS) as PssField[];
+
+const SWAP_PSS_PATTERN = /TOTAL SWAP PSS:\s+(\d+)/;
+
+const SWAP_WITHOUT_PSS_PATTERN = /TOTAL SWAP \(KB\):\s+\d+/;
 
 export function checkSchedule(schedule: MemorySchedule) {
   const { intervalSeconds, durationSeconds } = schedule;
@@ -132,15 +137,19 @@ export function parseMeminfo(output: string): MemoryValues | null {
   if (NO_PROCESS_PATTERN.test(output)) {
     return null;
   }
-  const missing = MEMINFO_FIELDS.filter(
-    (field) => !MEMINFO_PATTERNS[field].test(output)
-  );
+  const swapPss = SWAP_PSS_PATTERN.exec(output)?.[1];
+  const missing = [
+    ...MEMINFO_FIELDS.filter((field) => !MEMINFO_PATTERNS[field].test(output)),
+    ...(swapPss === undefined && !SWAP_WITHOUT_PSS_PATTERN.test(output)
+      ? ['totalSwapPss']
+      : []),
+  ];
   if (missing.length > 0) {
     throw new ToolError(
       `Cannot read ${missing.join(', ')} from dumpsys meminfo:\n${output.slice(0, 500)}`
     );
   }
-  const read = (field: keyof MemoryValues) =>
+  const read = (field: PssField) =>
     Number(MEMINFO_PATTERNS[field].exec(output)?.[1]);
   return {
     totalPss: read('totalPss'),
@@ -148,7 +157,7 @@ export function parseMeminfo(output: string): MemoryValues | null {
     dalvikHeap: read('dalvikHeap'),
     graphics: read('graphics'),
     privateOther: read('privateOther'),
-    totalSwapPss: read('totalSwapPss'),
+    totalSwapPss: swapPss === undefined ? null : Number(swapPss),
   };
 }
 

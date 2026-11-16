@@ -19,6 +19,57 @@ describe('Processes.run', () => {
     );
   });
 
+  it('stops a command and its children at its deadline, also when a child keeps the output open', async () => {
+    const started = Date.now();
+    let childPid = 0;
+    await assert.rejects(
+      new Processes().run(
+        NODE,
+        [
+          '-e',
+          `const child = require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { stdio: 'inherit' }); console.log(child.pid); setTimeout(() => {}, 10000)`,
+        ],
+        {
+          timeoutMs: 500,
+          onLine: (line) => {
+            childPid = Number(line);
+          },
+        }
+      ),
+      /did not finish in 0.5 s/
+    );
+    assert.ok(Date.now() - started < 5000);
+    assert.ok(childPid > 0);
+    await waitFor(() => !isRunning(childPid));
+  });
+
+  it('rejects when it cannot write the log of a command', async () => {
+    await assert.rejects(
+      new Processes().run(NODE, ['-e', 'setTimeout(() => {}, 10000)'], {
+        logFile: '/nonexistent-folder/build.log',
+      }),
+      /Cannot write the log \/nonexistent-folder\/build.log of node -e/
+    );
+  });
+
+  it('rejects when a command ends before it reads all its input', async () => {
+    await assert.rejects(
+      new Processes().run(NODE, ['-e', 'process.exit(0)'], {
+        input: 'x'.repeat(4_000_000),
+      }),
+      /node -e process.exit\(0\) ended before it read all its input/
+    );
+  });
+
+  it('gives the output of a command that reads all its input', async () => {
+    const { stdout } = await new Processes().run(
+      NODE,
+      ['-e', 'process.stdin.pipe(process.stdout)'],
+      { input: 'query' }
+    );
+    assert.equal(stdout, 'query');
+  });
+
   it('gives the output of a command that ends in time', async () => {
     const { stdout } = await new Processes().run(NODE, [
       '-e',
@@ -93,6 +144,15 @@ describe('once', () => {
     assert.equal(runs, 1);
   });
 });
+
+function isRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 async function waitFor(condition: () => boolean) {
   for (let i = 0; i < 100 && !condition(); i++) {

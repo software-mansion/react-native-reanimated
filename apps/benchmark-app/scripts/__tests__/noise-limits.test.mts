@@ -218,6 +218,13 @@ describe('noise limits of each metric', () => {
     assert.deepEqual(limits['mount-unmount'], floors);
   });
 
+  it('gives a limit above the floor when the samples of each variant vary', () => {
+    const limit = limitsOf('spread', [
+      outcome('css', (_variant, i) => ({ uiThreadCpu: 80 + 4 * i })),
+    ]).css?.uiThreadCpu;
+    assert.ok(limit !== undefined && limit > 0.02 && limit < 0.5, `${limit}`);
+  });
+
   it('leaves out a relative metric whose median can be 0', () => {
     const limits = limitsOf('zero', [
       outcome('css', (_variant, i) => ({ coldStart: i < 6 ? 0 : 300 })),
@@ -422,9 +429,28 @@ describe('validateNoiseLimitsRecord', () => {
           'unknown scenario "nope"',
           '"coldStart" is not a verdict metric of the platform',
           '"uiThreadCpu" is not a verdict metric of the platform',
-          'css.processInstructionRate must be a number of 0 or more',
+          'css.processInstructionRate must be a finite number of at least the noise floor (0.02)',
         ].every((part) => error.message.includes(part))
     );
+  });
+
+  it('refuses a limit below the noise floor of its metric or an infinite limit', () => {
+    for (const [metric, limit, floor] of [
+      ['uiThreadCpu', 0.019, 0.02],
+      ['jankyFrames', 0.004, 0.005],
+      ['uiThreadCpu', Infinity, 0.02],
+    ] as const) {
+      assert.throws(
+        () =>
+          validateNoiseLimitsRecord({
+            ...RECORD,
+            limits: { css: { [metric]: limit } },
+          }),
+        new RegExp(
+          `css\\.${metric} must be a finite number of at least the noise floor \\(${floor}\\)`
+        )
+      );
+    }
   });
 });
 
