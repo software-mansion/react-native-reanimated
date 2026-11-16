@@ -23,6 +23,7 @@ export type ClassifiedReports = {
 
 const REPORT_HEADER =
   /^(?:SUMMARY|WARNING|(?:==\d+==)?ERROR): (\w+)Sanitizer: (.*)$/m;
+const SUMMARY_LINE = /^SUMMARY: \w+Sanitizer: /;
 
 if (process.argv[1] === import.meta.filename) {
   process.exitCode = main(process.argv.slice(2));
@@ -32,16 +33,15 @@ export function main(argv: string[]): number {
   const args = parseArgs(argv);
   const reportsDir = path.resolve(args.reports ?? 'sanitizer-reports');
   const knownFile = path.resolve(args.known ?? 'sanitizer-known-issues.json');
-  const sanitizer = (args.sanitizer ?? '').toLowerCase();
   const reports = readReports(reportsDir);
   if (reports.length === 0) {
     console.log('No sanitizer reports.');
     return 0;
   }
-  const knownIssues = readKnownIssues(knownFile).filter(
-    (issue) => !sanitizer || issue.sanitizer === sanitizer
+  const { known, unknown } = classifyReports(
+    reports,
+    readKnownIssues(knownFile)
   );
-  const { known, unknown } = classifyReports(reports, knownIssues);
   for (const report of reports) {
     console.log(
       `::group::${path.basename(report.file)}#${report.index + 1}: ${report.summary}`
@@ -89,11 +89,23 @@ export function parseSanitizerReports(
   file: string,
   text: string
 ): SanitizerReport[] {
-  const chunks = text
-    .split(/^=+\s*$/m)
-    .map((chunk) => chunk.trim())
-    .filter((chunk) => chunk.length > 0);
-  const reports = chunks.filter((chunk) => REPORT_HEADER.test(chunk));
+  const segments: string[] = [];
+  let current: string[] = [];
+  for (const line of text.split('\n')) {
+    if (/^=+\s*$/.test(line)) {
+      continue;
+    }
+    current.push(line);
+    if (SUMMARY_LINE.test(line)) {
+      segments.push(current.join('\n').trim());
+      current = [];
+    }
+  }
+  const tail = current.join('\n').trim();
+  if (REPORT_HEADER.test(tail)) {
+    segments.push(tail);
+  }
+  const reports = segments.filter((segment) => REPORT_HEADER.test(segment));
   return (reports.length > 0 ? reports : [text.trim()]).map((chunk, index) =>
     parseSanitizerReport(file, index, chunk)
   );

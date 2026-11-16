@@ -42,6 +42,14 @@ SUMMARY: ThreadSanitizer: data race Foo.cpp:1 in reanimated::foo
 ==================
 `;
 
+const UBSAN_REPORTS = `Foo.cpp:1:1: runtime error: upcast of misaligned address 0x1 for type 'facebook::yoga::Node', which requires 8 byte alignment
+    #0 0x1 in YGNodeGetOwner YGNode.cpp:282
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior YGNode.cpp:282:10
+Bar.cpp:2:2: runtime error: load of null pointer of type 'int'
+    #0 0x2 in reanimated::bar Bar.cpp:2
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior Bar.cpp:2:2
+`;
+
 const KNOWN = [
   {
     sanitizer: 'thread',
@@ -83,6 +91,17 @@ describe('parseSanitizerReports', () => {
       [
         [0, 'data race YGNode.cpp:282 in YGNodeGetOwner'],
         [1, 'data race Foo.cpp:1 in reanimated::foo'],
+      ]
+    );
+  });
+
+  it('splits UBSan diagnostics that have no separator lines', () => {
+    const reports = parseSanitizerReports('ubsan.1', UBSAN_REPORTS);
+    assert.deepEqual(
+      reports.map((report) => [report.sanitizer, report.summary]),
+      [
+        ['undefined-behavior', 'undefined-behavior YGNode.cpp:282:10'],
+        ['undefined-behavior', 'undefined-behavior Bar.cpp:2:2'],
       ]
     );
   });
@@ -171,10 +190,29 @@ describe('sanitizer-reports command', () => {
     );
   });
 
-  it('matches the selected sanitizer case-insensitively', () => {
-    workDir = createWorkDir({ 'tsan.1': TSAN_REPORT });
-    const result = run(workDir, ['--sanitizer', 'Thread']);
-    assert.equal(result.status, 0, result.stdout);
+  it('keeps undefined-behavior entries in address mode', () => {
+    workDir = createWorkDir({ 'ubsan.1': UBSAN_REPORTS });
+    fs.writeFileSync(
+      path.join(workDir, 'sanitizer-known-issues.json'),
+      JSON.stringify([
+        ...KNOWN,
+        {
+          sanitizer: 'undefined-behavior',
+          summary: '^undefined-behavior YGNode\\.cpp:',
+          reason: 'sentinel upcast',
+        },
+      ])
+    );
+    const result = run(workDir, ['--sanitizer', 'address']);
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stdout,
+      /2 sanitizer report\(s\): 1 known, 1 unknown\./
+    );
+    assert.match(
+      result.stdout,
+      /^::error title=undefined-behavior sanitizer report::undefined-behavior Bar\.cpp:2:2/m
+    );
   });
 
   it('passes without reports', () => {
@@ -183,12 +221,6 @@ describe('sanitizer-reports command', () => {
     const result = run(workDir);
     assert.equal(result.status, 0, result.stdout);
     assert.match(result.stdout, /No sanitizer reports\./);
-  });
-
-  it('ignores known issues of another sanitizer when one is selected', () => {
-    workDir = createWorkDir({ 'tsan.1': TSAN_REPORT });
-    const result = run(workDir, ['--sanitizer', 'address']);
-    assert.equal(result.status, 1, result.stdout);
   });
 });
 
