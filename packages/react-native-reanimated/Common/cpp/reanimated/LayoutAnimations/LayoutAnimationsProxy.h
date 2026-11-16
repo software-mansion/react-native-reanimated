@@ -88,6 +88,7 @@ struct TransactionMeta {
   std::vector<std::shared_ptr<LightNode>> nodesToRestore;
   std::vector<std::shared_ptr<LightNode>> containersToRemove;
   std::unordered_map<Tag, Tag> staleSnapshots;
+  std::unordered_set<Tag> dueRemovals;
 };
 
 struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
@@ -250,9 +251,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &parent,
       TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
-  void flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const;
+  void collectDueRemovals(TransactionMeta &transaction) const;
+  void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 
-  void addOngoingAnimations(ShadowViewMutationList &mutations) const;
+  void addOngoingAnimations(TransactionMeta &transaction) const;
   ShadowView cloneViewWithoutOpacity(const ShadowView &shadowView, const PropsParserContext &propsParserContext) const;
 
   bool startAnimationsRecursively(
@@ -261,7 +263,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       StartAnimationsRecursivelyConfig config) const;
   void endAnimationsRecursively(const std::shared_ptr<LightNode> &node, int index, ShadowViewMutationList &mutations)
       const;
-  void maybeDropAncestors(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &cleanupMutations) const;
 
   // MountingOverrideDelegate
 

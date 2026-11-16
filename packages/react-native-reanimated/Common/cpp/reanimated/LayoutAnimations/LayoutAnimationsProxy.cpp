@@ -59,6 +59,39 @@ std::vector<AncestorOrigin> ancestorOrigins(
   }
   return chain;
 }
+
+void collectSubtreeTags(const std::shared_ptr<LightNode> &node, std::unordered_set<Tag> &tags) {
+  tags.insert(node->current.tag);
+  for (const auto &child : node->children) {
+    collectSubtreeTags(child, tags);
+  }
+}
+
+// Every exiting ancestor that the removals leave without children.
+void collectDroppedAncestors(const std::shared_ptr<LightNode> &node, std::unordered_set<Tag> &removals) {
+  for (auto ancestor = node->parent.lock(); ancestor && ancestor->isExiting() && ancestor->state != ANIMATING;
+       ancestor = ancestor->parent.lock()) {
+    const auto tag = ancestor->current.tag;
+    const auto keepsAChild = std::ranges::any_of(
+        ancestor->children, [&removals](const auto &child) { return !removals.contains(child->current.tag); });
+    if (removals.contains(tag) || keepsAChild) {
+      return;
+    }
+    removals.insert(tag);
+  }
+}
+
+// The subtrees of the roots and the ancestors that they drop.
+std::unordered_set<Tag> collectRemovals(const std::vector<std::shared_ptr<LightNode>> &roots) {
+  std::unordered_set<Tag> removals;
+  for (const auto &root : roots) {
+    collectSubtreeTags(root, removals);
+  }
+  for (const auto &root : roots) {
+    collectDroppedAncestors(root, removals);
+  }
+  return removals;
+}
 } // namespace
 
 std::shared_ptr<LayoutAnimationsProxyRegistry> createLayoutAnimationsProxyDefaultRegistry(
@@ -217,14 +250,15 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   filteredMutations.insert(
       filteredMutations.end(), transaction.teardownMutations.begin(), transaction.teardownMutations.end());
 
+  collectDueRemovals(transaction);
   if (flushStructuralMutations) {
-    flushCompletedRemovals(filteredMutations);
+    tearDown(transaction.dueRemovals, filteredMutations);
   }
 
   configLock.unlock();
   flushLayoutAnimationOperations(lock);
 
-  addOngoingAnimations(filteredMutations);
+  addOngoingAnimations(transaction);
 
   cleanupAnimations(transaction, propsParserContext, flushStructuralMutations);
 
@@ -271,46 +305,22 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
   }
 }
 
-// If React re-creates or re-inserts a tag whose exiting removal we are still
-// withholding, it has contradicted that withheld removal. Flush it now instead
-// of letting the stale node linger: updateLightTree would overwrite its
-// lightNodes_ entry (the "LightNode already exists" assert is compiled out in
-// release), orphaning the still-mounted exiting view, and the eventual
-// removal flush would then remove the wrong, live view and crash the
-// mounting layer.
-//
-// This must run before updateLightTree (so the tag is re-registered cleanly)
-// and before addOngoingAnimations (which would otherwise emit an Update for a
-// tag we are about to Delete this frame).
+// React re-creating a tag whose removal is withheld contradicts that removal, so the withheld node is torn
+// down before updateLightTree registers the tag again.
 void LayoutAnimationsProxy::reconcileContradictedRemovals(
     const ShadowViewMutationList &mutations,
     ShadowViewMutationList &filteredMutations) const {
+  std::vector<std::shared_ptr<LightNode>> recreatedNodes;
   for (const auto &mutation : mutations) {
-    if (mutation.type != ShadowViewMutation::Type::Create && mutation.type != ShadowViewMutation::Type::Insert) {
+    if (mutation.type != ShadowViewMutation::Type::Create) {
       continue;
     }
-    const auto tag = mutation.newChildShadowView.tag;
-    const auto it = lightNodes_.find(tag);
-    if (it == lightNodes_.end() || it->second->state == LIVE) {
-      continue;
+    const auto it = lightNodes_.find(mutation.newChildShadowView.tag);
+    if (it != lightNodes_.end() && it->second->state != LIVE) {
+      recreatedNodes.push_back(it->second);
     }
-    const auto node = it->second;
-    completedAnimations_.erase(tag);
-    updateMap_.erase(tag);
-    unmapLightNode(node);
-    const auto parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
-    if (!parent) {
-      continue;
-    }
-    const auto index = parent->removeChild(node);
-    react_native_assert(index != -1 && "Exiting node not found");
-    if (index == -1) {
-      continue;
-    }
-    endAnimationsRecursively(node, index, filteredMutations);
-    maybeDropAncestors(parent, filteredMutations);
   }
+  tearDown(collectRemovals(recreatedNodes), filteredMutations);
 }
 
 bool LayoutAnimationsProxy::shouldOverridePullTransaction() const {
@@ -427,6 +437,7 @@ void LayoutAnimationsProxy::updateLightTree(
       case ShadowViewMutation::Insert: {
         transferConfigFromNativeID(mutation.newChildShadowView.props->nativeId, mutation.newChildShadowView.tag);
         auto &node = lightNodes_[mutation.newChildShadowView.tag];
+        react_native_assert(node->state == LIVE && "React inserts a view whose removal is withheld");
         auto &parent = lightNodes_[mutation.parentTag];
         const auto hostIndex = parent->toHostIndexForInsert(mutation.index, indexCursors[mutation.parentTag]);
         parent->children.insert(parent->children.begin() + hostIndex, node);
@@ -776,41 +787,47 @@ bool LayoutAnimationsProxy::holdsSnapshottedScreen([[maybe_unused]] const std::s
   return false;
 }
 
-void LayoutAnimationsProxy::flushCompletedRemovals(ShadowViewMutationList &filteredMutations) const {
-  ReanimatedSystraceSection s("flushCompletedRemovals");
-
-  std::vector<Tag> completedRemovalTags;
-  completedRemovalTags.reserve(completedAnimations_.size());
+// A UI-thread pull on Android must not update the views that the next flushing pull removes, because
+// Android can mount that JS-thread pull first.
+void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) const {
+  std::vector<std::shared_ptr<LightNode>> finishedExits;
   for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    if (hasPendingLayoutAnimation(tag) || !completedAnimation.shouldRemove) {
-      continue;
-    }
-    completedRemovalTags.push_back(tag);
-  }
-
-  for (const auto tag : completedRemovalTags) {
-    const auto completedAnimationIt = completedAnimations_.find(tag);
-    if (completedAnimationIt == completedAnimations_.end() || hasPendingLayoutAnimation(tag) ||
-        !completedAnimationIt->second.shouldRemove) {
-      continue;
-    }
     const auto nodeIt = lightNodes_.find(tag);
-    if (nodeIt == lightNodes_.end() || nodeIt->second->state != COMPLETED) {
+    if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
+        nodeIt->second->state != COMPLETED) {
       continue;
     }
-    const auto node = nodeIt->second;
-    auto parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
-    auto index = parent->removeChild(node);
-    react_native_assert(index != -1 && "Completed node not found");
-
-    endAnimationsRecursively(node, index, filteredMutations);
-    maybeDropAncestors(parent, filteredMutations);
+    finishedExits.push_back(nodeIt->second);
   }
+  transaction.dueRemovals = collectRemovals(finishedExits);
 }
 
-void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutations) const {
+void LayoutAnimationsProxy::tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const {
+  ReanimatedSystraceSection s("tearDown");
+  std::vector<std::shared_ptr<LightNode>> roots;
+  for (const auto tag : removals) {
+    const auto &node = lightNodes_.at(tag);
+    const auto parent = node->parent.lock();
+    react_native_assert(parent && "Parent node is nullptr");
+    if (!removals.contains(parent->current.tag)) {
+      roots.push_back(node);
+    }
+  }
+  [[maybe_unused]] const auto mutationCount = mutations.size();
+  for (const auto &root : roots) {
+    const auto index = root->parent.lock()->removeChild(root);
+    react_native_assert(index != -1 && "Removed node not found in its parent");
+    endAnimationsRecursively(root, index, mutations);
+  }
+  react_native_assert(
+      mutations.size() - mutationCount == 2 * removals.size() &&
+      std::ranges::none_of(removals, [this](const Tag tag) { return lightNodes_.contains(tag); }) &&
+      "The teardown must remove exactly the removals");
+}
+
+void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) const {
   ReanimatedSystraceSection s1("addOngoingAnimations");
+  auto &mutations = transaction.filteredMutations;
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
@@ -842,6 +859,9 @@ void LayoutAnimationsProxy::addOngoingAnimations(ShadowViewMutationList &mutatio
       // so it might happen, that the first frame of the animation goes through
       // before the view is first mounted
       // https://github.com/software-mansion/react-native-reanimated/issues/7493
+      continue;
+    }
+    if (transaction.dueRemovals.contains(tag)) {
       continue;
     }
 #endif
@@ -899,29 +919,6 @@ void LayoutAnimationsProxy::endAnimationsRecursively(
   }
   mutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
   mutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-}
-
-void LayoutAnimationsProxy::maybeDropAncestors(
-    const std::shared_ptr<LightNode> &node,
-    ShadowViewMutationList &cleanupMutations) const {
-  if (node->children.size() != 0 || node->state == ANIMATING || node->state == LIVE) {
-    return;
-  }
-
-  auto parent = node->parent.lock();
-  react_native_assert(parent && "Parent node is nullptr");
-  auto index = parent->removeChild(node);
-  react_native_assert(index != -1 && "Child node not found");
-
-  node->setExitingState(TORN_DOWN);
-  unmapLightNode(node);
-  cancelLayoutAnimation(node->current.tag);
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    hiddenViewTags_.erase(node->current.tag);
-  }
-  cleanupMutations.push_back(ShadowViewMutation::RemoveMutation(parent->current.tag, node->current, index));
-  cleanupMutations.push_back(ShadowViewMutation::DeleteMutation(node->current));
-  maybeDropAncestors(parent, cleanupMutations);
 }
 
 bool LayoutAnimationsProxy::startAnimationsRecursively(
@@ -1057,7 +1054,12 @@ void LayoutAnimationsProxy::cleanupAnimations(
     const PropsParserContext &propsParserContext,
     const bool flushStructuralMutations) const {
   ReanimatedSystraceSection s("cleanupAnimations");
-  std::unordered_set<Tag> preservedContainerTags;
+  std::unordered_set<Tag> preservedTags;
+#ifdef ANDROID
+  if (!flushStructuralMutations) {
+    preservedTags = transaction.dueRemovals;
+  }
+#endif
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     for (const auto &[tag, _] : completedAnimations_) {
       if (hasPendingLayoutAnimation(tag)) {
@@ -1068,7 +1070,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
         continue;
       }
       if (!flushStructuralMutations) {
-        preservedContainerTags.insert(tag);
+        preservedTags.insert(tag);
         continue;
       }
       if (containerIt->second.restoreAfterNode) {
@@ -1079,7 +1081,7 @@ void LayoutAnimationsProxy::cleanupAnimations(
 
     cleanupSharedTransitions(transaction, propsParserContext);
   }
-  cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedContainerTags);
+  cleanupCompletedAnimations(transaction.filteredMutations, propsParserContext, true, preservedTags);
 }
 
 #ifdef ANDROID
