@@ -44,9 +44,16 @@ export class Processes {
         : null;
       let failure: ToolError | null = null;
       let inputError: Error | null = null;
+      const closeOutput = () => {
+        child.stdout?.destroy();
+        child.stderr?.destroy();
+      };
       const fail = (error: ToolError) => {
         failure ??= error;
         signalGroup(child, 'SIGKILL');
+        if (hasExited(child)) {
+          closeOutput();
+        }
       };
       const timer = setTimeout(
         () =>
@@ -86,8 +93,7 @@ export class Processes {
       });
       child.on('exit', () => {
         if (failure !== null) {
-          child.stdout?.destroy();
-          child.stderr?.destroy();
+          closeOutput();
         }
       });
       child.on('close', (code, signal) => {
@@ -189,6 +195,10 @@ function signalGroup(child: ChildProcess, signal: NodeJS.Signals) {
       throw error;
     }
   }
+}
+
+function hasExited(child: ChildProcess): boolean {
+  return child.exitCode !== null || child.signalCode !== null;
 }
 
 function lineSplitter(onLine: (line: string) => void): (text: string) => void {

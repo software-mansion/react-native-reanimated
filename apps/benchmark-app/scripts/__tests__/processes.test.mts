@@ -43,6 +43,34 @@ describe('Processes.run', () => {
     await waitFor(() => !isRunning(childPid));
   });
 
+  it('stops a command at its deadline when it exited and a worker in another process group keeps the output open', async () => {
+    const started = Date.now();
+    let workerPid = 0;
+    try {
+      await assert.rejects(
+        new Processes().run(
+          NODE,
+          [
+            '-e',
+            `const worker = require('node:child_process').spawn(process.execPath, ['-e', 'setTimeout(() => {}, 10000)'], { stdio: 'inherit', detached: true }); console.log(worker.pid); worker.unref()`,
+          ],
+          {
+            timeoutMs: 500,
+            onLine: (line) => {
+              workerPid = Number(line);
+            },
+          }
+        ),
+        /did not finish in 0.5 s/
+      );
+      assert.ok(Date.now() - started < 5000);
+    } finally {
+      if (workerPid > 0 && isRunning(workerPid)) {
+        process.kill(workerPid, 'SIGKILL');
+      }
+    }
+  });
+
   it('rejects when it cannot write the log of a command', async () => {
     await assert.rejects(
       new Processes().run(NODE, ['-e', 'setTimeout(() => {}, 10000)'], {
