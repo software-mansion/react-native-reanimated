@@ -374,6 +374,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   keepCarriersDetachedUntilFramesAreQueued(filteredMutations);
 #endif
   eraseFinishedSharedTransitionRuns();
+#ifdef ANDROID
+  maybeStartCarrierRelease();
+#endif
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
 }
 
@@ -1454,6 +1457,8 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   cleanupPullScheduled_ = false;
   unqueuedBatchTags_.clear();
   unqueuedCarrierFrames_.clear();
+  carrierFramesWithoutRelease_.clear();
+  pullWaitsForCarrierRelease_ = false;
   carrierDeletesAfterQueuedFrames_.clear();
 #endif
 }
@@ -1539,7 +1544,11 @@ void LayoutAnimationsProxy::cleanupAnimations(
 
 bool LayoutAnimationsProxy::hasUnqueuedCarrierFrame([[maybe_unused]] const Tag tag) const {
 #ifdef ANDROID
-  return unqueuedCarrierFrames_.contains(tag);
+  if (!unqueuedCarrierFrames_.contains(tag)) {
+    return false;
+  }
+  pullWaitsForCarrierRelease_ = true;
+  return true;
 #else
   return false;
 #endif
@@ -1672,7 +1681,9 @@ void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutatio
 // attach of a carrier before the last frame of the run. That frame is relative to the root and
 // would move the attached view. The carrier stays detached until the UI thread runs a job that
 // arrives from the JS thread, because that job runs after the frames are in the queue. The attach
-// also restores the content of the carrier, so the frames of its content keep it too.
+// also restores the content of the carrier, so the frames of its content keep it too. One JS task
+// for each frame is expensive, so the round trip starts only when a pull waits for the release or
+// when a carrier does not animate.
 void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const ShadowViewMutationList &mutations) const {
   const bool hasCarriers =
       !carrierPlacements_.atRoot().empty() || std::ranges::any_of(activeSharedTransitionRuns(), [](const auto &run) {
@@ -1681,7 +1692,6 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
   if (!hasCarriers || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
-  std::vector<Tag> tags;
   for (const auto &mutation : mutations) {
     const auto tag = mutation.newChildShadowView.tag;
     if (mutation.type != ShadowViewMutation::Update) {
@@ -1694,25 +1704,36 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
     for (auto carrier = node->second; carrier; carrier = carrier->parent.lock()) {
       if (carrier->isCarrier()) {
         const auto carrierTag = carrier->current.tag;
-        tags.push_back(carrierTag);
         unqueuedCarrierFrames_[carrierTag]++;
+        carrierFramesWithoutRelease_[carrierTag]++;
       }
     }
   }
-  if (tags.empty()) {
+}
+
+void LayoutAnimationsProxy::maybeStartCarrierRelease() const {
+  const bool pullWaits = std::exchange(pullWaitsForCarrierRelease_, false);
+  if (carrierFramesWithoutRelease_.empty()) {
     return;
   }
-  jsInvoker_->invokeAsync([this, weakThis = weak_from_this(), tags = std::move(tags)](jsi::Runtime &) {
-    const auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    scheduleOnUI(uiScheduler_, [this, weakThis, tags]() {
-      if (const auto strongThis = weakThis.lock()) {
-        releaseCarriersOfQueuedFrames(tags);
-      }
-    });
-  });
+  const bool startsRoundTrip = pullWaits ||
+      std::ranges::any_of(carrierFramesWithoutRelease_,
+                          [this](const auto &entry) { return !isCarrierAnimating(entry.first); });
+  if (!startsRoundTrip) {
+    return;
+  }
+  jsInvoker_->invokeAsync(
+      [this, weakThis = weak_from_this(), frames = std::exchange(carrierFramesWithoutRelease_, {})](jsi::Runtime &) {
+        const auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        scheduleOnUI(uiScheduler_, [this, weakThis, frames]() {
+          if (const auto strongThis = weakThis.lock()) {
+            releaseCarriersOfQueuedFrames(frames);
+          }
+        });
+      });
 }
 
 // React Native 0.86 throws for a padding update of a deleted view. The carrier leaves its layout root before React
@@ -1734,15 +1755,20 @@ void LayoutAnimationsProxy::flushCarrierDeletesAfterQueuedFrames(ShadowViewMutat
   carrierDeletesAfterQueuedFrames_.erase(carrierDeletesAfterQueuedFrames_.begin(), blocked);
 }
 
-void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
+void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::unordered_map<Tag, int> &frames) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
-  for (const auto tag : tags) {
+  for (const auto &[tag, count] : frames) {
     const auto it = unqueuedCarrierFrames_.find(tag);
-    if (it != unqueuedCarrierFrames_.end() && --it->second == 0) {
+    if (it == unqueuedCarrierFrames_.end()) {
+      continue;
+    }
+    it->second -= count;
+    if (it->second <= 0) {
       unqueuedCarrierFrames_.erase(it);
     }
   }
   maybeScheduleCleanupPull(false);
+  maybeStartCarrierRelease();
 }
 
 void LayoutAnimationsProxy::releaseFramesOfQueuedBatch(const std::vector<Tag> &tags) const {

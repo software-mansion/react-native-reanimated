@@ -2119,6 +2119,13 @@ bool LayoutAnimationsProxy::runContinues(const Tag carrierTag) const {
   return layoutAnimationPhase(carrierTag) != LayoutAnimationPhase::ENDED || hasUnqueuedCarrierFrame(carrierTag);
 }
 
+#ifdef ANDROID
+bool LayoutAnimationsProxy::isCarrierAnimating(const Tag carrierTag) const {
+  return sharedTransitionRun(carrierTag, SharedTransitionLifecycle::ACTIVE) &&
+      isQueuedOrRunning(layoutAnimationPhase(carrierTag));
+}
+#endif
+
 // Nested carriers land with the carrier that moves them, when the last run of the group ends. A nested carrier
 // that React moved out of every moving carrier lands on its own.
 bool LayoutAnimationsProxy::landsWithOtherRuns(const SharedTransitionRun &run) const {
