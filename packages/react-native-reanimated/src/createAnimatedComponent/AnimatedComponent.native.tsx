@@ -69,6 +69,7 @@ export default class AnimatedComponent
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
   _sharedTransition?: SharedTransition;
+  _defaultSharedTransition?: SharedTransition;
   _sharedTransitionTag?: string;
   _sharedTransitionFadeContent?: SharedTransition['fadeContentV'];
 
@@ -426,8 +427,7 @@ export default class AnimatedComponent
     }
     const sharedTransition = this.props.sharedTransitionTag
       ? (this.props.sharedTransitionStyle ??
-        this._sharedTransition ??
-        new SharedTransition())
+        (this._defaultSharedTransition ??= new SharedTransition()))
       : undefined;
     const reduceMotion = sharedTransition?.getReduceMotion();
     const sharedTransitionTag =
@@ -436,7 +436,7 @@ export default class AnimatedComponent
         ? undefined
         : this.props.sharedTransitionTag;
     if (!sharedTransitionTag || !sharedTransition) {
-      this._sharedTransition = sharedTransition ?? this._sharedTransition;
+      this._sharedTransition = sharedTransition;
       if (this._sharedTransitionTag) {
         for (const nativeId of useNativeId ? [true] : [true, false]) {
           updateLayoutAnimations(
