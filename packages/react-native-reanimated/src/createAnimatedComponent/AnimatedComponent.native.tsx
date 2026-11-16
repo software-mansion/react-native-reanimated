@@ -134,9 +134,11 @@ export default class AnimatedComponent
     );
 
     this._isFirstRender = false;
+    this._syncReducedMotionListener();
   }
 
   componentWillUnmount() {
+    ReducedMotionManager.listeners.delete(this._onReducedMotionChange);
     super.componentWillUnmount();
     this._NativeEventsManager?.detachEvents();
     this._detachStyles();
@@ -327,6 +329,7 @@ export default class AnimatedComponent
     this._NativeEventsManager?.updateEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+    this._syncReducedMotionListener();
   }
 
   _updateStyles(props: AnimatedComponentProps<InitialComponentProps>): void {
@@ -397,6 +400,22 @@ export default class AnimatedComponent
     );
   }
 
+  _onReducedMotionChange = () => this._configureSharedTransition();
+
+  _syncReducedMotionListener() {
+    if (
+      getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS') &&
+      this.props.sharedTransitionTag
+    ) {
+      if (!ReducedMotionManager.listeners.has(this._onReducedMotionChange)) {
+        ReducedMotionManager.listeners.add(this._onReducedMotionChange);
+        this._configureSharedTransition();
+      }
+    } else {
+      ReducedMotionManager.listeners.delete(this._onReducedMotionChange);
+    }
+  }
+
   _configureSharedTransition(useNativeId?: boolean) {
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
@@ -415,24 +434,22 @@ export default class AnimatedComponent
     if (!sharedTransitionTag || !sharedTransition) {
       this._sharedTransition = sharedTransition ?? this._sharedTransition;
       if (this._sharedTransitionTag) {
-        updateLayoutAnimations(
-          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-          useNativeId
-            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-          undefined,
-          undefined,
-          undefined
-        );
-        updateLayoutAnimations(
-          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-          useNativeId
-            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
-            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
-          undefined,
-          undefined,
-          undefined
-        );
+        for (const nativeId of useNativeId ? [true] : [true, false]) {
+          updateLayoutAnimations(
+            nativeId ? this.reanimatedID : this.getComponentViewTag(),
+            nativeId
+              ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+              : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+            undefined
+          );
+          updateLayoutAnimations(
+            nativeId ? this.reanimatedID : this.getComponentViewTag(),
+            nativeId
+              ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+              : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+            undefined
+          );
+        }
         this._sharedTransitionTag = undefined;
       }
       return;
