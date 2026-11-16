@@ -49,6 +49,9 @@ struct AncestorClipRange {
   AncestorClip to;
 };
 
+// Writes currentClip* and targetClip* to the values of a shared transition.
+void setClipValues(jsi::Runtime &runtime, const jsi::Object &values, const AncestorClipRange &clip);
+
 struct LayoutAnimation {
   // On Android, the props of currentView can hold only the props that the last frame changed. Read currentView with
   // LayoutAnimationsProxyCommon::currentViewOf.

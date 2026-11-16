@@ -91,6 +91,11 @@ jsi::Object withoutCarrierKeys(jsi::Runtime &runtime, const jsi::Object &object)
 }
 } // namespace
 
+void setClipValues(jsi::Runtime &runtime, const jsi::Object &values, const AncestorClipRange &clip) {
+  setClip(runtime, values, "current", clip.from);
+  setClip(runtime, values, "target", clip.to);
+}
+
 #ifdef ANDROID
 namespace {
 const ShadowNode *findShadowNode(const ShadowNode &node, const Tag tag) {
@@ -629,8 +634,7 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
         values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
       }
       if (start.clip) {
-        setClip(uiRuntime_, values, "current", start.clip->from);
-        setClip(uiRuntime_, values, "target", start.clip->to);
+        setClipValues(uiRuntime_, values, *start.clip);
         layoutAnimations_.at(start.tag).clip = start.clip->from;
       }
     } else {

@@ -512,6 +512,9 @@ void LayoutAnimationsProxy::applyProgressAnimations() {
     }
     auto values =
         SharedTransitionValuesFactory(uiRuntime_).create(layoutAnimation.startView, layoutAnimation.finalView);
+    if (run.clip) {
+      setClipValues(uiRuntime_, values, run.clip->range);
+    }
     values.setProperty(uiRuntime_, "windowWidth", window_.width);
     values.setProperty(uiRuntime_, "windowHeight", window_.height);
     const auto progressAnimation =
