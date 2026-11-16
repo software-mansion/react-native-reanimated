@@ -13,10 +13,13 @@
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
 #include <algorithm>
+#include <array>
+#include <cctype>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -33,18 +36,57 @@ void assertUpdatesRegistryUnlocked() {
 namespace {
 constexpr auto kContentOpacity = "contentOpacity";
 constexpr auto kGeometryProgress = "sharedTransitionGeometryProgress";
+constexpr std::array kClipKeys{"clipOriginX", "clipOriginY", "clipWidth", "clipHeight", "clipBorderRadius"};
+
+// The values name each style key after the end, for example currentClipOriginX.
+void setClip(jsi::Runtime &runtime, const jsi::Object &values, const std::string &end, const AncestorClip &clip) {
+  const auto &[origin, size] = clip.frame;
+  const std::array clipValues{origin.x, origin.y, size.width, size.height, clip.borderRadius};
+  for (size_t i = 0; i < kClipKeys.size(); i++) {
+    const std::string key = kClipKeys[i];
+    const auto name = end + static_cast<char>(std::toupper(key[0])) + key.substr(1);
+    values.setProperty(runtime, name.c_str(), clipValues[i]);
+  }
+}
+
+// A frame animates only the keys whose ends differ, so the other keys keep their values. A spring can overshoot below
+// zero.
+AncestorClip readClip(jsi::Runtime &runtime, const jsi::Object &style, const AncestorClip &clip) {
+  const auto &[origin, size] = clip.frame;
+  std::array<Float, kClipKeys.size()> clipValues{origin.x, origin.y, size.width, size.height, clip.borderRadius};
+  for (size_t i = 0; i < kClipKeys.size(); i++) {
+    if (style.hasProperty(runtime, kClipKeys[i])) {
+      clipValues[i] = static_cast<Float>(style.getProperty(runtime, kClipKeys[i]).asNumber());
+    }
+  }
+  const auto [x, y, width, height, borderRadius] = clipValues;
+  return {
+      .frame = {.origin = {x, y}, .size = {std::max<Float>(width, 0), std::max<Float>(height, 0)}},
+      .borderRadius = std::max<Float>(borderRadius, 0),
+  };
+}
+
+bool isCarrierKey(const std::string &name) {
+  return name == kContentOpacity || std::ranges::find(kClipKeys, name) != kClipKeys.end();
+}
+
+SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation) {
+  const auto baseOpacity = std::static_pointer_cast<const ViewProps>(animation.framePropsBase())->opacity;
+  return interpolateSharedTransitionGeometry(
+      animation.startView, animation.finalView, *animation.geometryProgress, baseOpacity);
+}
 
 ShadowView withProps(ShadowView view, const Props::Shared &props) {
   view.props = props;
   return view;
 }
 
-jsi::Object withoutProperty(jsi::Runtime &runtime, const jsi::Object &object, const std::string &excluded) {
+jsi::Object withoutCarrierKeys(jsi::Runtime &runtime, const jsi::Object &object) {
   jsi::Object copy(runtime);
   const auto names = object.getPropertyNames(runtime);
   for (size_t i = 0; i < names.size(runtime); i++) {
     const auto name = names.getValueAtIndex(runtime, i).getString(runtime);
-    if (name.utf8(runtime) != excluded) {
+    if (!isCarrierKey(name.utf8(runtime))) {
       copy.setProperty(
           runtime,
           jsi::PropNameID::forString(runtime, name),
@@ -54,6 +96,11 @@ jsi::Object withoutProperty(jsi::Runtime &runtime, const jsi::Object &object, co
   return copy;
 }
 } // namespace
+
+void setClipValues(jsi::Runtime &runtime, const jsi::Object &values, const AncestorClipRange &clip) {
+  setClip(runtime, values, "current", clip.from);
+  setClip(runtime, values, "target", clip.to);
+}
 
 #ifdef ANDROID
 namespace {
@@ -157,8 +204,12 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   if (animatesContentOpacity) {
     layoutAnimation.contentOpacity = std::clamp(newStyle.getProperty(uiRuntime_, kContentOpacity).asNumber(), 0.0, 1.0);
   }
-  const auto viewStyle = animatesContentOpacity ? withoutProperty(uiRuntime_, newStyle, kContentOpacity)
-                                                : jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
+  const bool animatesClip = layoutAnimation.clip.has_value();
+  if (animatesClip) {
+    layoutAnimation.clip = readClip(uiRuntime_, newStyle, *layoutAnimation.clip);
+  }
+  const auto viewStyle = animatesContentOpacity || animatesClip ? withoutCarrierKeys(uiRuntime_, newStyle)
+                                                                : jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
 
 #ifdef ANDROID
   auto style = jsi::dynamicFromValue(uiRuntime_, jsi::Value(uiRuntime_, viewStyle));
@@ -211,8 +262,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGe
   if (animation->opacity && !animatesOpacity) {
     style["opacity"] = *animation->opacity;
   }
-  auto geometry =
-      interpolateSharedTransitionGeometry(animation->startView, animation->finalView, *animation->geometryProgress);
+  auto geometry = interpolateGeometryOf(*animation);
   style.update(geometry.props);
   updateMap_.insert_or_assign(
       tag, frameValues(*animation, animation->framePropsBase(), std::move(style), geometry.frame, animatesOpacity));
@@ -222,8 +272,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGe
 // Without a frame that waits for a pull, the frame on screen is the base.
 void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, LayoutAnimation &animation) const {
   react_native_assert(animation.geometryProgress && "The animation does not interpolate the geometry");
-  auto geometry =
-      interpolateSharedTransitionGeometry(animation.startView, animation.finalView, *animation.geometryProgress);
+  auto geometry = interpolateGeometryOf(animation);
   const auto pending = updateMap_.find(tag);
 #ifdef ANDROID
   if (pending != updateMap_.end()) {
@@ -588,6 +637,10 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
         values.setProperty(uiRuntime_, "currentContentOpacity", start.contentOpacity->from);
         values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
       }
+      if (start.clip) {
+        setClipValues(uiRuntime_, values, *start.clip);
+        layoutAnimations_.at(start.tag).clip = start.clip->from;
+      }
     } else {
       const Snapshot current(start.before, window);
       const Snapshot target(start.after, window);
@@ -742,7 +795,8 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
     const ShadowView &finalView,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config,
-    const std::optional<ContentOpacityRange> contentOpacity) const {
+    const std::optional<ContentOpacityRange> contentOpacity,
+    const std::optional<AncestorClipRange> clip) const {
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   if (const auto pendingIt = pendingLayoutAnimations_.find(tag); pendingIt != pendingLayoutAnimations_.end()) {
     if (pendingIt->second.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS) {
@@ -758,6 +812,9 @@ void LayoutAnimationsProxyCommon::updateLayoutAnimationTarget(
       }
       if (contentOpacity) {
         managedStart->contentOpacity = contentOpacity;
+      }
+      if (clip) {
+        managedStart->clip = clip;
       }
       return;
     }

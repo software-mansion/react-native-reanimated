@@ -473,7 +473,7 @@ void LayoutAnimationsProxy::reconcileContradictedRemovals(
     auto update = ShadowViewMutation::UpdateMutation(
         mounted,
         recreated,
-        node->placement() == CarrierPlacement::AT_ROOT ? carrierHostTag(node)
+        node->placement() == CarrierPlacement::AT_ROOT ? carrierParentTag(node)
             : parent                                   ? parent->current.tag
                                                        : surfaceId_);
     if (node->state == LIVE) {
@@ -1311,6 +1311,9 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
         layoutAnimation,
         updateValues,
         layoutAnimation.frameProps || layoutAnimation.type == LayoutAnimationType::EXITING));
+    if (layoutAnimation.clip) {
+      updateCarrierClip(tag, layoutAnimation, mutations, {surfaceId_, *contextContainer_});
+    }
     if (layoutAnimation.opacity &&
         (updateValues.animatesOpacity ||
          getViewProps(layoutAnimation.currentView).opacity == *layoutAnimation.opacity)) {
@@ -1600,7 +1603,7 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
       const auto nodeIt = lightNodes_.find(tag);
       if (removedFromParents.contains(tag) && nodeIt != lightNodes_.end() &&
           nodeIt->second->placement() == CarrierPlacement::AT_ROOT &&
-          mutation.parentTag == carrierHostTag(nodeIt->second)) {
+          mutation.parentTag == carrierParentTag(nodeIt->second)) {
         movedToRoot.push_back(tag);
       }
     }
@@ -1861,7 +1864,8 @@ void LayoutAnimationsProxy::startSharedTransition(
     const ShadowView &after,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config,
-    const std::optional<ContentOpacityRange> contentOpacity) const {
+    const std::optional<ContentOpacityRange> contentOpacity,
+    const std::optional<AncestorClipRange> clip) const {
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = carrier->current.tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,
@@ -1871,6 +1875,7 @@ void LayoutAnimationsProxy::startSharedTransition(
       .parentTag = carrierParentTag(carrier),
       .config = config,
       .contentOpacity = contentOpacity,
+      .clip = clip,
   });
 }
 

@@ -6,13 +6,17 @@
 
 namespace reanimated {
 
-// The frame and the props `transform` and `transformOrigin` of a shared transition carrier.
+// The frame and the props `transform`, `transformOrigin` and `opacity` of a shared transition carrier. The opacity is
+// left out when both ends and the base props of the frame have the same one.
 struct SharedTransitionGeometry {
   Frame frame;
   folly::dynamic props;
 };
 
-SharedTransitionGeometry
-interpolateSharedTransitionGeometry(const ShadowView &start, const ShadowView &target, double progress);
+SharedTransitionGeometry interpolateSharedTransitionGeometry(
+    const ShadowView &start,
+    const ShadowView &target,
+    double progress,
+    Float baseOpacity);
 
 } // namespace reanimated
