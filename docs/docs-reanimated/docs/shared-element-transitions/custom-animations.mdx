@@ -123,7 +123,7 @@ const transition = SharedTransition.custom((values) => {
 
 ## Remarks
 
-- The callback must have the `'worklet'` directive.
+- An inline callback does not need the `'worklet'` directive. Add it when you pass the callback by reference.
 - Reanimated does not animate the properties that you do not return. Such a property keeps the value of the source view until the transition ends.
 - Animate the transform as a whole, with `transform: [{ matrix }]`. Separate transform operations, for example `transform: [{ scale: withTiming(2) }]`, are not supported.
 - The worklet controls the timing of each animation. The `.delay()` and `.withCallback()` modifiers of the builder still apply, for example `SharedTransition.custom(animation).delay(100)`.
