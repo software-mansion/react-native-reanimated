@@ -776,12 +776,10 @@ void LayoutAnimationsProxy::updateLightTree(
             auto updatedView = updatedViewIt->second;
             updatedView.layoutMetrics.frame.origin += offset;
             filteredMutations.push_back(ShadowViewMutation::InsertMutation(mutation.parentTag, updatedView, hostIndex));
-          } else if (hasPendingLayoutAnimation(tag)) {
-            filteredMutations.push_back(
-                ShadowViewMutation::InsertMutation(mutation.parentTag, node->previous, hostIndex));
           } else {
+            react_native_assert(
+                !hasPendingLayoutAnimation(tag) && "A moved view with a queued animation must mount its start view");
             auto view = mutation.newChildShadowView;
-            const auto updatedViewIt = updatedViews.find(tag);
             const bool propsChanged = updatedViewIt != updatedViews.end() && updatedViewIt->second.props != view.props;
             if (!propsChanged) {
               view.props = propsOfMountedView(view);
