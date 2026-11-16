@@ -713,7 +713,7 @@ describe('Shared element transition between boundaries', () => {
     const props = {
       transition,
       sourceParent: styles.clippingParent,
-      targetChild: styles.fill,
+      targetChild: styles.parent,
     };
     await render(
       <ParentScreens
@@ -731,19 +731,19 @@ describe('Shared element transition between boundaries', () => {
       />
     );
     await waitForFrames(2);
-    const clipStartY = (await mountedClips())[0].y;
 
+    // The target view keeps its frame, and only its clip grows from 100 to 180.
     await render(
       <ParentScreens
         {...props}
         showTarget
-        targetParent={styles.fartherClippingParent}
+        targetParent={styles.tallClippingParent}
       />
     );
     await wait(450);
     const clips = await mountedClips();
     expect(clips.length).toBe(1);
-    expect(clips[0].y).toBeWithinRange(clipStartY + 301, clipStartY + 380);
+    expect(clips[0].height).toBeWithinRange(130, 181);
 
     // The run keeps going to the new clip and reports its callback once.
     await expectEventually(() => finished).toBe([true]);
@@ -1032,10 +1032,10 @@ const styles = StyleSheet.create({
     marginTop: 200,
     overflow: 'hidden',
   },
-  fartherClippingParent: {
+  tallClippingParent: {
     width: 100,
-    height: 100,
-    marginTop: 280,
+    height: 180,
+    marginTop: 200,
     overflow: 'hidden',
   },
   identical: {
