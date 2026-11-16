@@ -1308,7 +1308,7 @@ void LayoutAnimationsProxy::attachCarrier(
   react_native_assert(parent && "Parent node is nullptr");
   const bool detached = node->placement() == CarrierPlacement::AT_ROOT;
   if (detached) {
-    removeCarrierFromHost(run, mounted, mutations);
+    removeCarrierFromHost(run, mounted, mutations, mutations);
   }
   carrierPlacements_.attach(node);
   cancelLayoutAnimation(tag);
@@ -1763,7 +1763,7 @@ void LayoutAnimationsProxy::removeFromParent(
   }
   if (node->placement() == CarrierPlacement::AT_ROOT) {
     if (carried) {
-      removeCarrierFromHost(*carried, carrierViewOnScreen(*carried), rootMutations);
+      removeCarrierFromHost(*carried, carrierViewOnScreen(*carried), rootMutations, mutations);
     } else {
       rootMutations.push_back(
           ShadowViewMutation::RemoveMutation(carrierHostTag(node), node->current, carrierHostIndex(node)));
@@ -1813,23 +1813,25 @@ void LayoutAnimationsProxy::insertCarrierIntoHost(
   mutations.push_back(ShadowViewMutation::InsertMutation(content.tag, view, 0));
 }
 
+// The Deletes of the clip go with the Deletes of the carrier, which can wait for its frames.
 void LayoutAnimationsProxy::removeCarrierFromHost(
     const SharedTransitionRun &run,
     const ShadowView &mounted,
-    ShadowViewMutationList &mutations) const {
+    ShadowViewMutationList &removals,
+    ShadowViewMutationList &deletes) const {
   const auto &node = run.carrier;
   const auto host = carrierHostTag(node);
   const auto index = carrierHostIndex(node);
   if (!run.clip) {
-    mutations.push_back(ShadowViewMutation::RemoveMutation(host, mounted, index));
+    removals.push_back(ShadowViewMutation::RemoveMutation(host, mounted, index));
     return;
   }
   const auto &[clip, content, _] = *run.clip;
-  mutations.push_back(ShadowViewMutation::RemoveMutation(content.tag, mounted, 0));
-  mutations.push_back(ShadowViewMutation::RemoveMutation(clip.tag, content, 0));
-  mutations.push_back(ShadowViewMutation::DeleteMutation(content));
-  mutations.push_back(ShadowViewMutation::RemoveMutation(host, clip, index));
-  mutations.push_back(ShadowViewMutation::DeleteMutation(clip));
+  removals.push_back(ShadowViewMutation::RemoveMutation(content.tag, mounted, 0));
+  removals.push_back(ShadowViewMutation::RemoveMutation(clip.tag, content, 0));
+  removals.push_back(ShadowViewMutation::RemoveMutation(host, clip, index));
+  deletes.push_back(ShadowViewMutation::DeleteMutation(content));
+  deletes.push_back(ShadowViewMutation::DeleteMutation(clip));
 }
 
 // The layer is the last child of its layout root, so React's indices of the other children do not change. On iOS,

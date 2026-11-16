@@ -619,7 +619,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void removeCarrierFromHost(
       const SharedTransitionRun &run,
       const ShadowView &mounted,
-      ShadowViewMutationList &mutations) const;
+      ShadowViewMutationList &removals,
+      ShadowViewMutationList &deletes) const;
   void ensureCarrierLayer(
       const std::shared_ptr<LightNode> &host,
       ShadowViewMutationList &mutations,
