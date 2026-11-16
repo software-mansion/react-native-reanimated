@@ -643,6 +643,30 @@ describe('Shared element transition between boundaries', () => {
     expect(finished).toBe([true]);
   });
 
+  test('keeps the ancestor opacity that both ends share', async () => {
+    const finished: boolean[] = [];
+    const transition = createTransition(
+      finished,
+      SharedTransition.duration(1000)
+    );
+    const props = {
+      transition,
+      sourceParent: [styles.parent, styles.dimmed],
+      targetParent: [styles.farParent, styles.dimmed],
+    };
+    await render(<ParentScreens {...props} showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ParentScreens {...props} showTarget />);
+    await waitForFrames(2);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.45, 0.55);
+    await wait(500);
+    expect(await mountedSourceOpacity()).toBeWithinRange(0.45, 0.55);
+
+    await waitForNotification('shared-transition-finished');
+    expect(finished).toBe([true]);
+  });
+
   test('moves the source inside a clip and removes the clip at the end', async () => {
     const finished: boolean[] = [];
     const transition = createTransition(

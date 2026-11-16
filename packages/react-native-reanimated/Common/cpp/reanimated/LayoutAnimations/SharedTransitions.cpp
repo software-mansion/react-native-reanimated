@@ -1141,8 +1141,8 @@ bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, con
 }
 
 // The carrier shows its own props, so that its content, for example a video player or an image
-// source, does not change during the run. Only the frame and the animated values come from the
-// other view.
+// source, does not change during the run. Only the frame, the opacity and the animated values come
+// from the other view.
 ShadowView LayoutAnimationsProxy::ownCarrierView(
     const ShadowView &view,
     const std::shared_ptr<LightNode> &carrier,
@@ -1153,10 +1153,12 @@ ShadowView LayoutAnimationsProxy::ownCarrierView(
 #ifdef ANDROID
   auto rawProps = carrierView.props->rawProps;
   rawProps["transform"] = view.props->rawProps.getDefault("transform", nullptr);
+  rawProps["opacity"] = getViewProps(view).opacity;
   carrierView.props = componentDescriptorRegistry_->at(carrierView.componentHandle)
                           .cloneProps(propsParserContext, carrierView.props, RawProps(std::move(rawProps)));
 #else
   overrideTransform(carrierView, getViewProps(view).transform, propsParserContext);
+  carrierView = cloneViewWithOpacity(carrierView, getViewProps(view).opacity, propsParserContext);
 #endif
   return carrierView;
 }
