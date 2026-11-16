@@ -10,6 +10,7 @@ export type KnownSanitizerIssue = {
 
 export type SanitizerReport = {
   file: string;
+  index: number;
   sanitizer: string;
   summary: string;
   text: string;
@@ -20,15 +21,18 @@ export type ClassifiedReports = {
   unknown: SanitizerReport[];
 };
 
+const REPORT_HEADER =
+  /^(?:SUMMARY|WARNING|(?:==\d+==)?ERROR): (\w+)Sanitizer: (.*)$/m;
+
 if (process.argv[1] === import.meta.filename) {
-  process.exit(main(process.argv.slice(2)));
+  process.exitCode = main(process.argv.slice(2));
 }
 
 export function main(argv: string[]): number {
   const args = parseArgs(argv);
   const reportsDir = path.resolve(args.reports ?? 'sanitizer-reports');
   const knownFile = path.resolve(args.known ?? 'sanitizer-known-issues.json');
-  const sanitizer = args.sanitizer ?? '';
+  const sanitizer = (args.sanitizer ?? '').toLowerCase();
   const reports = readReports(reportsDir);
   if (reports.length === 0) {
     console.log('No sanitizer reports.');
@@ -39,7 +43,9 @@ export function main(argv: string[]): number {
   );
   const { known, unknown } = classifyReports(reports, knownIssues);
   for (const report of reports) {
-    console.log(`::group::${path.basename(report.file)}: ${report.summary}`);
+    console.log(
+      `::group::${path.basename(report.file)}#${report.index + 1}: ${report.summary}`
+    );
     console.log(report.text);
     console.log('::endgroup::');
   }
@@ -54,7 +60,7 @@ export function main(argv: string[]): number {
     );
   }
   console.log(
-    `${reports.length} sanitizer report file(s): ${known.length} known, ${unknown.length} unknown.`
+    `${reports.length} sanitizer report(s): ${known.length} known, ${unknown.length} unknown.`
   );
   return unknown.length === 0 ? 0 : 1;
 }
@@ -79,16 +85,32 @@ export function classifyReports(
   return classified;
 }
 
-export function parseSanitizerReport(
+export function parseSanitizerReports(
   file: string,
   text: string
+): SanitizerReport[] {
+  const chunks = text
+    .split(/^=+\s*$/m)
+    .map((chunk) => chunk.trim())
+    .filter((chunk) => chunk.length > 0);
+  const reports = chunks.filter((chunk) => REPORT_HEADER.test(chunk));
+  return (reports.length > 0 ? reports : [text.trim()]).map((chunk, index) =>
+    parseSanitizerReport(file, index, chunk)
+  );
+}
+
+function parseSanitizerReport(
+  file: string,
+  index: number,
+  text: string
 ): SanitizerReport {
-  const warning = text.match(/^WARNING: (\w+)Sanitizer: (.*)$/m);
-  const summary = text.match(/^SUMMARY: \w+Sanitizer: (.*)$/m);
+  const summary = text.match(/^SUMMARY: (\w+)Sanitizer: (.*)$/m);
+  const header = text.match(REPORT_HEADER);
   return {
     file,
-    sanitizer: sanitizerName(warning?.[1] ?? ''),
-    summary: (summary?.[1] ?? warning?.[2] ?? 'unrecognized report').trim(),
+    index,
+    sanitizer: sanitizerName(summary?.[1] ?? header?.[1] ?? ''),
+    summary: (summary?.[2] ?? header?.[2] ?? 'unrecognized report').trim(),
     text,
   };
 }
@@ -104,7 +126,9 @@ function readReports(reportsDir: string): SanitizerReport[] {
     .sort()
     .map((name) => path.join(reportsDir, name))
     .filter((file) => fs.statSync(file).isFile())
-    .map((file) => parseSanitizerReport(file, fs.readFileSync(file, 'utf8')));
+    .flatMap((file) =>
+      parseSanitizerReports(file, fs.readFileSync(file, 'utf8'))
+    );
 }
 
 function readKnownIssues(knownFile: string): KnownSanitizerIssue[] {

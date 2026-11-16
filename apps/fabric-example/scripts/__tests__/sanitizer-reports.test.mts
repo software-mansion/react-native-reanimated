@@ -7,7 +7,7 @@ import { afterEach, describe, it } from 'node:test';
 
 import {
   classifyReports,
-  parseSanitizerReport,
+  parseSanitizerReports,
 } from '../sanitizer-reports.mts';
 
 const SCRIPT = path.resolve(import.meta.dirname, '..', 'sanitizer-reports.mts');
@@ -25,12 +25,20 @@ SUMMARY: ThreadSanitizer: data race YGNode.cpp:282 in YGNodeGetOwner
 ==================
 `;
 
-const ASAN_REPORT = `==================
+const ASAN_REPORT = `=================================================================
 ==1234==ERROR: AddressSanitizer: heap-use-after-free on address 0x0001 at pc 0x0002
-WARNING: AddressSanitizer: heap-use-after-free on address 0x0001
     #0 0x0003 in reanimated::LayoutAnimationsProxy::pullTransaction LayoutAnimationsProxy.cpp:299
 
 SUMMARY: AddressSanitizer: heap-use-after-free LayoutAnimationsProxy.cpp:299 in reanimated::LayoutAnimationsProxy::pullTransaction
+==================
+`;
+
+const UNKNOWN_TSAN_REPORT = `==================
+WARNING: ThreadSanitizer: data race (pid=90103)
+  Read of size 8 at 0x1 by main thread:
+    #0 reanimated::foo Foo.cpp:1 (FabricExample:arm64+0x1)
+
+SUMMARY: ThreadSanitizer: data race Foo.cpp:1 in reanimated::foo
 ==================
 `;
 
@@ -43,30 +51,54 @@ const KNOWN = [
   },
 ];
 
-describe('parseSanitizerReport', () => {
+describe('parseSanitizerReports', () => {
   it('reads the sanitizer and the summary of a TSAN report', () => {
-    const report = parseSanitizerReport('tsan.1', TSAN_REPORT);
+    const [report] = parseSanitizerReports('tsan.1', TSAN_REPORT);
     assert.equal(report.sanitizer, 'thread');
     assert.equal(report.summary, 'data race YGNode.cpp:282 in YGNodeGetOwner');
   });
 
-  it('reads an ASAN report', () => {
-    const report = parseSanitizerReport('asan.1', ASAN_REPORT);
+  it('reads an ASAN report with an ERROR header and no WARNING line', () => {
+    const [report] = parseSanitizerReports('asan.1', ASAN_REPORT);
     assert.equal(report.sanitizer, 'address');
     assert.match(report.summary, /^heap-use-after-free LayoutAnimationsProxy/);
   });
 
-  it('keeps a report without a summary line', () => {
-    const report = parseSanitizerReport('tsan.2', 'garbage\n');
-    assert.equal(report.sanitizer, '');
-    assert.equal(report.summary, 'unrecognized report');
+  it('reads an ASAN report without a summary line from its header', () => {
+    const [report] = parseSanitizerReports(
+      'asan.2',
+      ASAN_REPORT.replace(/^SUMMARY: .*$/m, '')
+    );
+    assert.equal(report.sanitizer, 'address');
+    assert.match(report.summary, /^heap-use-after-free on address/);
+  });
+
+  it('splits a log file that holds several reports', () => {
+    const reports = parseSanitizerReports(
+      'tsan.3',
+      TSAN_REPORT + UNKNOWN_TSAN_REPORT
+    );
+    assert.deepEqual(
+      reports.map((report) => [report.index, report.summary]),
+      [
+        [0, 'data race YGNode.cpp:282 in YGNodeGetOwner'],
+        [1, 'data race Foo.cpp:1 in reanimated::foo'],
+      ]
+    );
+  });
+
+  it('keeps a file without a report header as one unrecognized report', () => {
+    const reports = parseSanitizerReports('tsan.2', 'garbage\n');
+    assert.equal(reports.length, 1);
+    assert.equal(reports[0].sanitizer, '');
+    assert.equal(reports[0].summary, 'unrecognized report');
   });
 });
 
 describe('classifyReports', () => {
   it('matches a known issue by sanitizer and summary pattern', () => {
-    const tsan = parseSanitizerReport('tsan.1', TSAN_REPORT);
-    const asan = parseSanitizerReport('asan.1', ASAN_REPORT);
+    const [tsan] = parseSanitizerReports('tsan.1', TSAN_REPORT);
+    const [asan] = parseSanitizerReports('asan.1', ASAN_REPORT);
     const { known, unknown } = classifyReports([tsan, asan], KNOWN);
     assert.deepEqual(
       known.map(({ report }) => report.file),
@@ -79,7 +111,7 @@ describe('classifyReports', () => {
   });
 
   it('does not match a known issue of another sanitizer', () => {
-    const report = parseSanitizerReport(
+    const [report] = parseSanitizerReports(
       'asan.2',
       ASAN_REPORT.replace(
         /heap-use-after-free .* in .*/,
@@ -107,7 +139,7 @@ describe('sanitizer-reports command', () => {
     );
     assert.match(
       result.stdout,
-      /1 sanitizer report file\(s\): 1 known, 0 unknown\./
+      /1 sanitizer report\(s\): 1 known, 0 unknown\./
     );
   });
 
@@ -121,8 +153,28 @@ describe('sanitizer-reports command', () => {
     );
     assert.match(
       result.stdout,
-      /2 sanitizer report file\(s\): 1 known, 1 unknown\./
+      /2 sanitizer report\(s\): 1 known, 1 unknown\./
     );
+  });
+
+  it('fails when a known report and an unknown report share one log file', () => {
+    workDir = createWorkDir({ 'tsan.1': TSAN_REPORT + UNKNOWN_TSAN_REPORT });
+    const result = run(workDir);
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stdout,
+      /^::group::tsan\.1#2: data race Foo\.cpp:1 in reanimated::foo$/m
+    );
+    assert.match(
+      result.stdout,
+      /2 sanitizer report\(s\): 1 known, 1 unknown\./
+    );
+  });
+
+  it('matches the selected sanitizer case-insensitively', () => {
+    workDir = createWorkDir({ 'tsan.1': TSAN_REPORT });
+    const result = run(workDir, ['--sanitizer', 'Thread']);
+    assert.equal(result.status, 0, result.stdout);
   });
 
   it('passes without reports', () => {
