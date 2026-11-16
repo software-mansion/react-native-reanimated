@@ -111,7 +111,9 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
     const SurfaceId surfaceId,
     const LayoutAnimationsProxyDependencies &dependencies)
     : LayoutAnimationsProxyCommon(surfaceId, dependencies),
-      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()) {
+      sharedTransitionManager_(dependencies.layoutAnimationsManager->getSharedTransitionManager()),
+      uiRuntimeWeak_(dependencies.uiRuntimeWeak),
+      scheduleOnNextUIFrame_(dependencies.scheduleOnNextUIFrame) {
 #ifdef __APPLE__
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
   setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
@@ -1313,8 +1315,19 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
       layoutAnimationsManager_->clearSharedTransitionContentFade(tag);
     }
     releaseUnmappedContentFadeConfigs();
+    if (transition_) {
+      for (auto &config : transition_->progressCallbacks) {
+        scheduleSharedTransitionCallback(std::move(config), false);
+      }
+    }
+    if (uncommittedScreenPop_) {
+      for (auto &config : uncommittedScreenPop_->progressCallbacks) {
+        scheduleSharedTransitionCallback(std::move(config), false);
+      }
+    }
     carrierPlacements_.clear();
-    for (const auto &[_, run] : sharedTransitionRuns_) {
+    for (auto &[_, run] : sharedTransitionRuns_) {
+      finishProgressCallback(run);
       carrierPlacements_.tearDown(run.carrier);
     }
     layoutAnimationsManager_->clearSharedTransitionConfigs(std::vector<Tag>(

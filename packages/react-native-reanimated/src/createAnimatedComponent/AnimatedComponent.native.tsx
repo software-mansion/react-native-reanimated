@@ -469,7 +469,8 @@ export default class AnimatedComponent
       maybeBuild(sharedTransition),
       undefined,
       sharedTransitionTag,
-      sharedTransition.buildContentFade?.()
+      sharedTransition.buildContentFade?.(),
+      sharedTransition.callbackV
     );
     updateLayoutAnimations(
       useNativeId ? this.reanimatedID : this.getComponentViewTag(),

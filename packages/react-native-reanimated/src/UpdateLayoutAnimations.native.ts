@@ -71,14 +71,16 @@ export const updateLayoutAnimations: (
     | ProgressSharedTransitionAnimation,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionContentFade?: SharedTransitionContentFade
+  sharedTransitionContentFade?: SharedTransitionContentFade,
+  sharedTransitionCallback?: (finished: boolean) => void
 ) => void = (
   viewTag,
   type,
   config,
   isUnmounting,
   sharedTransitionTag,
-  sharedTransitionContentFade
+  sharedTransitionContentFade,
+  sharedTransitionCallback
 ) =>
   updateLayoutAnimationsManager.update(
     {
@@ -86,6 +88,9 @@ export const updateLayoutAnimations: (
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionCallback: sharedTransitionCallback
+        ? createSerializable(sharedTransitionCallback)
+        : undefined,
       sharedTransitionContentFade: sharedTransitionContentFade
         ? {
             fadeIn: createSerializable(sharedTransitionContentFade.fadeIn),

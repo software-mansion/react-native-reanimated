@@ -100,9 +100,11 @@ struct LayoutAnimationsProxyDependencies {
   SharedComponentDescriptorRegistry componentDescriptorRegistry;
   std::shared_ptr<const ContextContainer> contextContainer;
   jsi::Runtime &uiRuntime;
+  std::weak_ptr<WorkletRuntime> uiRuntimeWeak;
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  std::function<void(std::function<void()>)> scheduleOnNextUIFrame;
   std::function<std::optional<double>(Tag)> readSynchronousOpacity;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;

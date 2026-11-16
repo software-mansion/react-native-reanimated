@@ -232,6 +232,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   RequestRenderFunction requestRender_;
+  RequestRenderFunction requestNativeRender_;
   bool isAnimationRunning_{false};
 
   CallbackId animationBackendCallbackId_{0};
