@@ -1438,9 +1438,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
     deferredSharedTransitionConfigReleases_.clear();
     sharedElements_.clear();
     sharedTransitionRuns_.clear();
-#ifdef __APPLE__
-    react_native_assert(!carrierOverlay_ && "The last pull of a surface deletes its overlay");
-#endif
+    react_native_assert(carrierLayers_.empty() && "The last pull of a surface removes its carrier layers");
     heldEnterings_.clear();
     snapshottedScreens_.clear();
     transition_.reset();
@@ -1553,9 +1551,8 @@ bool LayoutAnimationsProxy::hasPendingStructuralCleanup() const {
       })) {
     return true;
   }
-  if (std::ranges::any_of(carrierDeletesAfterQueuedFrames_, [this](const auto &entry) {
-        return !hasUnqueuedCarrierFrame(entry.first);
-      })) {
+  if (!carrierDeletesAfterQueuedFrames_.empty() &&
+      !hasUnqueuedCarrierFrame(carrierDeletesAfterQueuedFrames_.front().first)) {
     return true;
   }
   const auto coveringViews = viewsHiddenByContinuingRuns();
@@ -1721,21 +1718,18 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
 void LayoutAnimationsProxy::removeCarrierBeforeQueuedFrames(
     const std::shared_ptr<LightNode> &carrier,
     ShadowViewMutationList &mutations) const {
-  const auto tag = carrier->current.tag;
-  ShadowViewMutationList deletes;
+  auto &deletes = carrierDeletesAfterQueuedFrames_.emplace_back(carrier->current.tag, ShadowViewMutationList{}).second;
   endAnimationsRecursively(carrier, deletes, mutations);
-  carrierDeletesAfterQueuedFrames_.emplace_back(tag, std::move(deletes));
 }
 
+// The deletes go in their order, so a carrier layer goes after the carriers that were in it.
 void LayoutAnimationsProxy::flushCarrierDeletesAfterQueuedFrames(ShadowViewMutationList &mutations) const {
-  std::erase_if(carrierDeletesAfterQueuedFrames_, [&](auto &entry) {
-    auto &[tag, deletes] = entry;
-    if (hasUnqueuedCarrierFrame(tag)) {
-      return false;
-    }
+  const auto blocked = std::ranges::find_if(
+      carrierDeletesAfterQueuedFrames_, [this](const auto &entry) { return hasUnqueuedCarrierFrame(entry.first); });
+  for (auto &[_, deletes] : std::ranges::subrange(carrierDeletesAfterQueuedFrames_.begin(), blocked)) {
     std::ranges::move(deletes, std::back_inserter(mutations));
-    return true;
-  });
+  }
+  carrierDeletesAfterQueuedFrames_.erase(carrierDeletesAfterQueuedFrames_.begin(), blocked);
 }
 
 void LayoutAnimationsProxy::releaseCarriersOfQueuedFrames(const std::vector<Tag> &tags) const {
