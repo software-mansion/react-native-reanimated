@@ -208,6 +208,22 @@ describe('parseSampleLine', () => {
       /has 599 updates, and its last boundary counts 600/
     );
   });
+
+  it('is a tool error when the app recorded UI updates before the first epoch', () => {
+    assert.throws(
+      () =>
+        parsed(
+          inAppSample({
+            boundaries: [
+              { ...START_BOUNDARY, updates: 1 },
+              { ...END_BOUNDARY, updates: 601 },
+            ],
+            updates: steadyUpdates(601),
+          })
+        ),
+      /The first boundary counts 1 UI updates\. The app recorded UI updates before the first epoch\./
+    );
+  });
 });
 
 describe('readEpoch', () => {

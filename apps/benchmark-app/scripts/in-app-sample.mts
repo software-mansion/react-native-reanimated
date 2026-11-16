@@ -530,6 +530,11 @@ function checkUpdates({ updates, boundaries }: InAppSample) {
       'The update lists of the SAMPLE line do not have the same length'
     );
   }
+  if (boundaries[0].updates !== 0) {
+    throw new ToolError(
+      `The first boundary counts ${boundaries[0].updates} UI updates. The app recorded UI updates before the first epoch.`
+    );
+  }
   if (boundaries.at(-1)?.updates !== count) {
     throw new ToolError(
       `The SAMPLE line has ${count} updates, and its last boundary counts ${boundaries.at(-1)?.updates}`
