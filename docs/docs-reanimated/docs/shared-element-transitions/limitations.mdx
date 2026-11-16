@@ -15,6 +15,7 @@ Check these points:
 - Both views have the same [`sharedTransitionTag`](./shared-transition-props.mdx#sharedtransitiontag), and each tag shows only once on a screen.
 - Both views are animated components of the same native type, for example `Animated.View` and `Animated.View`. With different types, a debug build stops on an assertion. A release build moves the view, but the view takes only the position, the size and the transform of the other view.
 - The tag is on a component with its own native view. A `Text` inside another `Text` has no native view, so it cannot be a shared view.
+- On Android, a view with its own `nativeID` gets its transition only after it mounts. If it mounts in the same update that changes `isActive`, it can miss that transition. Remove the `nativeID`, or mount the view before that update.
 - Each screen is in a [`SharedTransitionBoundary`](./screens-and-boundaries.mdx#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
 - No boundary that is always active is around the boundaries of your screens.
 - The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of the boundary of the screen. A boundary in the header becomes the active boundary instead of the boundary of the screen. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
