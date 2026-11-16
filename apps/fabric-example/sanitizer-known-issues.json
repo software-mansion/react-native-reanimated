@@ -1,0 +1,8 @@
+[
+  {
+    "sanitizer": "thread",
+    "summary": "^data race YGNode\\.cpp:\\d+ in YGNodeGetOwner$",
+    "reason": "React Native's YogaLayoutableShadowNode::updateYogaChildrenOwnersIfNeeded writes the Yoga owner of a child from the JS thread while a clone of the same node on the main thread reads it. Every frame of the report is inside React Native.",
+    "upstream": ""
+  }
+]
