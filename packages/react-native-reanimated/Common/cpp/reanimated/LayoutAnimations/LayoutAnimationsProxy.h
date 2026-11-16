@@ -223,9 +223,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::shared_ptr<LightNode> topScreen_;
   // The top boundary under each screen when another screen covered it, by screen tag.
   mutable std::unordered_map<Tag, std::weak_ptr<LightNode>> coveredTopBoundaries_;
-  // Set whenever the active boundary might no longer be `topScreen_`: on a structural change, a boundary's props
-  // changing or a node leaving the light tree. A light node never becomes live again, so nothing else changes it.
+  // Set whenever the active boundary might no longer be `topScreen_`: when React adds, moves or deletes a boundary or
+  // moves one of its ancestors, when the `isActive` prop of a boundary changes, or when a boundary leaves the light
+  // tree. A light node never becomes live again, so nothing else changes it.
   mutable bool activeBoundaryMayHaveChanged_ = true;
+  mutable std::unordered_set<std::shared_ptr<LightNode>> boundaries_;
   // Views the light tree replaced, often the last owners of their props. Destroyed off the UI thread.
   mutable std::vector<ShadowView> droppedViews_;
   // screens that forceScreenSnapshot_ switched to snapshots after updates; React Native Screens never switches them
@@ -382,6 +384,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void releaseUnmappedContentFadeConfigs() const;
 
   bool mayChangeActiveBoundary(const ShadowViewMutation &mutation) const;
+  bool holdsBoundary(const std::shared_ptr<LightNode> &node) const;
+  std::optional<std::unordered_set<SharedTag>> sharedTagsAffectedBy(const ShadowViewMutationList &mutations) const;
   void updateLightTree(
       const PropsParserContext &propsParserContext,
       ShadowViewMutationList &mutations,
@@ -478,8 +482,23 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &beforeTopScreen,
       const std::shared_ptr<LightNode> &afterTopScreen) const;
 
+  void findSharedElements(
+      const std::shared_ptr<LightNode> &screen,
+      BeforeOrAfter index,
+      const std::optional<std::unordered_set<SharedTag>> &sharedTags,
+      TransactionMeta &transaction) const;
   void findSharedElementsOnScreen(
       const std::shared_ptr<LightNode> &node,
+      BeforeOrAfter index,
+      TransactionMeta &transaction) const;
+  void findSharedElementsWithTags(
+      const std::shared_ptr<LightNode> &screen,
+      BeforeOrAfter index,
+      const std::unordered_set<SharedTag> &sharedTags,
+      TransactionMeta &transaction) const;
+  void collectSharedElement(
+      const std::shared_ptr<LightNode> &node,
+      const SharedTag &sharedTag,
       BeforeOrAfter index,
       TransactionMeta &transaction) const;
 

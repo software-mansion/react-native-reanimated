@@ -13,6 +13,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -32,9 +33,29 @@ struct Transition {
 struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
+  std::unordered_map<std::string, std::unordered_set<Tag>> nameToTags_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
   // Odd tags that end in 7. React gives even tags to views and tags that end in 1 to surfaces.
   Tag nextOverlayTag_{std::numeric_limits<Tag>::max()};
+
+  void setName(const Tag tag, const std::string &name) {
+    eraseName(tag);
+    tagToName_[tag] = name;
+    nameToTags_[name].insert(tag);
+  }
+
+  void eraseName(const Tag tag) {
+    const auto it = tagToName_.find(tag);
+    if (it == tagToName_.end()) {
+      return;
+    }
+    const auto tagsIt = nameToTags_.find(it->second);
+    tagsIt->second.erase(tag);
+    if (tagsIt->second.empty()) {
+      nameToTags_.erase(tagsIt);
+    }
+    tagToName_.erase(it);
+  }
 };
 
 // The fadeContent() options of a shared transition. The children fade out until fadeOutEnd of the move.

@@ -140,6 +140,19 @@ void LayoutAnimationsProxy::rememberCoveredTopBoundary(
   }
 }
 
+// Without sharedTags, collects the shared elements of the whole screen.
+void LayoutAnimationsProxy::findSharedElements(
+    const std::shared_ptr<LightNode> &screen,
+    BeforeOrAfter index,
+    const std::optional<std::unordered_set<SharedTag>> &sharedTags,
+    TransactionMeta &transaction) const {
+  if (!sharedTags) {
+    findSharedElementsOnScreen(screen, index, transaction);
+  } else if (!sharedTags->empty()) {
+    findSharedElementsWithTags(screen, index, *sharedTags, transaction);
+  }
+}
+
 void LayoutAnimationsProxy::findSharedElementsOnScreen(
     const std::shared_ptr<LightNode> &node,
     BeforeOrAfter index,
@@ -148,49 +161,94 @@ void LayoutAnimationsProxy::findSharedElementsOnScreen(
     return;
   }
   if (const auto sharedTag = findSharedTag(node->current)) {
-    if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
-      transaction.staleSnapshots[node->current.tag] = *staleTag;
-    }
-    resolveLightNodeProps(node);
-    const bool useViewsOnScreen = index == BEFORE;
-    ShadowView copy;
-    std::optional<Transform> newTransform;
-    std::vector<react::Point> absolutePositions;
-    std::vector<Ancestor> ancestors;
-    const auto *carried =
-        useViewsOnScreen && node->placement() == CarrierPlacement::AT_ROOT ? runOfCarrier(node) : nullptr;
-    if (carried) {
-      copy = carrierViewOnScreen(*carried);
-    } else {
-      copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
-      absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
-      copy.layoutMetrics.frame.origin = absolutePositions[0];
-      ancestors = collectAncestors(node, useViewsOnScreen);
-      newTransform = parseParentTransforms(ancestors, absolutePositions);
-    }
-
-    auto &collectedTransition = transaction.transitionMap[*sharedTag];
-    auto &transition = collectedTransition.transition;
-    auto &[snapshot, parentTag, transform] = transition;
-    const auto &parent = node->parent.lock();
-    react_native_assert(parent && "Parent node is nullptr");
-
-    int indexNum = static_cast<int>(index);
-    transform[indexNum] = std::move(newTransform);
-    snapshot[indexNum] = copy;
-    parentTag[indexNum] = parent->current.tag;
-    collectedTransition.nodes[indexNum] = node;
-    collectedTransition.absolutePositions[indexNum] = std::move(absolutePositions);
-    collectedTransition.ancestors[indexNum] = std::move(ancestors);
-
-    if (parentTag[BEFORE] && parentTag[AFTER]) {
-      transaction.transitions.emplace_back(*sharedTag, collectedTransition);
-    } else if (parentTag[AFTER]) {
-      transaction.restoreRequests.push_back({*sharedTag, node});
-    }
+    collectSharedElement(node, *sharedTag, index, transaction);
   }
   for (auto &child : node->children) {
     findSharedElementsOnScreen(child, index, transaction);
+  }
+}
+
+// Collects the same views, in the same order, as findSharedElementsOnScreen, but only for sharedTags.
+void LayoutAnimationsProxy::findSharedElementsWithTags(
+    const std::shared_ptr<LightNode> &screen,
+    BeforeOrAfter index,
+    const std::unordered_set<SharedTag> &sharedTags,
+    TransactionMeta &transaction) const {
+  struct Element {
+    std::vector<int> positions;
+    std::shared_ptr<LightNode> node;
+    SharedTag sharedTag;
+  };
+  std::vector<Element> elements;
+  {
+    auto lock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
+    const auto &nameToTags = sharedTransitionManager_->nameToTags_;
+    for (const auto &sharedTag : sharedTags) {
+      const auto tagsIt = nameToTags.find(sharedTag);
+      if (tagsIt == nameToTags.end()) {
+        continue;
+      }
+      for (const auto tag : tagsIt->second) {
+        const auto nodeIt = lightNodes_.find(tag);
+        if (nodeIt == lightNodes_.end() || !isViewKind(nodeIt->second->current)) {
+          continue;
+        }
+        if (auto positions = childPositionsFrom(screen, nodeIt->second)) {
+          elements.push_back({std::move(*positions), nodeIt->second, sharedTag});
+        }
+      }
+    }
+  }
+  std::ranges::sort(elements, std::ranges::less{}, &Element::positions);
+  for (const auto &[_, node, sharedTag] : elements) {
+    collectSharedElement(node, sharedTag, index, transaction);
+  }
+}
+
+void LayoutAnimationsProxy::collectSharedElement(
+    const std::shared_ptr<LightNode> &node,
+    const SharedTag &sharedTag,
+    BeforeOrAfter index,
+    TransactionMeta &transaction) const {
+  if (const auto staleTag = staleSynchronousProps_.find(node, LayoutAnimationType::SHARED_ELEMENT_TRANSITION)) {
+    transaction.staleSnapshots[node->current.tag] = *staleTag;
+  }
+  resolveLightNodeProps(node);
+  const bool useViewsOnScreen = index == BEFORE;
+  ShadowView copy;
+  std::optional<Transform> newTransform;
+  std::vector<react::Point> absolutePositions;
+  std::vector<Ancestor> ancestors;
+  const auto *carried =
+      useViewsOnScreen && node->placement() == CarrierPlacement::AT_ROOT ? runOfCarrier(node) : nullptr;
+  if (carried) {
+    copy = carrierViewOnScreen(*carried);
+  } else {
+    copy = useViewsOnScreen ? viewOnScreen(node) : node->current;
+    absolutePositions = getAbsolutePositionsForRootPathView(node, useViewsOnScreen);
+    copy.layoutMetrics.frame.origin = absolutePositions[0];
+    ancestors = collectAncestors(node, useViewsOnScreen);
+    newTransform = parseParentTransforms(ancestors, absolutePositions);
+  }
+
+  auto &collectedTransition = transaction.transitionMap[sharedTag];
+  auto &transition = collectedTransition.transition;
+  auto &[snapshot, parentTag, transform] = transition;
+  const auto &parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+
+  int indexNum = static_cast<int>(index);
+  transform[indexNum] = std::move(newTransform);
+  snapshot[indexNum] = copy;
+  parentTag[indexNum] = parent->current.tag;
+  collectedTransition.nodes[indexNum] = node;
+  collectedTransition.absolutePositions[indexNum] = std::move(absolutePositions);
+  collectedTransition.ancestors[indexNum] = std::move(ancestors);
+
+  if (parentTag[BEFORE] && parentTag[AFTER]) {
+    transaction.transitions.emplace_back(sharedTag, collectedTransition);
+  } else if (parentTag[AFTER]) {
+    transaction.restoreRequests.push_back({sharedTag, node});
   }
 }
 
