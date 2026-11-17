@@ -71,6 +71,10 @@ double fadeLength(const ContentFade &contentFade) {
 bool isQueuedOrRunning(const LayoutAnimationPhase phase) {
   return phase == LayoutAnimationPhase::QUEUED || phase == LayoutAnimationPhase::RUNNING;
 }
+
+bool isOutOfWindow(const NativeViewPlacement::Kind kind) {
+  return kind == NativeViewPlacement::Kind::OffWindow || kind == NativeViewPlacement::Kind::OffWindowOutsideReactParent;
+}
 } // namespace
 
 // MARK: Shared Element Transitions
@@ -95,17 +99,19 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findActiveBoundary(const std::
 }
 
 // The boundaries of a screen below the top one are inactive. The platform shows only one tab of a tab navigator.
-std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::shared_ptr<LightNode> &node) const {
+std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(
+    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &screen) const {
   std::shared_ptr<LightNode> result = nullptr;
 
   if (node->isExiting()) {
     return result;
   }
-  if (isSETBoundary(node) && !isOffWindow(node)) {
+  if (isSETBoundary(node) && isShownBy(node, screen)) {
     result = node;
   }
   for (const auto &child : std::views::reverse(node->children)) {
-    auto top = findBoundaryGuess(child);
+    auto top = findBoundaryGuess(child, screen);
     if (top) {
       return top;
     }
@@ -115,16 +121,25 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::s
 }
 
 // A back gesture shows the boundary that was on top when the screen was covered, for example the page of a pager.
-// A native stack puts the covered screen back into the window only after the first progress event.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::findRevealedBoundary(const std::shared_ptr<LightNode> &screen) const {
   if (const auto it = coveredTopBoundaries_.find(screen->current.tag); it != coveredTopBoundaries_.end()) {
     const auto boundary = it->second.lock();
     if (isLightNodeMapped(boundary) && !boundary->isExiting() && isInSubtree(boundary, screen) &&
-        (!isOffWindow(boundary) || isOffWindow(screen))) {
+        isShownBy(boundary, screen)) {
       return boundary;
     }
   }
-  return findBoundaryGuess(screen);
+  return findBoundaryGuess(screen, screen);
+}
+
+// The platform detaches the tabs that a screen does not show. A native stack keeps the whole screen out of the window
+// until its back transition starts, and the tab that the screen shows stays in it.
+bool LayoutAnimationsProxy::isShownBy(
+    const std::shared_ptr<LightNode> &boundary,
+    const std::shared_ptr<LightNode> &screen) const {
+  const auto kind = nativePlacementKind(boundary, screen);
+  return kind != NativeViewPlacement::Kind::OffWindowOutsideReactParent &&
+      kind != NativeViewPlacement::Kind::DifferentWindow;
 }
 
 void LayoutAnimationsProxy::rememberCoveredTopBoundary(
@@ -2248,7 +2263,7 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     }
     // The back button menu pops several screens, so the screen below may never show. The screen that the stack
     // reveals reports its own progress right after this event.
-    if (!transition_ && isOffWindow(below)) {
+    if (!transition_ && isOutOfWindow(nativePlacementKind(below))) {
       return {};
     }
     tag = below->current.tag;
@@ -3236,10 +3251,16 @@ void LayoutAnimationsProxy::adjustForNativePlacement(CollectedTransitions &trans
 }
 
 NativeViewPlacement::Kind LayoutAnimationsProxy::nativePlacementKind(const std::shared_ptr<LightNode> &node) const {
-#ifdef __APPLE__
   const auto parent = node ? node->parent.lock() : nullptr;
-  if (parent && nativeViewPlacement_) {
-    return nativeViewPlacement_(surfaceId_, node->current.tag, parent->current.tag, false).kind;
+  return parent ? nativePlacementKind(node, parent) : NativeViewPlacement::Kind::InsideReactParent;
+}
+
+NativeViewPlacement::Kind LayoutAnimationsProxy::nativePlacementKind(
+    const std::shared_ptr<LightNode> &node,
+    const std::shared_ptr<LightNode> &ancestor) const {
+#ifdef __APPLE__
+  if (nativeViewPlacement_) {
+    return nativeViewPlacement_(surfaceId_, node->current.tag, ancestor->current.tag, false).kind;
   }
 #endif
   return NativeViewPlacement::Kind::InsideReactParent;
@@ -3259,7 +3280,7 @@ NativeViewPlacement::Kind LayoutAnimationsProxy::targetBoundaryPlacementKind(
 // from.
 bool LayoutAnimationsProxy::isOffWindow(const std::shared_ptr<LightNode> &node) const {
   const auto placement = nativePlacementKind(node);
-  return placement == NativeViewPlacement::Kind::OffWindow || placement == NativeViewPlacement::Kind::DifferentWindow;
+  return isOutOfWindow(placement) || placement == NativeViewPlacement::Kind::DifferentWindow;
 }
 
 // The carriers of a surface show in its window, so they cannot fly to a boundary in another window.
@@ -3269,7 +3290,7 @@ bool LayoutAnimationsProxy::isInOtherWindow(const std::shared_ptr<LightNode> &ta
 
 void LayoutAnimationsProxy::waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target)
     const {
-  run.targetOffWindow = targetBoundaryPlacementKind(target) == NativeViewPlacement::Kind::OffWindow;
+  run.targetOffWindow = isOutOfWindow(targetBoundaryPlacementKind(target));
   run.targetWindowDeadline = std::chrono::steady_clock::now() + kTargetWindowWait;
 }
 
@@ -3377,7 +3398,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(
       continue;
     }
     const auto placement = targetBoundaryPlacementKind(run.target);
-    const bool targetOffWindow = targetMapped && placement == NativeViewPlacement::Kind::OffWindow;
+    const bool targetOffWindow = targetMapped && isOutOfWindow(placement);
     const bool waitsForWindow = targetOffWindow && !run.target->isExiting();
     const bool waitEnded = std::chrono::steady_clock::now() >= run.targetWindowDeadline && !carriesRunningRun(run) &&
         (!run.followsTarget || (!isQueuedOrRunning(layoutAnimationPhase(carrierTag)) && !landsWithOtherRuns(run)));

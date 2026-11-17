@@ -279,7 +279,10 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
   UIView *view = [self viewWithTag:tag];
   UIView *parent = [self viewWithTag:parentTag];
   if (!view.window || !parent) {
-    return {.kind = reanimated::NativeViewPlacement::Kind::OffWindow};
+    const bool outsideParent = view && parent && ![view isDescendantOfView:parent];
+    return {
+        .kind = outsideParent ? reanimated::NativeViewPlacement::Kind::OffWindowOutsideReactParent
+                              : reanimated::NativeViewPlacement::Kind::OffWindow};
   }
   UIView *rootView = [self viewWithTag:surfaceId];
   if (view.window != surfaceWindow(rootView)) {

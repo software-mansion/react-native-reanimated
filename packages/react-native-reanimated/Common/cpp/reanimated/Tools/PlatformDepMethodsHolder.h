@@ -62,8 +62,16 @@ using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceI
 // are at the end of a running presentation, without the transforms of the presented view and its ancestors.
 // A native view between a view and its React parent can move the view (e.g. the sheet of a bottom sheet). Then the
 // origin and the transform are relative to the React parent, with the current values also if settled.
+// A view out of the window is outside its React parent when the platform detached it from there, e.g. a hidden tab.
 struct NativeViewPlacement {
-  enum class Kind { InsideReactParent, MovedInsideReactParent, OffWindow, OutsideReactParent, DifferentWindow };
+  enum class Kind {
+    InsideReactParent,
+    MovedInsideReactParent,
+    OffWindow,
+    OffWindowOutsideReactParent,
+    OutsideReactParent,
+    DifferentWindow,
+  };
   Kind kind;
   react::Point origin;
   react::Transform transform;

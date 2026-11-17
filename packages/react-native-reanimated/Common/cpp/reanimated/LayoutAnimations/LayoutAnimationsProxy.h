@@ -550,8 +550,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void clearSurfaceState() const override;
 
   std::shared_ptr<LightNode> findActiveBoundary(const std::shared_ptr<LightNode> &node) const;
-  std::shared_ptr<LightNode> findBoundaryGuess(const std::shared_ptr<LightNode> &node) const;
+  std::shared_ptr<LightNode> findBoundaryGuess(
+      const std::shared_ptr<LightNode> &node,
+      const std::shared_ptr<LightNode> &screen) const;
   std::shared_ptr<LightNode> findRevealedBoundary(const std::shared_ptr<LightNode> &screen) const;
+  bool isShownBy(const std::shared_ptr<LightNode> &boundary, const std::shared_ptr<LightNode> &screen) const;
   void rememberCoveredTopBoundary(
       const std::shared_ptr<LightNode> &beforeTopScreen,
       const std::shared_ptr<LightNode> &afterTopScreen) const;
@@ -653,6 +656,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void removeCarrierLayersIn(const std::shared_ptr<LightNode> &node, ShadowViewMutationList &mutations) const;
   bool keepsCarrierLayerInWindow() const;
   NativeViewPlacement::Kind nativePlacementKind(const std::shared_ptr<LightNode> &node) const;
+  NativeViewPlacement::Kind nativePlacementKind(
+      const std::shared_ptr<LightNode> &node,
+      const std::shared_ptr<LightNode> &ancestor) const;
   NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
   bool isInOtherWindow(const std::shared_ptr<LightNode> &target) const;
