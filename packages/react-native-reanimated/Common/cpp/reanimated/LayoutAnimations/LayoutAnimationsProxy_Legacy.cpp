@@ -6,6 +6,8 @@
 #include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #endif // ANDROID
 
+#include <react/renderer/mounting/ShadowTree.h>
+#include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>

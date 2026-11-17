@@ -15,12 +15,6 @@
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <reanimated/Compat/ReactNativeGraphics.h>
 
-#include <react/renderer/components/scrollview/ScrollViewState.h>
-#include <react/renderer/mounting/Differentiator.h>
-#include <react/renderer/mounting/MountingCoordinator.h>
-#include <react/renderer/mounting/ShadowTree.h>
-#include <react/renderer/mounting/ShadowViewMutation.h>
-
 #include <array>
 #include <chrono>
 #include <cstdint>

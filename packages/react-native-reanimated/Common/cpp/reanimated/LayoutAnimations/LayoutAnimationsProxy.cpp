@@ -1,5 +1,8 @@
+#include <react/renderer/mounting/Differentiator.h>
+#include <react/renderer/mounting/MountingCoordinator.h>
+#include <react/renderer/mounting/ShadowTree.h>
+#include <react/renderer/mounting/ShadowViewMutation.h>
 #include <reanimated/Compat/ReactNativeDebug.h>
-
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
