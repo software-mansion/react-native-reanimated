@@ -10,7 +10,6 @@ example_flag = config[:is_reanimated_example_app] ? '-DIS_REANIMATED_EXAMPLE_APP
 deprecation_flag = config[:is_reanimated_example_app] ? '-Werror=deprecated-declarations' : ''
 reanimated_profiling_flag = ENV['IS_REANIMATED_PROFILING'] ? '-DREANIMATED_PROFILING' : ''
 version_flag = "-DREANIMATED_VERSION=#{reanimated_package_json['version']}"
-ios_min_version = '13.4'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
@@ -30,7 +29,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = "MIT"
   s.author       = { "author" => "author@domain.cn" }
-  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
+  s.platforms    = min_supported_versions
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.dependency "RNWorklets"

@@ -5,8 +5,6 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 worklets_config = WorkletsUtils.find_config()
 WorkletsUtils.assert_minimal_react_native_version(worklets_config)
 
-ios_min_version = '13.4'
-
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
 # We want generate the metadata only within the monorepo of Reanimated.
@@ -34,7 +32,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = package["license"]
   s.authors      = { "author" => "author@domain.com" }
-  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
+  s.platforms    = min_supported_versions
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.header_dir = "worklets"
