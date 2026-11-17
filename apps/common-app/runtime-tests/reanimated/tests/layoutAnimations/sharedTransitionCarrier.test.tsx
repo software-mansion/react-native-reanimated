@@ -212,6 +212,33 @@ function ChildContainer({
   );
 }
 
+function HiddenClippedSourceScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  const source = useTestRef('source');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!active}>
+        <View
+          collapsable={false}
+          style={[styles.clippingAncestor, active && { display: 'none' }]}>
+          <Animated.View
+            ref={source}
+            sharedTransitionTag="carrier"
+            sharedTransitionStyle={transition}
+            style={styles.source}
+          />
+        </View>
+      </SharedTransitionBoundary>
+      <Target active={active} transition={transition} opacity={1} mounted />
+    </View>
+  );
+}
+
 function observer() {
   if (!RuntimeTestObserver) {
     throw new Error('RuntimeTestObserver requires a runtime-test build');
@@ -360,6 +387,35 @@ describe('Shared transition moves a real native view', () => {
         );
       }
       await expectAtHome('target', 150, 1);
+    }
+  );
+
+  recreateChildTest(
+    'tears down a clipped carrier when React recreates its tag',
+    async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const transition = transitionWithNotification(4000);
+      await render(
+        <HiddenClippedSourceScreens active={false} transition={transition} />
+      );
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <HiddenClippedSourceScreens active transition={transition} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
+
+      await render(
+        <HiddenClippedSourceScreens active={false} transition={transition} />
+      );
+      await waitForFrames(3);
+      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+      await advanceAnimationTimer(4000);
+      await waitForNotification('carrier-finished');
+      await expectAtHome('source', 60, 1);
     }
   );
 
@@ -881,4 +937,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#2277dd',
   },
   child: { width: 20, height: 15, backgroundColor: '#ffffff' },
+  clippingAncestor: { width: 40, height: 40, overflow: 'hidden' },
 });
