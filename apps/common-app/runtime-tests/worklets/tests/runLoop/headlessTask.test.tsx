@@ -52,12 +52,20 @@ function collectUICallbacks(): Promise<FiredUICallbacks> {
       requestAnimationFrame: false,
       setTimeout: false,
     };
-    const timeout = setTimeout(() => resolve(fired), UI_CALLBACKS_TIMEOUT_MS);
+    let settled = false;
+    const settle = () => {
+      settled = true;
+      clearTimeout(timeout);
+      resolve({ ...fired });
+    };
+    const timeout = setTimeout(settle, UI_CALLBACKS_TIMEOUT_MS);
     const onFired = (name: UICallbackName) => {
+      if (settled) {
+        return;
+      }
       fired[name] = true;
       if (fired.requestAnimationFrame && fired.setTimeout) {
-        clearTimeout(timeout);
-        resolve(fired);
+        settle();
       }
     };
 
