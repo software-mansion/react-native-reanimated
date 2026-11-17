@@ -12,7 +12,12 @@ export function rubberBandDecay(
   'worklet';
   const { lastTimestamp, startTimestamp, current, velocity } = animation;
 
-  const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+  if (now < lastTimestamp) {
+    return false;
+  }
+
+  const deltaTime = Math.min(now - lastTimestamp, 64);
+  const elapsed = Math.max(now - startTimestamp, 0);
   const clampIndex =
     Math.abs(current - config.clamp[0]) < Math.abs(current - config.clamp[1])
       ? 0
@@ -24,10 +29,7 @@ export function rubberBandDecay(
   }
 
   const v =
-    velocity *
-      Math.exp(
-        -(1 - config.deceleration) * (now - startTimestamp) * SLOPE_FACTOR
-      ) -
+    velocity * Math.exp(-(1 - config.deceleration) * elapsed * SLOPE_FACTOR) -
     derivative * config.rubberBandFactor;
 
   if (Math.abs(derivative) > DERIVATIVE_EPS) {
