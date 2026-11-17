@@ -49,8 +49,12 @@ static id presentedFrame(UIView *view)
   CALayer *windowLayer = presentationLayer ? view.window.layer.presentationLayer : view.window.layer;
   const CGRect frame = [layer convertRect:layer.bounds toLayer:windowLayer];
   float opacity = 1;
+  CGRect visible = frame;
   for (CALayer *current = layer; current; current = current.superlayer) {
     opacity *= current.hidden ? 0 : current.opacity;
+    if (current != layer && current.masksToBounds) {
+      visible = CGRectIntersection(visible, [current convertRect:current.bounds toLayer:windowLayer]);
+    }
   }
   return @{
     @"x" : @(frame.origin.x),

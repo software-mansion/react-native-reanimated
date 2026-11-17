@@ -1104,15 +1104,16 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   const bool defersTeardown = holdsSnapshottedScreen(node);
-  const auto endedRuns = runsEndedBy(node);
-  const bool heldModal = !defersTeardown && holdsModal(node, endedRuns, transaction);
+  bool heldModal = false;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    const auto endedRuns = runsEndedBy(node);
+    heldModal = !defersTeardown && holdsModal(node, endedRuns, transaction);
     if (!transaction.surfaceDropped) {
       moveNestedCarriersOutOf(node, transaction);
     }
     removeCarriersHostedIn(node, transaction);
     if (heldModal && !transaction.surfaceDropped) {
-      stopSharedTransitions(endedRuns, transaction);
+      stopSharedTransitions(endedRuns, node, transaction);
     }
     retainRemovedCarriers(node, transaction);
     if (node->presence() == ReactPresence::REMOVED) {
@@ -1190,7 +1191,7 @@ bool LayoutAnimationsProxy::holdsModal(
     [[maybe_unused]] const TransactionMeta &transaction) const {
 #ifdef __APPLE__
   const auto isInModal = [&](const std::shared_ptr<LightNode> &view) {
-    return isInModalOf(view, node);
+    return modalContentOf(view, node) != nullptr;
   };
   return std::ranges::any_of(transaction.startedSources, isInModal) ||
       std::ranges::any_of(endedRuns, [&](const SharedTransitionRun *run) { return isInModal(run->carrier); });
@@ -1199,16 +1200,21 @@ bool LayoutAnimationsProxy::holdsModal(
 #endif
 }
 
-bool LayoutAnimationsProxy::isInModalOf(const std::shared_ptr<LightNode> &view, const std::shared_ptr<LightNode> &root)
-    const {
-  bool insideModal = false;
-  for (auto ancestor = view->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
-    insideModal = insideModal || !strcmp(ancestor->current.componentName, "ModalHostView");
+// The child of the innermost modal that shows the view, when the modal is in the subtree of the root.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(
+    const std::shared_ptr<LightNode> &view,
+    const std::shared_ptr<LightNode> &root) const {
+  std::shared_ptr<LightNode> content;
+  for (auto child = view, ancestor = view->parent.lock(); ancestor;
+       child = ancestor, ancestor = ancestor->parent.lock()) {
+    if (!content && !strcmp(ancestor->current.componentName, "ModalHostView")) {
+      content = child;
+    }
     if (ancestor == root) {
-      return insideModal;
+      return content;
     }
   }
-  return false;
+  return nullptr;
 }
 
 bool LayoutAnimationsProxy::isInHeldModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
@@ -1241,6 +1247,7 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
       return true;
     }
     if (transaction.surfaceDropped || now >= held.removableAt) {
+      removeCarriersHostedIn(held.node, transaction);
       finishedExits.push_back(held.node);
       return true;
     }

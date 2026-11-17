@@ -369,6 +369,15 @@ class CarrierPlacements {
     leave(node);
   }
 
+  // The carrier moves to the carrier layer of another host, after the carriers there.
+  void rehost(const std::shared_ptr<LightNode> &node, std::shared_ptr<LightNode> host) {
+    const auto position = static_cast<std::ptrdiff_t>(positionAtRoot(node));
+    atRoot_.erase(atRoot_.begin() + position);
+    hosts_.erase(hosts_.begin() + position);
+    atRoot_.push_back(node);
+    hosts_.push_back(std::move(host));
+  }
+
   // A removed carrier has no logical parent, so this also unlinks it. It stays mounted at the root.
   void retain(const std::shared_ptr<LightNode> &node) {
     react_native_assert(
