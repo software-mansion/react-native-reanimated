@@ -3,27 +3,12 @@
 React Native Worklets is a library that runs JavaScript code on more than one thread in a React
 Native app.
 
-By default, React Native executes all of your JavaScript on one thread, the JS thread, in one
-JavaScript runtime. Rendering, layout, touch handling, network callbacks and your business logic all
-wait in the same queue. A long task on the JS thread delays everything that comes after it, and the
-app stops responding until the task ends.
-
-Worklets adds more JavaScript runtimes to your app:
+The Worklets library adds more JavaScript runtimes to your app:
 
 * The **UI Runtime** runs on the UI (main) thread. Code on it can respond to every frame and every
   touch without waiting for the JS thread.
 * **Worker Runtimes** run on their own background threads. You create them for work that must not
   block either the JS thread or the UI thread.
-
-Each runtime has its own JavaScript heap, so runtimes do not share JavaScript objects. A
-[worklet function](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions) is a function that the
-[Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) prepares at build time, so that you can copy it to
-another runtime and run it there. To move data between runtimes, Worklets gives you
-[Serializables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/serializable), [Shareables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/shareable) and
-[Synchronizables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/synchronizable).
-
-The example below runs the same app in two ways: with all of its work on the JS thread, and with
-the work distributed across runtimes. Use the **Enable Worklets** switch to compare them:
 
 Without Worklets
 
@@ -149,3 +134,6 @@ scheduleOnRuntime(md, renderMarkdown, 'README.md', 1);
 scheduleOnUI(animateSpinner, 0);
 refreshFeed(1);
 ```
+
+You can find installation instructions [here](https://docs.swmansion.com/react-native-worklets/docs/unreleased/getting-started/installation). If you want to learn more, please
+look into our [tutorials](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model).
