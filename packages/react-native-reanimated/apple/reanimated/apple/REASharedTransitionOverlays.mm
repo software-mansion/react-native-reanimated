@@ -70,6 +70,55 @@ static facebook::react::Transform ancestorTransformInWindow(UIView *view, BOOL c
   return linearTransform(superlayer, windowLayer);
 }
 
+// The controller of a running presentation or dismissal whose presented view contains the view. When none runs, the
+// model layers already have the settled values.
+static UIPresentationController *runningPresentationControllerShowing(UIView *view)
+{
+  UIViewController *presented = view.reactViewController;
+  while (presented.parentViewController) {
+    presented = presented.parentViewController;
+  }
+  if (!presented.presentingViewController || !(presented.isBeingPresented || presented.isBeingDismissed)) {
+    return nil;
+  }
+  UIPresentationController *presentationController = presented.presentationController;
+  if (!presentationController.containerView || ![view isDescendantOfView:presentationController.presentedView]) {
+    return nil;
+  }
+  return presentationController;
+}
+
+// The origin of the view in the space of the presented view, with the transforms between them but not its own.
+static CGPoint originInPresentedView(UIView *view, UIView *presentedView)
+{
+  if (view == presentedView) {
+    return presentedView.bounds.origin;
+  }
+  return [view.superview.layer convertPoint:untransformedOrigin(view.layer) toLayer:presentedView.layer];
+}
+
+static facebook::react::Transform ancestorTransformInPresentedView(UIView *view, UIView *presentedView)
+{
+  if (view == presentedView) {
+    return {};
+  }
+  return linearTransform(view.superview.layer, presentedView.layer);
+}
+
+// A presentation animates the presented view and its ancestors, e.g. with the half turns of a flip, so the origin
+// uses the settled frame of the presented view and none of their transforms.
+static CGPoint settledOriginInWindow(UIView *view, UIPresentationController *presentationController)
+{
+  UIView *presentedView = presentationController.presentedView;
+  UIView *containerView = presentationController.containerView;
+  const CGPoint origin = originInPresentedView(view, presentedView);
+  const CGPoint containerOrigin = untransformedFrameInWindow(containerView).origin;
+  const CGPoint settledOrigin = presentationController.frameOfPresentedViewInContainerView.origin;
+  return {
+      containerOrigin.x - containerView.bounds.origin.x + settledOrigin.x + origin.x - presentedView.bounds.origin.x,
+      containerOrigin.y - containerView.bounds.origin.y + settledOrigin.y + origin.y - presentedView.bounds.origin.y};
+}
+
 // A full screen presentation removes the presenting views from the window, so the window that shows a surface is
 // then the one of the view controller presented over it.
 static UIWindow *surfaceWindow(UIView *rootView)
@@ -245,29 +294,15 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
     }
     return placementInReactParent(view, parent);
   }
-  CGPoint viewOrigin = originInWindow(view, !settled);
-  UIViewController *presented = view.reactViewController;
-  while (presented.parentViewController) {
-    presented = presented.parentViewController;
-  }
-  // A presentation animates the presented view, so a target inside it is measured at the presentation's settled frame.
-  if (settled && presented.presentingViewController) {
-    UIPresentationController *presentationController = presented.presentationController;
-    UIView *presentedView = presentationController.presentedView;
-    UIView *containerView = presentationController.containerView;
-    if (containerView && [view isDescendantOfView:presentedView]) {
-      const CGPoint presentedOrigin = untransformedFrameInWindow(presentedView).origin;
-      const CGPoint containerOrigin = untransformedFrameInWindow(containerView).origin;
-      const CGPoint settledOrigin = presentationController.frameOfPresentedViewInContainerView.origin;
-      viewOrigin.x += containerOrigin.x - containerView.bounds.origin.x + settledOrigin.x - presentedOrigin.x;
-      viewOrigin.y += containerOrigin.y - containerView.bounds.origin.y + settledOrigin.y - presentedOrigin.y;
-    }
-  }
+  UIPresentationController *presentationController = settled ? runningPresentationControllerShowing(view) : nil;
+  const CGPoint viewOrigin =
+      presentationController ? settledOriginInWindow(view, presentationController) : originInWindow(view, !settled);
   const CGPoint rootOrigin = untransformedFrameInWindow(rootView).origin;
   return {
       .kind = reanimated::NativeViewPlacement::Kind::OutsideReactParent,
       .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y},
-      .transform = ancestorTransformInWindow(view, !settled)};
+      .transform = presentationController ? ancestorTransformInPresentedView(view, presentationController.presentedView)
+                                          : ancestorTransformInWindow(view, !settled)};
 }
 
 @end

@@ -58,7 +58,8 @@ using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 // Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
 using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
 // The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its
-// origin relative to the root view of the surface comes from the platform, at the end of the presentation if settled.
+// origin relative to the root view of the surface comes from the platform. If settled, the origin and the transform
+// are at the end of a running presentation, without the transforms of the presented view and its ancestors.
 // A native view between a view and its React parent can move the view (e.g. the sheet of a bottom sheet). Then the
 // origin and the transform are relative to the React parent, with the current values also if settled.
 struct NativeViewPlacement {
