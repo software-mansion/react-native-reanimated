@@ -3,6 +3,16 @@ import { isBundleModeEnabled } from 'react-native-worklets';
 import type { RuntimeTestSuite } from '../types';
 
 export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
+  // First, because a Worker Runtime of the new instance only reaches the id of
+  // an old one by creating every runtime the suites before it created.
+  {
+    testSuiteName: 'reload',
+    importTest: () => {
+      require('./tests/reload/oldInstanceValues.test');
+    },
+    needsRuntimeTestsServer: true,
+    disabled: !__DEV__,
+  },
   {
     testSuiteName: 'memory',
     importTest: () => {
@@ -93,13 +103,5 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/plugin/versionMismatch.test');
       require('./tests/plugin/workletClasses.test');
     },
-  },
-  {
-    testSuiteName: 'reload',
-    importTest: () => {
-      require('./tests/reload/oldInstanceValues.test');
-    },
-    needsRuntimeTestsServer: true,
-    disabled: !__DEV__,
   },
 ];
