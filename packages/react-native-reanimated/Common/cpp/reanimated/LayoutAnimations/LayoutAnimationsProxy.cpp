@@ -1237,12 +1237,12 @@ void LayoutAnimationsProxy::tearDown(const std::unordered_set<Tag> &removals, Sh
       roots.push_back(node);
     }
   }
-  [[maybe_unused]] const auto mutationCount = mutations.size();
+  [[maybe_unused]] const auto lightNodeCount = lightNodes_.size();
   for (const auto &root : roots) {
     endAnimationsRecursively(root, mutations, mutations);
   }
   react_native_assert(
-      mutations.size() - mutationCount == 2 * removals.size() &&
+      lightNodeCount - lightNodes_.size() == removals.size() &&
       std::ranges::none_of(removals, [this](const Tag tag) { return lightNodes_.contains(tag); }) &&
       "The teardown must remove exactly the removals");
 }
