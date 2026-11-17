@@ -38,6 +38,7 @@ Pod::Spec.new do |s|
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.header_dir = "worklets"
+  s.resource_bundles = { 'RNWorklets_privacy' => 'apple/PrivacyInfo.xcprivacy' }
 
   s.subspec "common" do |ss|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
