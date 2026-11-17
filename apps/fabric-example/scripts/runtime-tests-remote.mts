@@ -335,13 +335,15 @@ async function runLibrary() {
 
   log(`launching ${BUNDLE_ID} (library: ${LIBRARY})`);
   await simRemote(['simctl', 'terminate', UDID, BUNDLE_ID]).catch(() => {});
-  try {
-    await simRemote(['simctl', 'launch', UDID, BUNDLE_ID]);
-  } catch (error) {
-    // Don't leave the collector hanging for the full connect timeout.
-    server.kill();
-    fail(`launch failed: ${errorMessage(error)}`);
-  }
+  const launchError = await simRemote([
+    'simctl',
+    'launch',
+    UDID,
+    BUNDLE_ID,
+  ]).then(
+    () => null,
+    (error: unknown) => error
+  );
   // The shared Debug build starts the tests whenever this is set.
   await simRemote([
     'spawn',
@@ -351,6 +353,11 @@ async function runLibrary() {
     'unsetenv',
     'RUNTIME_TESTS_LIBRARY',
   ]);
+  if (launchError) {
+    // Don't leave the collector hanging for the full connect timeout.
+    server.kill();
+    fail(`launch failed: ${errorMessage(launchError)}`);
+  }
 
   const exitCode = await serverExit;
   log(`library '${LIBRARY}' finished with exit code ${exitCode}`);
