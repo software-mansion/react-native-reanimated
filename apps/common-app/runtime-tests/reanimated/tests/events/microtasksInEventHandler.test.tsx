@@ -109,9 +109,11 @@ function ScrollList() {
   const onScroll = useAnimatedScrollHandler(() => {
     scheduleOnRN(onEvent);
     if (mode.value === MODE_PROMISE) {
-      void Promise.resolve().then(() => {
-        scheduleOnRN(onMicrotask);
-      });
+      Promise.resolve()
+        .then(() => {
+          scheduleOnRN(onMicrotask);
+        })
+        .catch(() => {});
     } else if (mode.value === MODE_QUEUE_MICROTASK) {
       queueMicrotask(() => {
         scheduleOnRN(onMicrotask);

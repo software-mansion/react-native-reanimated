@@ -90,9 +90,11 @@ describe('work queued on an idle UI Runtime', () => {
 
     runOnUISync(() => {
       'worklet';
-      void Promise.resolve().then(() => {
-        scheduleOnRN(onDone);
-      });
+      Promise.resolve()
+        .then(() => {
+          scheduleOnRN(onDone);
+        })
+        .catch(() => {});
     });
 
     await waitForNotification('promise');
@@ -104,9 +106,11 @@ describe('work queued on an idle UI Runtime', () => {
 
     scheduleOnUI(() => {
       'worklet';
-      void Promise.resolve().then(() => {
-        scheduleOnRN(onDone);
-      });
+      Promise.resolve()
+        .then(() => {
+          scheduleOnRN(onDone);
+        })
+        .catch(() => {});
     });
 
     await waitForNotification('promise');
