@@ -2,6 +2,7 @@ import type { Component, ReactElement, ReactNode } from 'react';
 import { Modal, Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  makeMutable,
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
@@ -22,6 +23,7 @@ import {
   useTestRef,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
+import type { MountedViewProps } from '../../../ReJest/types';
 import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
@@ -733,7 +735,73 @@ describe('Shared transitions inside an iOS Modal', () => {
   });
 });
 
+describe('Shared transitions in a Modal that closes', () => {
+  test('keeps the target hidden and the carrier in place until the Modal is gone', async () => {
+    const results: boolean[] = [];
+    const transition = recordingTransition(results);
+    const { sourceTag, width } = await startFlight((active) =>
+      modalScreens(transition, { active })
+    );
+    const targetTag = getTestComponent('window-target').getTag();
+    const frames = await recordFrames([sourceTag, targetTag], async () => {
+      await render(modalScreens(transition, { active: false, open: false }));
+      await expectEventually(
+        async () =>
+          (await mountedWidth(sourceTag)) === undefined &&
+          (await mountedWidth(targetTag)) === undefined
+      ).toBe(true);
+    });
+    const [carrierFrames, targetFrames] = [0, 1].map((index) =>
+      frames.map((frame) => frame[index]).filter((view) => view !== null)
+    );
+    expect(carrierFrames.length > 0).toBe(true);
+    for (const carrier of carrierFrames) {
+      expect(carrier.width).toBe(width, ComparisonMode.PIXEL);
+    }
+    for (const target of targetFrames) {
+      expect(target.opacity).toBe(0, ComparisonMode.FLOAT_DISTANCE);
+    }
+    await expectEventually(() => results.length).toBe(1);
+    expect(results).toBe([false]);
+  });
+});
+
 const SOURCE_IN_MODAL = { x: 40, y: 120 };
+
+type ViewSample = Pick<MountedViewProps, 'width' | 'opacity'>;
+
+// Records the views on each UI frame, from two frames before `during` until it ends.
+async function recordFrames(viewTags: number[], during: () => Promise<void>) {
+  const running = makeMutable(true);
+  const frames = makeMutable<(ViewSample | null)[][]>([]);
+  await runOnUIBlocking(() => {
+    'worklet';
+    const record = () => {
+      if (!running.value) {
+        return;
+      }
+      const views = viewTags.map((tag) => {
+        const view = global._obtainMountedViewProps(tag, false);
+        return view ? { width: view.width, opacity: view.opacity } : null;
+      });
+      frames.value = [...frames.value, views];
+      requestAnimationFrame(record);
+    };
+    requestAnimationFrame(record);
+  });
+  await waitForFrames(2);
+  let recorded: (ViewSample | null)[][] = [];
+  try {
+    await during();
+  } finally {
+    recorded = await runOnUIBlocking(() => {
+      'worklet';
+      running.value = false;
+      return frames.value;
+    });
+  }
+  return recorded;
+}
 
 async function modalHostOf(tag: number) {
   const offsetTag = getTestComponent('window-modal-offset').getTag();

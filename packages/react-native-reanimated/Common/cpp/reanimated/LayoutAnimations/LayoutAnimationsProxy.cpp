@@ -1180,11 +1180,12 @@ bool LayoutAnimationsProxy::hasRunningAnimations() const {
 #ifdef __APPLE__
 // React Native animates a modal that it removes while presented from a snapshot of what the screen shows, which lags a
 // mount by up to two frames. A modal that holds the source of a transition stays mounted until 34 ms, two frames of a
-// 60 Hz display, after the mount that hides the source.
+// 60 Hz display, after the mount that hides the source. Only a source that this pull hides holds the modal, because a
+// held modal also shows a target that the end of a run shows again.
 bool LayoutAnimationsProxy::holdsSourceInModal(
     const std::shared_ptr<LightNode> &node,
     const TransactionMeta &transaction) const {
-  return std::ranges::any_of(transaction.transitionMap, [&](const auto &entry) {
+  return std::ranges::any_of(transaction.transitions, [&](const auto &entry) {
     bool insideModal = false;
     for (const auto &ancestor : entry.second.ancestors[BEFORE]) {
       const auto ancestorIt = lightNodes_.find(ancestor.tag);
