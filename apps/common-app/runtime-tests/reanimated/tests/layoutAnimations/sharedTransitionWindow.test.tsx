@@ -247,8 +247,6 @@ type ModalRunOptions = {
   animation?: ModalAnimation;
   sourceParentStyle?: ViewStyle;
   nested?: boolean;
-  duration?: number;
-  flightTime?: number;
 };
 
 function modalProps(animation: ModalAnimation) {
@@ -396,75 +394,6 @@ function OverlappingRunsScreens({
               )}
             </SharedTransitionBoundary>
           </View>
-        </Modal>
-      )}
-    </View>
-  );
-}
-
-// The target of "inner" is in the target of "outer", so a short run of "inner" waits for the run of "outer".
-function NestedTargetScreens({
-  open,
-  expanded,
-  belowActive,
-  outerTransition,
-  innerTransition,
-  animation = 'none',
-}: {
-  open: boolean;
-  expanded: boolean;
-  belowActive: boolean;
-  outerTransition: SharedTransition;
-  innerTransition: SharedTransition;
-  animation?: ModalAnimation;
-}) {
-  return (
-    <View style={styles.root}>
-      <ClosedMarker open={open} />
-      <SharedTransitionBoundary isActive={belowActive}>
-        <TaggedView
-          name="inner-below"
-          sharedTag="inner"
-          transition={innerTransition}
-          style={styles.later}
-        />
-      </SharedTransitionBoundary>
-      {open && (
-        <Modal {...modalProps(animation)}>
-          <ModalContent>
-            <SharedTransitionBoundary isActive={!expanded}>
-              <View collapsable={false} style={styles.sourceOffset}>
-                <TaggedView
-                  name="outer-source"
-                  sharedTag="outer"
-                  transition={outerTransition}
-                  style={styles.source}
-                />
-                <TaggedView
-                  name="inner-source"
-                  sharedTag="inner"
-                  transition={innerTransition}
-                  style={styles.source}
-                />
-              </View>
-            </SharedTransitionBoundary>
-            <SharedTransitionBoundary isActive={expanded}>
-              {expanded && (
-                <TaggedView
-                  name="outer-target"
-                  sharedTag="outer"
-                  transition={outerTransition}
-                  style={styles.target}>
-                  <TaggedView
-                    name="inner-target"
-                    sharedTag="inner"
-                    transition={innerTransition}
-                    style={styles.innerTarget}
-                  />
-                </TaggedView>
-              )}
-            </SharedTransitionBoundary>
-          </ModalContent>
         </Modal>
       )}
     </View>
@@ -1204,24 +1133,6 @@ describe('Shared transitions in a Modal that closes', () => {
   );
 
   iosTest(
-    'keeps a moving view that left a transparent parent when the Modal closes',
-    async () => {
-      await expectModalLeavesWithMovingView({
-        sourceParentStyle: styles.transparentParent,
-      });
-    }
-  );
-
-  iosTest(
-    'keeps a moving view that left a parent scaled to zero when the Modal closes',
-    async () => {
-      await expectModalLeavesWithMovingView({
-        sourceParentStyle: styles.zeroScaleParent,
-      });
-    }
-  );
-
-  iosTest(
     'closes the Modal with a nested moving view where it is on screen',
     async () => {
       await expectModalLeavesWithMovingView({ nested: true });
@@ -1271,63 +1182,6 @@ describe('Shared transitions in a Modal that closes', () => {
       }
     );
   }
-
-  iosTest(
-    'lands a short run in a sliding Modal during its presentation and closes the Modal with its target',
-    async () => {
-      const results: boolean[] = [];
-      const transition = recordingTransition(results, 150);
-      const screens = (open: boolean, expanded: boolean) => (
-        <ModalRunScreens
-          open={open}
-          expanded={expanded}
-          transition={transition}
-          animation="slide"
-        />
-      );
-      await mockAnimationTimer({ autoAdvance: false });
-      await render(screens(true, false));
-      await waitForFrames(1);
-      const sourceTag = getTestComponent('window-source').getTag();
-      await render(screens(true, true));
-      await waitForFrames(3);
-      await advanceAnimationTimer(200);
-      const targetTag = getTestComponent('window-target').getTag();
-      const markerTag = getTestComponent('window-closed-marker').getTag();
-      const frames = await recordPresentedFrames(
-        [sourceTag, targetTag, markerTag],
-        () => closeUntilUnmounted(screens(false, true), [targetTag])
-      );
-      expectClosedDuringPresentation(frames, 1, 2);
-      for (const [source, target] of frames) {
-        if (!target) {
-          continue;
-        }
-        const shown = [source, target].filter(
-          (view): view is PresentedFrame => view !== null && view.opacity > 0
-        );
-        expect(shown.length).toBe(1);
-        expect(shown[0].x).toBe(target.x, ComparisonMode.PIXEL);
-        expect(shown[0].y).toBe(target.y, ComparisonMode.PIXEL);
-      }
-      expect(results).toBe([true]);
-      await waitForDismissal(markerTag);
-    }
-  );
-
-  iosTest(
-    'keeps a waiting run where it is when the Modal closes and its tag continues below',
-    async () => {
-      await expectWaitingRunStaysWhenModalCloses('none');
-    }
-  );
-
-  iosTest(
-    'keeps a waiting run where it is when a sliding Modal closes during its presentation',
-    async () => {
-      await expectWaitingRunStaysWhenModalCloses('slide');
-    }
-  );
 });
 
 const SOURCE_IN_MODAL = { x: 40, y: 120 };
@@ -1338,7 +1192,7 @@ async function expectModalLeavesWithMovingView(
   closesWhilePresenting = false
 ) {
   const results: boolean[] = [];
-  const transition = recordingTransition(results, modal.duration);
+  const transition = recordingTransition(results);
   const screens = (open: boolean, expanded: boolean) => (
     <ModalRunScreens
       open={open}
@@ -1360,7 +1214,7 @@ async function expectModalLeavesWithMovingView(
   ];
   await render(screens(true, true));
   await waitForFrames(3);
-  await advanceAnimationTimer(modal.flightTime ?? 400);
+  await advanceAnimationTimer(400);
   const targetTag = getTestComponent('window-target').getTag();
   const markerTag = getTestComponent('window-closed-marker').getTag();
   const contentTag = getTestComponent('window-modal-content').getTag();
@@ -1379,55 +1233,6 @@ async function expectModalLeavesWithMovingView(
   await expectEventually(() => results.length).toBe(movingTags.length);
   expect(results.every((finished) => !finished)).toBe(true);
   if (closesWhilePresenting) {
-    await waitForDismissal(markerTag);
-  }
-}
-
-// The short run of "inner" ends and waits for "outer". The close starts a new run of "inner" to the screen below.
-async function expectWaitingRunStaysWhenModalCloses(animation: ModalAnimation) {
-  const outerResults: boolean[] = [];
-  const innerResults: boolean[] = [];
-  const outerTransition = recordingTransition(outerResults);
-  const innerTransition = recordingTransition(innerResults, 150);
-  const screens = (open: boolean, expanded: boolean, belowActive = !open) => (
-    <NestedTargetScreens
-      open={open}
-      expanded={expanded}
-      belowActive={belowActive}
-      outerTransition={outerTransition}
-      innerTransition={innerTransition}
-      animation={animation}
-    />
-  );
-  await mockAnimationTimer({ autoAdvance: false });
-  await render(screens(false, false, false));
-  await waitForFrames(3);
-  await render(screens(true, false));
-  await waitForFrames(animation === 'none' ? 3 : 1);
-  const innerTag = getTestComponent('window-inner-source').getTag();
-  const outerTag = getTestComponent('window-outer-source').getTag();
-  await render(screens(true, true));
-  await waitForFrames(3);
-  await advanceAnimationTimer(400);
-  const outerTargetTag = getTestComponent('window-outer-target').getTag();
-  const markerTag = getTestComponent('window-closed-marker').getTag();
-  const contentTag = getTestComponent('window-modal-content').getTag();
-  const frames = await recordPresentedFrames(
-    [innerTag, outerTag, outerTargetTag, markerTag, contentTag],
-    () => closeUntilUnmounted(screens(false, true), [outerTargetTag])
-  );
-  if (animation === 'none') {
-    expectOnScreenWhileModalShows(frames, [0, 1], 2);
-  } else {
-    expectMovesWithPresentedModal(frames, [0, 1], 2);
-  }
-  expectHeldAfterClose(frames, 2);
-  await expectEventually(() => outerResults.length).toBe(1);
-  expect(outerResults).toBe([false]);
-  await advanceAnimationTimer(1300);
-  await expectEventually(() => innerResults.length).toBe(2);
-  expect([...innerResults].sort()).toBe([false, true]);
-  if (animation !== 'none') {
     await waitForDismissal(markerTag);
   }
 }
@@ -1751,8 +1556,6 @@ const styles = StyleSheet.create({
   scaledTranslucentParent: { opacity: 0.5, transform: [{ scale: 0.5 }] },
   marker: { width: 10, height: 10, backgroundColor: '#222222' },
   clippingParent: { width: 40, height: 40, overflow: 'hidden' },
-  transparentParent: { opacity: 0 },
-  zeroScaleParent: { transform: [{ scale: 0 }] },
   targetOffset: { position: 'absolute', top: 360, left: 20 },
   firstSource: {
     position: 'absolute',

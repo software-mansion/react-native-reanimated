@@ -1106,15 +1106,19 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
   const bool defersTeardown = holdsSnapshottedScreen(node);
   bool heldModal = false;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    const auto endedRuns = runsEndedBy(node);
-    heldModal = !defersTeardown && holdsModal(node, endedRuns, transaction);
     if (!transaction.surfaceDropped) {
       moveNestedCarriersOutOf(node, transaction);
     }
     removeCarriersHostedIn(node, transaction);
-    if (heldModal && !transaction.surfaceDropped) {
-      stopSharedTransitions(endedRuns, node, transaction);
+#ifdef __APPLE__
+    if (!defersTeardown) {
+      const auto endedRuns = runsEndedBy(node);
+      heldModal = holdsModal(node, endedRuns, transaction);
+      if (heldModal && !transaction.surfaceDropped) {
+        stopSharedTransitions(endedRuns, node, transaction);
+      }
     }
+#endif
     retainRemovedCarriers(node, transaction);
     if (node->presence() == ReactPresence::REMOVED) {
       return;
@@ -1185,20 +1189,18 @@ bool LayoutAnimationsProxy::hasRunningAnimations() const {
 // mount by up to two frames. A modal stays mounted until 34 ms, two frames of a 60 Hz display, after the mount in which
 // a source leaves it or a run that its removal ends stops. Then the snapshot shows the views of the runs as they are on
 // screen.
-bool LayoutAnimationsProxy::holdsModal(
-    [[maybe_unused]] const std::shared_ptr<LightNode> &node,
-    [[maybe_unused]] const std::vector<SharedTransitionRun *> &endedRuns,
-    [[maybe_unused]] const TransactionMeta &transaction) const {
 #ifdef __APPLE__
+bool LayoutAnimationsProxy::holdsModal(
+    const std::shared_ptr<LightNode> &node,
+    const std::vector<SharedTransitionRun *> &endedRuns,
+    const TransactionMeta &transaction) const {
   const auto isInModal = [&](const std::shared_ptr<LightNode> &view) {
     return modalContentOf(view, node) != nullptr;
   };
   return std::ranges::any_of(transaction.startedSources, isInModal) ||
       std::ranges::any_of(endedRuns, [&](const SharedTransitionRun *run) { return isInModal(run->carrier); });
-#else
-  return false;
-#endif
 }
+#endif
 
 // The child of the innermost modal that shows the view, when the modal is in the subtree of the root.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(
@@ -1219,7 +1221,7 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(
 
 void LayoutAnimationsProxy::holdModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
 #ifdef __APPLE__
-  heldModals_.push_back({node, std::chrono::steady_clock::now() + std::chrono::milliseconds(34)});
+  heldModals_.push_back({node, std::nullopt});
 #endif
 }
 
@@ -1245,11 +1247,14 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
   }
 #ifdef __APPLE__
   const auto now = std::chrono::steady_clock::now();
+  for (auto &held : heldModals_) {
+    held.removableAt = held.removableAt.value_or(now + std::chrono::milliseconds(34));
+  }
   std::erase_if(heldModals_, [&](const HeldModal &held) {
     if (!isLightNodeMapped(held.node)) {
       return true;
     }
-    if (transaction.surfaceDropped || now >= held.removableAt) {
+    if (transaction.surfaceDropped || now >= *held.removableAt) {
       removeCarriersHostedIn(held.node, transaction);
       finishedExits.push_back(held.node);
       return true;

@@ -477,8 +477,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
     }
     for (auto &[_, run] : sharedTransitionRuns_) {
       if (run.lifecycle == SharedTransitionLifecycle::ACTIVE && run.driver == SharedTransitionDriver::GESTURE) {
-        finishOrRetireSharedTransition(
-            run, transaction, propsParserContext, transition_->state == TransitionState::END);
+        finishSharedTransition(run, transaction, propsParserContext, transition_->state == TransitionState::END);
       }
     }
     if (transition_->state == TransitionState::END) {
@@ -1062,7 +1061,7 @@ SharedTransitionRun *LayoutAnimationsProxy::continueSharedTransitionRun(
     if ((!isQueuedOrRunning(phase) && !waitsToLand && !hasUnqueuedCarrierFrame(tag)) || carrierChangedTag ||
         carrierInOtherLayoutRoot) {
       react_native_assert(phase != LayoutAnimationPhase::NONE && "Shared carrier has no animation");
-      if (carrierWaitsToReturn(*run, transaction)) {
+      if (hasUnqueuedCarrierFrame(tag)) {
         retireSharedTransition(*run);
       } else {
         finishNestedSharedTransitions(run->carrier, transaction, propsParserContext, false);
@@ -1385,15 +1384,13 @@ void LayoutAnimationsProxy::attachCarrier(
   }
 }
 
-// The runs whose carriers the removal takes and that cannot go on elsewhere: a run that moves a view of the subtree to
-// another view of it, or a run that ended and whose carrier waits to return. The carriers at the root keep the order in
-// which the host tree draws them.
+// The runs that move a view of the subtree to another view of it. A nested carrier ends only with the carrier at the
+// root that holds it. The carriers at the root keep the order in which the host tree draws them.
 std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std::shared_ptr<LightNode> &node) const {
   std::vector<SharedTransitionRun *> runs;
-  for (auto &[_, run] : sharedTransitionRuns_) {
-    const bool ends = (run.lifecycle == SharedTransitionLifecycle::ACTIVE && isInSubtree(run.target, node)) ||
-        run.lifecycle == SharedTransitionLifecycle::RETIRING;
-    if (ends && isInSubtree(run.carrier, node)) {
+  for (auto &run : activeSharedTransitionRuns()) {
+    if (run.carrier->placement() == CarrierPlacement::AT_ROOT && isInSubtree(run.carrier, node) &&
+        isInSubtree(run.target, node)) {
       runs.push_back(&run);
     }
   }
@@ -1401,11 +1398,17 @@ std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std:
   std::ranges::sort(runs, {}, [&atRoot](const SharedTransitionRun *run) {
     return std::ranges::find(atRoot, run->carrier) - atRoot.begin();
   });
+  for (auto &run : activeSharedTransitionRuns()) {
+    if (run.carrier->placement() == CarrierPlacement::NESTED && isInSubtree(run.target, node) &&
+        std::ranges::any_of(
+            runs, [this, &run](const SharedTransitionRun *root) { return isCarriedBy(run.carrier, root->carrier); })) {
+      runs.push_back(&run);
+    }
+  }
   return runs;
 }
 
-// A held modal leaves with the views of these runs as they are on screen. A run whose flight ended shows the look of
-// its target.
+// A held modal leaves with the views of these runs as they are on screen.
 void LayoutAnimationsProxy::stopSharedTransitions(
     const std::vector<SharedTransitionRun *> &runs,
     const std::shared_ptr<LightNode> &node,
@@ -1416,7 +1419,7 @@ void LayoutAnimationsProxy::stopSharedTransitions(
     if (!modalContent) {
       continue;
     }
-    finishCallback(*run, layoutAnimationPhase(run->carrier->current.tag) == LayoutAnimationPhase::ENDED);
+    finishCallback(*run, false);
     restoreEndsOf(*run, transaction);
     moveCarrierIntoModal(*run, modalContent, transaction.filteredMutations, propsParserContext);
     run->lifecycle = SharedTransitionLifecycle::STOPPED;
@@ -1836,40 +1839,18 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || onTopScreen || movesWithAncestor) {
       continue;
     }
-    finishOrRetireSharedTransition(run, transaction, propsParserContext);
+    if (hasUnqueuedCarrierFrame(carrierTag)) {
+      retireSharedTransition(run);
+    } else {
+      finishSharedTransition(run, transaction, propsParserContext);
+    }
   }
 }
 
-void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run, const bool landed) const {
+void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run) const {
   react_native_assert(run.lifecycle == SharedTransitionLifecycle::ACTIVE && "The run already retires");
-  finishCallback(run, landed);
+  finishCallback(run, false);
   run.lifecycle = SharedTransitionLifecycle::RETIRING;
-}
-
-void LayoutAnimationsProxy::finishOrRetireSharedTransition(
-    SharedTransitionRun &run,
-    TransactionMeta &transaction,
-    const PropsParserContext &propsParserContext,
-    const bool landed) const {
-  if (carrierWaitsToReturn(run, transaction)) {
-    retireSharedTransition(run, landed);
-  } else {
-    finishSharedTransition(run, transaction, propsParserContext, landed);
-  }
-}
-
-// On Android, a frame of the carrier can still be outside the mount queue. A carrier at the root in a modal that React
-// removes in this pull returns only after the removal decides whether the modal stays on screen.
-bool LayoutAnimationsProxy::carrierWaitsToReturn(const SharedTransitionRun &run, const TransactionMeta &transaction)
-    const {
-  const auto &carrier = run.carrier;
-  if (hasUnqueuedCarrierFrame(carrier->current.tag)) {
-    return true;
-  }
-  return carrier->placement() == CarrierPlacement::AT_ROOT && carrier->presence() == ReactPresence::LIVE &&
-      std::ranges::any_of(transaction.removedSubtrees, [&](const std::shared_ptr<LightNode> &node) {
-           return modalContentOf(carrier, node) && !isInSubtree(carrierPlacements_.hostOf(carrier), node);
-         });
 }
 
 void LayoutAnimationsProxy::finishRetiringSharedTransitions(
@@ -2013,7 +1994,6 @@ void LayoutAnimationsProxy::ensureCarrierLayer(
       propsParserContext,
       nullptr,
       RawProps(folly::dynamic::object("pointerEvents", "none")("importantForAccessibility", "no-hide-descendants")));
-  // iOS mounts a view only with a view event emitter.
   layer.eventEmitter = host->current.eventEmitter;
   layer.layoutMetrics.frame.size = host->current.layoutMetrics.frame.size;
   layer.layoutMetrics.layoutDirection = host->current.layoutMetrics.layoutDirection;
@@ -3431,7 +3411,11 @@ void LayoutAnimationsProxy::endSharedTransitionOf(
     TransactionMeta &transaction,
     const PropsParserContext &propsParserContext) const {
   if (auto *run = activeSharedTransitionRun(sharedTag)) {
-    finishOrRetireSharedTransition(*run, transaction, propsParserContext);
+    if (hasUnqueuedCarrierFrame(run->carrier->current.tag)) {
+      retireSharedTransition(*run);
+    } else {
+      finishSharedTransition(*run, transaction, propsParserContext);
+    }
   }
 }
 
@@ -3521,7 +3505,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     const auto carrierTag = run.carrier->current.tag;
     const bool targetMapped = isLightNodeMapped(run.target);
     if (hasPendingLayoutAnimation(carrierTag) && (!targetMapped || run.target->isExiting())) {
-      finishOrRetireSharedTransition(run, transaction, propsParserContext);
+      finishSharedTransition(run, transaction, propsParserContext, false);
       continue;
     }
     const auto placement = targetBoundaryPlacementKind(run.target);
@@ -3531,7 +3515,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(
         (!run.followsTarget || (!isQueuedOrRunning(layoutAnimationPhase(carrierTag)) && !landsWithOtherRuns(run)));
     if ((targetMapped && placement == NativeViewPlacement::Kind::DifferentWindow) || (waitsForWindow && waitEnded)) {
       transaction.restoreRequests.push_back({run.sharedTag, run.source});
-      finishOrRetireSharedTransition(run, transaction, propsParserContext);
+      finishSharedTransition(run, transaction, propsParserContext, false);
       continue;
     }
     if (waitsForWindow) {

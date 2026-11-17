@@ -259,7 +259,8 @@ using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransitio
 #ifdef __APPLE__
 struct HeldModal {
   std::shared_ptr<LightNode> node;
-  std::chrono::steady_clock::time_point removableAt;
+  // The deadline starts in the pull that holds the modal, after the pull handles its removals.
+  std::optional<std::chrono::steady_clock::time_point> removableAt;
 };
 #endif
 
@@ -645,13 +646,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &topScreen,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
-  void retireSharedTransition(SharedTransitionRun &run, bool landed = false) const;
-  void finishOrRetireSharedTransition(
-      SharedTransitionRun &run,
-      TransactionMeta &transaction,
-      const PropsParserContext &propsParserContext,
-      bool landed = false) const;
-  bool carrierWaitsToReturn(const SharedTransitionRun &run, const TransactionMeta &transaction) const;
+  void retireSharedTransition(SharedTransitionRun &run) const;
   void restoreEndsOf(const SharedTransitionRun &run, TransactionMeta &transaction) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
@@ -880,10 +875,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   bool hasRunningAnimations() const;
+#ifdef __APPLE__
   bool holdsModal(
       const std::shared_ptr<LightNode> &node,
       const std::vector<SharedTransitionRun *> &endedRuns,
       const TransactionMeta &transaction) const;
+#endif
   std::shared_ptr<LightNode> modalContentOf(
       const std::shared_ptr<LightNode> &view,
       const std::shared_ptr<LightNode> &root) const;
