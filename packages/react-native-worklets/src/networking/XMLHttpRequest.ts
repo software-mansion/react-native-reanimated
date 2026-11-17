@@ -494,7 +494,6 @@ export class XMLHttpRequest extends EventTargetLite {
   }
 
   private terminate(): boolean {
-    // Invalidates callbacks and timers scheduled by the previous `send`.
     this.requestToken++;
     if (this.requestId === null) {
       return this.sent;
