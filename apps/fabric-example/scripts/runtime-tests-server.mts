@@ -2111,6 +2111,7 @@ async function installAndLaunchAndroid(serial: string) {
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
+  androidLaunchSerial = serial;
   await adb(serial, [
     'shell',
     'am',
@@ -2146,7 +2147,6 @@ if (SHOULD_LAUNCH) {
         await buildAndroidApp(serial);
       }
       await installAndLaunchAndroid(serial);
-      androidLaunchSerial = serial;
     } else {
       const device = await resolveSimulator();
       iosUdid = device.udid;
