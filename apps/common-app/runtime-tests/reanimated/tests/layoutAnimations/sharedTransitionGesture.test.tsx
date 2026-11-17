@@ -504,89 +504,131 @@ async function pushOverPager() {
   return tags;
 }
 
-// The container detaches the covered screen, as a native stack does until its back transition starts.
-function DetachedTargetScreens({
-  stage,
+// The container detaches the covered screens, as a native stack does until its back transition starts.
+function DetachedStack({
+  count,
+  top,
+  revealed,
 }: {
-  stage: 'below' | 'pushed' | 'revealed' | 'popped';
+  count: number;
+  top: number;
+  revealed?: number;
 }) {
-  const targetScreen = useTestRef('detachedTargetScreen');
-  const sourceScreen = useTestRef('detachedSourceScreen');
-  const target = useTestRef('detachedTarget');
-  const source = useTestRef('detachedSource');
   return (
     <ScreenContainer style={styles.container}>
-      <Screen
-        ref={targetScreen}
-        enabled
-        activityState={stage === 'pushed' ? 0 : 2}
-        style={styles.screen}>
-        <SharedTransitionBoundary
-          isActive={stage === 'below' || stage === 'popped'}>
-          <Animated.View
-            ref={target}
-            sharedTransitionTag="detached-target"
-            sharedTransitionStyle={transition}
-            style={styles.target}
+      {[0, 1, 2]
+        .filter((index) => index <= top)
+        .map((index) => (
+          <DetachedStackScreen
+            key={index}
+            index={index}
+            attached={index === top || index === revealed}
+            active={index === top}
+            style={
+              index === top && index === count - 1
+                ? styles.source
+                : index === 0
+                  ? styles.target
+                  : styles.hiddenTabTarget
+            }
           />
-        </SharedTransitionBoundary>
-      </Screen>
-      {stage !== 'popped' && (
-        <Screen
-          ref={sourceScreen}
-          onAppear={() => notify('detached-source-appeared')}
-          enabled
-          activityState={2}
-          style={styles.screen}>
-          <SharedTransitionBoundary
-            isActive={stage === 'pushed' || stage === 'revealed'}>
-            <Animated.View
-              ref={source}
-              sharedTransitionTag="detached-target"
-              sharedTransitionStyle={transition}
-              style={styles.source}
-            />
-          </SharedTransitionBoundary>
-        </Screen>
-      )}
+        ))}
     </ScreenContainer>
+  );
+}
+
+function DetachedStackScreen({
+  index,
+  attached,
+  active,
+  style,
+}: {
+  index: number;
+  attached: boolean;
+  active: boolean;
+  style: object;
+}) {
+  const screen = useTestRef(`detached-screen-${index}`);
+  const view = useTestRef(`detached-view-${index}`);
+  return (
+    <Screen
+      ref={screen}
+      onAppear={() => notify(`detached-screen-${index}-appeared`)}
+      enabled
+      activityState={attached ? 2 : 0}
+      style={styles.screen}>
+      <SharedTransitionBoundary isActive={active}>
+        <Animated.View
+          ref={view}
+          sharedTransitionTag="detached-stack"
+          sharedTransitionStyle={transition}
+          style={style}
+        />
+      </SharedTransitionBoundary>
+    </Screen>
+  );
+}
+
+async function pushDetachedStack(count: number) {
+  await mockAnimationTimer({ autoAdvance: false });
+  for (let top = 0; top < count; top++) {
+    await render(<DetachedStack count={count} top={top} />);
+    await waitForNotification(`detached-screen-${top}-appeared`);
+    await waitForFrames(3);
+    await advanceAnimationTimer(30000);
+    await waitForFrames(3);
+  }
+}
+
+// UIKit reports the progress of the closing screen first, then of the screen that it reveals.
+async function emitPopProgress(
+  closingScreen: number,
+  revealedScreen: number,
+  progress: number
+) {
+  await observer().emitScreenTransitionProgress(
+    closingScreen,
+    progress,
+    true,
+    false
+  );
+  await observer().emitScreenTransitionProgress(
+    revealedScreen,
+    progress,
+    false,
+    false
   );
 }
 
 describe('Back transition to a screen out of the window', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
-  gestureTest('starts at the first progress event', async () => {
-    await mockAnimationTimer({ autoAdvance: false });
-    await render(<DetachedTargetScreens stage="below" />);
-    await waitForNotification('detached-source-appeared');
-    await render(<DetachedTargetScreens stage="pushed" />);
-    await waitForFrames(3);
-    await advanceAnimationTimer(30000);
-    await waitForFrames(3);
-    const sourceScreen = getTestComponent('detachedSourceScreen').getTag();
-    const source = getTestComponent('detachedSource').getTag();
+  gestureTest.each([
+    ['starts at the first progress event', 2],
+    ['aims at the screen that the back menu reveals', 3],
+  ] as const)('${0}', async ([, count]) => {
+    await pushDetachedStack(count);
+    const closingScreen = getTestComponent(
+      `detached-screen-${count - 1}`
+    ).getTag();
+    const revealedScreen = getTestComponent('detached-screen-0').getTag();
+    const source = getTestComponent(`detached-view-${count - 1}`).getTag();
     const originalParent = await observer().observeParent(source);
     expect(originalParent !== null).toBe(true);
 
-    await observer().emitScreenTransitionProgress(sourceScreen, 0, true, false);
+    await emitPopProgress(closingScreen, revealedScreen, 0);
     await expectEventually(async () => {
       const parent = await observer().observeParent(source);
       return parent !== null && parent !== originalParent;
     }).toBe(true);
-    await render(<DetachedTargetScreens stage="revealed" />);
+    await render(<DetachedStack count={count} top={count - 1} revealed={0} />);
     await waitForFrames(3);
-    await observer().emitScreenTransitionProgress(
-      sourceScreen,
-      0.5,
-      true,
-      false
-    );
+    await emitPopProgress(closingScreen, revealedScreen, 0.5);
     await expectCarrier(source, 105);
 
-    await observer().emitScreenTransitionProgress(sourceScreen, 1, true, false);
-    await render(<DetachedTargetScreens stage="popped" />);
-    await expectEventually(() => opacityOf('detachedTarget')).toBe(1);
+    await emitPopProgress(closingScreen, revealedScreen, 1);
+    await render(<DetachedStack count={count} top={0} />);
+    await expectEventually(() => opacityOf('detached-view-0')).toBe(1);
   });
 });
 

@@ -2246,6 +2246,11 @@ LayoutAnimationsProxy::onTransitionProgress(int tag, double progress, bool isClo
     if (reversed) {
       return onGestureCancel(tag);
     }
+    // The back button menu pops several screens, so the screen below may never show. The screen that the stack
+    // reveals reports its own progress right after this event.
+    if (!transition_ && isOffWindow(below)) {
+      return {};
+    }
     tag = below->current.tag;
   }
   if (transition_ && (!transition_->targetScreen || tag != transition_->targetScreen->current.tag)) {
