@@ -95,6 +95,19 @@ struct CarrierClip {
   AncestorClipRange range;
 };
 
+enum class ScrollOffsets : std::uint8_t {
+  APPLIED,
+  IGNORED,
+};
+
+// The frame and the clip that the layout gives a target, without the offsets of the scroll views around it.
+struct TargetLayout {
+  react::Rect frame;
+  AncestorClip clip;
+
+  bool operator==(const TargetLayout &other) const = default;
+};
+
 // The carrier is the view that the run animates, moved from its parent to the carrier layer of its layout root for the
 // time of the run. A new run moves its source. A run that reverses keeps its carrier, which is then its target.
 // When an ancestor of either end clips the view, a carrier in a carrier layer moves inside a clip.
@@ -106,6 +119,9 @@ struct SharedTransitionRun {
   ShadowView carrierStartView;
   std::shared_ptr<LightNode> source;
   std::shared_ptr<LightNode> target;
+  // Only a change of this layout starts a new move. A scroll or a transform of a parent moves the target on screen, but
+  // keeps this layout.
+  std::optional<TargetLayout> targetLayout;
   // The source can be released while the run follows its target, which releases the configs of the source.
   std::shared_ptr<Serializable> config;
   // The view that gave config. A run that keeps its target takes the config changes of this view.
@@ -675,7 +691,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
       const PropsParserContext &propsParserContext) const;
-  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
+  bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget, bool layoutKept) const;
+  TargetLayout targetLayoutOf(const std::shared_ptr<LightNode> &target) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
@@ -762,8 +779,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   std::vector<react::Point> getAbsolutePositionsForRootPathView(
       const std::shared_ptr<LightNode> &node,
-      bool useViewsOnScreen) const;
-  std::vector<Ancestor> collectAncestors(const std::shared_ptr<LightNode> &node, bool useViewsOnScreen) const;
+      bool useViewsOnScreen,
+      ScrollOffsets scrollOffsets = ScrollOffsets::APPLIED) const;
+  std::vector<Ancestor> collectAncestors(
+      const std::shared_ptr<LightNode> &node,
+      bool useViewsOnScreen,
+      ScrollOffsets scrollOffsets = ScrollOffsets::APPLIED) const;
   NativePathPlacement
   placeNatively(std::vector<Ancestor> &ancestors, std::vector<react::Point> &absolutePositions, bool settled) const;
   void adjustForNativePlacement(CollectedTransition &collectedTransition, BeforeOrAfter index) const;

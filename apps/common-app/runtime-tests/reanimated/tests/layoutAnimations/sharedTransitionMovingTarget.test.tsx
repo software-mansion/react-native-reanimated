@@ -1,4 +1,12 @@
-import { PixelRatio, Platform, StyleSheet, View } from 'react-native';
+import type { ComponentRef } from 'react';
+import { createRef } from 'react';
+import {
+  PixelRatio,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -327,6 +335,48 @@ describe('Shared transition live target geometry', () => {
     );
   });
 
+  test.each(['builtIn', 'custom'] as const)(
+    'keeps one clock while a scroll view moves the target, transition: %s',
+    async (kind) => {
+      const state = counters();
+      const transition =
+        kind === 'builtIn'
+          ? countedTransition(1200, state)
+          : linearCustomTransition(1200, state);
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(<ScrollScreens active={false} transition={transition} />);
+      await waitForFrames();
+      const source = await geometryOf('source');
+      const stop = await recordStarts(state);
+      try {
+        await render(<ScrollScreens active transition={transition} />);
+        await waitForFrames(3);
+        await advanceAnimationTimer(300);
+        const target = await geometryOf('target');
+        scrollRef.current!.scrollTo({ y: 100, animated: false });
+        await waitForFrames(3);
+        const scrolledTarget = await geometryOf('target');
+        expect(scrolledTarget.y).toBe(target.y - 100, ComparisonMode.PIXEL);
+        await render(<ScrollScreens active extraRow transition={transition} />);
+        await waitForFrames(3);
+        expect(state.value.starts).toBe(1);
+        await advanceAnimationTimer(300);
+        await expectCarrierBetween(
+          source,
+          kind === 'builtIn' ? scrolledTarget : target,
+          0.5
+        );
+        await advanceAnimationTimer(600);
+        await expectEventually(() => state.value.success).toBe(1);
+        await expectEndpoint();
+        expect(state.value.starts).toBe(1);
+        expect(state.value.failure).toBe(0);
+      } finally {
+        await stop();
+      }
+    }
+  );
+
   test.each(['decomposable', 'zeroScale'] as const)(
     'interpolates the frame and the matrix like interpolateMatrix, matrices: %s',
     async (matrices) => {
@@ -509,6 +559,58 @@ function NativeParentScreens({
   );
 }
 
+const scrollRef = createRef<ComponentRef<typeof ScrollView>>();
+
+function ScrollScreens({
+  active,
+  extraRow = false,
+  transition,
+}: {
+  active: boolean;
+  extraRow?: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={useTestRef('source')}
+          sharedTransitionTag="scrolled-target"
+          sharedTransitionStyle={transition}
+          style={styles.source}
+        />
+      </SharedTransitionBoundary>
+      {active && <ScrolledTarget extraRow={extraRow} transition={transition} />}
+    </View>
+  );
+}
+
+function ScrolledTarget({
+  extraRow,
+  transition,
+}: {
+  extraRow: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <ScrollView ref={scrollRef} style={styles.scrollView}>
+      <SharedTransitionBoundary isActive>
+        <View style={styles.scrollContent}>
+          <View style={styles.clippedRow}>
+            <Animated.View
+              ref={useTestRef('target')}
+              sharedTransitionTag="scrolled-target"
+              sharedTransitionStyle={transition}
+              style={styles.target}
+            />
+          </View>
+          {extraRow && <View style={styles.clippedRow} />}
+        </View>
+      </SharedTransitionBoundary>
+    </ScrollView>
+  );
+}
+
 function Screens({
   active,
   transition,
@@ -607,6 +709,22 @@ function countedTransition(
     .withCallback(completionCounter(state));
 }
 
+function linearCustomTransition(
+  duration: number,
+  state: ReturnType<typeof counters>
+) {
+  const config = { duration, easing: Easing.linear };
+  return SharedTransition.custom((values) => {
+    'worklet';
+    return {
+      originX: withTiming(values.targetOriginX, config),
+      originY: withTiming(values.targetOriginY, config),
+      width: withTiming(values.targetWidth, config),
+      height: withTiming(values.targetHeight, config),
+    };
+  }).withCallback(completionCounter(state));
+}
+
 function completionCounter(state: ReturnType<typeof counters>) {
   return (finished: boolean) => {
     'worklet';
@@ -689,6 +807,9 @@ const styles = StyleSheet.create({
   source: { width: 30, height: 30, backgroundColor: '#ff0000', opacity: 0.8 },
   target: { width: 90, height: 90, backgroundColor: '#0000ff', opacity: 0.6 },
   sameGeometry: { width: 30, height: 30 },
+  scrollView: { position: 'absolute', top: 100, width: 380, height: 400 },
+  scrollContent: { paddingTop: 200, paddingBottom: 800, paddingLeft: 120 },
+  clippedRow: { width: 120, height: 120, overflow: 'hidden' },
   nativeParentHost: {
     marginTop: 40,
     marginLeft: 120,
