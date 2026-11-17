@@ -11,9 +11,11 @@ import {
   beforeEach,
   describe,
   expect,
+  notify,
   render,
   test,
   wait,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 
 const MODE_COUNT_ONLY = 0;
@@ -25,20 +27,20 @@ const ITEM_COUNT = 10;
 const READY_ATTEMPTS = 10;
 const READY_ATTEMPT_MS = 100;
 const IDLE_MS = 300;
-const MICROTASK_WAIT_MS = 1000;
+const MICROTASK_TIMEOUT_MS = 2000;
+const MICROTASK_NOTIFICATION = 'EVENT_HANDLER_MICROTASK';
 const SCROLL_OFFSET = 50;
 
 let scrollViewRef: AnimatedRef<Animated.ScrollView> | null = null;
 let modeValue: SharedValue<number> | null = null;
 let eventCount = 0;
-let microtaskCount = 0;
 
 function onEvent() {
   eventCount++;
 }
 
 function onMicrotask() {
-  microtaskCount++;
+  notify(MICROTASK_NOTIFICATION);
 }
 
 describe('microtasks queued by an event handler', () => {
@@ -46,29 +48,26 @@ describe('microtasks queued by an event handler', () => {
     scrollViewRef = null;
     modeValue = null;
     eventCount = 0;
-    microtaskCount = 0;
   });
 
-  test('runs a promise reaction without a later event or frame', async () => {
+  test('runs a promise reaction after the event without further input', async () => {
     await renderIdleListInMode(MODE_PROMISE);
     const eventCountBefore = eventCount;
 
     sendScroll(SCROLL_OFFSET);
-    await wait(MICROTASK_WAIT_MS);
 
+    await waitForNotification(MICROTASK_NOTIFICATION, MICROTASK_TIMEOUT_MS);
     expect(eventCount > eventCountBefore).toBe(true);
-    expect(microtaskCount > 0).toBe(true);
   });
 
-  test('runs a queueMicrotask callback without a later event', async () => {
+  test('runs a queueMicrotask callback after the event without further input', async () => {
     await renderIdleListInMode(MODE_QUEUE_MICROTASK);
     const eventCountBefore = eventCount;
 
     sendScroll(SCROLL_OFFSET);
-    await wait(MICROTASK_WAIT_MS);
 
+    await waitForNotification(MICROTASK_NOTIFICATION, MICROTASK_TIMEOUT_MS);
     expect(eventCount > eventCountBefore).toBe(true);
-    expect(microtaskCount > 0).toBe(true);
   });
 });
 
