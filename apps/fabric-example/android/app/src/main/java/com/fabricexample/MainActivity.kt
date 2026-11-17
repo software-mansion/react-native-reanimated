@@ -27,8 +27,12 @@ class MainActivity : ReactActivity() {
         override fun getMainComponentName(): String = this@MainActivity.mainComponentName
 
         override fun getLaunchOptions(): Bundle? =
-            this@MainActivity.intent?.getStringExtra("RUNTIME_TESTS_WS_URL")?.let {
-              Bundle().apply { putString("wsUrl", it) }
+            if (MainApplication.runtimeTestsLibrary == null) {
+              null
+            } else {
+              this@MainActivity.intent?.getStringExtra("RUNTIME_TESTS_WS_URL")?.let {
+                Bundle().apply { putString("wsUrl", it) }
+              }
             }
       }
 
