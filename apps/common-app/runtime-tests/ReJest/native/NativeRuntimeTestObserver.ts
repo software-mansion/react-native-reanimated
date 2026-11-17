@@ -74,6 +74,12 @@ export interface Spec extends TurboModule {
 
   /** Returns the Removes since the start in mount order. Android returns null. */
   takeUnmountRecording(): Promise<ReadonlyArray<UnmountObservation> | null>;
+
+  pauseHost(): Promise<void>;
+
+  resumeHost(): Promise<void>;
+
+  startHeadlessTask(taskKey: string): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('RuntimeTestObserver');
