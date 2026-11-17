@@ -11,6 +11,7 @@ import {
   createOrderConstraint,
   createTestValue,
   getWorkletRuntimesFromPool,
+  isFullRun,
   test,
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -19,7 +20,11 @@ import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_RUN_ON_RUNTIME } from './executio
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING } from './executionOrderConfigs/threeMethodsScheduling';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL } from './executionOrderConfigs/threeMethodsSerial';
 import { CONFIG as EXPECTED_ORDER_OF_EXECUTION_2_METHODS } from './executionOrderConfigs/twoMethodsSerial';
-import { getMethodMap, MethodsName } from './executionOrderConfigs/utils';
+import {
+  getMethodMap,
+  MethodsName,
+  ThreeMethodsConfig,
+} from './executionOrderConfigs/utils';
 
 const ANIMATION_QUEUE_POLLING_RATE = 16;
 const HANDSHAKE_TIMEOUT_MS = 1000;
@@ -29,6 +34,58 @@ const TIMER_METHODS: MethodsName[] = [
   'setImmediate',
   'setInterval',
 ];
+
+const METHODS: MethodsName[] = [
+  'topLevel',
+  'setTimeout',
+  'setImmediate',
+  'requestAnimationFrame',
+  'queueMicrotask',
+  'setInterval',
+];
+
+// Keeps the Latin square rows, where the third method follows from the first
+// two, and the rows with pairs the square misses, so every pair of methods in
+// the full table still meets at every pair of positions on each runtime.
+function shortRunSubset(configs: ThreeMethodsConfig[]) {
+  if (isFullRun()) {
+    return configs;
+  }
+  const covered = new Set(
+    configs.filter(isLatinSquareRow).flatMap(methodPairs)
+  );
+  return configs.filter((config) => {
+    if (isLatinSquareRow(config)) {
+      return true;
+    }
+    const missing = methodPairs(config).filter((pair) => !covered.has(pair));
+    missing.forEach((pair) => covered.add(pair));
+    return missing.length > 0;
+  });
+}
+
+function isLatinSquareRow([first, , second, , third]: ThreeMethodsConfig) {
+  return (
+    METHODS.indexOf(third) ===
+    (METHODS.indexOf(first) + METHODS.indexOf(second)) % METHODS.length
+  );
+}
+
+function methodPairs([
+  first,
+  ,
+  second,
+  ,
+  third,
+  ,
+  runtime,
+]: ThreeMethodsConfig) {
+  return [
+    `${runtime} 1:${first} 2:${second}`,
+    `${runtime} 1:${first} 3:${third}`,
+    `${runtime} 2:${second} 3:${third}`,
+  ];
+}
 
 const NESTED_TIMER_BEFORE_ANIMATION_FRAME: [MethodsName, MethodsName][] =
   TIMER_METHODS.flatMap((firstMethodName) =>
@@ -156,7 +213,7 @@ describe('Test mixed order of execution', () => {
     }
   );
 
-  test.each(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL)(
+  test.each(shortRunSubset(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL))(
     'three methods in serial, **${0}**[**${1}**], **${2}**[**${3}**], **${4}**[**${5}**], runtime: **${6}**',
     async (config) => {
       // Arrange
@@ -195,7 +252,7 @@ describe('Test mixed order of execution', () => {
     }
   );
 
-  test.each(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING)(
+  test.each(shortRunSubset(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SCHEDULING))(
     'nested scheduling, **${0}**[**${1}**], **${2}**[**${3}**], **${4}**[**${5}**], runtime: **${6}**',
     async (config) => {
       // Arrange
