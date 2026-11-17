@@ -38,8 +38,9 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
     )
 #endif
 
-    let initialProperties = ProcessInfo.processInfo.environment["RUNTIME_TESTS_WS_URL"]
-      .map { ["wsUrl": $0] as [AnyHashable: Any] }
+    let wsUrl =
+      runtimeTestsLibrary == nil ? nil : ProcessInfo.processInfo.environment["RUNTIME_TESTS_WS_URL"]
+    let initialProperties = wsUrl.map { ["wsUrl": $0] as [AnyHashable: Any] }
     reactNativeFactory?.startReactNative(
       withModuleName: runtimeTestsLibrary == nil ? "FabricExample" : "FabricExampleRuntimeTests",
       in: window,
