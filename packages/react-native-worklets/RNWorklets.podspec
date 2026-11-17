@@ -6,6 +6,7 @@ worklets_config = WorkletsUtils.find_config()
 WorkletsUtils.assert_minimal_react_native_version(worklets_config)
 
 ios_min_version = min_ios_version_supported
+macos_min_version = defined?(min_macos_version_supported) ? min_macos_version_supported : '10.14'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
@@ -34,7 +35,7 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = package["license"]
   s.authors      = { "author" => "author@domain.com" }
-  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
+  s.platforms    = { :ios => ios_min_version, :tvos => ios_min_version, :osx => macos_min_version, :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.header_dir = "worklets"
