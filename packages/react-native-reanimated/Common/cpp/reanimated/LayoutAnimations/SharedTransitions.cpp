@@ -1104,6 +1104,7 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
   }
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
+  run->targetLayout = targetLayoutOf(nodes[AFTER]);
   run->config = config;
   run->configSource = nodes[BEFORE];
   run->configFollowsTarget = false;
@@ -1138,11 +1139,14 @@ ShadowView LayoutAnimationsProxy::asCarrierView(
   return carrierView;
 }
 
-bool LayoutAnimationsProxy::targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget) const {
+bool LayoutAnimationsProxy::targetEndChanged(
+    const SharedTransitionRun &run,
+    const ShadowView &carrierTarget,
+    const bool layoutKept) const {
   const auto &animation = carrierAnimation(run);
   const auto &previousTarget = animation.finalView;
   const bool followsGeometry = animation.geometryProgress.has_value();
-  if (previousTarget.layoutMetrics != carrierTarget.layoutMetrics &&
+  if (!layoutKept && previousTarget.layoutMetrics != carrierTarget.layoutMetrics &&
       !(followsGeometry && completedAnimations_.contains(run.carrier->current.tag))) {
     return true;
   }
@@ -2117,6 +2121,9 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         }
       }
       run.target = afterNode;
+      const auto targetLayout = targetLayoutOf(afterNode);
+      const bool layoutKept = !targetChanged && run.targetLayout == targetLayout;
+      run.targetLayout = targetLayout;
       if (phase != LayoutAnimationPhase::QUEUED || targetChanged) {
         run.config = animation;
         run.configFollowsTarget = followsTarget;
@@ -2145,8 +2152,8 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
       } else if (!targetChanged && !leavesMovingParent && followsWithoutRestart(run, carrierAfter)) {
         followSharedTransitionTarget(run, propsParserContext);
       } else if (
-          (leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter) ||
-          !followsClipTarget(run, clipAfter)) {
+          (leavesMovingParent && restartsAtRoot(run)) || targetEndChanged(run, carrierAfter, layoutKept) ||
+          (!layoutKept && !followsClipTarget(run, clipAfter))) {
         run.followsTarget = followsTarget;
         run.targetAncestorOpacity = transition.ancestorOpacity[AFTER];
         startSharedTransition(
@@ -3104,10 +3111,13 @@ const ShadowView &LayoutAnimationsProxy::pathView(
 }
 
 // The offset of a scroll view moves the views in it, not the scroll view.
-static react::Point scrollPosition(const std::shared_ptr<LightNode> &pathNode, const std::shared_ptr<LightNode> &node) {
+static react::Point scrollPosition(
+    const std::shared_ptr<LightNode> &pathNode,
+    const std::shared_ptr<LightNode> &node,
+    const ScrollOffsets scrollOffsets) {
   react::Point position;
   const auto &view = pathNode->current;
-  if (pathNode != node && !strcmp(view.componentName, "ScrollView")) {
+  if (scrollOffsets == ScrollOffsets::APPLIED && pathNode != node && !strcmp(view.componentName, "ScrollView")) {
     position -= std::static_pointer_cast<const ConcreteState<ScrollViewState>>(view.state)->getData().contentOffset;
   }
   return position;
@@ -3115,14 +3125,15 @@ static react::Point scrollPosition(const std::shared_ptr<LightNode> &pathNode, c
 
 std::vector<react::Point> LayoutAnimationsProxy::getAbsolutePositionsForRootPathView(
     const std::shared_ptr<LightNode> &node,
-    const bool useViewsOnScreen) const {
+    const bool useViewsOnScreen,
+    const ScrollOffsets scrollOffsets) const {
   std::vector<react::Point> viewsAbsolutePositions;
   auto currentNode = node;
   while (currentNode) {
     const bool endsPath = endsPathOnScreen(currentNode, node, useViewsOnScreen);
     const auto &componentName = currentNode->current.componentName;
     react_native_assert(componentName && "Component name is nullptr");
-    react::Point viewPosition = scrollPosition(currentNode, node);
+    react::Point viewPosition = scrollPosition(currentNode, node, scrollOffsets);
     const auto &view = pathView(currentNode, node, useViewsOnScreen);
     const auto parent = currentNode->parent.lock();
     auto origin = view.layoutMetrics.frame.origin;
@@ -3321,6 +3332,15 @@ AncestorClip LayoutAnimationsProxy::fitTargetClip(
   return clip;
 }
 
+TargetLayout LayoutAnimationsProxy::targetLayoutOf(const std::shared_ptr<LightNode> &target) const {
+  const auto absolutePositions = getAbsolutePositionsForRootPathView(target, false, ScrollOffsets::IGNORED);
+  const auto ancestors = collectAncestors(target, false, ScrollOffsets::IGNORED);
+  Float opacity = 1;
+  AncestorClip clip;
+  parseAncestorOpacityAndClip(ancestors, absolutePositions, opacity, clip);
+  return {.frame = {absolutePositions[0], target->current.layoutMetrics.frame.size}, .clip = clip};
+}
+
 // A built-in transition moves the clip with its geometry, so the clip takes a new target without a restart.
 bool LayoutAnimationsProxy::followsClipTarget(SharedTransitionRun &run, const AncestorClip &clip) const {
   if (!run.clip || run.clip->range.to == clip) {
@@ -3437,7 +3457,8 @@ void LayoutAnimationsProxy::followProgressTargets(const PropsParserContext &prop
 
 std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
     const std::shared_ptr<LightNode> &node,
-    const bool useViewsOnScreen) const {
+    const bool useViewsOnScreen,
+    const ScrollOffsets scrollOffsets) const {
   std::vector<Ancestor> ancestors;
   auto currentNode = node;
   while (currentNode) {
@@ -3459,7 +3480,7 @@ std::vector<Ancestor> LayoutAnimationsProxy::collectAncestors(
     }
     ancestors.push_back(
         {currentNode->current.tag,
-         scrollPosition(currentNode, node),
+         scrollPosition(currentNode, node, scrollOffsets),
          props.transform,
          origin,
          viewSize,
