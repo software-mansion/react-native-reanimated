@@ -1,3 +1,4 @@
+import type { ComponentRef } from 'react';
 import { createRef } from 'react';
 import {
   PixelRatio,
@@ -558,7 +559,7 @@ function NativeParentScreens({
   );
 }
 
-const scrollRef = createRef<ScrollView>();
+const scrollRef = createRef<ComponentRef<typeof ScrollView>>();
 
 function ScrollScreens({
   active,
