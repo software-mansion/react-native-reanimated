@@ -218,6 +218,7 @@ let connectTimer: ReturnType<typeof setTimeout> | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
 let metroChild: ChildProcess | null = null;
 let androidSerial: string | null = null;
+let androidLaunchSerial: string | null = null;
 let iosUdid: string | null = null;
 let crashDiagnosticsPromise: Promise<void> | null = null;
 let afterSuiteChain: Promise<void> = Promise.resolve();
@@ -1684,13 +1685,12 @@ async function exitAfterSuiteCommands(code: number) {
   await afterSuiteChain;
   // The task left by the test launch would otherwise start the tests again
   // when the app is reopened from the launcher.
-  if (androidSerial) {
-    await adb(androidSerial, [
-      'shell',
-      'am',
-      'force-stop',
-      ANDROID_APP_ID,
-    ]).catch(() => {});
+  if (androidLaunchSerial) {
+    await adb(
+      androidLaunchSerial,
+      ['shell', 'am', 'force-stop', ANDROID_APP_ID],
+      { timeout: 5000 }
+    ).catch(() => {});
   }
   wss.close(() => {
     httpServer.close(() => {
@@ -2146,6 +2146,7 @@ if (SHOULD_LAUNCH) {
         await buildAndroidApp(serial);
       }
       await installAndLaunchAndroid(serial);
+      androidLaunchSerial = serial;
     } else {
       const device = await resolveSimulator();
       iosUdid = device.udid;

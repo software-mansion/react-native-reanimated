@@ -178,7 +178,6 @@ describe(
       assert.deepEqual(result.adbCalls, [
         'devices',
         `-s ${SELECTED} shell getprop ro.product.cpu.abi`,
-        `-s ${SELECTED} shell am force-stop com.fabricexample`,
       ]);
     });
 
