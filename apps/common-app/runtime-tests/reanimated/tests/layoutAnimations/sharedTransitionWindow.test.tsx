@@ -702,6 +702,37 @@ describe('Shared transitions from a source off the window', () => {
   });
 });
 
+describe('Shared transitions inside an iOS Modal', () => {
+  iosTest('flies back to the source when the run reverses', async () => {
+    const results: boolean[] = [];
+    const transition = recordingTransition(results);
+    await mockAnimationTimer({ autoAdvance: false });
+    await renderInModal(transition, { active: false });
+    const home = await homeOf('window-source');
+    await renderInModal(transition, { active: true });
+    await advanceAnimationTimer(400);
+    await renderInModal(transition, { active: false });
+    const start = await runOnUIBlocking(() => {
+      'worklet';
+      return global._obtainMountedViewProps(home.tag, false);
+    });
+    await advanceAnimationTimer(600);
+    await expectCarrier(
+      home.tag,
+      ((start?.x ?? 0) + SOURCE_IN_MODAL.x) / 2,
+      ((start?.y ?? 0) + SOURCE_IN_MODAL.y) / 2,
+      ((start?.width ?? 0) + 60) / 2
+    );
+    await advanceAnimationTimer(599);
+    await expectCarrier(home.tag, SOURCE_IN_MODAL.x, SOURCE_IN_MODAL.y, 60);
+    await advanceAnimationTimer(400);
+    await expectSettledEndpoint('source', 60, 0.6);
+    await expectEventually(() => results.length).toBe(2);
+    expect(results).toBe([false, true]);
+    await expectLandedAtHome(home);
+  });
+});
+
 const SOURCE_IN_MODAL = { x: 40, y: 120 };
 
 async function modalHostOf(tag: number) {

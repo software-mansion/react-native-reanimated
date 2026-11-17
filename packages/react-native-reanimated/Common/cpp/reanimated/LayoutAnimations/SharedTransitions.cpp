@@ -3177,10 +3177,10 @@ NativePathPlacement LayoutAnimationsProxy::placeNatively(
     return result;
   }
   for (size_t i = 0; i + 1 < ancestors.size(); ++i) {
-    // A detached carrier is in the overlay, and the paths of the views in it already end at the carrier.
+    // UIKit cannot measure a detached carrier in its React parent, because the carrier is in the overlay.
     if (const auto nodeIt = lightNodes_.find(ancestors[i].tag);
         nodeIt != lightNodes_.end() && nodeIt->second->placement() == CarrierPlacement::AT_ROOT) {
-      break;
+      continue;
     }
     const auto placement = nativeViewPlacement_(surfaceId_, ancestors[i].tag, ancestors[i + 1].tag, settled);
     if (placement.kind == NativeViewPlacement::Kind::MovedInsideReactParent) {
@@ -3220,7 +3220,7 @@ void LayoutAnimationsProxy::adjustForNativePlacement(
   parseAncestorOpacityAndClip(ancestors, absolutePositions, transition.ancestorOpacity[index], transition.clip[index]);
 }
 
-// A run that starts detaches its carrier, which ends the native placement search of the paths below it.
+// A run that starts detaches its carrier, and then UIKit cannot measure the carrier in its React parent.
 // The paths were collected before that, so all of them are adjusted before the first run starts.
 void LayoutAnimationsProxy::adjustForNativePlacement(CollectedTransitions &transitions) const {
   for (auto &[_, collectedTransition] : transitions) {
