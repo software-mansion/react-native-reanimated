@@ -404,7 +404,7 @@ class CarrierPlacements {
 
  private:
   std::vector<std::shared_ptr<LightNode>> atRoot_;
-  // The layout root that mounts the carrier at the same position in atRoot_.
+  // The view whose carrier layer mounts the carrier at the same position in atRoot_.
   std::vector<std::shared_ptr<LightNode>> hosts_;
 
   size_t positionAtRoot(const std::shared_ptr<LightNode> &node) const {

@@ -1128,7 +1128,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
       layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
     }
     node->setExitingState(COMPLETED);
-    transaction.modalsToHold.push_back(node);
+    holdModal(node);
     return;
   }
   const SubtreeRemovalConfig config = {
@@ -1217,6 +1217,12 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(
   return nullptr;
 }
 
+void LayoutAnimationsProxy::holdModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
+#ifdef __APPLE__
+  heldModals_.push_back({node, std::chrono::steady_clock::now() + std::chrono::milliseconds(34)});
+#endif
+}
+
 bool LayoutAnimationsProxy::isInHeldModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
 #ifdef __APPLE__
   return std::ranges::any_of(heldModals_, [&node](const HeldModal &held) { return isInSubtree(node, held.node); });
@@ -1239,9 +1245,6 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
   }
 #ifdef __APPLE__
   const auto now = std::chrono::steady_clock::now();
-  for (auto &node : transaction.modalsToHold) {
-    heldModals_.push_back({std::move(node), now + std::chrono::milliseconds(34)});
-  }
   std::erase_if(heldModals_, [&](const HeldModal &held) {
     if (!isLightNodeMapped(held.node)) {
       return true;

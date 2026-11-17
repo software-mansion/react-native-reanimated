@@ -599,7 +599,8 @@ bool LayoutAnimationsProxy::isLayoutRoot([[maybe_unused]] const std::shared_ptr<
 #endif
 }
 
-// A run moves its carrier in one layout root, so a carrier at the root stays in the layout root of its start.
+// A run moves its carrier in one layout root, so a carrier at the root stays in the layout root of its start. For a
+// carrier at the root, this is the view whose carrier layer mounts it.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::layoutRootOf(const std::shared_ptr<LightNode> &node) const {
   auto current = node;
   while (current->placement() != CarrierPlacement::AT_ROOT) {
@@ -1384,6 +1385,25 @@ void LayoutAnimationsProxy::attachCarrier(
   }
 }
 
+// The runs whose carriers the removal takes and that cannot go on elsewhere: a run that moves a view of the subtree to
+// another view of it, or a run that ended and whose carrier waits to return. The carriers at the root keep the order in
+// which the host tree draws them.
+std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std::shared_ptr<LightNode> &node) const {
+  std::vector<SharedTransitionRun *> runs;
+  for (auto &[_, run] : sharedTransitionRuns_) {
+    const bool ends = (run.lifecycle == SharedTransitionLifecycle::ACTIVE && isInSubtree(run.target, node)) ||
+        run.lifecycle == SharedTransitionLifecycle::RETIRING;
+    if (ends && isInSubtree(run.carrier, node)) {
+      runs.push_back(&run);
+    }
+  }
+  const auto &atRoot = carrierPlacements_.atRoot();
+  std::ranges::sort(runs, {}, [&atRoot](const SharedTransitionRun *run) {
+    return std::ranges::find(atRoot, run->carrier) - atRoot.begin();
+  });
+  return runs;
+}
+
 // A held modal leaves with the views of these runs as they are on screen. A run whose flight ended shows the look of
 // its target.
 void LayoutAnimationsProxy::stopSharedTransitions(
@@ -1445,20 +1465,6 @@ react::Point LayoutAnimationsProxy::nativeOriginOnScreen(const std::shared_ptr<L
   auto positions = getAbsolutePositionsForRootPathView(node, true);
   placeNatively(ancestors, positions, false);
   return positions[0];
-}
-
-// The runs whose carriers the removal takes and that cannot go on elsewhere: a run that moves a view of the subtree to
-// another view of it, or a run that ended and whose carrier waits to return.
-std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std::shared_ptr<LightNode> &node) const {
-  std::vector<SharedTransitionRun *> runs;
-  for (auto &[_, run] : sharedTransitionRuns_) {
-    const bool ends = (run.lifecycle == SharedTransitionLifecycle::ACTIVE && isInSubtree(run.target, node)) ||
-        run.lifecycle == SharedTransitionLifecycle::RETIRING;
-    if (ends && isInSubtree(run.carrier, node)) {
-      runs.push_back(&run);
-    }
-  }
-  return runs;
 }
 
 void LayoutAnimationsProxy::retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
@@ -1834,9 +1840,9 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
   }
 }
 
-void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run) const {
+void LayoutAnimationsProxy::retireSharedTransition(SharedTransitionRun &run, const bool landed) const {
   react_native_assert(run.lifecycle == SharedTransitionLifecycle::ACTIVE && "The run already retires");
-  finishCallback(run, false);
+  finishCallback(run, landed);
   run.lifecycle = SharedTransitionLifecycle::RETIRING;
 }
 
@@ -1846,7 +1852,7 @@ void LayoutAnimationsProxy::finishOrRetireSharedTransition(
     const PropsParserContext &propsParserContext,
     const bool landed) const {
   if (carrierWaitsToReturn(run, transaction)) {
-    retireSharedTransition(run);
+    retireSharedTransition(run, landed);
   } else {
     finishSharedTransition(run, transaction, propsParserContext, landed);
   }

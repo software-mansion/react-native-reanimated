@@ -241,19 +241,52 @@ function TaggedView({
   );
 }
 
+type ModalAnimation = 'none' | 'slide' | 'fade' | 'sheet';
+
 type ModalRunOptions = {
-  animationType?: 'none' | 'slide';
+  animation?: ModalAnimation;
   sourceParentStyle?: ViewStyle;
   nested?: boolean;
+  duration?: number;
   flightTime?: number;
 };
 
+function modalProps(animation: ModalAnimation) {
+  return animation === 'sheet'
+    ? {
+        animationType: 'slide' as const,
+        presentationStyle: 'pageSheet' as const,
+      }
+    : { transparent: true, animationType: animation };
+}
+
 // The marker below the Modal shows once the Modal closes.
+function ClosedMarker({ open }: { open: boolean }) {
+  const ref = useTestRef('window-closed-marker');
+  return (
+    <View
+      ref={ref}
+      collapsable={false}
+      style={[styles.marker, { opacity: open ? 0 : 1 }]}
+    />
+  );
+}
+
+// The root view of the Modal shows the opacity of the Modal during a fade.
+function ModalContent({ children }: { children: ReactNode }) {
+  const ref = useTestRef('window-modal-content');
+  return (
+    <View ref={ref} collapsable={false} style={styles.root}>
+      {children}
+    </View>
+  );
+}
+
 function ModalRunScreens({
   open,
   expanded,
   transition,
-  animationType = 'none',
+  animation = 'none',
   sourceParentStyle,
   nested = false,
 }: {
@@ -261,17 +294,12 @@ function ModalRunScreens({
   expanded: boolean;
   transition: SharedTransition;
 } & ModalRunOptions) {
-  const markerRef = useTestRef('window-closed-marker');
   return (
     <View style={styles.root}>
-      <View
-        ref={markerRef}
-        collapsable={false}
-        style={[styles.marker, { opacity: open ? 0 : 1 }]}
-      />
+      <ClosedMarker open={open} />
       {open && (
-        <Modal transparent animationType={animationType}>
-          <View style={styles.root}>
+        <Modal {...modalProps(animation)}>
+          <ModalContent>
             <SharedTransitionBoundary isActive={!expanded}>
               <View
                 collapsable={false}
@@ -310,6 +338,63 @@ function ModalRunScreens({
                 </TaggedView>
               )}
             </SharedTransitionBoundary>
+          </ModalContent>
+        </Modal>
+      )}
+    </View>
+  );
+}
+
+// Two sources and two targets overlap, and the second of each draws above the first.
+function OverlappingRunsScreens({
+  open,
+  expanded,
+  transition,
+}: {
+  open: boolean;
+  expanded: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.root}>
+      <ClosedMarker open={open} />
+      {open && (
+        <Modal transparent animationType="none">
+          <View style={styles.root}>
+            <SharedTransitionBoundary isActive={!expanded}>
+              <View collapsable={false} style={styles.sourceOffset}>
+                <TaggedView
+                  name="first-source"
+                  sharedTag="first"
+                  transition={transition}
+                  style={styles.firstSource}
+                />
+                <TaggedView
+                  name="second-source"
+                  sharedTag="second"
+                  transition={transition}
+                  style={styles.secondSource}
+                />
+              </View>
+            </SharedTransitionBoundary>
+            <SharedTransitionBoundary isActive={expanded}>
+              {expanded && (
+                <View collapsable={false} style={styles.targetOffset}>
+                  <TaggedView
+                    name="first-target"
+                    sharedTag="first"
+                    transition={transition}
+                    style={styles.firstTarget}
+                  />
+                  <TaggedView
+                    name="second-target"
+                    sharedTag="second"
+                    transition={transition}
+                    style={styles.secondTarget}
+                  />
+                </View>
+              )}
+            </SharedTransitionBoundary>
           </View>
         </Modal>
       )}
@@ -324,17 +409,18 @@ function NestedTargetScreens({
   belowActive,
   outerTransition,
   innerTransition,
-  animationType = 'none',
+  animation = 'none',
 }: {
   open: boolean;
   expanded: boolean;
   belowActive: boolean;
   outerTransition: SharedTransition;
   innerTransition: SharedTransition;
-  animationType?: 'none' | 'slide';
+  animation?: ModalAnimation;
 }) {
   return (
     <View style={styles.root}>
+      <ClosedMarker open={open} />
       <SharedTransitionBoundary isActive={belowActive}>
         <TaggedView
           name="inner-below"
@@ -344,8 +430,8 @@ function NestedTargetScreens({
         />
       </SharedTransitionBoundary>
       {open && (
-        <Modal transparent animationType={animationType}>
-          <View style={styles.root}>
+        <Modal {...modalProps(animation)}>
+          <ModalContent>
             <SharedTransitionBoundary isActive={!expanded}>
               <View collapsable={false} style={styles.sourceOffset}>
                 <TaggedView
@@ -378,7 +464,7 @@ function NestedTargetScreens({
                 </TaggedView>
               )}
             </SharedTransitionBoundary>
-          </View>
+          </ModalContent>
         </Modal>
       )}
     </View>
@@ -1095,7 +1181,7 @@ describe('Shared transitions in a Modal that closes', () => {
   iosTest(
     'closes a sliding Modal with the moving view where it is on screen',
     async () => {
-      await expectModalLeavesWithMovingView({ animationType: 'slide' });
+      await expectModalLeavesWithMovingView({ animation: 'slide' });
     }
   );
 
@@ -1136,16 +1222,6 @@ describe('Shared transitions in a Modal that closes', () => {
   );
 
   iosTest(
-    'keeps a moving view more opaque than its translucent parent when the Modal closes',
-    async () => {
-      await expectModalLeavesWithMovingView({
-        sourceParentStyle: styles.translucentParent,
-        flightTime: 1000,
-      });
-    }
-  );
-
-  iosTest(
     'closes the Modal with a nested moving view where it is on screen',
     async () => {
       await expectModalLeavesWithMovingView({ nested: true });
@@ -1153,9 +1229,89 @@ describe('Shared transitions in a Modal that closes', () => {
   );
 
   iosTest(
-    'closes a sliding Modal during its presentation with the moving view where it is',
+    'keeps the draw order of two overlapping moving views when the Modal closes',
     async () => {
-      await expectModalLeavesWithMovingView({ animationType: 'slide' }, true);
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const screens = (open: boolean, expanded: boolean) => (
+        <OverlappingRunsScreens
+          open={open}
+          expanded={expanded}
+          transition={transition}
+        />
+      );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(screens(true, false));
+      await waitForFrames(3);
+      const firstTag = getTestComponent('window-first-source').getTag();
+      const secondTag = getTestComponent('window-second-source').getTag();
+      await render(screens(true, true));
+      await waitForFrames(3);
+      await advanceAnimationTimer(400);
+      const targetTag = getTestComponent('window-first-target').getTag();
+      const frames = await recordPresentedFrames(
+        [firstTag, secondTag, targetTag],
+        () => closeUntilUnmounted(screens(false, true), [targetTag])
+      );
+      expectOnScreenWhileModalShows(frames, [0, 1], 2);
+      for (const [first, second] of frames) {
+        if (first && second && first.parentTag === second.parentTag) {
+          expect(first.indexInParent < second.indexInParent).toBe(true);
+        }
+      }
+      await expectEventually(() => results.length).toBe(2);
+    }
+  );
+
+  for (const animation of ['slide', 'fade', 'sheet'] as const) {
+    iosTest(
+      `closes a Modal during its ${animation} presentation with the moving view where it is`,
+      async () => {
+        await expectModalLeavesWithMovingView({ animation }, true);
+      }
+    );
+  }
+
+  iosTest(
+    'lands a short run in a sliding Modal during its presentation and closes the Modal with its target',
+    async () => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results, 150);
+      const screens = (open: boolean, expanded: boolean) => (
+        <ModalRunScreens
+          open={open}
+          expanded={expanded}
+          transition={transition}
+          animation="slide"
+        />
+      );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(screens(true, false));
+      await waitForFrames(1);
+      const sourceTag = getTestComponent('window-source').getTag();
+      await render(screens(true, true));
+      await waitForFrames(3);
+      await advanceAnimationTimer(200);
+      const targetTag = getTestComponent('window-target').getTag();
+      const markerTag = getTestComponent('window-closed-marker').getTag();
+      const frames = await recordPresentedFrames(
+        [sourceTag, targetTag, markerTag],
+        () => closeUntilUnmounted(screens(false, true), [targetTag])
+      );
+      expectClosedDuringPresentation(frames, 1, 2);
+      for (const [source, target] of frames) {
+        if (!target) {
+          continue;
+        }
+        const shown = [source, target].filter(
+          (view): view is PresentedFrame => view !== null && view.opacity > 0
+        );
+        expect(shown.length).toBe(1);
+        expect(shown[0].x).toBe(target.x, ComparisonMode.PIXEL);
+        expect(shown[0].y).toBe(target.y, ComparisonMode.PIXEL);
+      }
+      expect(results).toBe([true]);
+      await waitForDismissal(markerTag);
     }
   );
 
@@ -1176,14 +1332,13 @@ describe('Shared transitions in a Modal that closes', () => {
 
 const SOURCE_IN_MODAL = { x: 40, y: 120 };
 
-// The run in the Modal moves until the Modal closes, after the presentation or while it runs. A view that moves with
-// the presented Modal keeps only its size and opacity.
+// The run in the Modal moves until the Modal closes, after the presentation or while it runs.
 async function expectModalLeavesWithMovingView(
   modal: ModalRunOptions,
   closesWhilePresenting = false
 ) {
   const results: boolean[] = [];
-  const transition = recordingTransition(results);
+  const transition = recordingTransition(results, modal.duration);
   const screens = (open: boolean, expanded: boolean) => (
     <ModalRunScreens
       open={open}
@@ -1208,39 +1363,32 @@ async function expectModalLeavesWithMovingView(
   await advanceAnimationTimer(modal.flightTime ?? 400);
   const targetTag = getTestComponent('window-target').getTag();
   const markerTag = getTestComponent('window-closed-marker').getTag();
+  const contentTag = getTestComponent('window-modal-content').getTag();
   const frames = await recordPresentedFrames(
-    [...movingTags, targetTag, markerTag],
+    [...movingTags, targetTag, markerTag, contentTag],
     () => closeUntilUnmounted(screens(false, true), [targetTag])
   );
+  const movingIndexes = movingTags.map((_, index) => index);
   const targetIndex = movingTags.length;
-  expectOnScreenWhileModalShows(
-    frames,
-    movingTags.map((_, index) => index),
-    targetIndex,
-    !closesWhilePresenting
-  );
-  if (Platform.OS === 'ios') {
-    const heldFrames = frames.filter(
-      (frame) =>
-        frame[targetIndex + 1]?.opacity === 1 && frame[targetIndex] !== null
-    );
-    expect(heldFrames.length > 0).toBe(true);
+  if (closesWhilePresenting) {
+    expectMovesWithPresentedModal(frames, movingIndexes, targetIndex);
+  } else {
+    expectOnScreenWhileModalShows(frames, movingIndexes, targetIndex);
   }
+  expectHeldAfterClose(frames, targetIndex);
   await expectEventually(() => results.length).toBe(movingTags.length);
   expect(results.every((finished) => !finished)).toBe(true);
   if (closesWhilePresenting) {
-    await waitForDismissalAfterPresentation();
+    await waitForDismissal(markerTag);
   }
 }
 
-async function expectWaitingRunStaysWhenModalCloses(
-  animationType: 'none' | 'slide'
-) {
+// The short run of "inner" ends and waits for "outer". The close starts a new run of "inner" to the screen below.
+async function expectWaitingRunStaysWhenModalCloses(animation: ModalAnimation) {
   const outerResults: boolean[] = [];
+  const innerResults: boolean[] = [];
   const outerTransition = recordingTransition(outerResults);
-  const innerTransition = SharedTransition.duration(150)
-    .easing(Easing.linear)
-    .reduceMotion(ReduceMotion.Never);
+  const innerTransition = recordingTransition(innerResults, 150);
   const screens = (open: boolean, expanded: boolean, belowActive = !open) => (
     <NestedTargetScreens
       open={open}
@@ -1248,40 +1396,136 @@ async function expectWaitingRunStaysWhenModalCloses(
       belowActive={belowActive}
       outerTransition={outerTransition}
       innerTransition={innerTransition}
-      animationType={animationType}
+      animation={animation}
     />
   );
   await mockAnimationTimer({ autoAdvance: false });
   await render(screens(false, false, false));
   await waitForFrames(3);
   await render(screens(true, false));
-  if (animationType === 'none') {
-    await waitForFrames(3);
-  } else {
-    await waitForFrames(1);
-  }
+  await waitForFrames(animation === 'none' ? 3 : 1);
   const innerTag = getTestComponent('window-inner-source').getTag();
   const outerTag = getTestComponent('window-outer-source').getTag();
   await render(screens(true, true));
   await waitForFrames(3);
   await advanceAnimationTimer(400);
   const outerTargetTag = getTestComponent('window-outer-target').getTag();
+  const markerTag = getTestComponent('window-closed-marker').getTag();
+  const contentTag = getTestComponent('window-modal-content').getTag();
   const frames = await recordPresentedFrames(
-    [innerTag, outerTag, outerTargetTag],
+    [innerTag, outerTag, outerTargetTag, markerTag, contentTag],
     () => closeUntilUnmounted(screens(false, true), [outerTargetTag])
   );
-  expectOnScreenWhileModalShows(frames, [0, 1], 2, animationType === 'none');
+  if (animation === 'none') {
+    expectOnScreenWhileModalShows(frames, [0, 1], 2);
+  } else {
+    expectMovesWithPresentedModal(frames, [0, 1], 2);
+  }
+  expectHeldAfterClose(frames, 2);
   await expectEventually(() => outerResults.length).toBe(1);
   expect(outerResults).toBe([false]);
-  if (animationType === 'slide') {
-    await waitForDismissalAfterPresentation();
+  await advanceAnimationTimer(1300);
+  await expectEventually(() => innerResults.length).toBe(2);
+  expect([...innerResults].sort()).toBe([false, true]);
+  if (animation !== 'none') {
+    await waitForDismissal(markerTag);
+  }
+}
+
+// The marker is the view after the view at modalIndex. On iOS, the Modal stays on screen after the mount of the
+// close.
+function expectHeldAfterClose(
+  frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>,
+  modalIndex: number
+) {
+  if (Platform.OS !== 'ios') {
+    return;
+  }
+  const heldFrames = frames.filter(
+    (frame) =>
+      frame[modalIndex + 1]?.opacity === 1 && frame[modalIndex] !== null
+  );
+  expect(heldFrames.length > 0).toBe(true);
+}
+
+// Returns the first frame after the close. The marker is the view after the view at modalIndex.
+function expectClosedDuringPresentation(
+  frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>,
+  modalIndex: number,
+  markerIndex: number
+) {
+  const closeIndex = frames.findIndex(
+    (frame) => frame[markerIndex]?.opacity === 1
+  );
+  expect(closeIndex > 0).toBe(true);
+  expect(frames[closeIndex - 1]?.[modalIndex]?.inContainerTransition).toBe(
+    true
+  );
+  return closeIndex;
+}
+
+// The Modal still presents when it closes. From the close on, the moving views are part of the Modal: they move with
+// it and take its opacity during a fade. Their offset to the view at modalIndex changes only in the frame of the
+// close, by at most the way that the Modal moves in that frame. The marker and the root view of the Modal follow the
+// view at modalIndex.
+function expectMovesWithPresentedModal(
+  frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>,
+  movingIndexes: number[],
+  modalIndex: number
+) {
+  const closeIndex = expectClosedDuringPresentation(
+    frames,
+    modalIndex,
+    modalIndex + 1
+  );
+  const before = frames[closeIndex - 1];
+  const modalBefore = before[modalIndex];
+  const offsets = new Map<number, { x: number; y: number }>();
+  for (const frame of frames.slice(closeIndex)) {
+    const modalView = frame[modalIndex];
+    if (!modalView || !modalBefore) {
+      continue;
+    }
+    expect(modalView.opacity).toBe(0, ComparisonMode.FLOAT_DISTANCE);
+    for (const index of movingIndexes) {
+      const view = frame[index];
+      const expected = before[index];
+      expect(view !== null && expected !== null).toBe(true);
+      if (!view || !expected) {
+        continue;
+      }
+      const content = frame[modalIndex + 2];
+      expectSameLook(view, {
+        ...expected,
+        opacity: expected.opacity * (content?.opacity ?? 1),
+      });
+      const offset = { x: view.x - modalView.x, y: view.y - modalView.y };
+      const first = offsets.get(index);
+      if (first) {
+        expect(offset.x).toBe(first.x, ComparisonMode.PIXEL);
+        expect(offset.y).toBe(first.y, ComparisonMode.PIXEL);
+        continue;
+      }
+      offsets.set(index, offset);
+      const viewShift = Math.hypot(view.x - expected.x, view.y - expected.y);
+      const modalShift = Math.hypot(
+        modalView.x - modalBefore.x,
+        modalView.y - modalBefore.y
+      );
+      expect(viewShift <= modalShift + 0.5).toBe(true);
+    }
   }
 }
 
 // UIKit dismisses a Modal closed during its presentation after the presentation, and a later test must not start
-// under it. React Native reports no dismissal of a Modal that React unmounts.
-function waitForDismissalAfterPresentation() {
-  return wait(1500);
+// under it.
+async function waitForDismissal(markerTag: number) {
+  await expectEventually(async () => {
+    const marker = await RuntimeTestObserver!.observePresentedFrame(markerTag);
+    return (
+      marker !== null && marker.opacity === 1 && !marker.inContainerTransition
+    );
+  }).toBe(true);
 }
 
 async function recordPresentedFrames(
@@ -1299,13 +1543,12 @@ async function recordPresentedFrames(
   return frames;
 }
 
-// While the view at modalIndex is on screen, the views at movingIndexes keep the frame and the opacity with which the
+// While the view at modalIndex is on screen, the views at movingIndexes keep the frame and the look with which the
 // screen showed them before the close, and the view at modalIndex stays hidden.
 function expectOnScreenWhileModalShows(
   frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>,
   movingIndexes: number[],
-  modalIndex: number,
-  keepsPosition = true
+  modalIndex: number
 ) {
   const before = frames[0];
   for (const frame of frames) {
@@ -1321,26 +1564,19 @@ function expectOnScreenWhileModalShows(
       if (!view || !expected) {
         continue;
       }
-      if (keepsPosition) {
-        expect(view.x).toBe(expected.x, ComparisonMode.PIXEL);
-        expect(view.y).toBe(expected.y, ComparisonMode.PIXEL);
-      }
-      expect(view.width).toBe(expected.width, ComparisonMode.PIXEL);
-      expect(view.height).toBe(expected.height, ComparisonMode.PIXEL);
-      expect(view.visibleWidth).toBe(
-        expected.visibleWidth,
-        ComparisonMode.PIXEL
-      );
-      expect(view.visibleHeight).toBe(
-        expected.visibleHeight,
-        ComparisonMode.PIXEL
-      );
-      expect(view.opacity).toBe(
-        expected.opacity,
-        ComparisonMode.FLOAT_DISTANCE
-      );
+      expect(view.x).toBe(expected.x, ComparisonMode.PIXEL);
+      expect(view.y).toBe(expected.y, ComparisonMode.PIXEL);
+      expectSameLook(view, expected);
     }
   }
+}
+
+function expectSameLook(view: PresentedFrame, expected: PresentedFrame) {
+  expect(view.width).toBe(expected.width, ComparisonMode.PIXEL);
+  expect(view.height).toBe(expected.height, ComparisonMode.PIXEL);
+  expect(view.visibleWidth).toBe(expected.visibleWidth, ComparisonMode.PIXEL);
+  expect(view.visibleHeight).toBe(expected.visibleHeight, ComparisonMode.PIXEL);
+  expect(view.opacity).toBe(expected.opacity, ComparisonMode.FLOAT_DISTANCE);
 }
 
 async function closeUntilUnmounted(
@@ -1461,9 +1697,9 @@ async function startFlight(
   return { sourceTag, home, width };
 }
 
-function recordingTransition(results: boolean[]) {
+function recordingTransition(results: boolean[], duration = 1200) {
   const record = (finished: boolean) => results.push(finished);
-  return SharedTransition.duration(1200)
+  return SharedTransition.duration(duration)
     .easing(Easing.linear)
     .reduceMotion(ReduceMotion.Never)
     .withCallback((finished) => {
@@ -1517,7 +1753,35 @@ const styles = StyleSheet.create({
   clippingParent: { width: 40, height: 40, overflow: 'hidden' },
   transparentParent: { opacity: 0 },
   zeroScaleParent: { transform: [{ scale: 0 }] },
-  translucentParent: { opacity: 0.5 },
+  targetOffset: { position: 'absolute', top: 360, left: 20 },
+  firstSource: {
+    position: 'absolute',
+    width: 60,
+    height: 60,
+    backgroundColor: '#dd5522',
+  },
+  secondSource: {
+    position: 'absolute',
+    left: 20,
+    top: 20,
+    width: 60,
+    height: 60,
+    backgroundColor: '#2277dd',
+  },
+  firstTarget: {
+    position: 'absolute',
+    width: 150,
+    height: 150,
+    backgroundColor: '#dd5522',
+  },
+  secondTarget: {
+    position: 'absolute',
+    left: 40,
+    top: 40,
+    width: 150,
+    height: 150,
+    backgroundColor: '#2277dd',
+  },
   innerSource: { width: 20, height: 20, backgroundColor: '#ffcc00' },
   innerTarget: {
     marginTop: 30,

@@ -254,6 +254,15 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)observePresentedFrame:(NSInteger)tag
+                      resolve:(RCTPromiseResolveBlock)resolve
+                       reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    resolve(presentedFrame([self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag]));
+  });
+}
+
 - (void)startFrameRecording:(NSArray *)tags resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{

@@ -84,7 +84,8 @@ enum class SharedTransitionDriver : std::uint8_t {
 enum class SharedTransitionLifecycle : std::uint8_t {
   ACTIVE,
   RETIRING,
-  // The run ended where its carrier is on screen. The carrier stays in a held modal until the modal goes.
+  // The run ended where its carrier is on screen, and its carrier stays in a held modal. The run finishes when React
+  // Native removes the modal.
   STOPPED,
   FINISHED,
 };
@@ -280,7 +281,6 @@ struct TransactionMeta {
   std::optional<size_t> screenSnapshotRemoval;
   std::unordered_map<Tag, Tag> staleSnapshots;
   std::unordered_set<Tag> dueRemovals;
-  std::vector<std::shared_ptr<LightNode>> modalsToHold;
   std::unordered_set<Tag> recreatedTags;
   // Whatever changes a node's children or their exiting states during updateLightTree must reset its cursors.
   std::unordered_map<Tag, IndexCursors> indexCursors;
@@ -645,7 +645,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &topScreen,
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
-  void retireSharedTransition(SharedTransitionRun &run) const;
+  void retireSharedTransition(SharedTransitionRun &run, bool landed = false) const;
   void finishOrRetireSharedTransition(
       SharedTransitionRun &run,
       TransactionMeta &transaction,
@@ -888,6 +888,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &view,
       const std::shared_ptr<LightNode> &root) const;
   bool isWindowLayerHost(const std::shared_ptr<LightNode> &host) const;
+  void holdModal(const std::shared_ptr<LightNode> &node) const;
   bool isInHeldModal(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
