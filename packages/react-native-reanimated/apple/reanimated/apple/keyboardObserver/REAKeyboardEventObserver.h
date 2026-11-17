@@ -5,5 +5,6 @@ typedef void (^KeyboardEventListenerBlock)(int keyboardState, int height);
 - (instancetype)init;
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener;
 - (void)unsubscribeFromKeyboardEvents:(int)listenerId;
+- (void)invalidate;
 
 @end
