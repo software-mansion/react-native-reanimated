@@ -342,6 +342,15 @@ async function runLibrary() {
     server.kill();
     fail(`launch failed: ${errorMessage(error)}`);
   }
+  // The shared Debug build starts the tests whenever this is set.
+  await simRemote([
+    'spawn',
+    UDID,
+    '--',
+    'launchctl',
+    'unsetenv',
+    'RUNTIME_TESTS_LIBRARY',
+  ]);
 
   const exitCode = await serverExit;
   log(`library '${LIBRARY}' finished with exit code ${exitCode}`);
