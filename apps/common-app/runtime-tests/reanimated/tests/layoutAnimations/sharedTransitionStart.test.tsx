@@ -221,7 +221,12 @@ declare global {
 // LayoutAnimationType.SHARED_ELEMENT_TRANSITION, which the package exports only as a type.
 const SHARED_ELEMENT_TRANSITION = 4 as LayoutAnimationType;
 
-type SharedTransitionStart = { sourceY: number; targetY: number };
+type SharedTransitionStart = {
+  sourceX: number;
+  sourceY: number;
+  targetX: number;
+  targetY: number;
+};
 
 function measureWindowY(ref: AnimatedRef<Animated.View>) {
   return runOnUIBlocking(() => {
@@ -242,7 +247,9 @@ async function recordSharedTransitionStarts() {
           starts.value = [
             ...starts.value,
             {
+              sourceX: values.currentGlobalOriginX ?? NaN,
               sourceY: values.currentGlobalOriginY ?? NaN,
+              targetX: values.targetGlobalOriginX ?? NaN,
               targetY: values.targetGlobalOriginY ?? NaN,
             },
           ];
@@ -465,15 +472,21 @@ if (Platform.OS === 'ios') {
         const sourceTag = getTestComponent('fullScreenSource').getTag();
         const parent = await RuntimeTestObserver!.observeParent(sourceTag);
         expect(parent).not.toBe(null);
+        const source =
+          (await RuntimeTestObserver!.observeLocationOnScreen(sourceTag))!;
         let closed = false;
         try {
           await show('open');
+          const forward = await sampleFlight(sourceTag);
           await waitForNotification(forwardFinished);
           await waitForFrames(10);
           const targetTag = getTestComponent('fullScreenTarget').getTag();
           expect(await RuntimeTestObserver!.observeParent(targetTag)).not.toBe(
             null
           );
+          const target =
+            (await RuntimeTestObserver!.observeLocationOnScreen(targetTag))!;
+          expectFlightBetween(forward, source, target);
           await show('closed');
           await waitForNotification(dismissed);
           closed = true;
@@ -582,6 +595,201 @@ function FullScreenBox({
           sharedTransitionTag="fullScreen"
           sharedTransitionStyle={transition}
           style={source ? styles.sheetSource : styles.sheetTarget}
+        />
+      </View>
+    </SharedTransitionBoundary>
+  );
+}
+
+if (Platform.OS === 'ios') {
+  describe('Shared transition to a modal with a flip animation', () => {
+    // A built-in animation starts before the target is in the window and then
+    // follows it, so only a custom animation starts toward the settled target.
+    test.each([
+      { name: 'built-in', builder: linearTransitionBuilder, custom: false },
+      { name: 'custom', builder: customTransitionBuilder, custom: true },
+    ])(
+      'moves the ${name} animation between the settled frames, not the flipped ones',
+      async ({ builder, custom }) => {
+        const id = sheetTestId++;
+        const forwardFinished = `flipForwardFinished${id}`;
+        const reverseFinished = `flipReverseFinished${id}`;
+        const dismissed = `flipDismissed${id}`;
+        const sourceTransition = builder().withCallback((finished) => {
+          'worklet';
+          if (finished) notify(forwardFinished);
+        });
+        const targetTransition = builder().withCallback((finished) => {
+          'worklet';
+          if (finished) notify(reverseFinished);
+        });
+        const show = (phase: 'source' | 'open' | 'closed') =>
+          render(
+            <FlipModal
+              phase={phase}
+              sourceTransition={sourceTransition}
+              targetTransition={targetTransition}
+              dismissed={dismissed}
+            />
+          );
+        await show('source');
+        await waitForFrames(10);
+        const sourceTag = getTestComponent('flipSource').getTag();
+        const source =
+          (await RuntimeTestObserver!.observeLocationOnScreen(sourceTag))!;
+        const { starts, stop } = await recordSharedTransitionStarts();
+        let closed = false;
+        try {
+          await show('open');
+          const forward = await sampleFlight(sourceTag);
+          await waitForNotification(forwardFinished);
+          await waitForFrames(10);
+          const targetTag = getTestComponent('flipTarget').getTag();
+          const target =
+            (await RuntimeTestObserver!.observeLocationOnScreen(targetTag))!;
+          expect(starts.value.length).toBe(1);
+          if (custom) {
+            const start = starts.value[0];
+            expect(start.targetX - start.sourceX).toBeWithinRange(
+              target.x - source.x - 1,
+              target.x - source.x + 1
+            );
+            expect(start.targetY - start.sourceY).toBeWithinRange(
+              target.y - source.y - 1,
+              target.y - source.y + 1
+            );
+          }
+          expectFlightBetween(forward, source, target);
+          expect(Math.max(...forward.x)).toBeWithinRange(
+            source.x + FLIP_MIN_PROGRESS,
+            target.x + 1
+          );
+
+          await show('closed');
+          closed = true;
+          const reverse = await sampleFlight(targetTag);
+          await waitForNotification(reverseFinished);
+          await waitForNotification(dismissed);
+          expectFlightBetween(reverse, source, target);
+          expect(Math.min(...reverse.x)).toBeWithinRange(
+            source.x - 1,
+            target.x - FLIP_MIN_PROGRESS
+          );
+        } finally {
+          try {
+            await stop();
+            if (!closed) {
+              await show('closed');
+              await waitForNotification(dismissed);
+            }
+          } finally {
+            await render(null);
+          }
+        }
+      }
+    );
+  });
+}
+
+// About 0.65 s of a flight of DURATION. The flip takes about 0.6 s.
+const MODAL_FLIGHT_SAMPLES = 40;
+// The target of the flip is to the right of the source.
+const FLIP_MIN_PROGRESS = 20;
+
+type Flight = { x: number[]; y: number[]; scaleX: number[] };
+type ScreenPoint = { x: number; y: number };
+
+async function sampleFlight(tag: number): Promise<Flight> {
+  const flight: Flight = { x: [], y: [], scaleX: [] };
+  for (let sample = 0; sample < MODAL_FLIGHT_SAMPLES; sample++) {
+    const location = await RuntimeTestObserver!.observeLocationOnScreen(tag);
+    flight.x.push(location?.x ?? NaN);
+    flight.y.push(location?.y ?? NaN);
+    const transform = await RuntimeTestObserver!.observeTransform(tag);
+    flight.scaleX.push(transform?.matrix[0] ?? NaN);
+    await waitForFrames(1);
+  }
+  return flight;
+}
+
+function expectFlightBetween(
+  flight: Flight,
+  source: ScreenPoint,
+  target: ScreenPoint
+) {
+  expectWithin(flight.x, source.x, target.x);
+  expectWithin(flight.y, source.y, target.y);
+  expectWithin(flight.scaleX, 1, 1, 0.01);
+}
+
+function expectWithin(values: number[], a: number, b: number, tolerance = 1) {
+  const low = Math.min(a, b) - tolerance;
+  const high = Math.max(a, b) + tolerance;
+  expect(Math.min(...values)).toBeWithinRange(low, high);
+  expect(Math.max(...values)).toBeWithinRange(low, high);
+}
+
+function linearTransitionBuilder() {
+  return SharedTransition.duration(DURATION).easing(Easing.linear);
+}
+
+function customTransitionBuilder() {
+  return SharedTransition.custom(customSheetAnimation);
+}
+
+function FlipModal({
+  phase,
+  sourceTransition,
+  targetTransition,
+  dismissed,
+}: {
+  phase: 'source' | 'open' | 'closed';
+  sourceTransition: SharedTransition;
+  targetTransition: SharedTransition;
+  dismissed: string;
+}) {
+  const open = phase === 'open';
+  return (
+    <NativeScreenStack
+      style={styles.root}
+      onFinishTransitioning={() => {
+        if (phase === 'closed') notify(dismissed);
+      }}>
+      <Screen isNativeStack activityState={2} style={styles.root}>
+        <FlipBox source active={!open} transition={sourceTransition} />
+      </Screen>
+      {open && (
+        <Screen
+          isNativeStack
+          activityState={2}
+          style={styles.root}
+          stackPresentation="modal"
+          stackAnimation="flip">
+          <FlipBox source={false} active transition={targetTransition} />
+        </Screen>
+      )}
+    </NativeScreenStack>
+  );
+}
+
+function FlipBox({
+  source,
+  active,
+  transition,
+}: {
+  source: boolean;
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  const ref = useTestRef(source ? 'flipSource' : 'flipTarget');
+  return (
+    <SharedTransitionBoundary isActive={active}>
+      <View collapsable={false} style={styles.content}>
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="flip"
+          sharedTransitionStyle={transition}
+          style={source ? styles.sheetSource : styles.flipTarget}
         />
       </View>
     </SharedTransitionBoundary>
@@ -1372,6 +1580,13 @@ const styles = StyleSheet.create({
     width: 300,
     height: 260,
     marginTop: 28,
+    backgroundColor: '#2277dd',
+  },
+  flipTarget: {
+    width: 200,
+    height: 260,
+    marginTop: 28,
+    marginLeft: 120,
     backgroundColor: '#2277dd',
   },
   busySource: {
