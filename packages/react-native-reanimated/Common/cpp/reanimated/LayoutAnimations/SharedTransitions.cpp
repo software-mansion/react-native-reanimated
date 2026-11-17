@@ -115,11 +115,12 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::findBoundaryGuess(const std::s
 }
 
 // A back gesture shows the boundary that was on top when the screen was covered, for example the page of a pager.
+// A native stack puts the covered screen back into the window only after the first progress event.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::findRevealedBoundary(const std::shared_ptr<LightNode> &screen) const {
   if (const auto it = coveredTopBoundaries_.find(screen->current.tag); it != coveredTopBoundaries_.end()) {
     const auto boundary = it->second.lock();
     if (isLightNodeMapped(boundary) && !boundary->isExiting() && isInSubtree(boundary, screen) &&
-        !isOffWindow(boundary)) {
+        (!isOffWindow(boundary) || isOffWindow(screen))) {
       return boundary;
     }
   }

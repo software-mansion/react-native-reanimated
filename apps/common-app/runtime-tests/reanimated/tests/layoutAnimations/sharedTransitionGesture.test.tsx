@@ -504,6 +504,86 @@ async function pushOverPager() {
   return tags;
 }
 
+// The container detaches the covered screen, as a native stack does until its back transition starts.
+function DetachedTargetScreens({
+  stage,
+}: {
+  stage: 'below' | 'pushed' | 'revealed' | 'popped';
+}) {
+  const targetScreen = useTestRef('detachedTargetScreen');
+  const sourceScreen = useTestRef('detachedSourceScreen');
+  const target = useTestRef('detachedTarget');
+  const source = useTestRef('detachedSource');
+  return (
+    <ScreenContainer style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        enabled
+        activityState={stage === 'pushed' ? 0 : 2}
+        style={styles.screen}>
+        <SharedTransitionBoundary
+          isActive={stage === 'below' || stage === 'popped'}>
+          <Animated.View
+            ref={target}
+            sharedTransitionTag="detached-target"
+            sharedTransitionStyle={transition}
+            style={styles.target}
+          />
+        </SharedTransitionBoundary>
+      </Screen>
+      {stage !== 'popped' && (
+        <Screen
+          ref={sourceScreen}
+          onAppear={() => notify('detached-source-appeared')}
+          enabled
+          activityState={2}
+          style={styles.screen}>
+          <SharedTransitionBoundary
+            isActive={stage === 'pushed' || stage === 'revealed'}>
+            <Animated.View
+              ref={source}
+              sharedTransitionTag="detached-target"
+              sharedTransitionStyle={transition}
+              style={styles.source}
+            />
+          </SharedTransitionBoundary>
+        </Screen>
+      )}
+    </ScreenContainer>
+  );
+}
+
+describe('Back transition to a screen out of the window', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('starts at the first progress event', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<DetachedTargetScreens stage="below" />);
+    await waitForNotification('detached-source-appeared');
+    await render(<DetachedTargetScreens stage="pushed" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(30000);
+    await waitForFrames(3);
+    const sourceScreen = getTestComponent('detachedSourceScreen').getTag();
+    const source = getTestComponent('detachedSource').getTag();
+
+    await observer().emitScreenTransitionProgress(sourceScreen, 0, true, false);
+    await render(<DetachedTargetScreens stage="revealed" />);
+    await waitForFrames(3);
+    await observer().emitScreenTransitionProgress(
+      sourceScreen,
+      0.5,
+      true,
+      false
+    );
+    await expectCarrier(source, 105);
+
+    await observer().emitScreenTransitionProgress(sourceScreen, 1, true, false);
+    await render(<DetachedTargetScreens stage="popped" />);
+    await expectEventually(() => opacityOf('detachedTarget')).toBe(1);
+  });
+});
+
 async function opacityOf(name: string) {
   return (await getTestComponent(name).getMountedViewProps())?.opacity;
 }
