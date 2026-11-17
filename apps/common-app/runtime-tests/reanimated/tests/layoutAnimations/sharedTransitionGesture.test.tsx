@@ -566,8 +566,14 @@ describe('Back transition to a screen out of the window', () => {
     await waitForFrames(3);
     const sourceScreen = getTestComponent('detachedSourceScreen').getTag();
     const source = getTestComponent('detachedSource').getTag();
+    const originalParent = await observer().observeParent(source);
+    expect(originalParent !== null).toBe(true);
 
     await observer().emitScreenTransitionProgress(sourceScreen, 0, true, false);
+    await expectEventually(async () => {
+      const parent = await observer().observeParent(source);
+      return parent !== null && parent !== originalParent;
+    }).toBe(true);
     await render(<DetachedTargetScreens stage="revealed" />);
     await waitForFrames(3);
     await observer().emitScreenTransitionProgress(
