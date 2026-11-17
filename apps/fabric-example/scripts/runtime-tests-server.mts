@@ -1682,6 +1682,16 @@ function shutdown(code: number) {
 
 async function exitAfterSuiteCommands(code: number) {
   await afterSuiteChain;
+  // The task left by the test launch would otherwise start the tests again
+  // when the app is reopened from the launcher.
+  if (androidSerial) {
+    await adb(androidSerial, [
+      'shell',
+      'am',
+      'force-stop',
+      ANDROID_APP_ID,
+    ]).catch(() => {});
+  }
   wss.close(() => {
     httpServer.close(() => {
       process.exit(code);
