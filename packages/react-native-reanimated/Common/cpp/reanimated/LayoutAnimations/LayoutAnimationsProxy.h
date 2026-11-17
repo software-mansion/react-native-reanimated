@@ -270,6 +270,9 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
+  bool flushesSubtreeRemovals = false;
+  // the sources of the runs that start in this pull, which leave their places as hidden views or as carriers
+  std::vector<std::shared_ptr<LightNode>> startedSources;
   std::vector<RestoreRequest> restoreRequests;
   std::vector<InsertedSharedView> insertedSharedViews;
   // the place in filteredMutations of the first Remove of a screen that React Native Screens snapshots
@@ -590,6 +593,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  void stopCarrierInPlace(
+      SharedTransitionRun &run,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  react::Point nativeOriginOnScreen(const std::shared_ptr<LightNode> &node) const;
+  std::vector<SharedTransitionRun *> runsEndedBy(const std::shared_ptr<LightNode> &node) const;
+  void stopRunsEndedBy(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void removeCarriersHostedIn(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainCarrierContent(const std::shared_ptr<LightNode> &node) const;
@@ -858,9 +868,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   bool hasRunningAnimations() const;
-#ifdef __APPLE__
-  bool holdsSourceInModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
-#endif
+  bool holdsModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
+  bool isInHeldModal(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 

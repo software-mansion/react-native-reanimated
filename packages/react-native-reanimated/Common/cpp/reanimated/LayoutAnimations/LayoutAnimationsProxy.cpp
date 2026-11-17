@@ -1103,20 +1103,23 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
+  const bool defersTeardown = holdsSnapshottedScreen(node);
+  const bool heldModal = !defersTeardown && holdsModal(node, transaction);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (!transaction.surfaceDropped) {
       moveNestedCarriersOutOf(node, transaction);
     }
     removeCarriersHostedIn(node, transaction);
+    if (heldModal && !transaction.surfaceDropped) {
+      stopRunsEndedBy(node, transaction);
+    }
     retainRemovedCarriers(node, transaction);
     if (node->presence() == ReactPresence::REMOVED) {
       return;
     }
   }
-  const bool defersTeardown = holdsSnapshottedScreen(node);
   const bool removesRootFirst = defersTeardown || (startsExitTransitionOnRemove(node) && hasRunningAnimations());
-#ifdef __APPLE__
-  if (!defersTeardown && holdsSourceInModal(node, transaction)) {
+  if (heldModal) {
     std::unordered_set<Tag> heldTags;
     collectSubtreeTags(node, heldTags);
     for (const auto tag : heldTags) {
@@ -1126,7 +1129,6 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     transaction.modalsToHold.push_back(node);
     return;
   }
-#endif
   const SubtreeRemovalConfig config = {
       .shouldRemoveSubviewsWithoutAnimations = true,
       .shouldAnimate = !transaction.surfaceDropped,
@@ -1177,30 +1179,42 @@ bool LayoutAnimationsProxy::hasRunningAnimations() const {
   return hasLayoutAnimationRecords() || !std::ranges::empty(activeSharedTransitionRuns());
 }
 
-#ifdef __APPLE__
 // React Native animates a modal that it removes while presented from a snapshot of what the screen shows, which lags a
-// mount by up to two frames. A modal that holds the source of a transition stays mounted until 34 ms, two frames of a
-// 60 Hz display, after the mount that hides the source. Only a source that this pull hides holds the modal, because a
-// held modal also shows a target that the end of a run shows again.
-bool LayoutAnimationsProxy::holdsSourceInModal(
-    const std::shared_ptr<LightNode> &node,
-    const TransactionMeta &transaction) const {
-  return std::ranges::any_of(transaction.transitions, [&](const auto &entry) {
+// mount by up to two frames. A modal stays mounted until 34 ms, two frames of a 60 Hz display, after the mount in which
+// a source leaves it or a run that its removal ends stops. Then the snapshot shows the views of the runs as they are on
+// screen.
+bool LayoutAnimationsProxy::holdsModal(
+    [[maybe_unused]] const std::shared_ptr<LightNode> &node,
+    [[maybe_unused]] const TransactionMeta &transaction) const {
+#ifdef __APPLE__
+  react_native_assert(
+      (transaction.flushesSubtreeRemovals || transaction.surfaceDropped || !defersSubtreeRemoval(node)) &&
+      "A removal that can hold a modal waits for the runs that start in its pull");
+  const auto isInModal = [&node](const std::shared_ptr<LightNode> &view) {
     bool insideModal = false;
-    for (const auto &ancestor : entry.second.ancestors[BEFORE]) {
-      const auto ancestorIt = lightNodes_.find(ancestor.tag);
-      if (ancestorIt == lightNodes_.end()) {
-        return false;
-      }
-      insideModal = insideModal || !strcmp(ancestorIt->second->current.componentName, "ModalHostView");
-      if (ancestorIt->second == node) {
+    for (auto ancestor = view->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
+      insideModal = insideModal || !strcmp(ancestor->current.componentName, "ModalHostView");
+      if (ancestor == node) {
         return insideModal;
       }
     }
     return false;
-  });
-}
+  };
+  return std::ranges::any_of(transaction.startedSources, isInModal) ||
+      std::ranges::any_of(runsEndedBy(node), [&](const SharedTransitionRun *run) { return isInModal(run->carrier); });
+#else
+  return false;
 #endif
+}
+
+// The views of a held modal stay as they are on screen until its teardown.
+bool LayoutAnimationsProxy::isInHeldModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
+#ifdef __APPLE__
+  return std::ranges::any_of(heldModals_, [&node](const HeldModal &held) { return isInSubtree(node, held.node); });
+#else
+  return false;
+#endif
+}
 
 // A UI-thread pull on Android must not update the views that the next flushing pull removes, because
 // Android can mount that JS-thread pull first.

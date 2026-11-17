@@ -1350,6 +1350,10 @@ void LayoutAnimationsProxy::attachCarrier(
     endAnimationsRecursively(node, mutations, mutations);
     return;
   }
+  if (isInHeldModal(node)) {
+    stopCarrierInPlace(run, mutations, propsParserContext);
+    return;
+  }
   const auto tag = node->current.tag;
   const auto mounted = carrierViewOnScreen(run);
   const auto parent = node->parent.lock();
@@ -1380,6 +1384,61 @@ void LayoutAnimationsProxy::attachCarrier(
   if (run.contentFade) {
     restoreFadedChildren(*run.contentFade, {}, hiddenViewTags(), mutations, propsParserContext);
   }
+}
+
+// The carrier keeps its frame on screen, in its parent.
+void LayoutAnimationsProxy::stopCarrierInPlace(
+    SharedTransitionRun &run,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto &node = run.carrier;
+  const auto tag = node->current.tag;
+  if (node->placement() != CarrierPlacement::AT_ROOT) {
+    carrierPlacements_.attach(node);
+    cancelLayoutAnimation(tag);
+    return;
+  }
+  const auto mounted = carrierViewOnScreen(run);
+  const auto parent = node->parent.lock();
+  react_native_assert(parent && "Parent node is nullptr");
+  removeCarrierFromHost(run, mounted, mutations, mutations);
+  carrierPlacements_.attach(node);
+  cancelLayoutAnimation(tag);
+  auto view = mounted;
+  view.layoutMetrics.frame.origin -= nativeOriginOnScreen(parent);
+  const auto parentTag = parent->current.tag;
+  mutations.push_back(ShadowViewMutation::InsertMutation(parentTag, view, parent->hostIndex(parent->positionOf(node))));
+  mutations.push_back(createPropsUpdate(mounted, view, parentTag, propsParserContext));
+}
+
+// UIKit can show the view outside the view of its React parent, for example in a presented modal.
+react::Point LayoutAnimationsProxy::nativeOriginOnScreen(const std::shared_ptr<LightNode> &node) const {
+  auto ancestors = collectAncestors(node, true);
+  auto positions = getAbsolutePositionsForRootPathView(node, true);
+  placeNatively(ancestors, positions, false);
+  return positions[0];
+}
+
+// A held modal leaves with the views of the runs that its removal ends where they are on screen.
+void LayoutAnimationsProxy::stopRunsEndedBy(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
+    const {
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+  for (auto *run : runsEndedBy(node)) {
+    finishCallback(*run, false);
+    stopCarrierInPlace(*run, transaction.filteredMutations, propsParserContext);
+    run->lifecycle = SharedTransitionLifecycle::FINISHED;
+  }
+}
+
+std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std::shared_ptr<LightNode> &node) const {
+  std::vector<SharedTransitionRun *> runs;
+  for (auto &[_, run] : sharedTransitionRuns_) {
+    if (run.lifecycle == SharedTransitionLifecycle::ACTIVE && isInSubtree(run.carrier, node) &&
+        isInSubtree(run.target, node)) {
+      runs.push_back(&run);
+    }
+  }
+  return runs;
 }
 
 void LayoutAnimationsProxy::retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
@@ -1780,6 +1839,7 @@ void LayoutAnimationsProxy::finishRetiringSharedTransitions(
 }
 
 void LayoutAnimationsProxy::flushSubtreeRemovals(TransactionMeta &transaction) const {
+  transaction.flushesSubtreeRemovals = true;
   for (const auto &node : transaction.removedSubtrees) {
     if (isLightNodeMapped(node)) {
       handleSubtreeRemoval(node, transaction);
@@ -2210,6 +2270,9 @@ void LayoutAnimationsProxy::hideTransitioningViews(
     const auto &parentTag = transition.parentTag[indexNum];
     const auto &node = collectedTransition.nodes[indexNum];
     react_native_assert(node && "Shared transition view not found");
+    if (index == BEFORE) {
+      transaction.startedSources.push_back(node);
+    }
     if (node->isCarrier()) {
       continue;
     }
@@ -3081,7 +3144,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
       deferRestore(request);
       continue;
     }
-    if (node->isCarrier() || !showHiddenView(request) || !isLightNodeMapped(node)) {
+    if (node->isCarrier() || isInHeldModal(node) || !showHiddenView(request) || !isLightNodeMapped(node)) {
       continue;
     }
     resolveLightNodeProps(node);
