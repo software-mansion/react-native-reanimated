@@ -51,24 +51,24 @@ export const _updatePropsJS = (
       [{}, {}]
     );
 
-    if (typeof component.setNativeProps === 'function') {
-      // This is the legacy way to update props on React Native Web <= 0.18.
-      // Also, some components (e.g. from react-native-svg) don't have styles
-      // and always provide setNativeProps function instead (even on React Native Web 0.19+).
-      setNativeProps(component, rawStyles, isAnimatedProps);
-    } else if (
+    // Check for a DOM node first: React Native Web 0.22 gives its DOM nodes
+    // a setNativeProps function that does nothing.
+    if (
       createReactDOMStyle !== undefined &&
+      'nodeType' in component &&
       component.style !== undefined
     ) {
       // For Animated.Text we need to update textContent directly
       if ('children' in rawStyles) {
-        (component as ReanimatedHTMLElement).textContent = rawStyles.children;
+        component.textContent = rawStyles.children;
         delete rawStyles.children;
       }
 
-      // React Native Web 0.19+ no longer provides setNativeProps function,
-      // so we need to update DOM nodes directly.
       updatePropsDOM(component, rawStyles, isAnimatedProps);
+    } else if (typeof component.setNativeProps === 'function') {
+      // Some components (e.g. from react-native-svg) don't have styles
+      // and always provide setNativeProps function instead.
+      setNativeProps(component, rawStyles, isAnimatedProps);
     } else if (component.props && Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!(key in rawStyles)) {
