@@ -84,6 +84,34 @@ describe('work queued on an idle UI Runtime', () => {
     await waitForNotification('microtask');
   });
 
+  test('runs a promise reaction queued by a synchronous call from the RN Runtime', async () => {
+    const onDone = () => notify('promise');
+    await wait(IDLE_MS);
+
+    runOnUISync(() => {
+      'worklet';
+      void Promise.resolve().then(() => {
+        scheduleOnRN(onDone);
+      });
+    });
+
+    await waitForNotification('promise');
+  });
+
+  test('runs a promise reaction queued by a scheduled worklet', async () => {
+    const onDone = () => notify('promise');
+    await wait(IDLE_MS);
+
+    scheduleOnUI(() => {
+      'worklet';
+      void Promise.resolve().then(() => {
+        scheduleOnRN(onDone);
+      });
+    });
+
+    await waitForNotification('promise');
+  });
+
   test('runs every frame of a chain of requestAnimationFrame callbacks once', async () => {
     const FRAME_COUNT = 10;
     let timestamps: number[] = [];
