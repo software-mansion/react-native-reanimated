@@ -1,5 +1,5 @@
-import { AppRegistry } from 'react-native';
 import ReanimatedAutoRunApp from 'common-app/runtime-tests/reanimated/AutoRunApp';
+import { AppRegistry } from 'react-native';
 
 const RUNTIME_TESTS_APP_NAME = 'FabricExampleRuntimeTests';
 

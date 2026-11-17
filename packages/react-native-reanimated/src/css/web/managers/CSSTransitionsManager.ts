@@ -60,7 +60,8 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   }
 
   unmountCleanup() {
-    this.callbackListeners.detach();
+    // Browsers dispatch `transitioncancel` after the element leaves the DOM.
+    this.callbackListeners.scheduleDetach();
   }
 
   private detach() {

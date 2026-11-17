@@ -5,6 +5,7 @@
 #endif // ANDROID
 
 #include <memory>
+#include <queue>
 #include <string>
 #include <thread>
 #include <utility>
@@ -76,20 +77,35 @@ AsyncQueueImpl::AsyncQueueImpl(const std::string &name) : state_(std::make_share
 }
 
 AsyncQueueImpl::~AsyncQueueImpl() {
-  {
-    std::unique_lock<std::mutex> lock(state_->mutex);
-    state_->running = false;
-    state_->queue = {};
-  }
-  state_->cv.notify_all();
+  stop(defaultToken);
 }
 
 void AsyncQueueImpl::push(std::function<void()> &&job) {
   {
     std::unique_lock<std::mutex> lock(state_->mutex);
+    if (!state_->running) [[unlikely]] {
+      return;
+    }
     state_->queue.emplace(job);
   }
   state_->cv.notify_one();
+}
+
+void AsyncQueueImpl::abortPending(AbortToken /* abortToken */) {
+  std::queue<std::function<void()>> pendingJobs;
+  {
+    std::unique_lock<std::mutex> lock(state_->mutex);
+    std::swap(pendingJobs, state_->queue);
+  }
+}
+
+void AsyncQueueImpl::stop(AbortToken abortToken) {
+  {
+    std::unique_lock<std::mutex> lock(state_->mutex);
+    state_->running = false;
+  }
+  state_->cv.notify_all();
+  abortPending(abortToken);
 }
 
 AsyncQueueUI::AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler) : uiScheduler_(uiScheduler) {}

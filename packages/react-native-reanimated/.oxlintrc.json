@@ -1,0 +1,48 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../.oxlintrc.json"],
+  "jsPlugins": ["eslint-plugin-reanimated"],
+  "env": {
+    "builtin": true,
+    "es2026": true,
+    "node": true,
+    "commonjs": true,
+    "jest": true
+  },
+  "ignorePatterns": ["**/lib/**", "**/android/**", "**/apple/**"],
+  "rules": {
+    "reanimated/use-reanimated-error": "error",
+    "reanimated/use-logger": "error",
+    "reanimated/no-logger-message-prefix": "error",
+    "reanimated/use-global-this": "error",
+    "no-unused-expressions": "error"
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts", "**/*.tsx"],
+      "rules": {
+        "no-empty-function": "error",
+        "typescript/no-explicit-any": "error",
+        "n/no-unpublished-import": [
+          "error",
+          {
+            "ignoreTypeImport": true,
+            "ignorePrivate": true
+          }
+        ]
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
+      "rules": {
+        "typescript/unbound-method": "off"
+      }
+    },
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "rules": {
+        "eslint-core/strict": ["error", "global"]
+      }
+    }
+  ]
+}

@@ -1,9 +1,12 @@
 'use strict';
 
+import {
+  installLazyBundleLoader,
+  installLazyBundleRegistrar,
+  makeLazyBundleRegistrar,
+} from '../bundleMode/lazyBundles';
 import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
-import { initializeNetworking } from '../bundleMode/network';
 import { registerReportFatalRemoteError } from '../debug/errors';
-import { getStaticFeatureFlag } from '../featureFlags/featureFlags';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
 import { installRemoteFunctionUnpacker } from '../memory/remoteFunctionUnpacker';
@@ -12,6 +15,7 @@ import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker'
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
 import { installValueUnpacker } from '../memory/valueUnpacker';
+import { installNetworking } from '../networking/install';
 import { setupQueueMicrotask } from '../runLoop/common/queueMicrotaskPolyfill';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
 import { setupSetInterval } from '../runLoop/common/setIntervalPolyfill';
@@ -164,6 +168,7 @@ function initializeRNRuntime() {
   }
 
   registerReportFatalRemoteError();
+  setupSerializer();
 }
 
 /** A function that should be run only on Worklet runtimes. */
@@ -173,8 +178,10 @@ function initializeWorkletRuntime() {
       silenceHMRWarnings();
     }
 
-    if (getStaticFeatureFlag('FETCH_PREVIEW_ENABLED')) {
-      initializeNetworking();
+    installNetworking();
+
+    if (__DEV__) {
+      installLazyBundleLoader();
     }
   }
 }
@@ -195,12 +202,15 @@ function installRNBindingsOnUIRuntime() {
       ? null
       : getMemorySafeCapturableConsole();
 
+  const lazyBundleRegistrar = makeLazyBundleRegistrar();
+
   runOnUISync(() => {
     'worklet';
     if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
       setupConsole(runtimeBoundCapturableConsole!);
     } else if (__DEV__) {
       setupConsoleForwarding(runtimeBoundCapturableConsole!);
+      installLazyBundleRegistrar(lazyBundleRegistrar);
     }
 
     setupQueueMicrotask();

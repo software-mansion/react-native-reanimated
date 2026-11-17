@@ -4,7 +4,7 @@ title: Getting started
 sidebar_label: Getting started
 ---
 
-Before you get started you should definitely familiarize yourself with the original [Animated API](https://facebook.github.io/react-native/docs/animated.html). It will do you well to be comfortable with how animations are generally done in `Animated`. (Fun Fact: Reanimated is also backwards compatible with the `Animated API`. 🙌)
+Before you get started you should definitely familiarize yourself with the original [Animated API](https://reactnative.dev/docs/animated). It will do you well to be comfortable with how animations are generally done in `Animated`. (Fun Fact: Reanimated is also backwards compatible with the `Animated API`. 🙌)
 
 Refer to the [Motivation](about.md#motivation) section to understand why this library exists
 

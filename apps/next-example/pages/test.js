@@ -1,10 +1,10 @@
+import { StyleSheet, View, Text, Button } from 'react-native';
 import Animated, {
   PinwheelIn,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View, Text, Button } from 'react-native';
 
 export default function App() {
   const sv = useSharedValue(10);

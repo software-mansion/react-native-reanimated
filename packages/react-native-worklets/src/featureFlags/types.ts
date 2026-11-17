@@ -22,7 +22,6 @@ export type DynamicFlagName = keyof Omit<
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DefaultStaticFeatureFlags = {
   RUNTIME_TEST_FLAG: false,
-  FETCH_PREVIEW_ENABLED: false,
   IOS_DYNAMIC_FRAMERATE_ENABLED: true,
   ENABLE_CROSS_RUNTIME_STACK_TRACES: true,
 } as const satisfies typeof StaticFeatureFlagsJSON;

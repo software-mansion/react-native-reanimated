@@ -18,7 +18,10 @@ oxc_semantic = "0.132"
 oxc_span = "0.132"
 oxc_syntax = "0.132"
 
-napi = { version = "3", default-features = false, features = ["napi4", "serde-json"] }
+napi = { version = "3", default-features = false, features = [
+  "napi4",
+  "serde-json",
+] }
 napi-derive = "3"
 
 [build-dependencies]

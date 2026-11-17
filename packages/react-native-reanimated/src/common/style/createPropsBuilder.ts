@@ -6,6 +6,7 @@ import type {
 } from '../types';
 import { ValueProcessorTarget } from '../types';
 import { isRecord } from '../utils';
+import { processStyleValue, warnIgnoredStyleValue } from './processStyleValue';
 
 const MAX_PROCESS_DEPTH = 10;
 
@@ -93,7 +94,20 @@ export default function createPropsBuilder<
           continue;
         }
 
-        const processedValue = configValue(value, context);
+        // null resets the prop, the same as in React Native, so there is
+        // nothing to process.
+        if (value === null) {
+          result[property] = null;
+          continue;
+        }
+
+        let processedValue;
+        try {
+          processedValue = processStyleValue(configValue, value, context);
+        } catch (error) {
+          warnIgnoredStyleValue(error);
+          continue;
+        }
 
         if (isRecord(processedValue) && !isRecord(value)) {
           // The value processor may return multiple values for a single property

@@ -37,6 +37,8 @@
   cursor: pointer;
   height: 12px;
   width: 12px;
+  padding: 0;
+  border: none;
   background-color: var(--swm-navy-light-transparent);
   border-radius: 50%;
   display: inline-block;
@@ -61,4 +63,13 @@
   .testimonialPair {
     flex-direction: column;
   }
+}
+
+.dot:focus-visible {
+  outline: 2px solid var(--swm-navy-light-100);
+  outline-offset: 3px;
+}
+
+[data-theme='dark'] .dot:focus-visible {
+  outline-color: var(--swm-off-white);
 }

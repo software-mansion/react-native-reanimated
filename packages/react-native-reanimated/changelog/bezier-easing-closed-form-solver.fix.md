@@ -1,0 +1,1 @@
+Fix `Easing.bezier` returning wrong values around the middle of steep curves such as `(1, 0, 0, 1)` by using the closed-form solver of bezier-easing 3.2, which is precise to ~1e-14 and clamps inputs outside `[0, 1]`.

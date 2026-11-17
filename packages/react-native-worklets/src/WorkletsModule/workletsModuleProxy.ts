@@ -27,7 +27,8 @@ export interface WorkletsModuleProxy {
     shareableGuestUnpackerSourceMap: string,
     remoteFunctionUnpackerCode: string,
     remoteFunctionUnpackerLocation: string,
-    remoteFunctionUnpackerSourceMap: string
+    remoteFunctionUnpackerSourceMap: string,
+    isDev: boolean
   ): void;
 
   loadUnpackersWithBytecode(
@@ -118,6 +119,20 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): SerializableRef<object>;
 
+  /**
+   * Returns an opaque marker that refers to `serializable` without owning it.
+   * `serializableMappingCache` stores it for clones that hold a JS function.
+   */
+  makeWeakSerializableRef(serializable: SerializableRef<unknown>): object;
+
+  /**
+   * Returns a new reference to the marker's serializable while something else
+   * keeps it alive, or `undefined` once it was released.
+   */
+  derefWeakSerializableRef(
+    marker: object
+  ): SerializableRef<unknown> | undefined;
+
   createCustomSerializable(
     data: SerializableRef<unknown>,
     typeId: number
@@ -140,8 +155,15 @@ export interface WorkletsModuleProxy {
 
   scheduleOnRN<TArgs extends unknown[]>(
     fun: RemoteFunction | ((...args: TArgs) => unknown),
-    args: SerializableRef<TArgs> | undefined
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
   ): void;
+
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
+  ): TReturn;
 
   scheduleOnUI<TValue>(
     serializableArrayOfWorklets: SerializableRef<TValue[]>,
@@ -160,20 +182,28 @@ export interface WorkletsModuleProxy {
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean,
+    abortable: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack?: string,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string
+    scheduleStack?: string,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ): void;
+
+  abortWorkletRuntime(runtimeId: number): boolean;
 
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
@@ -230,6 +260,12 @@ export interface WorkletsModuleProxy {
   getStaticFeatureFlag(name: string): boolean;
 
   setDynamicFeatureFlag(name: string, value: boolean): void;
+
+  /**
+   * Test-only. Returns `true` until the Worklet Runtime with the given id is
+   * destroyed.
+   */
+  isRuntimeAlive(runtimeId: number): boolean;
 
   getCurrentThreadId(): string;
 

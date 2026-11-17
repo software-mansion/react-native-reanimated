@@ -2,21 +2,6 @@ name: Runtime tests Android
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - .github/workflows/runtime-tests-android.yml
-      - apps/common-app/runtime-tests/**
-      - apps/fabric-example/package.json
-      - apps/common-app/package.json
-      - apps/fabric-example/scripts/runtime-tests-server.js
-      - apps/fabric-example/android/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/src/**
-      - packages/react-native-worklets/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/bundleMode/**
-      - packages/react-native-worklets/src/**
   workflow_call:
     inputs:
       bundleMode:
@@ -27,6 +12,10 @@ on:
         required: false
         type: string
         default: DebugRuntimeTests
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -37,6 +26,10 @@ on:
         required: false
         type: string
         default: DebugRuntimeTests
+      full:
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -50,16 +43,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The workflow-name check is required: the nightly caller also runs on
-        # pull_request, and its workflow_call legs must keep their explicit
-        # inputs.bundleMode instead of fanning out both modes.
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests Android') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
+        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
     concurrency:
-      group: runtime-tests-android-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -79,8 +69,24 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Install Android NDK
+        uses: $/.github/actions/install-android-ndk
+
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       - name: Toggle Bundle Mode off (Legacy Eval)
         if: ${{ !matrix.bundleMode }}
@@ -92,7 +98,10 @@ jobs:
 
       - name: Build app
         working-directory: ${{ env.WORKING_DIRECTORY }}/android
-        run: ./gradlew "assemble$CONFIGURATION" --build-cache -PreactNativeArchitectures=x86_64
+        # Temporary: GWP-ASan is disabled on the x86_64 emulator because its backtrace recorder can crash
+        # the app. Remove -PruntimeTestsDisableGwpAsan when
+        # https://github.com/software-mansion/react-native-reanimated/issues/10960 is resolved.
+        run: ./gradlew "assemble$CONFIGURATION" --build-cache -PreactNativeArchitectures=x86_64 -PruntimeTestsDisableGwpAsan=true
 
       - name: AVD cache
         id: avd-cache
@@ -102,6 +111,12 @@ jobs:
             ~/.android/avd/*
             ~/.android/adb*
           key: avd-34-x86_64
+
+      - name: Install Android Emulator
+        uses: $/.github/actions/install-android-emulator
+        with:
+          api-level: 34
+          arch: x86_64
 
       - name: Create AVD and generate a boot snapshot
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -115,8 +130,10 @@ jobs:
           working-directory: apps/fabric-example
           script: echo "Generated AVD snapshot for caching."
 
-      - name: Run ReJest self-tests on the emulator (retries once)
+      - name: Run runtime tests on the emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        env:
+          RUNTIME_TESTS_ARGS: --launch --platform android --configuration ${{ env.CONFIGURATION }} --skip-build --connect-timeout 900 --idle-timeout 900 ${{ inputs.full && '--full' || '' }}
         with:
           api-level: 34
           arch: x86_64
@@ -124,40 +141,15 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: false
           working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900
+          script: |
+            echo "::group::ReJest self-tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Verify CI catches failing tests"; if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner"; status=1; else echo "Failing tests correctly failed the runner"; status=0; fi; echo "::endgroup::"; exit $status
+            echo "::group::Worklets runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Reanimated runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated; status=$?; echo "::endgroup::"; exit $status
 
-      - name: Verify CI catches failing tests
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        with:
-          api-level: 34
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          working-directory: apps/fabric-example
-          script: if node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library self-tests --skip-build --connect-timeout 900 --idle-timeout 900 --only "intentional failures"; then echo "A failing suite did not fail the runner" && exit 1; else echo "Failing tests correctly failed the runner"; fi
-
-      - name: Run Worklets runtime tests on the emulator (retries once)
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        with:
-          api-level: 34
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library worklets --skip-build --connect-timeout 900 --idle-timeout 900
-
-      - name: Run Reanimated runtime tests on the emulator (retries once)
-        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
-        with:
-          api-level: 34
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: false
-          working-directory: apps/fabric-example
-          script: node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900 || node scripts/runtime-tests-server.js --launch --platform android --configuration "$CONFIGURATION" --library reanimated --skip-build --connect-timeout 900 --idle-timeout 900
+      - name: Show disk usage
+        if: always()
+        run: df -h /
 
       - name: Upload crash reports
         if: failure()

@@ -2,43 +2,6 @@ name: Example Android build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - .github/workflows/example-android-build-check.yml
-      - .clang-tidy
-      - scripts/llvm-tools/**
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/package.json
-      - packages/react-native-reanimated/src/specs/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/package.json
-      - packages/react-native-worklets/src/specs/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/package.json
-      - apps/common-app/package.json
-      - apps/fabric-example/android/**
-  merge_group:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/example-android-build-check.yml
-      - .clang-tidy
-      - scripts/llvm-tools/**
-      - packages/react-native-reanimated/android/**
-      - packages/react-native-reanimated/package.json
-      - packages/react-native-reanimated/src/specs/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/android/**
-      - packages/react-native-worklets/package.json
-      - packages/react-native-worklets/src/specs/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/package.json
-      - apps/common-app/package.json
-      - apps/fabric-example/android/**
   workflow_call:
     inputs:
       bundleMode:
@@ -65,7 +28,7 @@ jobs:
       BUILD_MARKER_DIR: .build-markers
       CACHE_KEY: android-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
     concurrency:
-      group: android-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      group: android-${{ github.workflow }}-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -88,6 +51,10 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
+
+      - name: Install Android NDK
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/install-android-ndk
 
       # TODO: Add caching for node_modules and artifacts that will work with monorepo setup.
       - name: Install monorepo node dependencies

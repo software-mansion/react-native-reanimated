@@ -3,6 +3,8 @@ import { copyFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { TARGETS } from './targets.mts';
+
 interface LibraryNaming {
   ext: string;
   prefix: string;
@@ -18,8 +20,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const profile: string = process.argv[2] === 'release' ? 'release' : 'debug';
 
-const platform: NodeJS.Platform = process.platform;
-const arch: string = process.arch;
+const cargoTarget = process.env.CARGO_BUILD_TARGET;
+const target = cargoTarget
+  ? TARGETS[cargoTarget]
+  : { platform: process.platform, arch: process.arch };
+if (!target) {
+  console.error(`Unsupported CARGO_BUILD_TARGET: ${cargoTarget}`);
+  process.exit(1);
+}
+
+const { platform, arch } = target;
 
 const naming = NAMING_BY_PLATFORM[platform];
 if (!naming) {
@@ -30,6 +40,7 @@ if (!naming) {
 const src = join(
   root,
   'target',
+  ...(cargoTarget ? [cargoTarget] : []),
   profile,
   `${naming.prefix}worklets_oxc_plugin.${naming.ext}`
 );

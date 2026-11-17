@@ -1,5 +1,6 @@
 'use strict';
 
+import type { LazyBundleRegistrar } from './bundleMode/lazyBundles';
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { reportFatalRemoteError } from './debug/errors';
@@ -31,6 +32,16 @@ declare global {
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
+  /** The URL of the bundle. Only in Bundle Mode on Worklet Runtimes. */
+  var _WORKLETS_SOURCE_URL: string | undefined;
+  /** Prefix of the Metro runtime globals, defined by the Metro prelude. */
+  var __METRO_GLOBAL_PREFIX__: string | undefined;
+  /** Only in Debug builds on Worklet Runtimes. */
+  var evalWithSourceUrl:
+    | ((code: string, sourceUrl: string) => unknown)
+    | undefined;
+  /** Only in dev builds in Bundle Mode on Worklet Runtimes. */
+  var __workletsLazyBundleRegistrar: LazyBundleRegistrar | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializableString: (value: string) => FlatSerializableRef<string>;
@@ -86,6 +97,7 @@ declare global {
   var _beginSection: (name: string) => void;
   var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
+  var _getTimerTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
@@ -103,14 +115,30 @@ declare global {
     unknown,
     unknown
   >;
-  /** Only in Bundle Mode on Worklet Runtimes. */
-  var TurboModules: Map<string, unknown>;
   /**
    * Native logging hook installed by React Native on the RN Runtime and
    * propagated to Worklet Runtimes in Bundle Mode. Level values match RN's
    * `LOG_LEVELS`: 0 = trace, 1 = info, 2 = warn, 3 = error.
    */
   var nativeLoggingHook: ((message: string, level: number) => void) | undefined;
+  /** Only in Bundle Mode on Worklet Runtimes. */
+  var __workletsNetworking:
+    | {
+        sendRequest(
+          config: {
+            method: string;
+            url: string;
+            headers: Array<[string, string]>;
+            body?: string | ArrayBuffer;
+            timeoutMs: number;
+            withCredentials: boolean;
+          },
+          onEvent: (type: string, payload: unknown) => void
+        ): number;
+        abortRequest(requestId: number): void;
+        decodeText(buffer: ArrayBuffer, encoding?: string): string;
+      }
+    | undefined;
   interface NodeRequire {
     resolveWeak(id: string): number;
     getModules(): Map<number, unknown>;

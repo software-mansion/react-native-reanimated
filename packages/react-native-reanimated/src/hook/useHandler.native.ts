@@ -1,7 +1,7 @@
 'use strict';
 import { useEffect, useRef } from 'react';
 import type { WorkletFunction } from 'react-native-worklets';
-import { makeShareable } from 'react-native-worklets';
+import { isWorkletFunction, makeShareable } from 'react-native-worklets';
 
 import type { UnknownRecord } from '../common';
 import { logger } from '../common';
@@ -31,7 +31,10 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   'use no memo';
 
   if (__DEV__ && _dependencies !== undefined) {
-    logger.warn('dependencies should only be used in web implementation.');
+    logger.warnOnce(
+      'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+      1
+    );
   }
 
   const stateRef = useRef<{
@@ -49,7 +52,7 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
   const state = stateRef.current;
 
   if (__DEV__) {
-    ensureWorkletHandlers(handlers);
+    ensureWorkletHandlers(handlers, isWorkletFunction);
   }
   const doDependenciesDiffer = !areWorkletHandlersEqual(
     handlers as Record<string, WorkletFunction>,

@@ -4,6 +4,8 @@ title: Feature flags
 sidebar_label: Feature flags
 ---
 
+# Feature flags
+
 Feature flags allow developers to opt-in for experimental changes or opt-out from recent changes that have already been made default. Feature flags serve as a tool for incremental rollout of new implementation without affecting the general stability of the library, allowing to gather feedback from early adopters. There are two types of feature flags: static and dynamic.
 
 ## Summary of available feature flags
@@ -11,7 +13,7 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 | Feature flag name                                                          |              Type               | Added in | Removed in | Default value |
 | -------------------------------------------------------------------------- | :-----------------------------: | :------: | :--------: | :-----------: |
 | [`IOS_DYNAMIC_FRAMERATE_ENABLED`](#ios_dynamic_framerate_enabled)         | [static](#static-feature-flags) |  0.6.0   |  –   |    `true`     |
-| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                         | [static](#static-feature-flags) |  0.8.0   |  –   |    `false`    |
+| [`FETCH_PREVIEW_ENABLED`](#fetch_preview_enabled)                         | [static](#static-feature-flags) |  0.8.0   |  0.13.0   |    `false`    |
 | [`ENABLE_CROSS_RUNTIME_STACK_TRACES`](#enable_cross_runtime_stack_traces) | [static](#static-feature-flags) |  0.9.0   |  –   |    `true`     |
 
 :::info
@@ -32,14 +34,13 @@ This feature flags is supposed to improve the visual perception and perceived sm
 ### `FETCH_PREVIEW_ENABLED`
 </Badges>
 
-This feature flag enables the [preview of fetch API on Worklet Runtimes](/docs/bundleMode/usage#running-network-requests-in-worklets) in the [Bundle Mode](/docs/bundleMode/). Make sure to follow the rest of the [setup instructions](/docs/bundleMode/setup/) after enabling this flag.
-**This flag only takes effect in Bundle Mode.**
+**Removed in 0.13.0.** The [networking API on Worklet Runtimes](../bundleMode/usage.mdx#running-network-requests-in-worklets) is enabled by default in [Bundle Mode](../bundleMode/overview.mdx) and no longer requires a feature flag. To leave it out of a particular runtime, pass [`enableNetworking: false`](../threading/createWorkletRuntime.mdx#enablenetworking) to `createWorkletRuntime`.
 
 <Badges version="0.9.0">
 ### `ENABLE_CROSS_RUNTIME_STACK_TRACES`
 </Badges>
 
-When enabled, the JavaScript call site that schedules a worklet (via `scheduleOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet. If the worklet then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklets much easier to trace back to their origin in your app code.
+When enabled, the JavaScript call site that schedules a worklet function (via `scheduleOnUI`, `scheduleOnRuntime` and similar) is captured and attached to the worklet function. If the worklet function then throws on the worklet runtime, the resulting error stack is stitched together with the original scheduling stack so the LogBox entry points back to the line that scheduled it, rather than ending at the worklet runtime boundary. This makes errors thrown deep inside worklet functions much easier to trace back to their origin in your app code.
 
 This flag only takes effect in development builds (`__DEV__`). In release builds, capturing the scheduling stack is skipped regardless of the flag value to avoid the runtime overhead.
 
@@ -93,7 +94,7 @@ The call stack reported in LogBox differs depending on whether the flag is enabl
 </div>
 </div>
 
-The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `App`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet. Without the flag, the stack stops at the worklet runtime boundary and only the `[UI]:` frames are visible.
+The frames without the `[UI]:` prefix (`enqueueUI`, `scheduleOnUI`, `App`, ...) are the ones contributed by this feature. They come from the RN runtime call site that scheduled the worklet function. Without the flag, the stack stops at the worklet runtime boundary and only the `[UI]:` frames are visible.
 
 ## Static feature flags
 
@@ -116,10 +117,10 @@ Static flags are intended to be resolved during code compilation and cannot be c
 2. Rebuild the native app
 
 :::warning
-Static feature flags are not supported in environments where Worklets is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
+Static feature flags are not supported in environments where the Worklets library is prebuilt with the default configuration of flags, like for instance in [Expo Go](https://expo.dev/go) and [RNRepo](https://rnrepo.org/).
 
 - It's not possible to modify static feature flags in Expo Go. Please consider using [Expo Prebuild](https://docs.expo.dev/workflow/continuous-native-generation/) instead.
-- If your project uses RNRepo, you need to force building Worklets from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
+- If your project uses RNRepo, you need to force building the Worklets library from source by adding it to the deny list as described in [RNRepo's documentation](https://github.com/software-mansion/rnrepo/blob/main/TROUBLESHOOTING.md#deny-list-configuration).
 
 :::
 

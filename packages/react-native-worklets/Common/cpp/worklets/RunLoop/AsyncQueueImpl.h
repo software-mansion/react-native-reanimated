@@ -19,13 +19,19 @@ struct AsyncQueueState {
   std::queue<std::function<void()>> queue;
 };
 
-class AsyncQueueImpl : public AsyncQueue {
+class AsyncQueueImpl final : public AsyncQueue {
  public:
   explicit AsyncQueueImpl(const std::string &name);
 
   ~AsyncQueueImpl() override;
 
+  using AsyncQueue::push;
+
   void push(std::function<void()> &&job) override;
+
+  void abortPending(AbortToken abortToken) override;
+
+  void stop(AbortToken abortToken) override;
 
  private:
   static void runLoop(const std::shared_ptr<AsyncQueueState> &state);
@@ -38,6 +44,8 @@ class AsyncQueueUI : public AsyncQueue {
   explicit AsyncQueueUI(const std::shared_ptr<UIScheduler> &uiScheduler);
 
   ~AsyncQueueUI() override = default;
+
+  using AsyncQueue::push;
 
   void push(std::function<void()> &&job) override;
 

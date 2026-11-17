@@ -79,7 +79,6 @@ const rule: TSESLint.RuleModule<'noLoggerMessagePrefix', []> = {
     schema: [],
     fixable: 'code',
   },
-  defaultOptions: [],
 };
 
 export default rule;

@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/common/values/CSSValue.h>
 
-#include <react/utils/FloatComparison.h>
+#include <reanimated/Tools/TextMetrics.h>
 
 #include <string>
 
@@ -44,11 +44,7 @@ struct CSSDouble : public CSSNumberBase<CSSDouble, double> {
 struct CSSTextDouble : public CSSNumberBase<CSSTextDouble, double> {
   using CSSNumberBase::CSSNumberBase;
 
-  /// React Native compares text attributes with this epsilon but lays them out
-  /// exactly, so a smaller step moves the frame while the text keeps its old
-  /// metrics. Interpolation lands on the endpoint once it gets that close.
-  /// https://github.com/facebook/react-native/blob/v0.87.0/packages/react-native/ReactCommon/react/renderer/attributedstring/TextAttributes.cpp#L174-L177
-  static constexpr double epsilon = facebook::react::kDefaultEpsilon;
+  CSSTextDouble interpolate(double progress, const CSSTextDouble &other) const override;
 };
 
 struct CSSInteger : public CSSNumberBase<CSSInteger, int> {
@@ -62,19 +58,5 @@ struct CSSIndex : public CSSNumberBase<CSSIndex, int> {
 
   CSSIndex interpolate(double progress, const CSSIndex &other) const override;
 };
-
-#ifdef ANDROID
-
-// For some reason Android crashes when blurRadius is smaller than 1 so we use a
-// custom value that will never be smaller than 1
-
-struct CSSShadowRadiusAndroid : public CSSNumberBase<CSSShadowRadiusAndroid, double> {
-  CSSShadowRadiusAndroid();
-  explicit CSSShadowRadiusAndroid(double value);
-  explicit CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  explicit CSSShadowRadiusAndroid(const folly::dynamic &value);
-};
-
-#endif
 
 } // namespace reanimated::css

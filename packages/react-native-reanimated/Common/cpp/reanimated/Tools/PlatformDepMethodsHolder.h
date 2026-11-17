@@ -1,14 +1,18 @@
 #pragma once
 
-#include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
+#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <reanimated/CSS/core/transition/CSSPlatformTransitionBackend.h>
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
+#include <react/renderer/core/Props.h>
 #include <react/renderer/core/ReactPrimitives.h>
-#include <reanimated/CSS/core/CSSPlatformAnimationFactory.h>
+#include <react/renderer/graphics/Point.h>
+#include <react/renderer/graphics/Transform.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -40,6 +44,7 @@ using GetAnimationTimestampFunction = std::function<double(void)>;
 using ProgressLayoutAnimationFunction = std::function<void(jsi::Runtime &, int, jsi::Object)>;
 using EndLayoutAnimationFunction = std::function<void(int, bool)>;
 
+using IsSensorAvailableFunction = std::function<bool(int)>;
 using RegisterSensorFunction = std::function<int(int, int, int, std::function<void(double[], int)>)>;
 using UnregisterSensorFunction = std::function<void(int)>;
 using SetGestureStateFunction = std::function<void(int, int)>;
@@ -47,7 +52,37 @@ using KeyboardEventSubscribeFunction = std::function<int(std::function<void(int,
 using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
-using ForceScreenSnapshotFunction = std::function<void(Tag tag)>;
+using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
+using ReleaseViewTransitionsFunction = std::function<void(std::vector<int> &tags, bool isBatchQueued)>;
+using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
+// Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
+using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
+// The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its
+// origin relative to the root view of the surface comes from the platform. If settled, the origin and the transform
+// are at the end of a running presentation, without the transforms of the presented view and its ancestors.
+// A native view between a view and its React parent can move the view (e.g. the sheet of a bottom sheet). Then the
+// origin and the transform are relative to the React parent, with the current values also if settled.
+struct NativeViewPlacement {
+  enum class Kind { InsideReactParent, MovedInsideReactParent, OffWindow, OutsideReactParent, DifferentWindow };
+  Kind kind;
+  react::Point origin;
+  react::Transform transform;
+};
+using NativeViewPlacementFunction =
+    std::function<NativeViewPlacement(SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled)>;
+
+// A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
+// transforms. The background color is ARGB.
+struct MountedViewProps {
+  double x;
+  double y;
+  double width;
+  double height;
+  double opacity;
+  int backgroundColor;
+};
+// Presented props are the ones on screen, which differ from the view's own while Core Animation animates it.
+using ObtainMountedViewPropsFunction = std::function<std::optional<MountedViewProps>(Tag tag, bool presented)>;
 
 using PlatformAttachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector, std::function<void(bool)>)>;
 using PlatformDetachPseudoSelectorFunction = std::function<void(Tag, PseudoSelector)>;
@@ -56,12 +91,17 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
+  ReleaseViewTransitionsFunction releaseViewTransitionsFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
+  ReadMountedViewPropsFunction readMountedViewPropsFunction;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
+  NativeViewPlacementFunction nativeViewPlacementFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;
+  IsSensorAvailableFunction isSensorAvailable;
   RegisterSensorFunction registerSensor;
   UnregisterSensorFunction unregisterSensor;
   SetGestureStateFunction setGestureStateFunction;
@@ -70,11 +110,10 @@ struct PlatformDepMethodsHolder {
   MaybeFlushUIUpdatesQueueFunction maybeFlushUIUpdatesQueueFunction;
   PlatformAttachPseudoSelectorFunction attachPseudoSelector;
   PlatformDetachPseudoSelectorFunction detachPseudoSelector;
-  css::CSSCanRoutePropertyFunction cssCanRouteProperty;
-  css::CSSApplyTransitionFunction cssApplyTransition;
-  css::CSSRemoveTransitionFunction cssRemoveTransition;
-  css::CSSGetPlatformValueFunction cssGetPlatformValue;
-  // Last so a platform that does not supply it can omit it and get value-init.
+  ObtainMountedViewPropsFunction obtainMountedViewProps;
+  // Optional and last, so a platform without them just omits them; null keeps
+  // CSS transitions and animations on the C++ loop.
+  std::shared_ptr<css::CSSPlatformTransitionBackend> platformTransitionBackend;
   std::shared_ptr<css::CSSPlatformAnimationFactory> platformAnimationFactory;
 };
 

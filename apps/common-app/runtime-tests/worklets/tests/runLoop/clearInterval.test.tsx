@@ -1,3 +1,5 @@
+import { RuntimeKind } from 'react-native-worklets';
+
 import {
   describe,
   expect,
@@ -8,7 +10,6 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { dispatchWorklet } from './dispatchWorklet';
-import { RuntimeKind } from 'react-native-worklets';
 
 describe('Test clearInterval', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(

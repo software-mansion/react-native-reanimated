@@ -1,4 +1,5 @@
 import { makeMutable, withTiming } from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import {
   describe,
@@ -8,7 +9,6 @@ import {
   waitForNotification,
   beforeEach,
 } from '../../../../ReJest/RuntimeTestsApi';
-import { scheduleOnRN } from 'react-native-worklets';
 
 const NOTIFY_FIRST_CALLBACK = 'NOTIFY_FIRST_CALLBACK';
 const NOTIFY_SECOND_CALLBACK = 'NOTIFY_SECOND_CALLBACK';

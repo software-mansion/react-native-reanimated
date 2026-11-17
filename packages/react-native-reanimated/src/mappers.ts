@@ -1,7 +1,5 @@
 'use strict';
 
-import { scheduleOnUI } from 'react-native-worklets';
-
 import { IS_JEST } from './common';
 import type {
   Mapper,
@@ -225,7 +223,7 @@ export function startMapper(
 ): number {
   const mapperID = (MAPPER_ID += 1);
 
-  scheduleOnUI(() => {
+  requestAnimationFrame(() => {
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
@@ -237,8 +235,7 @@ export function startMapper(
 }
 
 export function stopMapper(mapperID: number): void {
-  scheduleOnUI(() => {
-    const mapperRegistry = global.__mapperRegistry;
-    mapperRegistry?.stop(mapperID);
+  requestAnimationFrame(() => {
+    global.__mapperRegistry?.stop(mapperID);
   });
 }

@@ -31,6 +31,12 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
 
    - `cd packages/react-native-reanimated && yarn set-version --version x.y.z`
 
+1. Move the changelog fragments into `CHANGELOG.md` by running the following script in the repository root (it needs `gh` to read the authors):
+
+   - `yarn workspace react-native-reanimated changelog:squash x.y.z`
+
+   The script reads the pull request number from the first `(#N)` in the subject of the commit that added the fragment. It fails when that subject has no `(#N)`. Add a `pr: N` line to that fragment and run the script again.
+
 1. Update the **Compatibility** in `packages/react-native-reanimated/compatibility.json`
 
 1. Update `peerDependencies` in `packages/react-native-reanimated/package.json` to align with the versions declared in the **Compatibility** file.
@@ -177,8 +183,26 @@ Reanimated follows [semver](https://semver.org/) whenever applicable.
      - **Set as pre-release** - select this when prereleasing (alpha, beta, rc),
      - **Set as the latest release** - check if releasing v4, don't check when dealing with v3 or v2.
 
-8. Share the good news with the team.
+8. After a minor release, open the post-release pull request to `main`. It moves `main` to the next `x.y.0-main` version and updates `compatibility.json`. In the same pull request, run the squash script in the repository root with the version and the date of the release:
 
-8. Ask Kacper Kapuściak for a tweet informing the world about new Reanimated (patches don't count).
+   - `yarn workspace react-native-reanimated changelog:squash x.y.0 --date YYYY-MM-DD --cut origin/x.y-stable`
+
+   `--cut` leaves the fragments that came to `main` after the stable branch was cut. They belong to the next release on `main`, also when a cherry-pick put them into `x.y.0` on the stable branch. Such an entry is then listed in both versions.
+
+8. After a minor or major release, cut a docs version. Patch releases do not need it. Open a separate pull request to `main`, because the docs are published from `main`. Until then, the released docs are served only as `Unreleased` at `/docs/unreleased/`.
+
+   - Worklets keeps one docs version for each minor. For Worklets `x.y.0`, run `yarn workspace docs-worklets docusaurus docs:version x.y`. Then, in `docs/docs-worklets/docusaurus.config.js`, add `'x.y': { label: 'x.y', banner: 'none' }` to `versions` and set `lastVersion` to `'x.y'`.
+   - Reanimated keeps one docs version for each major, for example `4.x`. For a new major, for example `5.0.0`, run `yarn workspace docs-reanimated docusaurus docs:version 5.x`, add `5.x` to `versions` in `docs/docs-reanimated/docusaurus.config.js` and set `lastVersion` to it. For a new minor, replace the snapshot of the current major: remove it from `docs/docs-reanimated/versions.json`, delete its directory in `versioned_docs/` and its file in `versioned_sidebars/`, and run `docs:version` again with the same name.
+   - The snapshot must document only released changes. The changelog fragments that the squash with `--cut` left on `main` are not in the release. Remove the docs for these changes from the snapshot. The current docs keep them.
+   - Link pages through file paths, for example `../core/useSharedValue.mdx`, not through URL paths. Then each version links to its own pages.
+   - Keep the URLs of the old latest version working. Each docs workspace (`docs/docs-reanimated`, `docs/docs-worklets`) has a `pending-redirects.json` file. It lists the pages of the old latest version that have no page at the same path in `Unreleased`, and the new path for each page. Move each entry whose `to` is a page of the new snapshot to `redirects` of `@docusaurus/plugin-client-redirects` in `docusaurus.config.js` of the same workspace, and remove it from the file. When its `to` is not a page of the new snapshot, for example because you removed the docs of an unreleased change from the snapshot, the new snapshot must have the page at its `from`. Restore the released version of that page in the snapshot and keep the entry in the file. It moves at the next docs version. If you cannot restore that page, remove the entry from the file and add a redirect from its `from` to a page of both the new snapshot and `Unreleased` to the config. You cannot add a redirect to the config while its `to` is not a page of the latest version: the plugin fails the build.
+   - Run `node --experimental-strip-types scripts/validate-docs-redirects.mts` in the repository root.
+   - Run `yarn build` in the docs workspace. It fails on broken links.
+
+   The docs build in CI runs `scripts/validate-docs-released-versions.mts` on `main`. It fails when the newest stable release on npm (the `latest` dist-tag) or the newest stable release in `CHANGELOG.md` has no docs version, or when `lastVersion` does not cover the newer of the two. A Worklets release needs a minor docs version, such as `0.13`. A major docs version, such as `0.x`, does not count for Worklets.
+
+   The docs build in CI also runs `scripts/validate-docs-redirects.mts` on `main`. It fails when a page of `lastVersion` has no page at the same path in `Unreleased` and no entry in `pending-redirects.json`, when an entry of `pending-redirects.json` starts at a path that is not a page of `lastVersion`, is not necessary, repeats a path, is also in `docusaurus.config.js` or points to a path that is not an `Unreleased` page, when a redirect in `docusaurus.config.js` points to a `/docs/` path that is not a page of `lastVersion`, or when a page of the docs version before `lastVersion` has no page at the same path in `lastVersion` and no redirect in `docusaurus.config.js` to a page of `lastVersion`. The last check fails when a release PR removes the entries from `pending-redirects.json` but does not add them to `docusaurus.config.js`. An entry of `pending-redirects.json` does not fix it, because the URL of the old page stopped working when the new version became the latest version. So when you move or delete a page of `lastVersion` in `docs/`, add `{ "from": "<old path>", "to": "<new path>" }` to `pending-redirects.json`, with paths without the version, for example `/docs/fundamentals/closures`. A page that is only in `Unreleased` has no released URL, so it needs no entry.
+
+8. Share the good news with the team.
 
 **Congratulations on releasing a new version of Reanimated!**

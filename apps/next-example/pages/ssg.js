@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { StyleSheet, View, Text } from 'react-native';
 import Animated, {
   PinwheelIn,
   useAnimatedStyle,
@@ -5,9 +7,6 @@ import Animated, {
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
-import { StyleSheet, View, Text } from 'react-native';
-
-import { useEffect } from 'react';
 
 export default function App() {
   const sv = useSharedValue(0);

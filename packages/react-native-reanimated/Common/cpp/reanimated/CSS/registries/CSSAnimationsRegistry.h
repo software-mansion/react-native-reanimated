@@ -38,9 +38,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
       const CSSAnimationUpdates &updates);
 
   void flushUpdates(UpdatesBatch &updatesBatch);
-#if REACT_NATIVE_VERSION_MINOR >= 85
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
-#endif
 
  private:
   class AnimationObserver : public CSSAnimationObserver {

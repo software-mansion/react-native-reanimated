@@ -29,7 +29,7 @@ class ReanimatedCommitShadowNode : public ShadowNode {
   inline void unsetReanimatedCommitTrait() {
     traits_.unset(ReanimatedCommitTrait);
   }
-  inline bool hasReanimatedCommitTrait() {
+  inline bool hasReanimatedCommitTrait() const {
     return traits_.check(ReanimatedCommitTrait);
   }
   inline void setReanimatedMountTrait() {
@@ -38,7 +38,7 @@ class ReanimatedCommitShadowNode : public ShadowNode {
   inline void unsetReanimatedMountTrait() {
     traits_.unset(ReanimatedMountTrait);
   }
-  inline bool hasReanimatedMountTrait() {
+  inline bool hasReanimatedMountTrait() const {
     return traits_.check(ReanimatedMountTrait);
   }
 };

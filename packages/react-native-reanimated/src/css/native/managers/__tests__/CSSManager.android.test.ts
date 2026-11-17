@@ -1,5 +1,6 @@
 'use strict';
 import type { ShadowNodeWrapper } from '../../../../commonTypes';
+import type { CSSTransitionProperties } from '../../../types';
 import { setViewStyle } from '../../proxy';
 import CSSManager from '../CSSManager';
 
@@ -22,8 +23,8 @@ const TRANSITION = {
 } as const;
 
 // Runs in the android jest project (Platform.OS === 'android'), so IS_ANDROID is
-// true. The revert subsystem is Android-only, so unlike other platforms a
-// transition detach records the committed style via the props setter
+// true. The revert subsystem is Android-only, so unlike other platforms every
+// transition update records the committed style via the props setter
 // (setViewStyle) for the native revert to restore.
 describe('CSSManager (Android)', () => {
   let manager: CSSManager;
@@ -57,15 +58,35 @@ describe('CSSManager (Android)', () => {
     expect(setViewStyle).not.toHaveBeenCalled();
   });
 
-  // The base is recorded only on a detach, not for every transition update, so a
-  // still-running transition must stay silent even on Android.
-  test('does not call the props setter while a transition keeps running', () => {
+  // A property removed from a still-attached transition is reverted natively,
+  // so every transition update records the committed style it reverts to.
+  test('records the committed style while a transition keeps running', () => {
     manager.update({ opacity: 0, ...TRANSITION });
     jest.clearAllMocks();
 
     manager.update({ opacity: 1, ...TRANSITION });
 
-    expect(setViewStyle).not.toHaveBeenCalled();
+    expect(setViewStyle).toHaveBeenCalledWith(
+      viewTag,
+      expect.objectContaining({ opacity: 1 })
+    );
+  });
+
+  test('records the committed style when a property leaves an attached transition', () => {
+    const config: CSSTransitionProperties = {
+      transitionProperty: ['opacity', 'width'],
+      transitionDuration: '300ms',
+    };
+    manager.update({ opacity: 0, width: 10, ...config });
+    manager.update({ opacity: 1, width: 20, ...config });
+    jest.clearAllMocks();
+
+    manager.update({ opacity: 1, width: 20, ...TRANSITION });
+
+    expect(setViewStyle).toHaveBeenCalledWith(
+      viewTag,
+      expect.objectContaining({ opacity: 1, width: 20 })
+    );
   });
 
   test('records the committed style when a 0ms config detaches a running transition', () => {

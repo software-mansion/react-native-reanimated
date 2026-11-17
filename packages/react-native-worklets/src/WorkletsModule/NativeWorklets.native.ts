@@ -46,15 +46,8 @@ class NativeWorklets implements IWorkletsModule {
 See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#native-part-of-worklets-doesnt-seem-to-be-initialized for more details.`
       );
     }
-    if (__DEV__) {
-      if (bundleModeEnabled) {
-        console.log(
-          '[Worklets] Bundle mode initialization: Downloaded the bundle for Worklet Runtimes.'
-        );
-      }
-      if (onRNRuntime) {
-        checkCppVersion();
-      }
+    if (__DEV__ && onRNRuntime) {
+      checkCppVersion();
     }
     this.#workletsModuleProxy = globalThis.__workletsModuleProxy;
     this.#serializableNull = this.#workletsModuleProxy.createSerializableNull();
@@ -200,6 +193,16 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     );
   }
 
+  makeWeakSerializableRef(serializable: SerializableRef<unknown>): object {
+    return this.#workletsModuleProxy.makeWeakSerializableRef(serializable);
+  }
+
+  derefWeakSerializableRef(
+    marker: object
+  ): SerializableRef<unknown> | undefined {
+    return this.#workletsModuleProxy.derefWeakSerializableRef(marker);
+  }
+
   createCustomSerializable(
     data: SerializableRef<unknown>,
     typeId: number
@@ -239,9 +242,18 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   scheduleOnRN<TArgs extends unknown[]>(
     fun: RemoteFunction | ((...args: TArgs) => unknown),
-    args: SerializableRef<TArgs> | undefined
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
   ): void {
-    this.#workletsModuleProxy.scheduleOnRN(fun, args);
+    this.#workletsModuleProxy.scheduleOnRN(fun, args, scheduleStack);
+  }
+
+  runOnRNSync<TArgs extends unknown[], TReturn>(
+    fun: RemoteFunction | SerializableRef | ((...args: TArgs) => unknown),
+    args: SerializableRef<TArgs> | undefined,
+    scheduleStack?: string
+  ): TReturn {
+    return this.#workletsModuleProxy.runOnRNSync(fun, args, scheduleStack);
   }
 
   scheduleOnUI<TValue>(
@@ -269,7 +281,9 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     useDefaultQueue: boolean,
     customQueue: object | undefined,
     enableEventLoop: boolean,
-    enableLocking: boolean
+    enableLocking: boolean,
+    enableNetworking: boolean,
+    abortable: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
@@ -277,32 +291,46 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       useDefaultQueue,
       customQueue,
       enableEventLoop,
-      enableLocking
+      enableLocking,
+      enableNetworking,
+      abortable
     );
   }
 
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     serializableWorklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack: string | undefined,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       serializableWorklet,
-      scheduleStack
+      scheduleStack,
+      resolve,
+      reject
     );
   }
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    scheduleStack: string | undefined,
+    resolve?: SerializableRef,
+    reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
       worklet,
-      scheduleStack
+      scheduleStack,
+      resolve,
+      reject
     );
+  }
+
+  abortWorkletRuntime(runtimeId: number): boolean {
+    return this.#workletsModuleProxy.abortWorkletRuntime(runtimeId);
   }
 
   runOnRuntimeSync<TValue, TReturn>(
@@ -406,6 +434,10 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     this.#workletsModuleProxy.setDynamicFeatureFlag(name, value);
   }
 
+  isRuntimeAlive(runtimeId: number): boolean {
+    return this.#workletsModuleProxy.isRuntimeAlive(runtimeId);
+  }
+
   getCurrentThreadId(): string {
     return this.#workletsModuleProxy.getCurrentThreadId();
   }
@@ -472,7 +504,8 @@ function installUnpackers(workletsModuleProxy: WorkletsModuleProxy) {
       shareableGuest.sourceMap ?? '',
       remoteFunction.code!,
       remoteFunction.location ?? '',
-      remoteFunction.sourceMap ?? ''
+      remoteFunction.sourceMap ?? '',
+      __DEV__
     );
   }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { forwardRef, useEffect } from 'react';
 import { GestureDetector, usePanGesture } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -9,9 +9,20 @@ import Animated, {
 } from 'react-native-reanimated';
 import { css, html } from 'react-strict-dom';
 
+function withoutCollapsable(Component: typeof html.div) {
+  return forwardRef<
+    React.ComponentRef<typeof html.div>,
+    React.ComponentPropsWithoutRef<typeof html.div> & { collapsable?: boolean }
+  >(function StrictDOMWrapper({ collapsable: _collapsable, ...props }, ref) {
+    // we do not want to pass collapsable as strict dom components
+    // do not support it as a prop and error out
+    return <Component {...props} ref={ref} />;
+  });
+}
+
 const animated = {
   html: {
-    div: Animated.createAnimatedComponent(html.div),
+    div: Animated.createAnimatedComponent(withoutCollapsable(html.div)),
   },
 };
 
@@ -39,7 +50,7 @@ export default function StrictDOMExample() {
   // @ts-ignore
   // There's a TypeScript bug in `react-native-dom` that doesn't allow
   // React-Native-like `transform`, but it works in runtime.
-  // https://github.com/facebook/react-strict-dom/issues/204
+  // https://github.com/react/react-strict-dom/issues/204
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: opacity.value,
@@ -69,7 +80,7 @@ export default function StrictDOMExample() {
       <html.div>React Strict DOM demo</html.div>
       <GestureDetector gesture={panGesture}>
         {/* Our property types conversion for Animated Components is conflicting
-        with Strict DOM's property type conversions in such a way they generate an endless loop. 
+        with Strict DOM's property type conversions in such a way they generate an endless loop.
         Let's circle back on it in a few years. */}
         <animated.html.div style={[styles.box, animatedStyle]} />
       </GestureDetector>

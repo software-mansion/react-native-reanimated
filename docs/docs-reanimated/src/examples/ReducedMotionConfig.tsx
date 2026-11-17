@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Switch, View, Text } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -8,11 +8,12 @@ import Animated, {
   ReducedMotionConfig,
   ReduceMotion,
 } from 'react-native-reanimated';
-import useThemedTextStyle from '@site/src/hooks/useThemedTextStyle';
+import { SelectOption } from '@site/src/components/InteractivePlayground';
+
+type Mode = keyof typeof ReduceMotion;
 
 export default function App() {
-  const textColor = useThemedTextStyle();
-  const [isReduceMotionDisabled, setIsReduceMotionDisabled] = useState(false);
+  const [mode, setMode] = useState<Mode>('System');
   const sv = useSharedValue<number>(0);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${sv.value}deg` }],
@@ -21,43 +22,32 @@ export default function App() {
   useEffect(() => {
     sv.value = 0;
     sv.value = withRepeat(withTiming(360, { duration: 2000 }), -1, true);
-  }, [textColor, isReduceMotionDisabled]);
+  }, [mode]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
-        <Text style={[styles.text, textColor]}>Disable reduced motion</Text>
-        <Switch
-          value={isReduceMotionDisabled}
-          onValueChange={setIsReduceMotionDisabled}
-        />
-      </View>
-      <ReducedMotionConfig
-        mode={isReduceMotionDisabled ? ReduceMotion.Never : ReduceMotion.System}
+      <SelectOption
+        label="Mode"
+        value={mode}
+        onChange={(value) => setMode(value as Mode)}
+        options={Object.keys(ReduceMotion)}
       />
+      <ReducedMotionConfig mode={ReduceMotion[mode]} />
       <Animated.View style={[styles.box, animatedStyle]} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 20,
+  },
   box: {
     height: 100,
     width: 100,
     backgroundColor: '#b58df1',
     borderRadius: 20,
-  },
-  container: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    marginBottom: 20,
-  },
-  text: {
-    marginRight: 10,
-    fontFamily: 'Aeonik',
-    fontSize: 16,
   },
 });

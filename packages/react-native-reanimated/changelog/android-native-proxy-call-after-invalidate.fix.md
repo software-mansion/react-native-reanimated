@@ -1,0 +1,1 @@
+Fix an Android crash (`JNI DETECTED ERROR IN APPLICATION: obj == null` in `NativeProxy::getAnimationTimestamp`) when a worklet still runs on the UI thread while the React host is torn down, for example on an `expo-updates` restart.

@@ -25,8 +25,9 @@ struct BytecodeUnpacker {
 
 class UnpackerLoader {
  public:
-  void loadCodeUnpackers(std::array<CodeUnpacker, 6> unpackers) {
+  void loadCodeUnpackers(std::array<CodeUnpacker, 6> unpackers, bool isDev) {
     codeUnpackers_ = std::move(unpackers);
+    isDev_ = isDev;
   }
 
   void loadBytecodeUnpackers(std::array<BytecodeUnpacker, 6> unpackers) {
@@ -34,6 +35,7 @@ class UnpackerLoader {
   }
 
   void installUnpackers(facebook::jsi::Runtime &rt) const {
+    rt.global().setProperty(rt, "__DEV__", isDev_);
     if (codeUnpackers_) {
       for (const auto &unpacker : *codeUnpackers_) {
         installUnpacker(rt, unpacker);
@@ -73,6 +75,7 @@ class UnpackerLoader {
 
   std::optional<std::array<CodeUnpacker, 6>> codeUnpackers_;
   std::optional<std::array<BytecodeUnpacker, 6>> bytecodeUnpackers_;
+  bool isDev_ = false;
 };
 
 } // namespace worklets

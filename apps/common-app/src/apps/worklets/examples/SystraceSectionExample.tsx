@@ -1,6 +1,5 @@
-import { Button, StyleSheet, Text, View } from 'react-native';
-
 import React from 'react';
+import { Button, StyleSheet, Text, View } from 'react-native';
 import { scheduleOnUI } from 'react-native-worklets';
 
 declare global {

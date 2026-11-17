@@ -31,6 +31,7 @@ const ignoredDirs = [
   'cypress',
   'vendor',
   'DerivedData',
+  'Build',
 ];
 
 const ignoredFiles = [
@@ -38,7 +39,7 @@ const ignoredFiles = [
 ];
 
 const urlRegex =
-  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
+  /\b((http|https):\/\/?)[^\s<>[\]`'"]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
 /**
  * @param {string} dir
@@ -75,52 +76,51 @@ async function getFileAndUrls(dir) {
 }
 
 /** @param {{ file: string; url: string }[]} data */
-function validUrls(data) {
-  let index = 0;
+async function validUrls(data) {
   let isBrokenUrlDetected = false;
-  function sendRequest() {
-    if (index >= data.length) {
-      if (isBrokenUrlDetected) {
-        throw new Error('🔴 Invalid links detected.');
-      }
-      return;
-    }
-    const currentData = data[index];
+  for (const currentData of data) {
     if (
+      skippedExactUrls.includes(currentData.url) ||
       skippedUrls.some((skippedUrl) => currentData.url.includes(skippedUrl))
     ) {
-      index++;
-      return;
+      continue;
     }
-    fetch(currentData.url, {
-      headers: [],
-    })
-      .then((response) => {
-        const status = response.status;
-        if (![200, 301, 302, 307, 503].includes(status)) {
-          console.error(
-            `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
-          );
-          isBrokenUrlDetected = true;
-        }
-        index++;
-        sendRequest();
-        return;
-      })
-      .catch((/** @type {Error} */ error) => {
-        isBrokenUrlDetected = true;
-        console.error('Error:', error);
-        index++;
-        sendRequest();
+    try {
+      const response = await fetch(currentData.url, {
+        headers: {
+          'User-Agent':
+            'react-native-reanimated-url-validator (https://github.com/software-mansion/react-native-reanimated)',
+        },
       });
+      const status = response.status;
+      const extraStatuses =
+        Object.entries(extraValidStatuses).find(([host]) =>
+          currentData.url.includes(host)
+        )?.[1] ?? [];
+      if (![200, 301, 302, 307, 503, ...extraStatuses].includes(status)) {
+        console.error(
+          `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
+        );
+        isBrokenUrlDetected = true;
+      }
+    } catch (error) {
+      isBrokenUrlDetected = true;
+      console.error(
+        `🔴 Request failed: ${currentData.url} in file: ${currentData.file}\n`,
+        error
+      );
+    }
   }
-  sendRequest();
+  if (isBrokenUrlDetected) {
+    console.error('🔴 Invalid links detected.');
+    process.exitCode = 1;
+  }
 }
 
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
-  validUrls(data);
+  await validUrls(data);
 }
 
 const skippedUrls = [
@@ -140,6 +140,21 @@ const skippedUrls = [
   'testing-library.com/docs', // tends to fail on CI
   'babeljs.io/docs', // tends to fail on CI
   'reactnative.dev', // tends to fail on CI
+  'stackoverflow.com',
+  'observablehq.com',
+  'example.com',
+  '127.0.0.1',
+  '//x.com',
+  'youtube.com',
+  'cppreference.com',
 ];
+
+const skippedExactUrls = [
+  'https://docs.swmansion.com/react-native-worklets/docs',
+];
+
+const extraValidStatuses = {
+  'swm-delivery.com': [204], // README banner slot with no banner booked
+};
 
 scanLinks();

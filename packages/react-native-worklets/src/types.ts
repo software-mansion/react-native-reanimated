@@ -119,6 +119,19 @@ type WorkletRuntimeConfigBase = {
    * by requestAnimationFrame. If not specified, it defaults to 16 ms.
    */
   animationQueuePollingRate?: number;
+  /**
+   * Determines whether the networking API (`fetch`, `XMLHttpRequest` and
+   * their supporting globals) is installed on the runtime. Effective only in
+   * Bundle Mode. If not specified, it defaults to `true`.
+   */
+  enableNetworking?: boolean;
+  /**
+   * Determines whether the runtime can be stopped with
+   * `abortWorkletRuntime`. A custom queue drops the runtime's pending jobs
+   * only if it implements `AsyncQueue::stop`. If not specified, it defaults to
+   * `false`.
+   */
+  abortable?: boolean;
 };
 
 /** Configuration object for creating a worklet runtime. */

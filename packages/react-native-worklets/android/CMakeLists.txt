@@ -19,16 +19,10 @@ add_compile_options(${folly_FLAGS})
 string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_VERSION=${WORKLETS_VERSION}\
     -DWORKLETS_FEATURE_FLAGS=\"${WORKLETS_FEATURE_FLAGS}\"")
 
-# HERMES_V1_ENABLED is centralized in react-native-flags.cmake for RN >= 84.
-# Only define manually for older versions to avoid macro redefinition error.
-if(ReactAndroid_VERSION_MINOR LESS 84)
-  string(APPEND CMAKE_CXX_FLAGS " -DHERMES_V1_ENABLED=${HERMES_V1_ENABLED}")
-else()
-  # Reference the value so CMake records it as used, otherwise it warns:
-  # "Manually-specified variables were not used by the project:
-  # HERMES_V1_ENABLED"
-  set(HERMES_V1_ENABLED "${HERMES_V1_ENABLED}")
-endif()
+# HERMES_V1_ENABLED is centralized in react-native-flags.cmake. Reference the
+# value so CMake records it as used, otherwise it warns: "Manually-specified
+# variables were not used by the project: HERMES_V1_ENABLED"
+set(HERMES_V1_ENABLED "${HERMES_V1_ENABLED}")
 
 string(APPEND CMAKE_CXX_FLAGS " -fno-omit-frame-pointer -fstack-protector-all")
 
@@ -36,10 +30,8 @@ if(${WORKLETS_PROFILING})
   string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_PROFILING")
 endif()
 if(${IS_REANIMATED_EXAMPLE_APP})
-  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
-endif()
-if(${WORKLETS_FETCH_PREVIEW_ENABLED})
-  string(APPEND CMAKE_CXX_FLAGS " -DWORKLETS_FETCH_PREVIEW_ENABLED")
+  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic\
+    -Werror=deprecated-declarations")
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -58,7 +50,8 @@ file(GLOB_RECURSE WORKLETS_ANDROID_CPP_SOURCES CONFIGURE_DEPENDS
 add_library(worklets SHARED ${WORKLETS_COMMON_CPP_SOURCES}
                             ${WORKLETS_ANDROID_CPP_SOURCES})
 
-target_precompile_headers(worklets PRIVATE "${ANDROID_CPP_DIR}/WorkletsPCH.h")
+include("${CMAKE_SOURCE_DIR}/cmake/pch-ccache.cmake")
+pch_ccache_precompile_headers(worklets "${ANDROID_CPP_DIR}/WorkletsPCH.h")
 
 # Stop Clang from embedding a build timestamp in the .pch. Without this the PCH
 # is non-reproducible across builds, so ccache can't reuse it and translation
@@ -66,14 +59,8 @@ target_precompile_headers(worklets PRIVATE "${ANDROID_CPP_DIR}/WorkletsPCH.h")
 target_compile_options(
   worklets PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:-Xclang;-fno-pch-timestamp>")
 
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 80)
-  include(
-    "${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
-  target_compile_reactnative_options(worklets PUBLIC)
-else()
-  string(APPEND CMAKE_CXX_FLAGS
-         " -fexceptions -frtti -std=c++${CMAKE_CXX_STANDARD} -Wall -Werror")
-endif()
+include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
+target_compile_reactnative_options(worklets PUBLIC)
 
 # includes
 target_include_directories(worklets PUBLIC "${COMMON_CPP_DIR}"
@@ -97,11 +84,7 @@ set_target_properties(worklets PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(worklets android log ReactAndroid::reactnative
                       ReactAndroid::jsi fbjni::fbjni)
 
-if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 82)
-  target_link_libraries(worklets hermes-engine::hermesvm)
-else()
-  target_link_libraries(worklets hermes-engine::libhermes)
-endif()
+target_link_libraries(worklets hermes-engine::hermesvm)
 
 if(${HERMES_ENABLE_DEBUGGER})
   string(APPEND CMAKE_CXX_FLAGS " -DHERMES_ENABLE_DEBUGGER=1")

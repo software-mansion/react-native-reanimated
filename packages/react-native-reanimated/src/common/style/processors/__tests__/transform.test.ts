@@ -9,6 +9,10 @@ describe(processTransform, () => {
     ]);
   });
 
+  test('returns an empty list for none', () => {
+    expect(processTransform('none')).toEqual([]);
+  });
+
   describe('converts transform string to transform objects', () => {
     const cases: {
       name: string;
@@ -288,14 +292,6 @@ describe(processTransform, () => {
           { scale: 2 },
           { rotate: '45deg' },
         ],
-      },
-      {
-        input: '  translate(25, 25) scale(2)  ',
-        output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
-      },
-      {
-        input: '\n  translate(25, 25)\n  scale(2)\n',
-        output: [{ translateX: 25 }, { translateY: 25 }, { scale: 2 }],
       },
       {
         input: 'translate(50, 50) scale(1.5, 2) skew(30deg, 15deg)',

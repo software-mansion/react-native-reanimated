@@ -1,0 +1,13 @@
+diff --git a/RNSVG.podspec b/RNSVG.podspec
+index 0b4bd85ef794f5edc02bfdc7910cd31b11308c12..0324d5f5d56a9202bf59aec5b633382056056572 100644
+--- a/RNSVG.podspec
++++ b/RNSVG.podspec
+@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
+   s.visionos.exclude_files = '**/*.macos.{h,m,mm}' if s.respond_to?(:visionos)
+   s.osx.exclude_files = '**/*.ios.{h,m,mm}'
+   s.requires_arc      = true
+-  s.platforms         = { :osx => "10.14", :ios => "12.4", :tvos => "12.4", :visionos => "1.0" }
++  s.platforms         = { :osx => "10.14", :ios => "15.1", :tvos => "15.1", :visionos => "1.0" }
+   
+   s.osx.resource_bundles  = {'RNSVGFilters' => ['apple/**/*.macosx.metallib']}
+   s.ios.resource_bundles  = {'RNSVGFilters' => ['apple/**/*.iphoneos.metallib']}

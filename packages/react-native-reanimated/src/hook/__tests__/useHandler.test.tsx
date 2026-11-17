@@ -1,8 +1,19 @@
 'use strict';
 
+import * as Worklets from 'react-native-worklets';
+
 import { logger } from '../../common';
 import { worklet } from '../../jestUtils';
 import { renderUseHandler, runCommonTests } from './useHandler.shared';
+
+jest.mock('react-native-worklets', () => {
+  const actual = jest.requireActual('react-native-worklets');
+  return {
+    __esModule: true,
+    ...actual,
+    makeShareable: jest.fn(actual.makeShareable),
+  };
+});
 
 function nonWorkletError(...names: string[]) {
   return new Error(
@@ -12,6 +23,35 @@ function nonWorkletError(...names: string[]) {
 
 describe('useHandler (native)', () => {
   runCommonTests();
+
+  describe('lazy context creation', () => {
+    const makeShareableMock = Worklets.makeShareable as jest.MockedFunction<
+      typeof Worklets.makeShareable
+    >;
+
+    beforeEach(() => {
+      makeShareableMock.mockClear();
+    });
+
+    test('does not call makeShareable when context is never read', () => {
+      const { rerender } = renderUseHandler({ onScroll: worklet() });
+
+      rerender({ handlers: { onScroll: worklet() } });
+
+      expect(makeShareableMock).not.toHaveBeenCalled();
+    });
+
+    test('calls makeShareable at most once across reads and re-renders', () => {
+      const { result, rerender } = renderUseHandler({ onScroll: worklet() });
+
+      void result.current.context;
+
+      rerender({ handlers: { onScroll: worklet() } });
+      void result.current.context;
+
+      expect(makeShareableMock).toHaveBeenCalledTimes(1);
+    });
+  });
 
   describe('non-worklet handlers', () => {
     test('throws when all handlers are non-worklets', () => {
@@ -44,7 +84,7 @@ describe('useHandler (native)', () => {
 
   describe('dependencies parameter is ignored', () => {
     beforeEach(() => {
-      jest.spyOn(logger, 'warn').mockImplementation();
+      jest.spyOn(logger, 'warnOnce').mockImplementation();
     });
 
     afterEach(() => {
@@ -68,8 +108,9 @@ describe('useHandler (native)', () => {
       rerender({ handlers: { onScroll: w }, deps: ['a', 'b', 'c'] });
       expect(result.current.doDependenciesDiffer).toBe(false);
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'dependencies should only be used in web implementation.'
+      expect(logger.warnOnce).toHaveBeenCalledWith(
+        'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+        1
       );
     });
 
@@ -86,7 +127,7 @@ describe('useHandler (native)', () => {
       rerender({ handlers: { onScroll: worklet() }, deps: undefined });
       expect(result.current.doDependenciesDiffer).toBe(true);
 
-      expect(logger.warn).not.toHaveBeenCalled();
+      expect(logger.warnOnce).not.toHaveBeenCalled();
     });
 
     test('doDependenciesDiffer is unaffected by empty deps', () => {
@@ -102,8 +143,9 @@ describe('useHandler (native)', () => {
       rerender({ handlers: { onScroll: worklet() }, deps: [] });
       expect(result.current.doDependenciesDiffer).toBe(true);
 
-      expect(logger.warn).toHaveBeenCalledWith(
-        'dependencies should only be used in web implementation.'
+      expect(logger.warnOnce).toHaveBeenCalledWith(
+        'Dependencies should only be used on the web and are always ignored on native. Check DevTools to see the offending code.',
+        1
       );
     });
   });

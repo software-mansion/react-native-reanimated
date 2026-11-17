@@ -75,7 +75,7 @@ std::unique_ptr<StyleOperation> TransformOperationInterpolator<MatrixOperation>:
 
   // Unfortunately 2D matrices aren't handled properly in RN, so we have to
   // convert them to 3D
-  // see the issue: https://github.com/facebook/react-native/issues/53639
+  // see the issue: https://github.com/react/react-native/issues/53639
   return std::make_unique<MatrixOperation>(TransformMatrix3D::from2D(result2D));
 }
 
@@ -152,7 +152,7 @@ template TransformMatrix3D TransformOperationInterpolator<MatrixOperation>::inte
 template <ResolvableOp TOperation>
 TransformOperationInterpolator<TOperation>::TransformOperationInterpolator(
     const std::shared_ptr<TOperation> &defaultOperation,
-    ResolvableValueInterpolatorConfig config)
+    RelativeValueInterpolatorConfig config)
     : StyleOperationInterpolator(defaultOperation), config_(std::move(config)) {}
 
 template <ResolvableOp TOperation>

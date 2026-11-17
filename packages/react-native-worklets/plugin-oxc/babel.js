@@ -35,7 +35,7 @@ function workletsPluginOxcBabelShim(babelApi) {
           const filename = state.filename;
           if (filename == null) {
             throw new Error(
-              '[Worklets] the OXC transform needs a filename to name worklets ' +
+              '[Worklets] the Oxc transform needs a filename to name worklets ' +
                 'and to place their generated files, but Babel was given none.'
             );
           }
@@ -101,7 +101,7 @@ function warnAboutIgnoredOptions(options) {
   warnedAboutIgnoredOptions = true;
   console.warn(
     '[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface ' +
-      'compatibility with `react-native-worklets/plugin` but ignored — the OXC transform ' +
+      'compatibility with `react-native-worklets/plugin` but ignored — the Oxc transform ' +
       'cannot dispatch arbitrary Babel plugins. Compose them around this plugin in ' +
       'babel.config.js instead.'
   );

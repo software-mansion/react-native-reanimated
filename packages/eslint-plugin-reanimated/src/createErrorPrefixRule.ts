@@ -14,7 +14,7 @@ export function createErrorPrefixRule<MessageId extends string>(
 ): TSESLint.RuleModule<MessageId, []> {
   return {
     create(context) {
-      const sourceCode = context.getSourceCode();
+      const sourceCode = context.sourceCode;
       return {
         NewExpression(node: TSESTree.NewExpression) {
           if (
@@ -95,6 +95,5 @@ export function createErrorPrefixRule<MessageId extends string>(
       schema: [],
       fixable: 'code',
     },
-    defaultOptions: [],
   };
 }

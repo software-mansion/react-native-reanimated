@@ -10,10 +10,12 @@ namespace worklets {
 
 EventLoop::EventLoop(
     const std::string &name,
+    const AbortToken abortToken,
     const std::shared_ptr<jsi::Runtime> &runtime,
     const std::shared_ptr<AsyncQueue> &queue,
     const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
-    : runtime_(runtime),
+    : abortToken_(abortToken),
+      runtime_(runtime),
       queue_(queue),
       runtimeMutex_(runtimeMutex),
       timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()),
@@ -82,18 +84,38 @@ void EventLoop::run() {
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
   queue_->push(
-      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_}, runtimeMutex = runtimeMutex_, job = std::move(job)] {
+      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_},
+       runtimeMutex = runtimeMutex_,
+       state = timeoutsQueueState_,
+       job = std::move(job)] {
         if (auto runtime = weakRuntime.lock()) {
           std::unique_lock lock(*runtimeMutex);
+          if (!state->running) [[unlikely]] {
+            return;
+          }
           job(*runtime);
           runtime->drainMicrotasks();
         }
-      });
+      },
+      abortToken_);
+}
+
+void EventLoop::abortPending() {
+  std::vector<Timeout> pendingTimeouts;
+  {
+    std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
+    timeoutsQueueState_->running = false;
+    std::swap(pendingTimeouts, timeoutsQueueState_->queue);
+  }
+  timeoutsQueueState_->cv.notify_all();
 }
 
 void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay) {
   {
     std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
+    if (!timeoutsQueueState_->running) {
+      return;
+    }
     const auto targetTime = getCurrentTimeInMs() + delay;
     const auto timeout = Timeout{std::move(job), targetTime};
     auto &queue = timeoutsQueueState_->queue;

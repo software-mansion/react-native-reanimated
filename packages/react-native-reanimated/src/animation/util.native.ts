@@ -3,6 +3,7 @@ import {
   isWorkletFunction,
   RuntimeKind,
   scheduleOnUI,
+  setSerializableMapping,
 } from 'react-native-worklets';
 
 import type {
@@ -22,6 +23,9 @@ export {
   isValidLayoutAnimationProp,
   recognizePrefixSuffix,
 } from './utilCommon';
+
+// is-tree-shakable-suppress
+setSerializableMapping(IN_STYLE_UPDATER, { current: false });
 
 export function assertEasingIsWorklet(
   easing: EasingFunction | EasingFunctionFactory

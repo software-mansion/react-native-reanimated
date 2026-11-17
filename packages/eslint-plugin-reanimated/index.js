@@ -43,7 +43,7 @@ var rule = {
         if (node.name.type === import_utils.AST_NODE_TYPES.JSXNamespacedName) {
           return;
         }
-        var sourceCode = context.getSourceCode();
+        var sourceCode = context.sourceCode;
         var tokensBefore = sourceCode.getTokensBefore(node);
         var componentName =
           (_a = node === null || node === void 0 ? void 0 : node.name) ===
@@ -188,7 +188,6 @@ var rule = {
     type: 'suggestion',
     schema: [],
   },
-  defaultOptions: [],
 };
 var noAnimatedStyleToNonAnimatedComponent_default = rule;
 
@@ -271,7 +270,6 @@ var rule2 = {
     schema: [],
     fixable: 'code',
   },
-  defaultOptions: [],
 };
 var noLoggerMessagePrefix_default = rule2;
 
@@ -310,7 +308,6 @@ var rule3 = {
     schema: [],
     fixable: 'code',
   },
-  defaultOptions: [],
 };
 var useGlobalThis_default = rule3;
 
@@ -354,7 +351,6 @@ var rule4 = {
     schema: [],
     fixable: 'code',
   },
-  defaultOptions: [],
 };
 var useLogger_default = rule4;
 
@@ -370,7 +366,7 @@ function createErrorPrefixRule(prefix, messageId) {
   var _a;
   return {
     create: function (context) {
-      var sourceCode = context.getSourceCode();
+      var sourceCode = context.sourceCode;
       return {
         NewExpression: function (node) {
           var _a2;
@@ -457,7 +453,6 @@ function createErrorPrefixRule(prefix, messageId) {
       schema: [],
       fixable: 'code',
     },
-    defaultOptions: [],
   };
 }
 

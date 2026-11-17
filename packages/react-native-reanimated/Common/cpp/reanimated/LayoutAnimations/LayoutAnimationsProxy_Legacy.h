@@ -111,8 +111,11 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon {
   LayoutAnimationsProxy_Legacy(const SurfaceId surfaceId, const LayoutAnimationsProxyDependencies &dependencies)
       : LayoutAnimationsProxyCommon(surfaceId, dependencies) {}
 
-  void startEnteringAnimation(const int tag, ShadowViewMutation &mutation, const std::shared_ptr<Serializable> &config)
-      const;
+  void startEnteringAnimation(
+      const int tag,
+      ShadowViewMutation &mutation,
+      const ShadowView &hiddenView,
+      const std::shared_ptr<Serializable> &config) const;
   void startExitingAnimation(const int tag, ShadowViewMutation &mutation, const std::shared_ptr<Serializable> &config)
       const;
   void startLayoutAnimation(
@@ -120,7 +123,7 @@ struct LayoutAnimationsProxy_Legacy : public LayoutAnimationsProxyCommon {
       const ShadowViewMutation &mutation,
       const std::shared_ptr<Serializable> &config) const;
 
-  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) override;
+  std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const override;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void reconcileContradictedRemovals(ShadowViewMutationList &mutations, ShadowViewMutationList &filteredMutations)
       const;

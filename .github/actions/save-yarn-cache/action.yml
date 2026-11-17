@@ -1,0 +1,26 @@
+name: Save Yarn cache
+description: Persist the Yarn package cache after a successful install, outside pull requests only
+
+inputs:
+  cache-hit:
+    description: The cache-hit output of the matching setup-node-yarn step
+    required: true
+  cache-primary-key:
+    description: The cache-primary-key output of the matching setup-node-yarn step
+    required: true
+  cache-path:
+    description: The cache-path output of the matching setup-node-yarn step
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Save Yarn cache
+      if: >-
+        inputs.cache-hit != 'true' &&
+        inputs.cache-primary-key != '' &&
+        contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event_name)
+      uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ${{ inputs.cache-path }}
+        key: ${{ inputs.cache-primary-key }}

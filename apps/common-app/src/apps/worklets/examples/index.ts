@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-var-requires */
 import 'react-native-worklets';
+
 import React from 'react';
 
 import type { Example } from '@/components';
@@ -10,8 +11,10 @@ const CopySerializablePerformanceTest: React.FC = () =>
   React.createElement(
     require('./CopySerializablePerformanceTest').default as React.FC
   );
-const FetchExample: React.FC = () =>
-  React.createElement(require('./FetchExample').default as React.FC);
+const SerializableCachePerformanceTest: React.FC = () =>
+  React.createElement(
+    require('./SerializableCachePerformanceTest').default as React.FC
+  );
 const HermesSamplingProfilerExample: React.FC = () =>
   React.createElement(
     require('./HermesSamplingProfilerExample').default as React.FC
@@ -34,11 +37,11 @@ export const EXAMPLES: Record<string, Example> = {
     screen: CopySerializablePerformanceTest,
     disabledPlatforms: [REAPlatform.WEB],
   },
-  FetchExample: {
-    icon: '📡',
-    title: 'Fetch & XHR (Bundle Mode)',
-    screen: FetchExample,
-    needsBundleMode: true,
+  SerializableCachePerformanceTest: {
+    icon: '⏱️',
+    title: 'Serializable cache performance',
+    screen: SerializableCachePerformanceTest,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   HermesSamplingProfilerExample: {
     icon: '📊',

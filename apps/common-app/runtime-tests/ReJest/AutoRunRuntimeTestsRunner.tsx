@@ -4,7 +4,9 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import type { RuntimeTestSuite } from '../types';
-import type { TestConfiguration, TestProgress } from './types';
+import type { TestConfiguration, TestProgress, TestRunSummary } from './types';
+import { setFullRun } from './utils/fullRun';
+import { applyIsolationCheck } from './utils/isolationCheck';
 import { runWithRemoteReporter } from './utils/remoteReporter';
 import { RenderLock } from './utils/RenderLock';
 
@@ -13,7 +15,7 @@ import { RenderLock } from './utils/RenderLock';
 // a Worklets-only run never loads reanimated at all — the Reanimated entry point preloads
 // it explicitly at boot instead.
 //
-// `RenderLock` and `runWithRemoteReporter` are safe — they depend on
+// `RenderLock`, `runWithRemoteReporter` and `applyIsolationCheck` are safe — they depend on
 // `react-native-worklets` / `react-native` only, no reanimated.
 
 let renderLock: RenderLock = new RenderLock();
@@ -28,17 +30,6 @@ interface AutoRunRuntimeTestsRunnerProps {
   library: string;
   forbidReanimated?: boolean;
   warmUp?: () => Promise<void>;
-}
-
-function isReanimatedLoaded() {
-  const globals = globalThis as {
-    _REANIMATED_VERSION_JS?: unknown;
-    __reanimatedLoggerConfig?: unknown;
-  };
-  return (
-    globals._REANIMATED_VERSION_JS !== undefined ||
-    globals.__reanimatedLoggerConfig !== undefined
-  );
 }
 
 export default function AutoRunRuntimeTestsRunner({
@@ -66,6 +57,7 @@ export default function AutoRunRuntimeTestsRunner({
     const declaredSuites = tests.map((test) => ({
       name: test.testSuiteName,
       skipByDefault: !!test.skipByDefault,
+      fullRunOnly: !!test.fullRunOnly,
       disabled: !!test.disabled,
     }));
 
@@ -78,7 +70,8 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only, reportSuiteFinished }) => {
+      onStart: async ({ only, full, reportSuiteFinished, requestReload }) => {
+        setFullRun(!!full);
         const filterSet = only ? new Set(only) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
@@ -87,7 +80,7 @@ export default function AutoRunRuntimeTestsRunner({
           if (filterSet) {
             return filterSet.has(test.testSuiteName);
           }
-          return !test.skipByDefault;
+          return !test.skipByDefault && (!!full || !test.fullRunOnly);
         });
 
         const known = new Set(tests.map((test) => test.testSuiteName));
@@ -98,34 +91,33 @@ export default function AutoRunRuntimeTestsRunner({
           throw new Error(`Unknown test suites: ${unknown.join(', ')}`);
         }
 
-        const { configure, runTests } = require('./RuntimeTestsApi') as {
-          configure: (config: TestConfiguration) => RenderLock;
-          runTests: () => Promise<{
-            passed: number;
-            failed: number;
-            skipped: number;
-            failedTests: string[];
-            durationMs: number;
-          }>;
-        };
+        const { configure, importRuntimeTestSuite, runTests } =
+          require('./RuntimeTestsApi') as {
+            configure: (config: TestConfiguration) => RenderLock;
+            importRuntimeTestSuite: (
+              name: string,
+              importTest: () => void
+            ) => void;
+            runTests: () => Promise<TestRunSummary>;
+          };
 
-        selected.forEach((test) => test.importTest());
+        selected.forEach((test) =>
+          importRuntimeTestSuite(test.testSuiteName, test.importTest)
+        );
         renderLock = configure({
           render: setComponent,
           onProgress: setProgress,
           onSuiteFinished: reportSuiteFinished,
+          onReloadRequested: (resumeFromSuite, summarySoFar) =>
+            requestReload(
+              resumeFromSuite,
+              applyIsolationCheck(summarySoFar, !!forbidReanimated)
+            ),
         });
         if (warmUp) {
           await warmUp();
         }
-        const summary = await runTests();
-        if (forbidReanimated && isReanimatedLoaded()) {
-          summary.failed += 1;
-          summary.failedTests.push(
-            '[isolation] react-native-reanimated was loaded during a Worklets-only run'
-          );
-        }
-        return summary;
+        return applyIsolationCheck(await runTests(), !!forbidReanimated);
       },
     });
 

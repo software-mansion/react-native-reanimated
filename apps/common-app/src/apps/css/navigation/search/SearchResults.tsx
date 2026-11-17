@@ -1,3 +1,4 @@
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native';
 import type { FuseResult } from 'fuse.js';
 import { memo, useCallback, useMemo } from 'react';
@@ -102,7 +103,7 @@ const ResultCard = memo(function ResultCard({
   currentFilter,
   searchResult: { item, matches },
 }: ResultCardProps) {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<ParamListBase>>();
 
   const formatted = useMemo(() => {
     const formattedValues: Record<string, string> = {};
@@ -144,7 +145,7 @@ const ResultCard = memo(function ResultCard({
     <Pressable
       key={item.key}
       style={styles.resultCard}
-      onPress={() => navigation.navigate(item.key as never)}>
+      onPress={() => navigation.navigate(item.key)}>
       <View style={styles.resultHeader}>
         <Text style={styles.resultName}>{formatted.name}</Text>
         {item.labelTypes?.map((labelType) => (

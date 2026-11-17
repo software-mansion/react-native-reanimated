@@ -2,9 +2,6 @@
 
 #include <jsi/jsi.h>
 
-#include <cxxreact/ReactNativeVersion.h>
-
-#if REACT_NATIVE_VERSION_MINOR >= 85
 #include <react/featureflags/ReactNativeFeatureFlags.h>
 #include <reanimated/Fabric/updates/propNameFromString.h>
 
@@ -94,5 +91,3 @@ inline bool hasLayoutProps(facebook::jsi::Runtime &rt, const facebook::jsi::Valu
 }
 
 } // namespace reanimated
-
-#endif

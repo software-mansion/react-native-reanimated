@@ -1,0 +1,1 @@
+Resolve the DOM element of a component that exposes `getAnimatableRef` on web, so CSS animations and transitions, and entering, exiting and layout animations, apply to the animatable view instead of throwing or being skipped.

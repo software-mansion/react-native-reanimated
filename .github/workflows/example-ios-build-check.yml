@@ -2,55 +2,6 @@ name: Example iOS build check
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - .github/workflows/example-ios-build-check.yml
-      - .github/actions/install-pods/**
-      - .github/actions/save-pods/**
-      - .github/actions/setup-ccache/**
-      - .github/actions/save-ccache/**
-      - scripts/llvm-tools/**
-      - packages/react-native-reanimated/RNReanimated.podspec
-      - packages/react-native-reanimated/scripts/reanimated_utils.rb
-      - packages/react-native-reanimated/apple/**
-      - packages/react-native-reanimated/package.json
-      - packages/react-native-reanimated/src/specs/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/RNWorklets.podspec
-      - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/apple/**
-      - packages/react-native-worklets/package.json
-      - packages/react-native-worklets/src/specs/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/**
-      - apps/common-app/package.json
-  merge_group:
-    branches:
-      - main
-  push:
-    branches:
-      - main
-    paths:
-      - .github/workflows/example-ios-build-check.yml
-      - .github/actions/install-pods/**
-      - .github/actions/save-pods/**
-      - .github/actions/setup-ccache/**
-      - .github/actions/save-ccache/**
-      - scripts/llvm-tools/**
-      - packages/react-native-reanimated/RNReanimated.podspec
-      - packages/react-native-reanimated/scripts/reanimated_utils.rb
-      - packages/react-native-reanimated/apple/**
-      - packages/react-native-reanimated/package.json
-      - packages/react-native-reanimated/src/specs/**
-      - packages/react-native-reanimated/Common/**
-      - packages/react-native-worklets/RNWorklets.podspec
-      - packages/react-native-worklets/scripts/worklets_utils.rb
-      - packages/react-native-worklets/apple/**
-      - packages/react-native-worklets/package.json
-      - packages/react-native-worklets/src/specs/**
-      - packages/react-native-worklets/Common/**
-      - apps/fabric-example/**
-      - apps/common-app/package.json
   workflow_call:
     inputs:
       bundleMode:
@@ -65,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   example-ios-build-check:
@@ -78,7 +30,7 @@ jobs:
       USE_CCACHE_LAUNCHER: 1
       CACHE_KEY: ios-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
     concurrency:
-      group: ios-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      group: ios-${{ github.workflow }}-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -106,14 +58,21 @@ jobs:
 
       - name: Use Node.js
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
-          cache: 'yarn'
 
       - name: Install monorepo node dependencies
         if: steps.result-cache.outputs.cache-hit != 'true'
         run: yarn install --immutable
+      - name: Save Yarn cache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
       - name: Toggle Bundle Mode
         if: steps.result-cache.outputs.cache-hit != 'true' && inputs.bundleMode
         run: yarn toggle-bundle-mode
@@ -124,14 +83,14 @@ jobs:
 
       - name: Setup ccache
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/setup-ccache
+        uses: $/.github/actions/setup-ccache
         with:
           key-prefix: ios-${{ env.CONFIGURATION }}
 
       - name: Install Pods (with caching)
         id: install-pods
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
@@ -148,7 +107,7 @@ jobs:
 
       - name: Save ccache
         if: steps.result-cache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/save-ccache
+        uses: $/.github/actions/save-ccache
         with:
           key-prefix: ios-${{ env.CONFIGURATION }}
 
@@ -184,7 +143,7 @@ jobs:
       # fan-out does not race for the key.
       - name: Save Pods cache
         if: steps.result-cache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
-        uses: ./.github/actions/save-pods
+        uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios

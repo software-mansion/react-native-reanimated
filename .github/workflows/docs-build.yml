@@ -2,16 +2,6 @@ name: docs build
 env:
   YARN_ENABLE_HARDENED_MODE: 0
 on:
-  pull_request:
-    paths:
-      - '.github/workflows/docs-build.yml'
-      - '.github/workflows/docs-publish.yml'
-      - '.github/actions/docs-build/**'
-      - 'scripts/validate-docs-versions.js'
-      - docs/docs-reanimated/**
-      - packages/react-native-reanimated/compatibility.json
-      - docs/docs-worklets/**
-      - packages/react-native-worklets/compatibility.json
   workflow_call:
   workflow_dispatch:
 
@@ -32,7 +22,7 @@ jobs:
 
       # We always build both docs because they are released together.
       - name: Lint and build Reanimated and Worklets docs
-        uses: ./.github/actions/docs-build
+        uses: $/.github/actions/docs-build
         with:
           REANIMATED_DOCS_DIR: ${{ env.REANIMATED_DOCS_DIR }}
           WORKLETS_DOCS_DIR: ${{ env.WORKLETS_DOCS_DIR }}

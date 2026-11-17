@@ -19,12 +19,12 @@ import type {
 import type { PropsBuilderConfig } from '../../../../common';
 import {
   convertStringToNumber,
-  processColorSVG,
+  processColorOrPlatformColorSVG,
   processPercentage,
   processStrokeDashArray,
 } from '../processors';
 
-const colorAttributes = { process: processColorSVG };
+const colorAttributes = { process: processColorOrPlatformColorSVG };
 
 const colorProps: PropsBuilderConfig<ColorProps> = {
   color: colorAttributes,
@@ -79,6 +79,7 @@ const clipProps: PropsBuilderConfig<ClipProps> = {
   clipPath: true, // TODO - maybe preprocess this?
 };
 
+/* eslint-disable @typescript-eslint/no-deprecated */
 const transformProps: PropsBuilderConfig<TransformProps> = {
   translate: true, // TODO - add preprocessor (NumberArray) and split to translateX and translateY
   translateX: true,
@@ -97,6 +98,7 @@ const transformProps: PropsBuilderConfig<TransformProps> = {
   y: true,
   transform: true, // TODO - add preprocessor
 };
+/* eslint-enable @typescript-eslint/no-deprecated */
 
 const responderProps: PropsBuilderConfig<
   Omit<ResponderProps, keyof GestureResponderHandlers>
@@ -131,7 +133,17 @@ export type SvgStyleBuilderConfig<T> = PropsBuilderConfig<
   Omit<T, NonAnimatablePropNames>
 >;
 
-export const SVG_COMMON_PROPERTIES_CONFIG = {
+export const SVG_COMMON_PROPERTIES_CONFIG: typeof colorProps &
+  typeof fillProps &
+  typeof strokeProps &
+  typeof clipProps &
+  typeof transformProps &
+  typeof responderProps &
+  typeof commonMarkerProps &
+  typeof commonMaskProps &
+  typeof commonFilterProps & {
+    readonly opacity: { readonly process: typeof processPercentage };
+  } = {
   ...colorProps,
   ...fillProps,
   ...strokeProps,

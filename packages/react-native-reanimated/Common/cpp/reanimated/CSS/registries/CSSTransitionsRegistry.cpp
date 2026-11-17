@@ -127,16 +127,15 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
 
     auto &transition = it->second;
-    const auto updates = transition->takeUpdates();
+    auto updates = transition->takeUpdates();
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNodeFamily(), updates);
+      addUpdatesToBatch(transition->getShadowNodeFamily(), std::move(updates));
     }
   }
 
   flush(updatesBatch);
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 85
 void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto tags = std::exchange(updatedTags_, {});
@@ -158,7 +157,6 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatc
 
   flush(updatesBatch);
 }
-#endif
 
 CSSTransitionsRegistry::TransitionObserver::TransitionObserver(CSSTransitionsRegistry &owner) : owner_(owner) {}
 

@@ -23,11 +23,7 @@ using namespace facebook::react;
   RCTAssertMainQueue();
 
   if (!_displayLink) {
-    _displayLink = [READisplayLink displayLinkWithTarget:self selector:@selector(onAnimationFrame:)];
-#if !TARGET_OS_OSX
-    _displayLink.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
-#endif // TARGET_OS_OSX
-    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+    _displayLink = REAMakeDisplayLink(self, @selector(onAnimationFrame:));
   }
   return _displayLink;
 }
@@ -173,9 +169,6 @@ using namespace facebook::react;
   NSSet<NSString *> *propKeysManagedByAnimated = [componentView propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN];
   [surfacePresenter schedulerDidSynchronouslyUpdateViewOnUIThread:viewTag props:props];
   [componentView setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:propKeysManagedByAnimated];
-  // `synchronouslyUpdateViewOnUIThread` does not flush props like `backgroundColor` etc.
-  // so that's why we need to call `finalizeUpdates` here.
-  [componentView finalizeUpdates:RNComponentViewUpdateMask{}];
 }
 
 @end

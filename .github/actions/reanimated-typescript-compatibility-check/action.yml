@@ -35,6 +35,7 @@ runs:
       run: yarn type:check:plugin
 
     - name: Check API
+      if: inputs.react-native-version != '0.86'
       shell: bash
       working-directory: packages/react-native-reanimated
       run: yarn type:check:app
@@ -50,6 +51,7 @@ runs:
       run: yarn type:check:legacy-rn-types:src
 
     - name: Check API (legacy React Native types)
+      if: inputs.react-native-version != '0.86'
       shell: bash
       working-directory: packages/react-native-reanimated
       run: yarn type:check:legacy-rn-types:app

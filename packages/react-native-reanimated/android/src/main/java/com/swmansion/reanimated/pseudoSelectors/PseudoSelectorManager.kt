@@ -14,7 +14,6 @@ import com.facebook.react.common.annotations.UnstableReactNativeAPI
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.ReactCompoundView
-import com.swmansion.reanimated.BuildConfig
 import com.swmansion.reanimated.nativeProxy.PseudoSelectorCallback
 import java.lang.ref.WeakReference
 
@@ -43,10 +42,8 @@ class PseudoSelectorManager(
         // bridge must be listening before the first Modal can open. Installing it on the first
         // pseudo registration is too late for a registration that happens inside that Modal.
         UiThreadUtil.runOnUiThread {
-            if (BuildConfig.IS_REACT_NATIVE_86_OR_NEWER) {
-                reactContext.get()?.let { context ->
-                    extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
-                }
+            reactContext.get()?.let { context ->
+                extraWindowBridge = ExtraWindowObserverBridge(context, hover).also { it.install() }
             }
         }
     }

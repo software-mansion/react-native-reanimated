@@ -4,10 +4,6 @@ import type { SharedValue } from 'react-native-reanimated';
 import type { ValueGetter } from './matchers/EventualMatchers';
 import type { TestComponent } from './TestComponent';
 import { TestRunner } from './TestRunner/TestRunner';
-import {
-  waitForFrames as waitForFramesImpl,
-  waitUntilSettled as waitUntilSettledImpl,
-} from './utils/waitForFrames';
 import type {
   DefaultValue,
   MaybeAsync,
@@ -15,8 +11,14 @@ import type {
   TestValue,
 } from './types';
 import { DescribeDecorator, TestDecorator } from './types';
+import {
+  waitForFrames as waitForFramesImpl,
+  waitUntilSettled as waitUntilSettledImpl,
+} from './utils/waitForFrames';
 
 export { Presets } from './Presets';
+export { isFullRun } from './utils/fullRun';
+export { isViewMountedNatively } from './utils/nativeViewHierarchy';
 
 const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
@@ -169,6 +171,14 @@ export async function runTests() {
   return testRunner.runTests();
 }
 
+export function importRuntimeTestSuite(name: string, importTest: () => void) {
+  testSuiteBuilder.importRuntimeTestSuite(name, importTest);
+}
+
+export function reloadAndResume(resumeFromSuite: string) {
+  return testRunner.reloadAndResume(resumeFromSuite);
+}
+
 export async function waitForFrames(count?: number, timeout?: number) {
   return waitForFramesImpl(count, timeout);
 }
@@ -229,8 +239,29 @@ export function createTestValue<T = DefaultValue>(defaultValue: T) {
   return testRunner.createTestValue<T>(defaultValue);
 }
 
-export async function mockAnimationTimer() {
-  await animationRecorder.mockAnimationTimer();
+/**
+ * Replaces the animation clock until the test ends. By default, the clock
+ * starts at 0 and each frame adds 16 ms. With `autoAdvance: false`, the clock
+ * stays at a nonzero start time until `advanceAnimationTimer` adds time. Each
+ * call resets the clock.
+ */
+export async function mockAnimationTimer({
+  autoAdvance = true,
+}: { autoAdvance?: boolean } = {}) {
+  await animationRecorder.mockAnimationTimer(autoAdvance);
+}
+
+/**
+ * Adds the time in one step, then waits 3 frames. A timing animation is at the
+ * new time after the first frame. A spring adds at most 64 ms in one frame, so
+ * advance a spring in steps of 64 ms or less.
+ */
+export async function advanceAnimationTimer(milliseconds: number) {
+  if (!Number.isFinite(milliseconds) || milliseconds < 0) {
+    throw new Error('Animation time must be finite and nonnegative.');
+  }
+  await animationRecorder.advanceAnimationTimer(milliseconds);
+  await waitForFramesImpl(3);
 }
 
 export async function unmockAnimationTimer() {

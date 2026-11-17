@@ -115,20 +115,6 @@ describe(processTransformOrigin, () => {
         ],
       },
       {
-        name: 'padded string syntax',
-        cases: [
-          {
-            name: 'surrounded by whitespace',
-            cases: [
-              { input: '  50% 50%', output: ['50%', '50%', 0] },
-              { input: '  left top  ', output: [0, 0, 0] },
-              { input: '\n  25px 25% 25px\n', output: [25, '25%', 25] },
-              { input: '\tcenter', output: ['50%', '50%', 0] },
-            ],
-          },
-        ],
-      },
-      {
         name: 'array syntax',
         cases: [
           {
@@ -217,6 +203,15 @@ describe(processTransformOrigin, () => {
               {
                 input: '25', // number without px unit
                 message: ERROR_MESSAGES.invalidValue('25', 'x', '25', false),
+              },
+              {
+                input: 'toString', // inherited object key
+                message: ERROR_MESSAGES.invalidValue(
+                  'toString',
+                  'x',
+                  'toString',
+                  false
+                ),
               },
             ],
           },

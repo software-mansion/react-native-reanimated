@@ -4,19 +4,14 @@ import android.os.SystemClock
 import androidx.tracing.Trace
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
-import com.facebook.react.bridge.WritableMap
 import com.facebook.react.fabric.FabricUIManager
-import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.modules.core.ReactChoreographer
 import com.facebook.react.uimanager.GuardedFrameCallback
 import com.facebook.react.uimanager.UIManagerHelper
-import com.facebook.react.uimanager.UIManagerModule
 import com.facebook.react.uimanager.common.UIManagerType
 import com.facebook.react.uimanager.events.Event
 import com.facebook.react.uimanager.events.EventDispatcherListener
-import com.facebook.react.uimanager.events.RCTModernEventEmitter
-import com.swmansion.reanimated.nativeProxy.NoopEventHandler
-import java.util.ArrayList
+import com.swmansion.reanimated.nativeProxy.EventHandler
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -31,17 +26,14 @@ class NodesManager(
     private var mSlowAnimationsEnabled = false
     private var mAnimationsDragFactor = 0
 
-    private val mEventEmitter: DeviceEventManagerModule.RCTDeviceEventEmitter =
-        context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
     private val mReactChoreographer: ReactChoreographer
     private val mChoreographerCallback: GuardedFrameCallback
-    val mCustomEventNamesResolver: UIManagerModule.CustomEventNamesResolver
     private val mCallbackPosted = AtomicBoolean()
-    private var mCustomEventHandler: RCTModernEventEmitter = NoopEventHandler()
+    private var mCustomEventHandler: EventHandler? = null
     private var mFrameCallbacks: MutableList<OnAnimationFrame> = ArrayList()
     private val mEventQueue = ConcurrentLinkedQueue<CopiedEvent>()
     private var lastFrameTimeMs = 0.0
-    private var mFabricUIManager: FabricUIManager
+    private val mFabricUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
     private val mDrawPassDetector: DrawPassDetector
 
     private var mNativeProxy: NativeProxy? = null
@@ -51,12 +43,6 @@ class NodesManager(
     init {
         context.assertOnJSQueueThread()
 
-        val uiManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC)
-        assert(uiManager != null)
-        mCustomEventNamesResolver =
-            object : UIManagerModule.CustomEventNamesResolver {
-                override fun resolveCustomEventName(eventName: String): String? = uiManager!!.resolveCustomDirectEventName(eventName)
-            }
         mDrawPassDetector = DrawPassDetector(context)
 
         mReactChoreographer = ReactChoreographer.getInstance()
@@ -68,7 +54,6 @@ class NodesManager(
             }
 
         mNativeProxy = NativeProxy(context, this)
-        mFabricUIManager = uiManager as FabricUIManager
         mFabricUIManager.eventDispatcher.addListener(this)
     }
 
@@ -199,9 +184,7 @@ class NodesManager(
                 Trace.beginSection("onEventDispatch")
             }
 
-            if (mNativeProxy == null) {
-                return
-            }
+            val nativeProxy = mNativeProxy ?: return
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
@@ -211,9 +194,9 @@ class NodesManager(
                 handleEvent(event)
                 performOperationsRespectingDrawPass()
             } else {
-                val eventName = mCustomEventNamesResolver.resolveCustomEventName(event.eventName) ?: return
+                val eventName = resolveCustomEventName(event.eventName)
                 val viewTag = event.viewTag
-                val shouldSaveEvent = mNativeProxy!!.isAnyHandlerWaitingForEvent(eventName, viewTag)
+                val shouldSaveEvent = nativeProxy.isAnyHandlerWaitingForEvent(eventName, viewTag)
                 if (shouldSaveEvent) {
                     mEventQueue.offer(CopiedEvent(event))
                 }
@@ -227,32 +210,15 @@ class NodesManager(
     }
 
     private fun handleEvent(event: Event<*>) {
-        event.dispatchModern(mCustomEventHandler)
+        mCustomEventHandler?.let(event::dispatchModern)
     }
 
     private fun handleEvent(copiedEvent: CopiedEvent) {
-        mCustomEventHandler.receiveEvent(
-            copiedEvent.surfaceId,
-            copiedEvent.targetTag,
-            copiedEvent.eventName,
-            copiedEvent.canCoalesceEvent,
-            copiedEvent.customCoalesceKey,
-            copiedEvent.payload,
-            copiedEvent.category,
-        )
+        mCustomEventHandler?.handle(copiedEvent.eventName, copiedEvent.targetTag, copiedEvent.payload)
     }
 
-    fun getEventNameResolver(): UIManagerModule.CustomEventNamesResolver = mCustomEventNamesResolver
-
-    fun registerEventHandler(handler: RCTModernEventEmitter) {
+    fun registerEventHandler(handler: EventHandler) {
         mCustomEventHandler = handler
-    }
-
-    fun sendEvent(
-        name: String,
-        body: WritableMap,
-    ) {
-        mEventEmitter.emit(name, body)
     }
 
     fun enableSlowAnimations(

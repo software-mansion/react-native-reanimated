@@ -1,0 +1,8 @@
+{
+  "$schema": "../../../../../node_modules/oxlint/configuration_schema.json",
+  "extends": ["../../../runtime-tests/.oxlintrc.json"],
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": ["**/*.snapshot.ts", "**/*.prettierrc.js"]
+}

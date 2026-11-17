@@ -6,7 +6,7 @@
     "macos": "react-native run-macos",
     "build": "yarn run --top-level toggle-bundle-mode --off && cd macos && bundle install && bundle exec pod update --no-repo-update",
     "format": "yarn run --top-level oxfmt .",
-    "lint": "eslint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
+    "lint": "yarn run --top-level oxlint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
     "start": "react-native start",
     "type:check": "tsc --noEmit"
   },
@@ -26,10 +26,8 @@
     "@react-native-community/cli": "20.2.0",
     "@react-native-community/cli-platform-ios": "20.2.0",
     "@react-native/babel-preset": "0.81.6",
-    "@react-native/eslint-config": "0.81.6",
     "@react-native/metro-config": "0.81.6",
     "@react-native/typescript-config": "0.81.6",
-    "eslint": "9.37.0",
     "typescript": "5.9.3"
   },
   "engines": {
@@ -54,8 +52,7 @@
   "worklets": {
     "staticFeatureFlags": {
       "RUNTIME_TEST_FLAG": true,
-      "IOS_DYNAMIC_FRAMERATE_ENABLED": true,
-      "FETCH_PREVIEW_ENABLED": false
+      "IOS_DYNAMIC_FRAMERATE_ENABLED": true
     }
   }
 }

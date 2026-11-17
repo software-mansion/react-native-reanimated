@@ -1,0 +1,1 @@
+Treat `none` for `transform` and `boxShadow` as an explicit empty list, as CSS does, so `transform: 'none'` no longer throws and an empty `transform` list in a CSS transition is the identity transform instead of the current view value.

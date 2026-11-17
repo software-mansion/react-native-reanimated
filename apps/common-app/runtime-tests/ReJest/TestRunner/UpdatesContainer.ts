@@ -183,6 +183,9 @@ export function createUpdatesContainer() {
       if (viewTags.length === 1) {
         return sortedUpdates[Number(viewTags[0])];
       }
+      if (viewTags.length === 0) {
+        throw new Error('No updates were recorded');
+      }
       throw new Error(
         'Recorded snapshots of many views, specify component you want to get snapshot of'
       );
@@ -199,9 +202,11 @@ export function createUpdatesContainer() {
     return runOnUIBlocking(
       () => {
         'worklet';
+        // Copies, because serialization caches arrays by identity and the
+        // recorder mutates them in place, so a second read would be stale.
         return {
-          jsUpdates: jsUpdates.value,
-          nativeSnapshots: nativeSnapshots.value,
+          jsUpdates: [...jsUpdates.value],
+          nativeSnapshots: [...nativeSnapshots.value],
         };
       },
       undefined,

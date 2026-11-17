@@ -4,9 +4,9 @@ sidebar_position: 3
 
 # useAnimatedProps
 
-`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](/docs/fundamentals/glossary#shared-value). This object is used to animate properties of third-party components.
+`useAnimatedProps` lets you create an animated props object which can be animated using [shared values](../fundamentals/glossary.mdx#shared-value). This object is used to animate properties of third-party components.
 
-For animating style use [`useAnimatedStyle`](/docs/core/useAnimatedStyle) instead.
+For animating style use [`useAnimatedStyle`](./useAnimatedStyle.mdx) instead.
 
 ## Reference
 
@@ -59,8 +59,8 @@ Sometimes when working with third-party libraries properties might be named diff
 
 Reanimated comes with two built-in adapters:
 
-- [`SVGAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/src/reanimated2/PropAdapters.ts#L19) for handling `transform` property in `react-native-svg`
-- [`TextInputAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/Reanimated2/src/reanimated2/PropAdapters.ts#L57).
+- [`SVGAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/2.17.0/src/reanimated2/PropAdapters.ts#L19) for handling `transform` property in `react-native-svg`
+- [`TextInputAdapter`](https://github.com/software-mansion/react-native-reanimated/blob/2.17.0/src/reanimated2/PropAdapters.ts#L57).
 
 You can create your own adapters using `createAnimatedPropAdapter` function.
 
@@ -108,7 +108,7 @@ function App() {
 
 ## Returns
 
-`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](/docs/fundamentals/glossary#animated-component) that you want to animate.
+`useAnimatedProps` returns an animated props object which has to be passed to `animatedProps` property of an [Animated component](../fundamentals/glossary.mdx#animated-component) that you want to animate.
 
 ## Example
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button, StyleSheet, View } from 'react-native';
-
 import Animated, { FadeOut } from 'react-native-reanimated';
 
 export default function MoveWithExiting() {

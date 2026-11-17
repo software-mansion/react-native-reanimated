@@ -42,7 +42,6 @@ const rule: TSESLint.RuleModule<'useLogger', []> = {
     schema: [],
     fixable: 'code',
   },
-  defaultOptions: [],
 };
 
 export default rule;

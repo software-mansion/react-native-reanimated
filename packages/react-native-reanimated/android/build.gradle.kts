@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -27,6 +28,11 @@ if (shouldApplyKotlinAndroidPlugin()) {
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
+
+fun findRootStringProperty(prop: String): String? =
+    (rootProject.findProperty(prop) as? CharSequence)
+        ?.toString()
+        ?.takeIf { it.isNotEmpty() }
 
 fun safeAppExtGet(prop: String, fallback: Any?): Any? {
     val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
@@ -109,12 +115,12 @@ fun getReanimatedStaticFeatureFlags(): String {
 }
 
 fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
-    val androidSyncUiProps = featureFlags["ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS"] == "true"
+    val legacyLayoutAnimationsProxy = featureFlags["USE_LEGACY_LAYOUT_ANIMATIONS_PROXY"] == "true"
     val sharedElementTransitions = featureFlags["ENABLE_SHARED_ELEMENT_TRANSITIONS"] == "true"
 
-    if (androidSyncUiProps && sharedElementTransitions) {
+    if (legacyLayoutAnimationsProxy && sharedElementTransitions) {
         throw GradleException(
-            "[Reanimated] The feature flags `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. Please disable one of them in your package.json."
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. If you want to use the legacy layout animations proxy, you need to explicitly disable `ENABLE_SHARED_ELEMENT_TRANSITIONS` feature flag (enabled by default) in your package.json."
         )
     }
 
@@ -135,12 +141,6 @@ if (project != rootProject) {
 val packageDir: File = project.projectDir.parentFile
 val reactNativeRootDir: File = resolveReactNativeDirectory()
 val REACT_NATIVE_VERSION: String = getReactNativeVersion()
-val IS_REACT_NATIVE_86_OR_NEWER: Boolean = run {
-    val parts = REACT_NATIVE_VERSION.split(".")
-    val major = parts.getOrNull(0)?.toIntOrNull() ?: 0
-    val minor = parts.getOrNull(1)?.toIntOrNull() ?: 0
-    major > 0 || minor >= 86
-}
 val REANIMATED_VERSION: String = getReanimatedVersion()
 val IS_REANIMATED_EXAMPLE_APP: Boolean = safeAppExtGet("isReanimatedExampleApp", false)?.toString()?.toBoolean() ?: false
 val REANIMATED_PROFILING: Boolean = safeAppExtGet("enableReanimatedProfiling", false)?.toString()?.toBoolean() ?: false
@@ -171,18 +171,18 @@ if (project == rootProject) {
 
 apply(from = "./generate-stub-pch.gradle.kts")
 
-android {
+extensions.configure<LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.reanimated"
 
-    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
-    if (!resolvedNdkPath.isNullOrEmpty()) {
+    val resolvedNdkPath = findRootStringProperty("ndkPath")
+    if (resolvedNdkPath != null) {
         ndkPath = resolvedNdkPath
     }
 
-    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
-    if (!resolvedNdkVersion.isNullOrEmpty()) {
+    val resolvedNdkVersion = findRootStringProperty("ndkVersion")
+    if (resolvedNdkVersion != null) {
         ndkVersion = resolvedNdkVersion
     }
 
@@ -207,8 +207,6 @@ android {
         buildConfigField("String", "REANIMATED_VERSION_JAVA", "\"$REANIMATED_VERSION\"")
         buildConfigField("boolean", "IS_INTERNAL_BUILD", "false")
         buildConfigField("int", "EXOPACKAGE_FLAGS", "0")
-        buildConfigField("boolean", "IS_REACT_NATIVE_86_OR_NEWER", IS_REACT_NATIVE_86_OR_NEWER.toString())
-
         @Suppress("UnstableApiUsage")
         externalNativeBuild {
             cmake {
@@ -278,6 +276,9 @@ if (project != rootProject) {
     extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
+            if (IS_REANIMATED_EXAMPLE_APP) {
+                freeCompilerArgs.add("-Xwarning-level=DEPRECATION:error")
+            }
         }
     }
 }

@@ -30,6 +30,21 @@
       "options": {
         "jsdoc": false
       }
+    },
+    {
+      "files": ["docs/**"],
+      "options": {
+        "sortImports": false
+      }
     }
-  ]
+  ],
+  "sortImports": {
+    "groups": [
+      "side_effect",
+      ["builtin", "external"],
+      ["internal", "subpath"],
+      ["parent", "sibling", "index", "style"],
+      "unknown"
+    ]
+  }
 }

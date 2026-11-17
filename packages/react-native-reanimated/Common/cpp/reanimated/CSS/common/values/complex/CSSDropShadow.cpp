@@ -45,32 +45,11 @@ CSSDropShadow::CSSDropShadow(const folly::dynamic &value) {
 }
 
 bool CSSDropShadow::canConstruct(const folly::dynamic &value) {
-  if (!value.isObject()) {
-    return false;
-  }
-
-  for (const auto &validator : fieldValidators) {
-    if (value.count(validator.fieldName) > 0 && !validator.validateDynamic(value[validator.fieldName])) {
-      return false;
-    }
-  }
-  return true;
+  return canConstructFields(value, fieldValidators);
 }
 
 bool CSSDropShadow::canConstruct(jsi::Runtime &rt, const jsi::Value &jsiValue) {
-  if (!jsiValue.isObject()) {
-    return false;
-  }
-
-  const auto &obj = jsiValue.asObject(rt);
-
-  for (const auto &validator : fieldValidators) {
-    const auto &fieldName = validator.fieldName.c_str();
-    if (obj.hasProperty(rt, fieldName) && !validator.validateJSI(rt, obj.getProperty(rt, fieldName))) {
-      return false;
-    }
-  }
-  return true;
+  return canConstructFields(rt, jsiValue, fieldValidators);
 }
 folly::dynamic CSSDropShadow::toDynamic() const {
   folly::dynamic obj = folly::dynamic::object();

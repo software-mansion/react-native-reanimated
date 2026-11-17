@@ -123,7 +123,6 @@ pub fn make_worklet_factory<'a>(
         update_relative_requires(
             body,
             filename,
-            &state.forwardable_relative_paths,
             state.opts.worklets_package_dir.as_deref(),
             builder,
         );

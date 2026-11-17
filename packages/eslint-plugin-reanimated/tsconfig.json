@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
     "preserveSymlinks": true,
     "jsx": "react-native",
     "skipLibCheck": true,

@@ -1,5 +1,5 @@
-import { AppRegistry } from 'react-native';
 import SelfTestsAutoRunApp from 'common-app/runtime-tests/self-tests/AutoRunApp';
+import { AppRegistry } from 'react-native';
 
 const RUNTIME_TESTS_APP_NAME = 'FabricExampleRuntimeTests';
 

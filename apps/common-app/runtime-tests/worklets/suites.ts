@@ -3,17 +3,35 @@ import { isBundleModeEnabled } from 'react-native-worklets';
 import type { RuntimeTestSuite } from '../types';
 
 export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
+  // First, because a Worker Runtime of the new instance only reaches the id of
+  // an old one by creating every runtime the suites before it created.
+  {
+    testSuiteName: 'reload',
+    importTest: () => {
+      require('./tests/reload/oldInstanceValues.test');
+    },
+    needsRuntimeTestsServer: true,
+    disabled: !__DEV__,
+  },
   {
     testSuiteName: 'memory',
     importTest: () => {
       require('./tests/memory/createSerializable.test');
+      require('./tests/memory/createSerializableTyped.test');
       require('./tests/memory/createSerializableOnUI.test');
       require('./tests/memory/isSerializableRef.test');
+      require('./tests/memory/serializableMapping.test');
       require('./tests/memory/retainingSerializable.test');
+      require('./tests/memory/crossRuntimeCycle.test');
+      require('./tests/memory/retainingSerializableConcurrency.test');
       require('./tests/memory/synchronizable.test');
       require('./tests/memory/customSerializable.test');
       require('./tests/memory/hybridObjectSupport.test');
       require('./tests/memory/shareable.test');
+      require('./tests/memory/runtimeAddressReuse.test');
+      require('./tests/memory/shareableHostReuse.test');
+      require('./tests/memory/destroyedRuntimeCleanup.test');
+      require('./tests/memory/staleRemoteFunction.test');
     },
   },
   {
@@ -22,9 +40,11 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       __DEV__ && require('./tests/runtimes/errorTraces.test');
       __DEV__ && require('./tests/runtimes/loggingFromWorkletRuntime.test');
       require('./tests/runtimes/createWorkletRuntime.test');
+      require('./tests/runtimes/abortWorkletRuntime.test');
       require('./tests/runtimes/getCurrentThreadId.test');
       require('./tests/runtimes/scheduleOnRN.test');
       require('./tests/runtimes/runOnUISync.test');
+      require('./tests/runtimes/runOnRNSync.test');
       require('./tests/runtimes/scheduleOnRuntime.test');
       require('./tests/runtimes/scheduleOnUI.test');
       require('./tests/runtimes/runOnRuntimeSync.test');
@@ -35,17 +55,27 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/scheduleOnRuntimeWithId.test');
       require('./tests/runtimes/microtaskDrains.test');
       require('./tests/runtimes/weakRef.test');
+      require('./tests/runtimes/performanceNow.test');
     },
   },
   {
     testSuiteName: 'bundle mode core',
     importTest: () => {
       require('./tests/runtimes/reactNativeImportShim.test');
-      require('./tests/runtimes/turboModuleRegistryShim.test');
+      require('./tests/runtimes/lazyImport.test');
     },
     // The shims these tests assert on are only active in __DEV__, so the suite
     // stays out of Release builds until Bundle Mode supports them there.
     disabled: !isBundleModeEnabled() || !__DEV__,
+  },
+  {
+    testSuiteName: 'networking',
+    importTest: () => {
+      require('./tests/networking/api.test');
+      require('./tests/networking/xhr.test');
+      require('./tests/networking/fetch.test');
+    },
+    disabled: !isBundleModeEnabled(),
   },
   {
     testSuiteName: 'run loop',

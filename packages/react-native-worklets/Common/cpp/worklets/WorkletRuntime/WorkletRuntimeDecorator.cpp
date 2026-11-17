@@ -20,6 +20,7 @@
 #endif
 
 #if defined(__APPLE__)
+#include <mach/mach_time.h>
 #include <os/trace_base.h>
 #if OS_LOG_TARGET_HAS_10_15_FEATURES
 #include <os/log.h>
@@ -28,6 +29,7 @@
 #endif
 
 #include <chrono>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -47,13 +49,32 @@ static os_log_t getWorkletsInstrumentsLogHandle() {
 
 namespace worklets {
 
-static inline double performanceNow() {
-  // copied from JSExecutor.cpp
-  auto time = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(time.time_since_epoch()).count();
+#ifdef __APPLE__
+static double getMachTimebaseConversionFactor() {
+  mach_timebase_info_data_t info;
+  mach_timebase_info(&info);
+  return static_cast<double>(info.numer) / info.denom;
+}
+#endif
 
-  constexpr double NANOSECONDS_IN_MILLISECOND = 1000000.0;
-  return duration / NANOSECONDS_IN_MILLISECOND;
+static inline double performanceNow() {
+#ifdef __APPLE__
+  static const double conversionFactor = getMachTimebaseConversionFactor();
+  const auto nanoseconds = static_cast<int64_t>(static_cast<double>(mach_absolute_time()) * conversionFactor);
+#else
+  const auto nanoseconds =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+#endif
+  return std::chrono::duration<double, std::milli>(std::chrono::nanoseconds(nanoseconds)).count();
+}
+
+static inline double getTimerTimestamp() {
+#ifdef __APPLE__
+  const auto time = std::chrono::system_clock::now().time_since_epoch();
+#else
+  const auto time = std::chrono::steady_clock::now().time_since_epoch();
+#endif
+  return std::chrono::duration<double, std::milli>(time).count();
 }
 
 void WorkletRuntimeDecorator::decorate(
@@ -61,7 +82,6 @@ void WorkletRuntimeDecorator::decorate(
     const RuntimeData::RuntimeKind runtimeKind,
     const std::string &name,
     const std::shared_ptr<JSScheduler> &jsScheduler,
-    const bool isDevBundle,
     const bool enableMicrotaskQueue,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
@@ -74,8 +94,6 @@ void WorkletRuntimeDecorator::decorate(
   rt.global().setProperty(rt, "_WORKLET", true);
 
   rt.global().setProperty(rt, RuntimeData::runtimeNameBindingName, jsi::String::createFromAscii(rt, name));
-
-  rt.global().setProperty(rt, "__DEV__", isDevBundle);
 
   rt.global().setProperty(rt, "__workletsModuleProxy", std::move(jsiWorkletsModuleProxy));
 
@@ -206,6 +224,9 @@ void WorkletRuntimeDecorator::decorate(
           }));
   rt.global().setProperty(rt, "performance", performance);
 
+  jsi_utils::installJsiFunction(
+      rt, "_getTimerTimestamp", [](jsi::Runtime &rt) { return jsi::Value(getTimerTimestamp()); });
+
   rt.global().setProperty(
       rt,
       "_startProfiling",
@@ -243,85 +264,5 @@ void WorkletRuntimeDecorator::decorate(
         return jsi::Value::undefined();
       });
 }
-
-void WorkletRuntimeDecorator::postEvaluateScript(
-    jsi::Runtime &rt,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-  installNetworking(rt, runtimeBindings);
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
-}
-
-#ifdef WORKLETS_FETCH_PREVIEW_ENABLED
-void WorkletRuntimeDecorator::installNetworking(
-    jsi::Runtime &rt,
-    const std::shared_ptr<RuntimeBindings> &runtimeBindings) {
-  auto TurboModules = rt.global().getPropertyAsObject(rt, "TurboModules");
-
-  auto Networking = TurboModules.getPropertyAsFunction(rt, "get").callWithThis(rt, TurboModules, "Networking");
-
-#ifdef ANDROID
-  auto jsiSendRequest = jsi::Function::createFromHostFunction(
-      rt,
-      jsi::PropNameID::forAscii(rt, "sendRequest"),
-      9,
-      [sendRequest = runtimeBindings->sendRequest](
-          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-        auto method = args[0].asString(rt);
-        auto url = args[1].asString(rt);
-        auto requestId = args[2].asNumber();
-        auto headers = args[3].asObject(rt).asArray(rt);
-        auto data = args[4].asObject(rt);
-        auto responseType = args[5].asString(rt);
-        auto incrementalUpdates = args[6].asBool();
-        auto timeout = args[7].asNumber();
-        auto withCredentials = args[8].asBool();
-        sendRequest(
-            rt, method, url, requestId, headers, data, responseType, incrementalUpdates, timeout, withCredentials);
-        return jsi::Value::undefined();
-      });
-#else
-  auto jsiSendRequest = jsi::Function::createFromHostFunction(
-      rt,
-      jsi::PropNameID::forAscii(rt, "sendRequest"),
-      2,
-      [sendRequest = runtimeBindings->sendRequest](
-          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-        auto &query = args[0];
-        auto responseSender = args[1].asObject(rt).asFunction(rt);
-        sendRequest(rt, query, std::move(responseSender));
-        return jsi::Value::undefined();
-      });
-#endif // ANDROID
-
-  Networking.asObject(rt).setProperty(rt, "sendRequest", std::move(jsiSendRequest));
-
-  auto jsiAbortRequest = jsi::Function::createFromHostFunction(
-      rt,
-      jsi::PropNameID::forAscii(rt, "abortRequest"),
-      1,
-      [abortRequest = runtimeBindings->abortRequest](
-          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-        auto requestID = args[0].asNumber();
-        abortRequest(rt, requestID);
-        return jsi::Value::undefined();
-      });
-
-  Networking.asObject(rt).setProperty(rt, "abortRequest", std::move(jsiAbortRequest));
-
-  auto jsiClearCookies = jsi::Function::createFromHostFunction(
-      rt,
-      jsi::PropNameID::forAscii(rt, "clearCookies"),
-      1,
-      [clearCookies = runtimeBindings->clearCookies](
-          jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) {
-        auto responseSender = args[0].asObject(rt).asFunction(rt);
-        clearCookies(rt, std::move(responseSender));
-        return jsi::Value::undefined();
-      });
-
-  Networking.asObject(rt).setProperty(rt, "clearCookies", std::move(jsiClearCookies));
-}
-#endif // WORKLETS_FETCH_PREVIEW_ENABLED
 
 } // namespace worklets

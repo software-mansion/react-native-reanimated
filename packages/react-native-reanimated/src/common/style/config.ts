@@ -1,4 +1,4 @@
-/* eslint-disable camelcase */
+/* eslint-disable eslint-core/camelcase */
 'use strict';
 import { IS_ANDROID } from '../constants';
 import {
@@ -12,8 +12,10 @@ import {
   processInset,
   processInsetBlock,
   processInsetInline,
+  processObjectFit,
   processTransform,
   processTransformOrigin,
+  processVerticalAlign,
 } from './processors';
 import type { AllStyleProps, PropsBuilderConfig } from './types';
 
@@ -175,7 +177,7 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   borderRightWidth: true,
 
   // Decoration
-  borderCurve: false,
+  borderCurve: true,
   borderStyle: true,
 
   // OUTLINES
@@ -194,6 +196,7 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
 
   // @ts-ignore Available since RN 0.87
   backgroundImage: { process: processBackgroundImage },
+  experimental_backgroundImage: { process: processBackgroundImage },
   // @ts-ignore This type doesn't exist on non-strict-api
   experimental_backgroundPosition: false, // TODO
   // @ts-ignore Available since RN 0.88
@@ -219,7 +222,7 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   // Alignment
   textAlign: true,
   textAlignVertical: true,
-  verticalAlign: false,
+  verticalAlign: { process: processVerticalAlign },
   // Decoration
   letterSpacing: true,
   lineHeight: true,
@@ -228,13 +231,15 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   textDecorationStyle: true,
   // Others
   userSelect: true,
-  writingDirection: false,
+  writingDirection: true,
+  // @ts-ignore Available since RN 0.89
+  experimental_textWidthMode: false, // TODO
   includeFontPadding: true,
 
   /** Others */
   // Image
   resizeMode: true,
-  objectFit: false,
+  objectFit: { process: processObjectFit },
   // Cursor
   cursor: true,
   pointerEvents: true,

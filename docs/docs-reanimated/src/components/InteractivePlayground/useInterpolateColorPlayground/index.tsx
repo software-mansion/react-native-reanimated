@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CheckboxOption, Range, SelectOption } from '../';
 import Example from './Example';
 import styles from './styles.module.css';
-import ColorPicker from './ColorPicker';
+import ColorPicker from '../ColorPicker';
+import rowStyles from '../exampleWithColorPicker.module.css';
 import ProgressBarSection from './ColorProgressBar/ProgressBarSection';
 import { Collapsible } from '@docusaurus/theme-common';
 import CollapseButton from '@site/src/components/CollapseButton';
@@ -145,7 +146,7 @@ export default function useInterpolateColorPlayground() {
 
   function ExampleFC() {
     return (
-      <div className={styles.example}>
+      <div className={rowStyles.example}>
         <ColorPicker
           color={colorLeftBoundary}
           setColor={setColorLeftBoundary}

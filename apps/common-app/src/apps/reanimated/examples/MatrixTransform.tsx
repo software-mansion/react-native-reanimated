@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     backgroundColor: 'blue',
-    // border radius of rotated view doesn't work on android https://github.com/facebook/react-native/issues/18266
+    // border radius of rotated view doesn't work on android https://github.com/react/react-native/issues/18266
     borderRadius: Platform.select({ ios: 10, android: 0 }),
     marginLeft: 100,
   },

@@ -240,8 +240,14 @@ describe('Test useDerivedValue changing width', () => {
           }[]
         )
       )(
-        'Animate from ${startWidth} to ${finalWidth}, ${animationType} ${animate}',
-        async ({ startWidth, finalWidth, animate, animationType }) => {
+        'Animate from ${startWidth} to ${finalWidth}, ${animationType} ${animate}, compiler API: ${compilerApi}',
+        async ({
+          startWidth,
+          finalWidth,
+          animate,
+          animationType,
+          compilerApi,
+        }) => {
           const snapshotIdPerType = {
             [AnimationLocation.NONE]: 1,
             [AnimationLocation.USE_EFFECT]: 2,
@@ -263,7 +269,7 @@ describe('Test useDerivedValue changing width', () => {
               finalWidth,
               animate,
               animationType,
-              false
+              compilerApi
             );
 
           expect(updates).toMatchSnapshots(snapshot[snapshotName]);

@@ -1,0 +1,38 @@
+diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp
+index 397db82b51af137a657b9079040b9a716225c20e..cf56a6d64125f6c9c06848e576953b3450f6062a 100644
+--- a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp
++++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp
+@@ -13,11 +13,13 @@ folly::dynamic RNSScreenStackHeaderConfigState::getDynamic() const {
+ #else // ANDROID
+ void RNSScreenStackHeaderConfigState::setImageLoader(
+     std::weak_ptr<void> imageLoader) {
++  std::lock_guard<std::mutex> lock(imageLoaderMutex_);
+   imageLoader_ = imageLoader;
+ }
+ 
+ std::weak_ptr<void> RNSScreenStackHeaderConfigState::getImageLoader()
+     const noexcept {
++  std::lock_guard<std::mutex> lock(imageLoaderMutex_);
+   return imageLoader_;
+ }
+ #endif // ANDROID
+diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h
+index f42c483b42bd7481456153fb533627f26b7af66a..b2566011227fb3b5cbe3af29b7ab999f0750b513 100644
+--- a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h
++++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h
+@@ -1,5 +1,7 @@
+ #pragma once
+ 
++#include <mutex>
++
+ #include <react/renderer/core/graphicsConversions.h>
+ #include <react/renderer/graphics/Float.h>
+ 
+@@ -90,6 +92,7 @@ class JSI_EXPORT RNSScreenStackHeaderConfigState final {
+ 
+  private:
+ #if !defined(ANDROID)
++  mutable std::mutex imageLoaderMutex_;
+   std::weak_ptr<void> imageLoader_;
+ #endif // !ANDROID
+ };

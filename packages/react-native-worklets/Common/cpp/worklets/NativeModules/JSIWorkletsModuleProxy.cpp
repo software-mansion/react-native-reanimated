@@ -31,6 +31,8 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <cmath>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -92,56 +94,134 @@ inline void scheduleOnUI(
 #endif // NDEBUG
 }
 
-#ifndef NDEBUG
 inline jsi::Value runOnUISync(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &worklet,
-    const std::optional<std::string> &scheduleStack) {
+    const jsi::Value &worklet
+#ifndef NDEBUG
+    ,
+    const std::optional<std::string> &scheduleStack
+#endif // NDEBUG
+) {
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+#ifndef NDEBUG
     auto serializedResult =
         uiWorkletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(serializableWorklet, scheduleStack);
-    return serializedResult->toJSValue(rt);
-  }
-  return jsi::Value::undefined();
-}
 #else
-inline jsi::Value
-runOnUISync(const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime, jsi::Runtime &rt, const jsi::Value &worklet) {
-  if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
-    auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
-        rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
     auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+#endif // NDEBUG
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
 }
-#endif // NDEBUG
 
-#ifndef NDEBUG
 jsi::Value runOnRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue,
-    const std::optional<std::string> &scheduleStack) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
-  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  auto serializedResult = workletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(worklet, scheduleStack);
-  return serializedResult->toJSValue(rt);
-}
-#else
-jsi::Value
-runOnRuntimeSync(jsi::Runtime &rt, const jsi::Value &workletRuntimeValue, const jsi::Value &serializableWorkletValue) {
-  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
-  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
-      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
-  auto serializedResult = workletRuntime->runSyncSerialized(worklet);
-  return serializedResult->toJSValue(rt);
-}
+    const jsi::Value &serializableWorkletValue
+#ifndef NDEBUG
+    ,
+    const std::optional<std::string> &scheduleStack
 #endif // NDEBUG
+) {
+  auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
+  auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+      rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
+    throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
+  }
+#ifndef NDEBUG
+  auto serializedResult = workletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(worklet, scheduleStack);
+#else
+  auto serializedResult = workletRuntime->runSyncSerialized(worklet);
+#endif // NDEBUG
+  return serializedResult->toJSValue(rt);
+}
+
+template <typename TCall>
+void callOnRN(
+    [[maybe_unused]] const std::shared_ptr<JSScheduler> &jsScheduler,
+    [[maybe_unused]] jsi::Runtime &rnRuntime,
+    [[maybe_unused]] const std::optional<std::string> &scheduleStack,
+    TCall &&call) {
+#ifndef NDEBUG
+  try {
+    call();
+  } catch (jsi::JSError &error) {
+    JSLogger::handleJSError(jsScheduler, rnRuntime, RuntimeData::rnRuntimeName, error, scheduleStack);
+  }
+#else
+  call();
+#endif // NDEBUG
+}
+
+jsi::Value runOnRNSync(
+    const std::shared_ptr<JSScheduler> &jsScheduler,
+    jsi::Runtime &rt,
+    const jsi::Value &funValue,
+    const jsi::Value &argsValue
+#ifndef NDEBUG
+    ,
+    const std::optional<std::string> &scheduleStack
+#endif // NDEBUG
+) {
+  const auto funObject = funValue.getObject(rt);
+  std::shared_ptr<Serializable> serializableFun;
+  std::optional<jsi::HostFunctionType> hostFun;
+  if (!funObject.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
+    serializableFun = extractSerializableOrThrow<SerializableRemoteFunction>(rt, funValue);
+  } else if (funObject.isFunction(rt) && funObject.getFunction(rt).isHostFunction(rt)) {
+    hostFun = funObject.getFunction(rt).getHostFunction(rt);
+  } else {
+    serializableFun = extractSerializableOrThrow<SerializableWorklet>(
+        rt,
+        funValue,
+        "[Worklets] Locally defined function passed to runOnRNSync. Only worklets, functions defined on the RN Runtime and host functions can be run on the RN Runtime.");
+  }
+
+  const auto serializableArgs = argsValue.isUndefined()
+      ? nullptr
+      : extractSerializableOrThrow<SerializableArray>(rt, argsValue, "[Worklets] Args must be an array.");
+
+  std::shared_ptr<Serializable> serializedResult;
+  std::optional<std::string> errorMessage;
+  std::string errorStack;
+
+  jsScheduler->runSyncOnJS([&](jsi::Runtime &rnRuntime) {
+    try {
+      const auto args =
+          serializableArgs == nullptr ? std::vector<jsi::Value>{} : serializableArgs->getJSIValueArr(rnRuntime);
+      const auto result = hostFun.has_value()
+          ? (*hostFun)(rnRuntime, jsi::Value::undefined(), args.data(), args.size())
+          : serializableFun->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime).call(
+                rnRuntime, args.data(), args.size());
+      serializedResult = result.isUndefined()
+          ? nullptr
+          : extractSerializableOrThrow(
+                rnRuntime, rnRuntime.global().getPropertyAsFunction(rnRuntime, "__serializer").call(rnRuntime, result));
+    } catch (const jsi::JSError &error) {
+      errorMessage = error.getMessage();
+#ifndef NDEBUG
+      errorStack =
+          JSLogger::joinStacks(error.getMessage(), error.getStack(), RuntimeData::rnRuntimeName, scheduleStack);
+#else
+      errorStack = error.getStack();
+#endif // NDEBUG
+    } catch (const std::exception &error) {
+      errorMessage = error.what();
+    }
+  });
+
+  if (errorMessage.has_value()) {
+    throw jsi::JSError(rt, *errorMessage, errorStack);
+  }
+  if (serializedResult == nullptr) {
+    return jsi::Value::undefined();
+  }
+  return serializedResult->toJSValue(rt);
+}
 
 inline jsi::Value createWorkletRuntime(
     jsi::Runtime &originRuntime,
@@ -151,9 +231,11 @@ inline jsi::Value createWorkletRuntime(
     std::shared_ptr<SerializableWorklet> &initializer,
     const std::shared_ptr<AsyncQueue> &queue,
     bool enableEventLoop,
-    bool enableLocking) {
-  const auto workletRuntime =
-      runtimeManager->createWorkletRuntime(sourceProxy, name, initializer, queue, enableEventLoop, enableLocking);
+    bool enableLocking,
+    bool enableNetworking,
+    bool abortable) {
+  const auto workletRuntime = runtimeManager->createWorkletRuntime(
+      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking, abortable);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -214,7 +296,7 @@ inline void registerCustomSerializable(
     const int typeId) {
   const SerializationData data{.determine = determine, .pack = pack, .unpack = unpack, .typeId = typeId};
   // Prevent registering new worklet runtimes while we are updating existing ones to prevent inconsistencies.
-  runtimeManager->withRegistrationPaused([&] {
+  runtimeManager->withRuntimeReadyPaused([&] {
     memoryManager->registerCustomSerializable(data);
     for (const auto &runtime : runtimeManager->getAllRuntimes()) {
       if (runtime->isLockingEnabled()) {
@@ -224,28 +306,54 @@ inline void registerCustomSerializable(
   });
 }
 
+std::shared_ptr<void> makePromiseDropGuard(
+    jsi::Runtime &rt,
+    const WorkletRuntime &workletRuntime,
+    const jsi::Value &resolveValue,
+    const jsi::Value &rejectValue) {
+  if (!workletRuntime.isAbortable() || !rejectValue.isObject()) {
+    return nullptr;
+  }
+  return std::make_shared<PromiseDropGuard>(
+      extractSerializableOrThrow<SerializableRemoteFunction>(rt, resolveValue),
+      extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue));
+}
+
+RuntimeData::RuntimeId runtimeIdFromJS(const jsi::Value &value) {
+  const auto runtimeId = value.getNumber();
+  react_native_assert(std::isfinite(runtimeId) && "[Worklets] Runtime id must be a finite number.");
+  react_native_assert(std::trunc(runtimeId) == runtimeId && "[Worklets] Runtime id must be an integer.");
+  react_native_assert(runtimeId >= 0 && "[Worklets] Runtime id must not be negative.");
+  react_native_assert(
+      runtimeId < static_cast<double>(std::numeric_limits<RuntimeData::RuntimeId>::max()) &&
+      "[Worklets] Runtime id must be smaller than 2^64.");
+  return static_cast<RuntimeData::RuntimeId>(runtimeId);
+}
+
 } // namespace
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
   using jsi_utils::at;
 
-  jsi_utils::addMethod<18>(
+  jsi_utils::addMethod<19>(
       rt,
       obj,
       "loadUnpackersWithCode",
-      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[18]) {
+      [unpackerLoader = unpackerLoader_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[19]) {
         const auto str = [&](size_t i) {
           return args[i].getString(rt).utf8(rt);
         };
-        unpackerLoader->loadCodeUnpackers({
-            CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
-            CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
-            CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
-            CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
-            CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
-            CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
-        });
+        unpackerLoader->loadCodeUnpackers(
+            {
+                CodeUnpacker{.code = str(0), .location = str(1), .sourceMap = str(2)},
+                CodeUnpacker{.code = str(3), .location = str(4), .sourceMap = str(5)},
+                CodeUnpacker{.code = str(6), .location = str(7), .sourceMap = str(8)},
+                CodeUnpacker{.code = str(9), .location = str(10), .sourceMap = str(11)},
+                CodeUnpacker{.code = str(12), .location = str(13), .sourceMap = str(14)},
+                CodeUnpacker{.code = str(15), .location = str(16), .sourceMap = str(17)},
+            },
+            args[18].asBool());
       });
 
   jsi_utils::addMethod<6>(
@@ -319,18 +427,19 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "createSerializableNonWorkletFunction",
-      [jsScheduler = jsScheduler_, hostRuntimeId = hostRuntimeId_, rnRuntimeStatus = rnRuntimeStatus_](
+      [jsScheduler = jsScheduler_,
+       hostIdentity = hostRuntimeId_ == RuntimeData::rnRuntimeId
+           ? RuntimeIdentity::forRNRuntime(rnRuntimeStatus_)
+           : RuntimeIdentity::forWorkletRuntime(runtimeManager_, hostRuntimeId_)](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         auto fun = at<0>(args).getObject(rt).getFunction(rt);
         const auto name = at<1>(args).isUndefined() ? "" : at<1>(args).getString(rt).utf8(rt);
         if (fun.isHostFunction(rt)) {
           return makeSerializableHostFunction(
               rt, fun.getHostFunction(rt), name, fun.getProperty(rt, "length").getNumber());
-        } else if (hostRuntimeId == RuntimeData::rnRuntimeId) {
-          return makeRNRuntimeSerializableRemoteFunction(rt, name, fun, jsScheduler, rnRuntimeStatus);
-        } else {
-          return makeWorkletRuntimeSerializableRemoteFunction(rt, name, fun, hostRuntimeId);
         }
+        return makeSerializableRemoteFunction(
+            rt, name, fun, hostIdentity, hostIdentity.isRNRuntime() ? jsScheduler : nullptr);
       });
 
   jsi_utils::addMethod<2>(
@@ -393,6 +502,33 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableWorklet(rt, at<0>(args).getObject(rt), at<1>(args).getBool());
       });
 
+  jsi_utils::addMethod<1>(
+      rt, obj, "makeWeakSerializableRef", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto serializable =
+            extractSerializableOrThrow(rt, at<0>(args), "[Worklets] makeWeakSerializableRef expects a serializable.");
+        auto marker = jsi::Object(rt);
+        marker.setNativeState(rt, std::make_shared<WeakSerializableJSRef>(serializable));
+        // Deliberately no `__serializableRef`, so JS never takes a marker for a serializable. A marker that
+        // reaches C++ as a value is rejected, because its native state is not a SerializableJSRef.
+        return marker;
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "derefWeakSerializableRef", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (!at<0>(args).isObject()) {
+          return jsi::Value::undefined();
+        }
+        auto marker = at<0>(args).getObject(rt);
+        if (!marker.hasNativeState<WeakSerializableJSRef>(rt)) {
+          return jsi::Value::undefined();
+        }
+        auto serializable = marker.getNativeState<WeakSerializableJSRef>(rt)->lock();
+        if (!serializable) {
+          return jsi::Value::undefined();
+        }
+        return jsi::Value(SerializableJSRef::newNativeStateObject(rt, serializable));
+      });
+
   jsi_utils::addMethod<2>(
       rt, obj, "createCustomSerializable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeCustomSerializable(rt, at<0>(args), at<1>(args).asNumber());
@@ -414,11 +550,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         registerCustomSerializable(runtimeManager, memoryManager, determine, pack, unpack, typeId);
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "scheduleOnRN",
-      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
         const auto &fun = at<0>(args).getObject(rt).getFunction(rt);
         const auto &remoteArgs = at<1>(args);
 
@@ -426,29 +562,40 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             ? nullptr
             : extractSerializableOrThrow<SerializableArray>(rt, remoteArgs, "[Worklets] Args must be an array.");
 
-        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] { // NOLINT(readability/braces)
+        std::optional<std::string> scheduleStack;
+        if (at<2>(args).isString()) {
+          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        }
+
+        if (!fun.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
           const auto remoteFunction = extractSerializableOrThrow<SerializableRemoteFunction>(rt, fun);
-          jsScheduler->scheduleOnJS([remoteFunction, serializableArgs](jsi::Runtime &rnRuntime) {
-            const auto unpackedFun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
-            if (serializableArgs == nullptr) {
-              // fast path for remote function w/o arguments
-              unpackedFun.call(rnRuntime);
-            } else {
-              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              unpackedFun.call(rnRuntime, args.data(), args.size());
-            }
+          jsScheduler->scheduleOnJS([jsScheduler, remoteFunction, serializableArgs, scheduleStack](
+                                        jsi::Runtime &rnRuntime) {
+            callOnRN(jsScheduler, rnRuntime, scheduleStack, [&]() {
+              const auto unpackedFun = remoteFunction->toJSValue(rnRuntime).getObject(rnRuntime).getFunction(rnRuntime);
+              if (serializableArgs == nullptr) {
+                // fast path for remote function w/o arguments
+                unpackedFun.call(rnRuntime);
+              } else {
+                const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+                unpackedFun.call(rnRuntime, args.data(), args.size());
+              }
+            });
           });
         } else if (fun.isHostFunction(rt)) {
           auto hostFun = fun.getHostFunction(rt);
-          jsScheduler->scheduleOnJS([hostFun = std::move(hostFun), serializableArgs](jsi::Runtime &rnRuntime) {
-            if (serializableArgs == nullptr) {
-              // fast path for host function w/o arguments
-              hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
-            } else {
-              const auto args = serializableArgs->getJSIValueArr(rnRuntime);
-              hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
-            }
-          });
+          jsScheduler->scheduleOnJS(
+              [jsScheduler, hostFun = std::move(hostFun), serializableArgs, scheduleStack](jsi::Runtime &rnRuntime) {
+                callOnRN(jsScheduler, rnRuntime, scheduleStack, [&]() {
+                  if (serializableArgs == nullptr) {
+                    // fast path for host function w/o arguments
+                    hostFun(rnRuntime, jsi::Value::undefined(), nullptr, 0);
+                  } else {
+                    const auto args = serializableArgs->getJSIValueArr(rnRuntime);
+                    hostFun(rnRuntime, jsi::Value::undefined(), args.data(), args.size());
+                  }
+                });
+              });
         } else {
           const auto fnName = fun.getProperty(rt, "name").getString(rt).utf8(rt);
           const auto nameInError = fnName.empty() ? "" : " (" + fnName + ")";
@@ -456,6 +603,22 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
               "[Worklets] Locally defined function passed to scheduleOnRN" + nameInError +
               ". Only functions defined on the RN Runtime or host functions can be scheduled on the RN Runtime. Define the function on the RN Runtime and pass it as a reference. See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#locally-defined-function-passed-to-scheduleonrn for more details.");
         }
+      });
+
+  jsi_utils::addMethod<3>(
+      rt,
+      obj,
+      "runOnRNSync",
+      [jsScheduler = jsScheduler_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+#ifndef NDEBUG
+        std::optional<std::string> scheduleStack;
+        if (at<2>(args).isString()) {
+          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        }
+        return runOnRNSync(jsScheduler, rt, at<0>(args), at<1>(args), scheduleStack);
+#else
+        return runOnRNSync(jsScheduler, rt, at<0>(args), at<1>(args));
+#endif // NDEBUG
       });
 
   jsi_utils::addMethod<3>(
@@ -504,7 +667,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "runOnRuntimeSyncWithId",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        const int runtimeId = at<0>(args).asNumber();
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -512,6 +675,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be executed on a worklet runtime.");
+        if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
+          throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
+        }
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
@@ -525,11 +691,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return serializedResult->toJSValue(rt);
       });
 
-  jsi_utils::addMethod<6>(
+  jsi_utils::addMethod<8>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[8]) {
         const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
@@ -544,31 +710,57 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 
         const auto enableEventLoop = at<4>(args).getBool();
         const auto enableLocking = at<5>(args).getBool();
+        const auto enableNetworking = at<6>(args).getBool();
+        const auto abortable = at<7>(args).getBool();
         const auto runtimeManager = sourceProxy->getRuntimeManager();
 
         return createWorkletRuntime(
-            rt, runtimeManager, sourceProxy, name, serializableInitializer, asyncQueue, enableEventLoop, enableLocking);
+            rt,
+            runtimeManager,
+            sourceProxy,
+            name,
+            serializableInitializer,
+            asyncQueue,
+            enableEventLoop,
+            enableLocking,
+            enableNetworking,
+            abortable);
       });
 
-  jsi_utils::addMethod<3>(
-      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+  jsi_utils::addMethod<5>(
+      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+        const auto workletRuntime = extractWorkletRuntime(rt, at<0>(args));
+        const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
+            rt, at<1>(args), "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+#ifndef NDEBUG
+        if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
+          rt.global()
+              .getPropertyAsObject(rt, "console")
+              .getPropertyAsFunction(rt, "warn")
+              .call(
+                  rt,
+                  "[Worklets] Dropped work scheduled on the aborted Worklet Runtime \"" +
+                      workletRuntime->getRuntimeName() + "\".");
+        }
+#endif // NDEBUG
+        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args), scheduleStack);
+        workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
 #else
-        worklets::scheduleOnRuntime(rt, at<0>(args), at<1>(args));
+        workletRuntime->schedule(worklet, std::move(dropGuard));
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<3>(
+  jsi_utils::addMethod<5>(
       rt,
       obj,
       "scheduleOnRuntimeWithId",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        const int runtimeId = at<0>(args).asNumber();
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -577,30 +769,61 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
 #ifndef NDEBUG
+        if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
+          rt.global()
+              .getPropertyAsObject(rt, "console")
+              .getPropertyAsFunction(rt, "warn")
+              .call(
+                  rt,
+                  "[Worklets] Dropped work scheduled on the aborted Worklet Runtime \"" +
+                      workletRuntime->getRuntimeName() + "\".");
+        }
+#endif // NDEBUG
+        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
+#ifndef NDEBUG
         std::optional<std::string> scheduleStack;
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        workletRuntime->scheduleWithStack(worklet, scheduleStack);
+        workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
 #else
-        workletRuntime->schedule(worklet);
+        workletRuntime->schedule(worklet, std::move(dropGuard));
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<1>(
       rt,
       obj,
-      "handlePromise",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      "abortWorkletRuntime",
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+        const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
+        if (!workletRuntime) {
+          return jsi::Value(false);
+        }
+        if (workletRuntime->getRuntimeKind() != RuntimeData::RuntimeKind::Worker) {
+          throw jsi::JSError(rt, "[Worklets] abortWorkletRuntime: only Worker Runtimes can be aborted.");
+        }
+        if (!workletRuntime->isAbortable()) {
+          throw jsi::JSError(
+              rt,
+              "[Worklets] abortWorkletRuntime: the Worklet Runtime \"" + workletRuntime->getRuntimeName() +
+                  "\" was not created with `abortable: true`.");
+        }
+        workletRuntime->abort();
+        return jsi::Value(true);
+      });
+
+  jsi_utils::addMethod<2>(
+      rt, obj, "handlePromise", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         const auto fun = at<0>(args).getObject(rt).getFunction(rt);
-        // NOLINTNEXTLINE(readability/braces)
         if (fun.getProperty(rt, "__remoteFunction").isUndefined()) [[unlikely]] {
           // TODO: add a fast path for it in TypeScript
           fun.call(rt, extractSerializableOrThrow(rt, at<1>(args))->toJSValue(rt));
         } else {
           auto resolveOrReject = extractSerializableOrThrow<SerializableRemoteFunction>(rt, at<0>(args));
           auto valueOrError = extractSerializableOrThrow(rt, at<1>(args));
-          resolveOrReject->resolveOrRejectPromise(valueOrError, runtimeManager);
+          resolveOrReject->resolveOrRejectPromise(valueOrError);
         }
       });
 
@@ -626,6 +849,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         worklets::DynamicFeatureFlags::setFlag(
             /* name */ at<0>(args).asString(rt).utf8(rt),
             /* value */ at<1>(args).asBool());
+      });
+
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
+      "isRuntimeAlive",
+      [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+        return jsi::Value(runtimeManager->isRuntimeAlive(runtimeId));
       });
 
   jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {
@@ -693,7 +925,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "createShareable",
       [runtimeManager = runtimeManager_](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) -> jsi::Value {
-        const int hostRuntimeId = at<0>(args).asNumber();
+        const auto hostRuntimeId = runtimeIdFromJS(at<0>(args));
         const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
         if (!hostRuntime) {
           throw jsi::JSError(
@@ -703,8 +935,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto initSynchronously = at<2>(args).asBool();
         const auto decorateHost = extractSerializableOrThrow(rt, at<3>(args));
         const auto decorateGuest = extractSerializableOrThrow(rt, at<4>(args));
-        const auto shareable =
-            std::make_shared<Shareable>(hostRuntime, initial, initSynchronously, decorateHost, decorateGuest);
+        const auto shareable = std::make_shared<Shareable>(
+            hostRuntime,
+            RuntimeIdentity::forWorkletRuntime(runtimeManager, hostRuntime->getRuntimeId()),
+            initial,
+            initSynchronously,
+            decorateHost,
+            decorateGuest);
         return SerializableJSRef::newNativeStateObject(rt, shareable);
       });
 

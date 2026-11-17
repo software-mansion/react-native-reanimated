@@ -1,0 +1,1 @@
+Fix an animated view that showed an older value for one frame when a React commit mounted over a newer synchronous write, with `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` on.

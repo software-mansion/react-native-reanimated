@@ -42,9 +42,7 @@ class CSSTransitionsRegistry : public UpdatesRegistry {
       const TransitionProperties &lockedProperties);
 
   void flushUpdates(UpdatesBatch &updatesBatch);
-#if REACT_NATIVE_VERSION_MINOR >= 85
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
-#endif
 
  private:
   using Registry = std::unordered_map<Tag, std::shared_ptr<CSSTransition>>;

@@ -6,12 +6,14 @@
 import { faHeart, faThumbsUp } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import type { ComponentType } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import Animated, { css } from 'react-native-reanimated';
 import {
   Circle,
   Defs,
   LinearGradient,
+  Path,
   RadialGradient,
   Rect,
   Stop,
@@ -278,8 +280,8 @@ function YayEmoji() {
   return (
     <Animated.View style={yayStyles.emoji}>
       <View style={yayStyles.eyeBrows}>
-        <View style={yayStyles.eyeBrow} />
-        <View style={yayStyles.eyeBrow} />
+        <YayArc {...YAY_EYE_BROW} style={yayStyles.eyeBrow} />
+        <YayArc {...YAY_EYE_BROW} style={yayStyles.eyeBrow} />
       </View>
       <Svg
         height={0.5 * EMOJI_SIZE}
@@ -313,10 +315,58 @@ function YayEmoji() {
           y="0"
         />
       </Svg>
-      <View style={yayStyles.mouth} />
+      <YayArc {...YAY_MOUTH} style={yayStyles.mouth} />
     </Animated.View>
   );
 }
+
+type YayArcProps = {
+  direction: 'up' | 'down';
+  height: number;
+  strokeWidth: number;
+  style: StyleProp<ViewStyle>;
+  width: number;
+};
+
+// Half-ellipse stroke with flat ends, filling its box. A View with one
+// zero-width border side would draw a hairline along that side on Android
+// (BorderDrawable clips the outer and inner border paths separately and their
+// coincident anti-aliased edges do not cancel out), and the transparent-side
+// border trick used by the other emojis only works for fully rounded boxes.
+function YayArc({ direction, height, strokeWidth, style, width }: YayArcProps) {
+  const inset = strokeWidth / 2;
+  const rx = width / 2 - inset;
+  const ry = height - inset;
+  const y = direction === 'up' ? height : 0;
+  const sweep = direction === 'up' ? 1 : 0;
+
+  return (
+    <View style={style}>
+      <Svg height={height} width={width}>
+        <Path
+          d={`M ${inset} ${y} A ${rx} ${ry} 0 0 ${sweep} ${width - inset} ${y}`}
+          fill="none"
+          stroke={COLORS.black}
+          strokeWidth={strokeWidth}
+        />
+      </Svg>
+    </View>
+  );
+}
+
+const YAY_EYE_BROW: Omit<YayArcProps, 'style'> = {
+  direction: 'up',
+  height: 0.15 * EMOJI_SIZE,
+  strokeWidth: 0.05 * EMOJI_SIZE,
+  width: 0.3 * EMOJI_SIZE,
+};
+
+const YAY_MOUTH: Omit<YayArcProps, 'style'> = {
+  direction: 'down',
+  height: 0.25 * EMOJI_SIZE,
+  strokeWidth: 0.06 * EMOJI_SIZE,
+  width: 0.5 * EMOJI_SIZE,
+};
 
 const yay = css.keyframes({
   '25%': {
@@ -342,14 +392,7 @@ const yayStyles = css.create({
     overflow: 'hidden',
   },
   eyeBrow: {
-    borderBottomWidth: 0,
-    borderColor: COLORS.black,
-    borderTopLeftRadius: radius.full,
-    borderTopRightRadius: radius.full,
-    borderWidth: 0.05 * EMOJI_SIZE,
-    height: 0.15 * EMOJI_SIZE,
     transform: [{ scaleY: 1.1 }],
-    width: 0.3 * EMOJI_SIZE,
   },
   eyeBrows: {
     flexDirection: 'row',
@@ -357,15 +400,8 @@ const yayStyles = css.create({
     top: -0.1 * EMOJI_SIZE,
   },
   mouth: {
-    borderBottomLeftRadius: 0.3 * EMOJI_SIZE,
-    borderBottomRightRadius: 0.3 * EMOJI_SIZE,
-    borderColor: COLORS.black,
-    borderTopWidth: 0,
-    borderWidth: 0.06 * EMOJI_SIZE,
-    height: 0.25 * EMOJI_SIZE,
     top: -0.05 * EMOJI_SIZE,
     transform: [{ scaleY: 0.7 }],
-    width: 0.5 * EMOJI_SIZE,
   },
 });
 

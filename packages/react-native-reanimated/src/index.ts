@@ -49,6 +49,7 @@ export {
 } from './animation';
 export type { ParsedColorArray } from './Colors';
 export { contrastColor, convertToRGBA, isColor } from './Colors';
+export type { LogData, LogFunction, LoggerConfig } from './common';
 export { ReanimatedLogLevel } from './common';
 export { DynamicColorIOS, PlatformColor, processColor } from './common';
 export type {
@@ -77,6 +78,8 @@ export type {
   LayoutAnimationType,
   MeasuredDimensions,
   SensorConfig,
+  SensorValue,
+  SensorValueMap,
   SharedValue,
   StyleProps,
   TransformArrayItem,
@@ -170,7 +173,13 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
-export type { ReanimatedKeyframe } from './layoutReanimation';
+export type {
+  CustomSharedTransitionAnimation,
+  FadeContentConfig,
+  ProgressSharedTransitionAnimation,
+  ReanimatedKeyframe,
+  SharedTransitionAnimationsValues,
+} from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
@@ -241,6 +250,7 @@ export {
   RotateOutUpRight,
   SequencedTransition,
   SharedTransition,
+  SharedTransitionType,
   SlideInDown,
   SlideInLeft,
   // Slide

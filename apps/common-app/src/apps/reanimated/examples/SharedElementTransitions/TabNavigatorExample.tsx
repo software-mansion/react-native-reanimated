@@ -1,11 +1,12 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React, { memo } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+
 import { withSharedTransitionBoundary } from './withSharedTransitionBoundary';
-import { useIsFocused } from '@react-navigation/native';
 
 function getStyle(index: number) {
   switch (index) {
@@ -66,9 +67,27 @@ function createStack() {
   );
 }
 
+// A back gesture from the details goes to the boundary that was active, not to the last one.
+function createMultipleBoundariesStack() {
+  const Stack = createNativeStackNavigator();
+  return () => (
+    <Stack.Navigator>
+      <Stack.Screen name="Boundaries">
+        {({ navigation }) => (
+          <ScreenWithMultipleBoundaries
+            onOpenDetails={() => navigation.push('Details', { id: 1 })}
+          />
+        )}
+      </Stack.Screen>
+      <Stack.Screen name="Details" component={Screen as React.ComponentType} />
+    </Stack.Navigator>
+  );
+}
+
 const Tab = createBottomTabNavigator();
 const StackA = createStack();
 const StackB = createStack();
+const MultipleBoundariesStack = createMultipleBoundariesStack();
 
 function FakeScreen({
   isActive,
@@ -86,7 +105,11 @@ function FakeScreen({
   );
 }
 
-function ScreenWithMultipleBoundaries() {
+function ScreenWithMultipleBoundaries({
+  onOpenDetails,
+}: {
+  onOpenDetails?: () => void;
+}) {
   const [activeBoundary, setActiveBoundary] = React.useState(0);
 
   return (
@@ -95,6 +118,7 @@ function ScreenWithMultipleBoundaries() {
         title="Switch boundary"
         onPress={() => setActiveBoundary((activeBoundary + 1) % 3)}
       />
+      {onOpenDetails && <Button title="Open details" onPress={onOpenDetails} />}
       <FakeScreen isActive={activeBoundary === 0}>
         <Animated.View style={styles.minibox1} sharedTransitionTag="tag" />
       </FakeScreen>
@@ -129,7 +153,7 @@ function TabNavigatorExample() {
       <Tab.Screen name="C" component={StackA} />
       <Tab.Screen name="D" component={StackB} />
       <Tab.Screen name="E" component={ScreenWithMultipleBoundaries} />
-      <Tab.Screen name="F" component={ScreenWithMultipleBoundaries} />
+      <Tab.Screen name="F" component={MultipleBoundariesStack} />
     </Tab.Navigator>
   );
 }

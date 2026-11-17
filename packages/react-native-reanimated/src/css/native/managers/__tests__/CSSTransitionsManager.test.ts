@@ -179,6 +179,29 @@ describe('CSSTransitionsManager', () => {
         });
       });
 
+      test('emits cleanup for a property transitioning to undefined when it is no longer allowed', () => {
+        const config: CSSTransitionProperties = {
+          transitionProperty: ['opacity', 'width'],
+          transitionDuration: '300ms',
+        };
+        manager.update(config, { opacity: 0, width: 100 });
+        // width leaves the style, so it transitions to undefined
+        manager.update(config, { opacity: 0 });
+        jest.clearAllMocks();
+
+        // width is a key of neither the old nor the new props here
+        manager.update(
+          { transitionProperty: 'opacity', transitionDuration: '300ms' },
+          { opacity: 0 }
+        );
+
+        expect(runCSSTransition).toHaveBeenCalledWith(
+          shadowNodeWrapper,
+          { width: null },
+          0
+        );
+      });
+
       test('updates transition settings when config changes', () => {
         manager.update(
           { transitionProperty: 'opacity', transitionDuration: '300ms' },
