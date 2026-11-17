@@ -68,6 +68,8 @@ The content of the screen. `SharedTransitionBoundary` does not change the layout
 
 One boundary should contain all shared views of its screen, so wrap whole screens, not single views. Set `isActive` to `true` only while the screen is focused.
 
+Use `@react-navigation/core` 7.16.0 or newer, which `@react-navigation/native` 7.1.32 and newer require. In older versions, `useIsFocused()` changes one update after a screen is removed, so on Android the transition back to the previous screen sometimes does not run.
+
 You can wrap screens in three ways:
 
 - **All screens of a navigator**, with `screenLayout`. Use it when the screens of the navigator are normal screens, not other navigators.
@@ -219,6 +221,41 @@ function Gallery() {
 }
 ```
 
+### Expo Router
+
+With Expo Router, import `useIsFocused` from `expo-router`. Put the boundaries in the layouts of the stacks that show your screens:
+
+```tsx
+// app/(tabs)/gallery/_layout.tsx
+import { Stack, useIsFocused } from 'expo-router';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  // highlight-next-line
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
+export default function GalleryLayout() {
+  return (
+    <Stack
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[id]" />
+    </Stack>
+  );
+}
+```
+
+- Do not use `screenLayout` in a layout whose routes are other navigators, for example in the root `_layout.tsx` that shows a `(tabs)` group, or in the layout of the `(tabs)` group. See [Nested navigators](#nested-navigators).
+- A route that the root stack shows as a modal, for example `photo/[id]` with `presentation: 'modal'`, is a screen of the root stack. Put its boundary in the [content of the screen](#the-content-of-a-screen).
+
 ### Modals
 
 During a transition to or from a modal, the moving view shows above the modal.
@@ -257,10 +294,13 @@ A React Native [`Modal`](https://reactnative.dev/docs/modal) is not a screen, so
 </Modal>
 ```
 
+On Android, a view does not move between the screen and a `Modal`. See [Modals and windows](./limitations.mdx#modals-and-windows).
+
 ## Remarks
 
 - Reanimated runs a transition only between two boundaries. A view outside of all boundaries does not take part.
 - Only one boundary should be active at a time. If more boundaries are active, Reanimated uses the one that React renders last.
+- A shared view that mounts under an inactive boundary shows as usual, for example in a list under a sheet. Reanimated hides it only when the active boundary shows a view with the same tag, or when a transition moves that tag.
 - When a new boundary becomes active during a transition, for example when the user goes back before the transition ends, the view turns and moves to its match in the new boundary. If the new boundary has no match, the transition stops and the views show in their own places at once.
 
 ## Platform compatibility

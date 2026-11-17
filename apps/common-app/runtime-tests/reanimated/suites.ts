@@ -77,6 +77,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'event handlers',
     importTest: () => {
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
+      require('./tests/events/hostReplacement.test');
     },
   },
   {
@@ -169,6 +170,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations entering',
     importTest: () => {
       require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+      require('./tests/layoutAnimations/entering/userNativeID.test');
       require('./tests/layoutAnimations/startError.test');
     },
   },
@@ -197,7 +199,9 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrier.test');
       require('./tests/layoutAnimations/sharedTransitionAnimatedStyle.test');
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
+      require('./tests/layoutAnimations/sharedTransitionMovingTarget.test');
       require('./tests/layoutAnimations/sharedTransitionGesture.test');
+      require('./tests/layoutAnimations/sharedTransitionWindow.test');
       require('./tests/layoutAnimations/sharedTransitionFadeContent.test');
       require('./tests/layoutAnimations/sharedTransitionFadeProgress.test');
       require('./tests/layoutAnimations/sharedTransitionNested.test');
@@ -206,6 +210,13 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
       require('./tests/layoutAnimations/sharedTransitionStart.test');
+      require('./tests/layoutAnimations/sharedTransitionCallback.test');
+    },
+  },
+  {
+    testSuiteName: 'screen transition events',
+    importTest: () => {
+      require('./tests/layoutAnimations/screenTransitionEvents.test');
     },
   },
   {

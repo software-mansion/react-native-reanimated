@@ -81,19 +81,22 @@ SharedTransition.duration(400)
   .delay(100)
   .reduceMotion(ReduceMotion.System)
   .withCallback((finished) => {
+    'worklet';
     console.log(`finished without interruptions: ${finished}`);
   });
 ```
 
 - `.duration(duration: number)` sets the length of the animation in milliseconds. Defaults to `500`.
 - `.delay(duration: number)` sets the time before the animation starts, in milliseconds. Defaults to `0`.
-- `.reduceMotion(reduceMotion: ReduceMotion)` sets how the animation responds to the reduced motion [accessibility](../guides/accessibility.mdx) setting of the device.
-- `.withCallback(callback: (finished: boolean) => void)` sets a function that runs when the animation ends. `finished` is `true` when the animation ends without interruptions, and `false` otherwise.
+- `.reduceMotion(reduceMotion: ReduceMotion)` sets how the transition responds to the reduced motion [accessibility](../guides/accessibility.mdx) setting of the device. When reduced motion applies to one of the two views, the transition does not run, and the views show in their own places.
+- `.withCallback(callback: (finished: boolean) => void)` sets a function that runs once, when the transition ends. The callback is automatically [workletized](../fundamentals/glossary.mdx#to-workletize) and runs on the [UI thread](../fundamentals/glossary.mdx#ui-thread). `finished` is `true` when the view lands at its target, and `false` when the transition stops before that or does not move the view.
+
+When a new transition of the same tag starts before the first one ends, for example when the user goes back, the first callback gets `false`, and the new transition reports its own result. During an iOS back gesture, the callback gets `true` when the navigation completes, and `false` when the user cancels the gesture.
 
 ### Shared transition modifiers <Optional/>
 
 - [`.fadeContent(config?)`](./children-of-shared-views.mdx#fadecontent) fades the children of the view during the transition.
-- [`SharedTransition.custom(animation)`](./custom-animations.mdx) uses your own animation worklet.
+- [`.custom(animation)`](./custom-animations.mdx) uses your own animation worklet.
 - [`.progressAnimation(animation)` and `.defaultTransitionType(type)`](./progress-transitions.mdx) set the transition that follows the progress of the screen change.
 
 ## Remarks

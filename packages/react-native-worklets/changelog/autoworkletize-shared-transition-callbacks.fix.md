@@ -1,0 +1,1 @@
+Autoworkletize the inline `withCallback`, `custom` and `progressAnimation` functions of `SharedTransition` builder chains, and layout animation callbacks after `reduceMotion`, `dampingRatio` or `withTargetValues`, in the Babel and Oxc plugins.

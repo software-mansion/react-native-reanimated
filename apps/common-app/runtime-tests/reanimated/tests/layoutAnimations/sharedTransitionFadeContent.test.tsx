@@ -235,12 +235,12 @@ const longLayout = LinearTransition.duration(10000).withCallback((finished) => {
 function EnteringChild({
   exits,
   wide,
-  tagged,
+  sharedTag,
   opacity,
 }: {
   exits: boolean;
   wide: boolean;
-  tagged: boolean;
+  sharedTag?: string;
   opacity?: SharedValue<number>;
 }) {
   const ref = useTestRef('enteringChild');
@@ -250,7 +250,8 @@ function EnteringChild({
   return (
     <Animated.View
       ref={ref}
-      sharedTransitionTag={tagged ? 'unmatched-entering-child' : undefined}
+      sharedTransitionTag={sharedTag}
+      sharedTransitionStyle={transition}
       entering={childEntering}
       exiting={exits ? longExiting : undefined}
       layout={longLayout}
@@ -268,6 +269,8 @@ function ScreensWithEnteringChild({
   childTagged = false,
   keepChild = false,
   covered = false,
+  tagOnChild = false,
+  targetColor,
   childOpacity,
 }: {
   showTarget: boolean;
@@ -277,9 +280,12 @@ function ScreensWithEnteringChild({
   childTagged?: boolean;
   keepChild?: boolean;
   covered?: boolean;
+  tagOnChild?: boolean;
+  targetColor?: string;
   childOpacity?: SharedValue<number>;
 }) {
   const ref = useTestRef('target');
+  const childTag = childTagged ? 'unmatched-entering-child' : undefined;
   return (
     <View style={styles.container}>
       <Endpoint
@@ -291,14 +297,17 @@ function ScreensWithEnteringChild({
       <SharedTransitionBoundary isActive={showTarget && !covered}>
         <Animated.View
           ref={ref}
-          sharedTransitionTag="fadeContent"
+          sharedTransitionTag={tagOnChild ? undefined : 'fadeContent'}
           sharedTransitionStyle={transition}
-          style={styles.target}>
+          style={[
+            styles.target,
+            targetColor && { backgroundColor: targetColor },
+          ]}>
           {(showTarget || keepChild) && showChild && (
             <EnteringChild
               exits={childExits}
               wide={childWide}
-              tagged={childTagged}
+              sharedTag={tagOnChild ? 'fadeContent' : childTag}
               opacity={childOpacity}
             />
           )}
@@ -838,6 +847,32 @@ describe('Shared transition with fadeContent', () => {
     const mounted = frames.filter(([child]) => !!child);
     expect(mounted.length > 0).toBe(true);
     expect(mounted.every(([child]) => child!.opacity < 0.01)).toBe(true);
+    expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
+    expect(await getTrackerCallCount(ENTERING_CANCELLED)).toBeCalledUI(0);
+  });
+
+  test('does not play the held entering animation of a target child that becomes the target', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<ScreensWithEnteringChild showTarget={false} />);
+    await waitForFrames();
+
+    await render(<ScreensWithEnteringChild showTarget />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(1500);
+    await expectMovingWithChildOpacity('source', 0.1, CHILD_OPACITY - 0.1);
+    // The shared tag registers after the commit that moves it, so the next update retargets the run.
+    await render(<ScreensWithEnteringChild showTarget tagOnChild />);
+    await waitForFrames(3);
+    await render(
+      <ScreensWithEnteringChild showTarget tagOnChild targetColor="#22aa55" />
+    );
+    await waitForFrames(3);
+
+    await advanceAnimationTimer(300);
+    const child = await mountedProps('enteringChild');
+    expect(!!child && child.opacity < 0.01).toBe(true);
+    await advanceAnimationTimer(3000);
+    await expectOpacity('enteringChild', 1);
     expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
     expect(await getTrackerCallCount(ENTERING_CANCELLED)).toBeCalledUI(0);
   });

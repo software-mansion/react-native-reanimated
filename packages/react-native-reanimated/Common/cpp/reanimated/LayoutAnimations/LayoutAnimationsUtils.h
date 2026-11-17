@@ -9,6 +9,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <optional>
@@ -45,7 +46,14 @@ struct Frame {
 };
 
 struct UpdateValues {
+#ifdef ANDROID
+  // The props of the frame are `style` over `base`. The pull makes them, because only the pull knows the props that
+  // the view shows.
+  Props::Shared base;
+  folly::dynamic style;
+#else
   Props::Shared newProps;
+#endif
   Frame frame;
   bool animatesOpacity = false;
 };
@@ -80,6 +88,23 @@ typedef enum class ExitingState : std::uint8_t {
 
 struct MutationNode;
 
+// Where the host tree mounts a light node that can carry a shared transition run.
+enum class CarrierPlacement : std::uint8_t {
+  // The node is not a carrier and is mounted under its parent.
+  IN_PARENT,
+  // The carrier is mounted in the carrier layer of its layout root, not under its parent.
+  AT_ROOT,
+  // The carrier is in a moving carrier. It stays under its parent and moves with it.
+  NESTED,
+};
+
+enum class ReactPresence : std::uint8_t {
+  LIVE,
+  // React deleted the carrier while it was at the root. The carrier left its logical parent. It and its
+  // content stay mounted until its run ends. A nested carrier that React deletes stays LIVE and WAITING.
+  REMOVED,
+};
+
 enum class TransitionState : std::uint8_t {
   START,
   ACTIVE,
@@ -106,7 +131,6 @@ struct IndexCursors {
 };
 
 struct LightNode {
-  ShadowView previous;
   ShadowView current;
 #ifdef ANDROID
   // React Native stores only the props changed by a commit in `Props::rawProps` on Android.
@@ -128,14 +152,22 @@ struct LightNode {
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
-  // A shared transition carrier is mounted under the root, not under its parent.
-  bool isDetached = false;
-  // A carrier that React deleted. It and its content stay mounted until its run ends.
-  bool isRetained = false;
-  int detachedChildrenCount = 0;
+  uint64_t followedInSynchronousBatch = 0;
 
   bool isExiting() const {
     return state != ExitingState::LIVE;
+  }
+
+  CarrierPlacement placement() const {
+    return placement_;
+  }
+
+  ReactPresence presence() const {
+    return presence_;
+  }
+
+  bool isCarrier() const {
+    return placement_ != CarrierPlacement::IN_PARENT;
   }
 
   void setExitingState(ExitingState newState) {
@@ -151,14 +183,15 @@ struct LightNode {
   }
 
   // `children` holds the children that React renders and the exiting ones. The host
-  // parent holds all of them but the detached ones.
+  // parent holds all of them but the carriers at the root.
   int hostIndex(const int position) const {
-    if (detachedChildrenCount == 0) {
+    if (childrenAtRootCount_ == 0) {
       return position;
     }
-    const auto detachedBefore = std::count_if(
-        children.begin(), children.begin() + position, [](const auto &child) { return child->isDetached; });
-    return position - static_cast<int>(detachedBefore);
+    const auto atRootBefore = std::count_if(children.begin(), children.begin() + position, [](const auto &child) {
+      return child->placement_ == CarrierPlacement::AT_ROOT;
+    });
+    return position - static_cast<int>(atRootBefore);
   }
 
   int positionOf(const std::shared_ptr<LightNode> &child) const {
@@ -166,20 +199,23 @@ struct LightNode {
     return it == children.end() ? -1 : static_cast<int>(std::distance(children.begin(), it));
   }
 
-  void setDetached(const bool detached) {
-    react_native_assert(isDetached != detached && "The light node is already in this state");
-    isDetached = detached;
-    if (const auto parentNode = parent.lock()) {
-      parentNode->detachedChildrenCount += detached ? 1 : -1;
+  static void
+  insertChild(const std::shared_ptr<LightNode> &parent, const int position, std::shared_ptr<LightNode> child) {
+    if (child->placement_ == CarrierPlacement::AT_ROOT) {
+      parent->childrenAtRootCount_++;
     }
+    child->parent = parent;
+    parent->children.insert(parent->children.begin() + position, std::move(child));
   }
 
   int removeChild(const std::shared_ptr<LightNode> &child) {
-    for (int i = children.size() - 1; i >= 0; i--) {
+    for (int i = static_cast<int>(children.size()) - 1; i >= 0; i--) {
       if (children[i]->current.tag == child->current.tag) {
-        react_native_assert(!children[i]->isDetached && "Remove the carrier from the root before unlinking its node");
-        if (children[i]->isDetached) {
-          detachedChildrenCount--;
+        react_native_assert(
+            children[i]->placement_ != CarrierPlacement::AT_ROOT &&
+            "Remove the carrier from the root before unlinking its node");
+        if (children[i]->placement_ == CarrierPlacement::AT_ROOT) {
+          childrenAtRootCount_--;
         }
         if (children[i]->isExiting()) {
           exitingChildrenCount--;
@@ -191,10 +227,13 @@ struct LightNode {
     return -1;
   }
 
-  void extractDetachedChild(const std::shared_ptr<LightNode> &child) {
+  // A carrier at the root leaves its logical parent when React moves it or deletes it. It stays at the root.
+  void extractChildAtRoot(const std::shared_ptr<LightNode> &child) {
     const auto position = positionOf(child);
-    react_native_assert(position != -1 && child->isDetached && "Extract a mounted carrier from its logical parent");
-    detachedChildrenCount--;
+    react_native_assert(
+        position != -1 && child->placement_ == CarrierPlacement::AT_ROOT &&
+        "Extract a carrier at the root from its logical parent");
+    childrenAtRootCount_--;
     if (child->isExiting()) {
       exitingChildrenCount--;
     }
@@ -254,6 +293,12 @@ struct LightNode {
   }
 
  private:
+  friend class CarrierPlacements;
+
+  CarrierPlacement placement_ = CarrierPlacement::IN_PARENT;
+  ReactPresence presence_ = ReactPresence::LIVE;
+  int childrenAtRootCount_ = 0;
+
   int scanToHostIndex(const int shadowIndex, const int startHostIndex, const int startLiveChildren) const {
     const auto childrenCount = static_cast<int>(children.size());
     int hostIndex = startHostIndex;
@@ -281,6 +326,103 @@ struct LightNode {
             std::count_if(children.begin(), children.end(), [](const auto &child) { return child->isExiting(); }) &&
         "exitingChildrenCount is out of sync");
     cursors.invariantChecked = true;
+  }
+};
+
+// The placement and the presence of a light node change only here. This keeps the list of carriers at the root and
+// the counts of carriers at the root in their parents in step with the placements.
+class CarrierPlacements {
+ public:
+  // In the order that the host tree mounts them in the carrier layers of their hosts.
+  const std::vector<std::shared_ptr<LightNode>> &atRoot() const {
+    return atRoot_;
+  }
+
+  const std::shared_ptr<LightNode> &hostOf(const std::shared_ptr<LightNode> &node) const {
+    return hosts_[positionAtRoot(node)];
+  }
+
+  bool hostsCarriers(const std::shared_ptr<LightNode> &host) const {
+    return std::ranges::find(hosts_, host) != hosts_.end();
+  }
+
+  int indexInHost(const std::shared_ptr<LightNode> &node) const {
+    const auto position = hosts_.begin() + static_cast<std::ptrdiff_t>(positionAtRoot(node));
+    return static_cast<int>(std::count(hosts_.begin(), position, *position));
+  }
+
+  void detach(const std::shared_ptr<LightNode> &node, std::shared_ptr<LightNode> host) {
+    react_native_assert(node->placement_ != CarrierPlacement::AT_ROOT && "The carrier is already at the root");
+    setPlacement(node, CarrierPlacement::AT_ROOT);
+    atRoot_.push_back(node);
+    hosts_.push_back(std::move(host));
+  }
+
+  void nest(const std::shared_ptr<LightNode> &node) {
+    react_native_assert(node->placement_ == CarrierPlacement::IN_PARENT && "The node is already a carrier");
+    setPlacement(node, CarrierPlacement::NESTED);
+  }
+
+  void attach(const std::shared_ptr<LightNode> &node) {
+    react_native_assert(
+        node->isCarrier() && node->presence_ == ReactPresence::LIVE && "Only a live carrier returns to its parent");
+    leave(node);
+  }
+
+  // A removed carrier has no logical parent, so this also unlinks it. It stays mounted at the root.
+  void retain(const std::shared_ptr<LightNode> &node) {
+    react_native_assert(
+        node->placement_ == CarrierPlacement::AT_ROOT && node->presence_ == ReactPresence::LIVE &&
+        "React deletes a live carrier at the root");
+    const auto parent = node->parent.lock();
+    react_native_assert(parent && "A new retained carrier has a parent");
+    parent->extractChildAtRoot(node);
+    node->presence_ = ReactPresence::REMOVED;
+  }
+
+  // The node leaves the host tree. A removed carrier stays removed.
+  void tearDown(const std::shared_ptr<LightNode> &node) {
+    leave(node);
+  }
+
+  void clear() {
+    for (const auto &node : atRoot_) {
+      setPlacement(node, CarrierPlacement::IN_PARENT);
+    }
+    atRoot_.clear();
+    hosts_.clear();
+  }
+
+ private:
+  std::vector<std::shared_ptr<LightNode>> atRoot_;
+  // The layout root that mounts the carrier at the same position in atRoot_.
+  std::vector<std::shared_ptr<LightNode>> hosts_;
+
+  size_t positionAtRoot(const std::shared_ptr<LightNode> &node) const {
+    const auto it = std::ranges::find(atRoot_, node);
+    react_native_assert(it != atRoot_.end() && "The node is not a carrier at the root");
+    return static_cast<size_t>(std::distance(atRoot_.begin(), it));
+  }
+
+  void leave(const std::shared_ptr<LightNode> &node) {
+    if (node->placement_ == CarrierPlacement::AT_ROOT) {
+      const auto position = static_cast<std::ptrdiff_t>(positionAtRoot(node));
+      atRoot_.erase(atRoot_.begin() + position);
+      hosts_.erase(hosts_.begin() + position);
+    }
+    setPlacement(node, CarrierPlacement::IN_PARENT);
+  }
+
+  static void setPlacement(const std::shared_ptr<LightNode> &node, const CarrierPlacement placement) {
+    const bool wasAtRoot = node->placement_ == CarrierPlacement::AT_ROOT;
+    const bool isAtRoot = placement == CarrierPlacement::AT_ROOT;
+    node->placement_ = placement;
+    if (wasAtRoot == isAtRoot) {
+      return;
+    }
+    if (const auto parent = node->parent.lock()) {
+      parent->childrenAtRootCount_ += isAtRoot ? 1 : -1;
+    }
   }
 };
 
@@ -357,9 +499,53 @@ static inline bool isInSubtree(std::shared_ptr<LightNode> node, const std::share
   return false;
 }
 
+// The positions of the children on the path from root down to node, if a walk from root that skips exiting nodes
+// reaches node. A walk visits the nodes in the lexicographic order of these positions.
+static inline std::optional<std::vector<int>> childPositionsFrom(
+    const std::shared_ptr<LightNode> &root,
+    std::shared_ptr<LightNode> node) {
+  std::vector<int> positions;
+  while (node != root) {
+    auto parent = node->parent.lock();
+    if (node->isExiting() || !parent) {
+      return std::nullopt;
+    }
+    const auto position = parent->positionOf(node);
+    if (position == -1) {
+      return std::nullopt;
+    }
+    positions.push_back(position);
+    node = std::move(parent);
+  }
+  if (root->isExiting()) {
+    return std::nullopt;
+  }
+  std::ranges::reverse(positions);
+  return positions;
+}
+
+// A view that React moved keeps its old parent until the Insert, but that parent no longer holds it.
+static inline bool isLinkedInSubtree(const std::shared_ptr<LightNode> &node, const std::shared_ptr<LightNode> &root) {
+  for (auto child = node, parent = node->parent.lock(); child != root; child = parent, parent = parent->parent.lock()) {
+    if (!parent || parent->positionOf(child) == -1) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static inline bool isInRetainedCarrier(std::shared_ptr<LightNode> node) {
   for (; node; node = node->parent.lock()) {
-    if (node->isRetained) {
+    if (node->presence() == ReactPresence::REMOVED) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static inline bool isInExitingSubtree(std::shared_ptr<LightNode> node) {
+  for (; node; node = node->parent.lock()) {
+    if (node->isExiting()) {
       return true;
     }
   }
@@ -373,13 +559,20 @@ static inline bool isDescendantOfAny(
   return std::ranges::any_of(views, [&parent](const auto &view) { return isInSubtree(parent, view); });
 }
 
+static inline bool isSETBoundary(const ShadowView &view) {
+  return !std::strcmp(view.componentName, "REASharedTransitionBoundary");
+}
+
 static inline bool isSETBoundary(const std::shared_ptr<LightNode> &node) {
-  return !std::strcmp(node->current.componentName, "REASharedTransitionBoundary");
+  return isSETBoundary(node->current);
+}
+
+static inline bool isBoundaryActive(const ShadowView &view) {
+  return std::static_pointer_cast<const REASharedTransitionBoundaryProps>(view.props)->isActive;
 }
 
 static inline bool isBoundaryActive(const std::shared_ptr<LightNode> &node) {
-  auto boundaryProps = std::static_pointer_cast<const REASharedTransitionBoundaryProps>(node->current.props);
-  return boundaryProps->isActive;
+  return isBoundaryActive(node->current);
 }
 
 static inline bool isInsideInactiveBoundary(const std::shared_ptr<LightNode> &node) {

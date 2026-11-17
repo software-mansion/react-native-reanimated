@@ -26,6 +26,11 @@ RootShadowNode::Shared MountedRootsRegistry::get(const SurfaceId surfaceId) cons
   return it == rootsBySurface_.end() ? nullptr : it->second;
 }
 
+bool MountedRootsRegistry::isRunning(const SurfaceId surfaceId) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  return rootsBySurface_.contains(surfaceId);
+}
+
 bool MountedRootsRegistry::isMounted(const ShadowNodeFamily &shadowNodeFamily) const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   const auto it = rootsBySurface_.find(shadowNodeFamily.getSurfaceId());

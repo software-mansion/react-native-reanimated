@@ -5,6 +5,7 @@ import {
   interpolateMatrix,
   prepareMatrixInterpolation,
 } from '../animation/transformationMatrix/matrixUtils';
+import { convertToRGBA, isColor, rgbaArrayToRGBAColor } from '../Colors';
 import { logger, processBoxShadow, processColorsInProps } from '../common';
 import type {
   Animation,
@@ -12,6 +13,7 @@ import type {
   EntryAnimationsValues,
   EntryExitAnimationFunction,
   ILayoutAnimationBuilder,
+  LayoutAnimationAndConfig,
   LayoutAnimationFunction,
   StyleProps,
   Timestamp,
@@ -19,7 +21,7 @@ import type {
 import { Easing } from '../Easing';
 import { interpolateColor } from '../interpolateColor';
 import type { BaseAnimationBuilder } from './animationBuilder';
-import { ComplexAnimationBuilder } from './animationBuilder';
+import { AnimationConfigBuilder } from './animationBuilder';
 
 const DEFAULT_DURATION = 500;
 
@@ -119,6 +121,16 @@ type SharedTransitionSnapshotValues = {
   ShadowRadius: number;
   /** Android only. */
   Elevation?: number;
+  /**
+   * The clip of the moving view in window coordinates: the bounds of its
+   * ancestors with `overflow: hidden`. Present only when an ancestor clips
+   * either view.
+   */
+  ClipOriginX?: number;
+  ClipOriginY?: number;
+  ClipWidth?: number;
+  ClipHeight?: number;
+  ClipBorderRadius?: number;
 };
 
 /**
@@ -164,6 +176,14 @@ type ChangedStyle = { key: string; current: unknown; target: unknown };
 
 // `globalOrigin*` and `transformMatrix` repeat `origin*` and `transform`.
 const ALIAS_NAMES = ['GlobalOriginX', 'GlobalOriginY', 'TransformMatrix'];
+const GEOMETRY_KEYS = [
+  'originX',
+  'originY',
+  'width',
+  'height',
+  'transform',
+  'transformOrigin',
+];
 
 function isEqual(a: unknown, b: unknown): boolean {
   'worklet';
@@ -187,6 +207,21 @@ function isEqual(a: unknown, b: unknown): boolean {
   );
 }
 
+// A transparent color takes the RGB of the other color, as in
+// `interpolateColor`, so that the fade does not pass through gray.
+function matchTransparentColor(color: unknown, otherColor: unknown): unknown {
+  'worklet';
+  if (
+    !isColor(color) ||
+    !isColor(otherColor) ||
+    convertToRGBA(color)[3] !== 0
+  ) {
+    return color;
+  }
+  const [red, green, blue] = convertToRGBA(otherColor);
+  return rgbaArrayToRGBAColor([red, green, blue, 0]);
+}
+
 function getChangedStyles(
   values: SharedTransitionAnimationsValues
 ): ChangedStyle[] {
@@ -203,10 +238,11 @@ function getChangedStyles(
     if (ALIAS_NAMES.includes(name) || isEqual(current, target)) {
       continue;
     }
+    const isColorStyle = name.endsWith('Color');
     changed.push({
       key: name[0].toLowerCase() + name.slice(1),
-      current,
-      target,
+      current: isColorStyle ? matchTransparentColor(current, target) : current,
+      target: isColorStyle ? matchTransparentColor(target, current) : target,
     });
   }
   return changed;
@@ -308,6 +344,21 @@ function getContentOpacityChange(values: SharedTransitionAnimationsValues) {
     current !== target
     ? { current, target }
     : undefined;
+}
+
+// The clip of the moving view, in the coordinates of the window. A custom animation that does not animate it gets the
+// default animation, so that the moving view stays clipped like the ancestors of the shared views.
+const CLIP_KEYS = [
+  'clipOriginX',
+  'clipOriginY',
+  'clipWidth',
+  'clipHeight',
+  'clipBorderRadius',
+];
+
+function getClipChanges(values: SharedTransitionAnimationsValues) {
+  'worklet';
+  return getChangedStyles(values).filter(({ key }) => CLIP_KEYS.includes(key));
 }
 
 function getInitialStyle(
@@ -424,7 +475,7 @@ function progressDrivenAnimations(
 }
 
 export class SharedTransition
-  extends ComplexAnimationBuilder
+  extends AnimationConfigBuilder
   implements ILayoutAnimationBuilder
 {
   static presetName = 'SharedTransition';
@@ -482,6 +533,19 @@ export class SharedTransition
     };
   }
 
+  /**
+   * Tells if the built animation aims at the current geometry of the target in
+   * each frame. Custom animations and timed progress animations use the
+   * geometry that the target has when they start. This is used internally by
+   * the layout animations system.
+   */
+  followsTarget(): boolean {
+    return (
+      this.transitionType !== SharedTransitionType.PROGRESS_ANIMATION &&
+      !this.customAnimationFactory
+    );
+  }
+
   private buildContentFadeIn(duration: number): EntryExitAnimationFunction {
     const config = {
       duration,
@@ -509,9 +573,13 @@ export class SharedTransition
   static custom(
     customAnimationFactory: CustomSharedTransitionAnimation
   ): SharedTransition {
-    const instance = new SharedTransition();
-    instance.customAnimationFactory = customAnimationFactory;
-    return instance;
+    return new SharedTransition().custom(customAnimationFactory);
+  }
+
+  /** Uses a custom animation worklet. See {@link SharedTransition.custom}. */
+  custom(customAnimationFactory: CustomSharedTransitionAnimation): this {
+    this.customAnimationFactory = customAnimationFactory;
+    return this;
   }
 
   /**
@@ -564,13 +632,62 @@ export class SharedTransition
     return this;
   }
 
+  /** Not supported. A shared transition starts from the source view. */
+  static withInitialValues<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    _values: never
+  ): InstanceType<T> {
+    warnUnsupportedModifier('withInitialValues');
+    return this.createInstance();
+  }
+
+  /** Not supported. A shared transition starts from the source view. */
+  withInitialValues(_values: never): this {
+    warnUnsupportedModifier('withInitialValues');
+    return this;
+  }
+
+  /** Not supported. A shared transition ends at the target view. */
+  static withTargetValues<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    _values: never
+  ): InstanceType<T> {
+    warnUnsupportedModifier('withTargetValues');
+    return this.createInstance();
+  }
+
+  /** Not supported. A shared transition ends at the target view. */
+  withTargetValues(_values: never): this {
+    warnUnsupportedModifier('withTargetValues');
+    return this;
+  }
+
+  /** Not supported. A shared transition animates the transform of the view. */
+  static rotate<T extends typeof BaseAnimationBuilder>(
+    this: T,
+    _degree: never
+  ): InstanceType<T> {
+    warnUnsupportedModifier('rotate');
+    return this.createInstance();
+  }
+
+  /** Not supported. A shared transition animates the transform of the view. */
+  rotate(_degree: never): this {
+    warnUnsupportedModifier('rotate');
+    return this;
+  }
+
+  getAnimationAndConfig(): LayoutAnimationAndConfig {
+    const [animation, config] = super.getAnimationAndConfig();
+    if (config.duration === undefined && !this.isPhysicsBasedSpring()) {
+      config.duration = DEFAULT_DURATION;
+    }
+    return [animation, config];
+  }
+
   build = (): LayoutAnimationFunction => {
     const delayFunction = this.getDelayFunction();
-    if (!this.isPhysicsBasedSpring()) {
-      this.durationV ??= DEFAULT_DURATION;
-    }
     const [animation, config] = this.getAnimationAndConfig();
-    const callback = this.callbackV;
     const delay = this.getDelay();
     const customAnimationFactory = this.customAnimationFactory;
     const progressAnimation = this.getStyleProgressAnimation();
@@ -596,7 +713,6 @@ export class SharedTransition
             progressAnimation,
             () => delayFunction(delay, animation(1, config))
           ),
-          callback,
         };
       };
     }
@@ -618,10 +734,16 @@ export class SharedTransition
             contentOpacity.target
           );
         }
+        const delayedRecord = delayedAnimations as Record<string, unknown>;
+        for (const { key, target } of getClipChanges(values)) {
+          delayedRecord[key] ??= delayFunction(
+            delay,
+            animation(target as number, config)
+          );
+        }
         return {
           initialValues: getCustomInitialStyle(values, animations),
           animations: delayedAnimations,
-          callback,
         };
       };
     }
@@ -644,30 +766,54 @@ export class SharedTransition
         }
         return delayFunction(delay, animation(target, config));
       };
+      // The native side moves the clip and the opacity with the geometry.
+      const isGeometry = (key: string) =>
+        GEOMETRY_KEYS.includes(key) ||
+        CLIP_KEYS.includes(key) ||
+        key === 'opacity';
       const changed = getChangedStyles(values);
-      const animations: Record<string, unknown> = {};
-      for (const { key, target } of changed) {
+      const nonGeometry = changed.filter(({ key }) => !isGeometry(key));
+      const hasGeometryChanges = changed.some(({ key }) => isGeometry(key));
+      // Equal geometry needs a clock only to hold the start during the delay. The clamp keeps a fade-only spring
+      // from ending after its fade.
+      const geometryClock =
+        hasGeometryChanges || delay > 0
+          ? () =>
+              delayFunction(
+                delay,
+                animation(
+                  1,
+                  hasGeometryChanges
+                    ? config
+                    : { ...config, overshootClamping: true }
+                )
+              )
+          : undefined;
+      const animations: Record<string, unknown> = geometryClock
+        ? progressDrivenAnimations(
+            values,
+            { sharedTransitionGeometryProgress: 0 },
+            (_values, progress) => {
+              'worklet';
+              return { sharedTransitionGeometryProgress: progress };
+            },
+            geometryClock
+          )
+        : { sharedTransitionGeometryProgress: 1 };
+      for (const { key, target } of nonGeometry) {
         if (key === 'contentOpacity') {
           animations[key] = fadeContentOpacity(target as number);
           continue;
         }
-        animations[key] =
-          key === 'transform'
-            ? [
-                {
-                  matrix: delayFunction(
-                    delay,
-                    animation((target as { matrix: number[] }).matrix, config)
-                  ),
-                },
-              ]
-            : animateValue(target);
+        animations[key] = animateValue(target);
       }
 
       return {
-        initialValues: getInitialStyle(changed),
+        initialValues: {
+          ...getInitialStyle(nonGeometry),
+          sharedTransitionGeometryProgress: geometryClock ? 0 : 1,
+        },
         animations,
-        callback,
       };
     };
   };
@@ -687,6 +833,14 @@ export class SharedTransition
     return (values, progress) => {
       'worklet';
       let style = progressAnimation(values, progress);
+      for (const { key, current, target } of getClipChanges(values)) {
+        if ((style as Record<string, unknown>)[key] === undefined) {
+          style = {
+            ...style,
+            [key]: interpolateValue(progress, current, target),
+          };
+        }
+      }
       const contentOpacity = getContentOpacityChange(values);
       if (contentOpacity && style.contentOpacity === undefined) {
         style = {
@@ -718,6 +872,13 @@ export class SharedTransition
       return style;
     };
   }
+}
+
+function warnUnsupportedModifier(name: string) {
+  logger.warnOnce(
+    `SharedTransition: ${name}() is not supported and has no effect.`,
+    0
+  );
 }
 
 function isOptionsObject(value: unknown): value is object {

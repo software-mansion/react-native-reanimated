@@ -14,6 +14,7 @@ LayoutAnimationsProxyRegistry::LayoutAnimationsProxyRegistry(LayoutAnimationsPro
 
 std::shared_ptr<LayoutAnimationsProxyCommon> LayoutAnimationsProxyRegistry::registerSurface(
     const facebook::react::ShadowTree &shadowTree) {
+  assertUpdatesRegistryUnlocked();
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   const auto surfaceId = shadowTree.getSurfaceId();
   const auto existing = instances_.find(surfaceId);
@@ -28,6 +29,7 @@ std::shared_ptr<LayoutAnimationsProxyCommon> LayoutAnimationsProxyRegistry::regi
 }
 
 void LayoutAnimationsProxyRegistry::remove(const SurfaceId surfaceId) {
+  assertUpdatesRegistryUnlocked();
   std::shared_ptr<LayoutAnimationsProxyCommon> instance;
   {
     const std::lock_guard<std::mutex> lock(instancesMutex_);
@@ -89,8 +91,16 @@ std::optional<SurfaceId> LayoutAnimationsProxyRegistry::onGestureCancel(const in
   return {};
 }
 
-std::vector<Tag> LayoutAnimationsProxyRegistry::sharedTransitionConfigsToRelease(
-    const std::vector<Tag> &removedTags) const {
+// Called outside the updates registry lock: a pull holds the layout animations lock while it reads synchronous props.
+void LayoutAnimationsProxyRegistry::releaseSharedTransitionConfigs(
+    const std::vector<Tag> &removedTags,
+    LayoutAnimationsManager &layoutAnimationsManager) const {
+  if constexpr (!StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    return;
+  }
+  if (removedTags.empty()) {
+    return;
+  }
   const auto proxies = instances();
   std::vector<Tag> released;
   for (const auto tag : removedTags) {
@@ -99,7 +109,7 @@ std::vector<Tag> LayoutAnimationsProxyRegistry::sharedTransitionConfigsToRelease
       released.push_back(tag);
     }
   }
-  return released;
+  layoutAnimationsManager.clearSharedTransitionConfigs(released);
 }
 
 void LayoutAnimationsProxyRegistry::onSharedTransitionConfigured(const std::vector<Tag> &viewTags) const {
@@ -129,6 +139,7 @@ void LayoutAnimationsProxyRegistry::composeSynchronousProps(UpdatesBatch &update
 }
 
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
+  assertUpdatesRegistryUnlocked();
   const std::lock_guard<std::mutex> lock(instancesMutex_);
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances;
   instances.reserve(instances_.size());

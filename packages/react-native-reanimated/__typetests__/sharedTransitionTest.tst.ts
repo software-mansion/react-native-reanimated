@@ -77,4 +77,43 @@ describe('SharedTransition', () => {
       SharedTransition.defaultTransitionType(SharedTransitionType.ANIMATION)
     ).type.toBe<SharedTransition>();
   });
+
+  test('custom can come after other modifiers', () => {
+    expect(
+      SharedTransition.duration(800).custom(() => {
+        'worklet';
+        return {};
+      })
+    ).type.toBe<SharedTransition>();
+  });
+
+  test('rejects the modifiers that shared transitions ignore', () => {
+    expect(() => {
+      SharedTransition.withInitialValues({ originX: 0 });
+    }).type.toRaiseError(2345);
+    expect(() => {
+      SharedTransition.duration(300).withInitialValues({ originX: 0 });
+    }).type.toRaiseError(2345);
+    expect(() => {
+      SharedTransition.withTargetValues({ originX: 0 });
+    }).type.toRaiseError(2345);
+    expect(() => {
+      SharedTransition.duration(300).withTargetValues({ originX: 0 });
+    }).type.toRaiseError(2345);
+    expect(() => {
+      SharedTransition.rotate('45deg');
+    }).type.toRaiseError(2345);
+    expect(() => {
+      SharedTransition.duration(300).rotate('45deg');
+    }).type.toRaiseError(2345);
+  });
+
+  test('overshootClamping takes a boolean, like withSpring', () => {
+    expect(
+      new SharedTransition().springify().overshootClamping(true)
+    ).type.toBe<SharedTransition>();
+    expect(() => {
+      new SharedTransition().overshootClamping(1);
+    }).type.toRaiseError(2345);
+  });
 });

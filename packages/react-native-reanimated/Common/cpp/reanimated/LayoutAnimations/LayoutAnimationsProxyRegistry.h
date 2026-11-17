@@ -26,7 +26,9 @@ class LayoutAnimationsProxyRegistry {
   std::optional<SurfaceId> onTransitionProgress(int tag, double progress, bool isClosing, bool isGoingForward);
   std::optional<SurfaceId> onGestureCancel(int tag);
   void onSharedTransitionConfigured(const std::vector<Tag> &viewTags) const;
-  std::vector<Tag> sharedTransitionConfigsToRelease(const std::vector<Tag> &removedTags) const;
+  void releaseSharedTransitionConfigs(
+      const std::vector<Tag> &removedTags,
+      LayoutAnimationsManager &layoutAnimationsManager) const;
   void flushLayoutAnimationOperations() const;
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree);
   void composeSynchronousProps(UpdatesBatch &updatesBatch) const;

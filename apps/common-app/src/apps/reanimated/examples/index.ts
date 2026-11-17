@@ -53,6 +53,10 @@ const CustomTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/CustomTransition').default as React.FC
   );
+const ModalHostExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalHost').default as React.FC
+  );
 const ModalPresentationsExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ModalPresentations').default as React.FC
@@ -231,6 +235,10 @@ const SynchronousPropsSETExample: React.FC = () =>
   );
 const NestedTagsExample: React.FC = () =>
   React.createElement(require('./SharedElementTransitions/NestedTags').default);
+const NestedZOrderExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/NestedZOrder').default
+  );
 const NestedStacksExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/NestedStacks').default
@@ -851,6 +859,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  NestedZOrderExample: {
+    title: '[SET] Nested z-order',
+    screen: NestedZOrderExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
@@ -901,7 +918,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: ChangeThemeSharedExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // s2 -> change theme -> go back (progress) will have wrong target
+      ios: true,
       android: true,
     },
   },
@@ -936,6 +953,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  ModalHostExample: {
+    title: '[SET] Inside a Modal',
+    screen: ModalHostExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
