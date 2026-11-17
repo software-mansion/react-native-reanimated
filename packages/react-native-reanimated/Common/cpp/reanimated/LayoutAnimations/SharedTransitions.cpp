@@ -10,6 +10,7 @@
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <iterator>
 #include <ranges>
 #include <unordered_set>
@@ -3549,56 +3550,82 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
     const std::vector<Ancestor> &ancestors,
     const std::vector<react::Point> &absolutePositions,
     const std::optional<AncestorOutsideReactParent> &nativePlacement) const {
+  auto transform = parentTransformsOf(ancestors, absolutePositions, nativePlacement);
+  if (!transform) {
+    return {};
+  }
+  const auto &targetSize = ancestors[0].ownSize;
+  const auto origin = getTranslateForTransformOrigin(targetSize.width, targetSize.height, ancestors[0].origin);
+  return Transform::FromTransformOperation(
+      react::TransformOperation(TransformOperationType::Arbitrary),
+      {},
+      Transform::Translate(-origin[0], -origin[1], -origin[2]) * *transform *
+          Transform::Translate(origin[0], origin[1], origin[2]));
+}
+
+// The transforms of the parents of the target and its own transform, about the center of the target. A view draws the
+// content of its children flat, so a parent transform that reads z gets the content without z. The content keeps its z
+// under other parent transforms and in the last result, so that the result keeps the depth of its 3D transforms.
+std::optional<Transform> LayoutAnimationsProxy::parentTransformsOf(
+    const std::vector<Ancestor> &ancestors,
+    const std::vector<react::Point> &absolutePositions,
+    const std::optional<AncestorOutsideReactParent> &nativePlacement) const {
   const auto &targetSize = ancestors[0].ownSize;
   const auto &targetViewPosition = absolutePositions[0];
-  Transform combinedMatrix;
-  bool parentHasTransform = nativePlacement && nativePlacement->transform.matrix != Transform{}.matrix;
-  if (parentHasTransform) {
-    const auto &ancestor = ancestors[nativePlacement->index];
-    const auto position = nativePlacement->position - ancestor.scrollPosition;
+  const auto originAt = [&targetViewPosition](const react::Point position) {
     TransformOrigin origin;
     origin.xy[0] = {static_cast<float>(position.x - targetViewPosition.x), UnitType::Point};
     origin.xy[1] = {static_cast<float>(position.y - targetViewPosition.y), UnitType::Point};
-    combinedMatrix = resolveTransform(targetSize, ancestor.ownSize, nativePlacement->transform, origin);
-  }
-  for (int i = static_cast<int>(absolutePositions.size()) - 1; i >= 0; --i) {
+    return origin;
+  };
+  std::optional<Transform> result;
+  const auto drawInParent = [&result](const Transform &transform) {
+    result = result ? transform * (readsZ(transform) ? withFlatZAxis(*result) : *result) : transform;
+    result->operations.clear();
+  };
+  bool parentHasTransform = false;
+  for (size_t i = 0; i < absolutePositions.size(); ++i) {
     const auto &ancestor = ancestors[i];
     // The absolute position of a scroll view above the shared view is the position of its content.
     const auto ancestorPosition = absolutePositions[i] - ancestor.scrollPosition;
+    if (!ancestor.transform.operations.empty()) {
+      auto transformOrigin = ancestor.origin;
+      transformOrigin.xy[0].value -= targetViewPosition.x - ancestorPosition.x;
+      transformOrigin.xy[1].value -= targetViewPosition.y - ancestorPosition.y;
+      drawInParent(resolveTransform(targetSize, ancestor.ownSize, ancestor.transform, transformOrigin));
+      parentHasTransform = parentHasTransform || i > 0;
+    }
     if (ancestor.nativeTransform) {
-      TransformOrigin origin;
-      origin.xy[0] = {static_cast<float>(ancestorPosition.x - targetViewPosition.x), UnitType::Point};
-      origin.xy[1] = {static_cast<float>(ancestorPosition.y - targetViewPosition.y), UnitType::Point};
-      combinedMatrix =
-          combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, *ancestor.nativeTransform, origin);
-      combinedMatrix.operations.clear();
+      drawInParent(
+          resolveTransform(targetSize, ancestor.ownSize, *ancestor.nativeTransform, originAt(ancestorPosition)));
       parentHasTransform = true;
     }
-    if (ancestor.transform.operations.empty()) {
-      continue;
-    } else if (i > 0) {
-      parentHasTransform = true;
-    }
-    if (i == 0 && !parentHasTransform) {
-      // If only target view has transform, let's skip it, to matrix decomposition in JS
-      break;
-    }
-    auto transformOrigin = ancestor.origin;
-    transformOrigin.xy[0].value -= targetViewPosition.x - ancestorPosition.x;
-    transformOrigin.xy[1].value -= targetViewPosition.y - ancestorPosition.y;
-    combinedMatrix =
-        combinedMatrix * resolveTransform(targetSize, ancestor.ownSize, ancestor.transform, transformOrigin);
-    combinedMatrix.operations.clear();
   }
-  if (parentHasTransform) {
-    const auto origin = getTranslateForTransformOrigin(targetSize.width, targetSize.height, ancestors[0].origin);
-    combinedMatrix = Transform::Translate(-origin[0], -origin[1], -origin[2]) * combinedMatrix *
-        Transform::Translate(origin[0], origin[1], origin[2]);
-    return Transform::FromTransformOperation(
-        react::TransformOperation(TransformOperationType::Arbitrary), {}, combinedMatrix);
+  if (nativePlacement && nativePlacement->transform.matrix != Transform{}.matrix) {
+    const auto &ancestor = ancestors[nativePlacement->index];
+    const auto position = nativePlacement->position - ancestor.scrollPosition;
+    drawInParent(resolveTransform(targetSize, ancestor.ownSize, nativePlacement->transform, originAt(position)));
+    parentHasTransform = true;
   }
+  // A transform of the target alone stays in its props, so that JS decomposes it.
+  return parentHasTransform ? result : std::nullopt;
+}
 
-  return {};
+// A transform reads z when z changes its x, y or w. A turn by 360deg leaves a small float error in x and y, but only a
+// perspective changes w.
+bool LayoutAnimationsProxy::readsZ(const Transform &transform) {
+  constexpr Float tolerance = 1e-5;
+  return transform.at(2, 3) != 0 || std::abs(transform.at(2, 0)) > tolerance ||
+      std::abs(transform.at(2, 1)) > tolerance;
+}
+
+// A flat view has no z, so its transform keeps only its x and y axes.
+Transform LayoutAnimationsProxy::withFlatZAxis(Transform transform) {
+  for (const auto i : {2, 6, 8, 9, 11, 14}) {
+    transform.matrix[i] = 0;
+  }
+  transform.matrix[10] = 1;
+  return transform;
 }
 
 // The methods resolveTransform and getTranslateForTransformOrigin are sourced
