@@ -11,6 +11,7 @@ import Animated, {
 import { runOnUISync } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   getTestComponent,
@@ -541,6 +542,10 @@ async function expectOpacity(expected: number, step: string) {
 }
 
 const TOGGLE_DURATION = 2000;
+// With the mocked clock every frame is 16 ms of the animation.
+const TOGGLE_FRAMES = TOGGLE_DURATION / FRAME_MS;
+const SWITCH_DURATION = 960;
+const SWITCH_WINDOW_FRAMES = 12;
 
 async function toggleDuringAnimation(
   progress: SharedValue<number>,
@@ -549,12 +554,17 @@ async function toggleDuringAnimation(
   flags: boolean[],
   show: (flag: boolean) => Promise<void>
 ) {
+  await mockAnimationTimer();
   animateTo(progress, toValue, notificationName, TOGGLE_DURATION);
+  const framesBetweenToggles = Math.floor(TOGGLE_FRAMES / (flags.length + 2));
   for (const flag of flags) {
-    await wait(TOGGLE_DURATION / (flags.length + 2));
+    for (let frame = 0; frame < framesBetweenToggles; frame++) {
+      await waitForFrames(1);
+    }
     await show(flag);
   }
   await waitForNotification(notificationName);
+  await unmockAnimationTimer();
 }
 
 type FramesAfterSwitch = { children: string[]; opacity: number[] };
@@ -567,24 +577,31 @@ async function switchFlagMidAnimation(
   flag: boolean,
   show: (flag: boolean) => Promise<void>
 ): Promise<FramesAfterSwitch> {
+  // The clock waits while the app renders the switch, so the window always
+  // holds SWITCH_WINDOW_FRAMES animation frames.
+  await mockAnimationTimer({ autoAdvance: false });
   const updates = await recordAnimationUpdates();
   try {
-    animateTo(progress, toValue, notificationName, TOGGLE_DURATION);
-    await wait(TOGGLE_DURATION / 3);
+    animateTo(progress, toValue, notificationName, SWITCH_DURATION);
+    await advanceAnimationTimer(SWITCH_DURATION / 3);
     await show(flag);
     // Updates already queued for the old children may still land.
     await waitTwoFrames();
     const before = await readRecorded(updates, ['children', 'opacity']);
-    await wait(TOGGLE_DURATION / 3);
+    for (let frame = 0; frame < SWITCH_WINDOW_FRAMES; frame++) {
+      await advanceAnimationTimer(FRAME_MS);
+    }
     const after = await readRecorded(updates, ['children', 'opacity']);
     const frames = {
       children: after.children.slice(before.children.length).map(String),
       opacity: after.opacity.slice(before.opacity.length).map(Number),
     };
+    await advanceAnimationTimer(SWITCH_DURATION);
     await waitForNotification(notificationName);
     return frames;
   } finally {
     await stopRecordingAnimationUpdates();
+    await unmockAnimationTimer();
   }
 }
 
