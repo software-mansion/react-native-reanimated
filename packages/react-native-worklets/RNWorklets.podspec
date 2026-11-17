@@ -5,7 +5,7 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 worklets_config = WorkletsUtils.find_config()
 WorkletsUtils.assert_minimal_react_native_version(worklets_config)
 
-default_platforms = { :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
+default_platforms = { :ios => min_ios_version_supported, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
