@@ -1,3 +1,5 @@
+#import <reanimated/apple/REASurfacePresenterCompat.h>
+
 #import <reanimated/apple/REASharedTransitionOverlays.h>
 
 #if TARGET_OS_IOS
@@ -214,9 +216,7 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
     _surfacePresenter = surfacePresenter;
     _overlayTags = [NSMutableDictionary new];
     _containers = [NSMutableDictionary new];
-    // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
-    // See `REAPseudoSelectorAttachQueue`.
-    [surfacePresenter addObserver:self];
+    REAAddSurfacePresenterObserver(surfacePresenter, self);
   }
   return self;
 }

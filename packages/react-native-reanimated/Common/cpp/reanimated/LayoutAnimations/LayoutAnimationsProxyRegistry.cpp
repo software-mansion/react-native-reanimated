@@ -1,8 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/renderer/mounting/ShadowTree.h>
-
 #include <algorithm>
 #include <utility>
 #include <vector>

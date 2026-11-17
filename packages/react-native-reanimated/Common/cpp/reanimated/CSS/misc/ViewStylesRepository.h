@@ -5,9 +5,9 @@
 #include <reanimated/Fabric/MountedRootsRegistry.h>
 #include <reanimated/Fabric/updates/AnimatedPropsRegistry.h>
 
-#include <react/renderer/components/view/ViewProps.h>
-#include <react/renderer/core/LayoutableShadowNode.h>
 #include <react/renderer/dom/DOM.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <reanimated/Compat/ReactNativeView.h>
 
 #include <memory>
 #include <string>

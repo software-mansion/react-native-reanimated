@@ -57,10 +57,6 @@ class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate
     RCTLinkingManager.scene(scene, continue: userActivity)
   }
 
-  override func sourceURL(for bridge: RCTBridge) -> URL? {
-    self.bundleURL()
-  }
-
   override func bundleURL() -> URL? {
 #if DEBUG
     return RCTBundleURLProvider.sharedSettings()
