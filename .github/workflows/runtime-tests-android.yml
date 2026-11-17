@@ -12,6 +12,10 @@ on:
         required: false
         type: string
         default: DebugRuntimeTests
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -22,6 +26,10 @@ on:
         required: false
         type: string
         default: DebugRuntimeTests
+      full:
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -125,7 +133,7 @@ jobs:
       - name: Run runtime tests on the emulator
         uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
         env:
-          RUNTIME_TESTS_ARGS: --launch --platform android --configuration ${{ env.CONFIGURATION }} --skip-build --connect-timeout 900 --idle-timeout 900
+          RUNTIME_TESTS_ARGS: --launch --platform android --configuration ${{ env.CONFIGURATION }} --skip-build --connect-timeout 900 --idle-timeout 900 ${{ inputs.full && '--full' || '' }}
         with:
           api-level: 34
           arch: x86_64

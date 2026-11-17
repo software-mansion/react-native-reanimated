@@ -5,9 +5,14 @@ import {
   type Shareable,
 } from 'react-native-worklets';
 
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  isFullRun,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 
-const ITERATIONS = 150;
+const ITERATIONS = isFullRun() ? 150 : 10;
 const MAX_COLLECTION_ATTEMPTS = 20;
 
 describe('Shareable whose host Worker Runtime was destroyed', () => {

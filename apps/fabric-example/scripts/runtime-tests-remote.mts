@@ -22,6 +22,7 @@
 //   node --experimental-strip-types runtime-tests-remote.mts install --udid <UUID> --app-path <path/to/FabricExample.app>
 //   node --experimental-strip-types runtime-tests-remote.mts run     --udid <UUID> --library <reanimated|worklets|self-tests>
 //                                                                    [--configuration ReleaseRuntimeTests] [--only "<suites>"]
+//                                                                    [--full true]
 //                                                                    [--metro-port <port>]
 //                                                                    [--connect-timeout <secs>] [--idle-timeout <secs>]
 //
@@ -90,6 +91,7 @@ const APP_PATH = args['app-path'] ?? '';
 const LIBRARY = args.library ?? '';
 const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
 const ONLY = args.only ?? '';
+const FULL = args.full === 'true';
 
 function positiveInt(name: string, value: string | number) {
   const parsed = Number(value);
@@ -307,6 +309,9 @@ async function runLibrary() {
   ];
   if (ONLY) {
     serverArgs.push('--only', ONLY);
+  }
+  if (FULL) {
+    serverArgs.push('--full');
   }
 
   const server = spawn('node', serverArgs, {

@@ -1,9 +1,14 @@
 import type { WorkletRuntime } from 'react-native-worklets';
 import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  isFullRun,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 
-const ITERATIONS = 50;
+const ITERATIONS = isFullRun() ? 50 : 10;
 const MAX_COLLECTION_ATTEMPTS = 20;
 const REMOTE_FUNCTION_ERROR = 'Tried to synchronously call a Remote Function';
 

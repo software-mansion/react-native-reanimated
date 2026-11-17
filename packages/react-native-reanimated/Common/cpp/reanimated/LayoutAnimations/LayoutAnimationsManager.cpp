@@ -27,24 +27,31 @@ std::unique_lock<std::recursive_mutex> LayoutAnimationsManager::lockAndFlushConf
   }
   auto sharedTransitionLock = std::unique_lock<std::mutex>(sharedTransitionManager_->mutex_);
   for (const auto &layoutAnimationConfig : configUpdates) {
-    const auto &[tag, type, config, sharedTag, contentFade] = layoutAnimationConfig;
+    const auto &[tag, type, config, sharedTag, contentFade, callback, followsTarget] = layoutAnimationConfig;
 
     if (type == LayoutAnimationType::ENTERING) {
       enteringAnimationsForNativeID_[tag] = config;
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_NATIVE_ID) {
-      sharedTransitionsForNativeID_[tag] = {.animation = config, .contentFade = contentFade};
-      sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      if (config == nullptr) {
+        sharedTransitionsForNativeID_.erase(tag);
+        sharedTransitionManager_->nativeIDToName_.erase(tag);
+      } else {
+        sharedTransitionsForNativeID_[tag] = {
+            .animation = config, .contentFade = contentFade, .callback = callback, .followsTarget = followsTarget};
+        sharedTransitionManager_->nativeIDToName_[tag] = sharedTag;
+      }
       continue;
     }
     if (type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
       if (config == nullptr) {
         sharedTransitions_.erase(tag);
-        sharedTransitionManager_->tagToName_.erase(tag);
+        sharedTransitionManager_->eraseName(tag);
       } else {
-        sharedTransitions_[tag] = {.animation = config, .contentFade = contentFade};
-        sharedTransitionManager_->tagToName_[tag] = sharedTag;
+        sharedTransitionManager_->setName(tag, sharedTag);
+        sharedTransitions_[tag] = {
+            .animation = config, .contentFade = contentFade, .callback = callback, .followsTarget = followsTarget};
       }
       continue;
     }
@@ -127,7 +134,7 @@ void LayoutAnimationsManager::clearSharedTransitionConfigs(const std::vector<Tag
   for (const auto tag : tags) {
     sharedTransitions_.erase(tag);
     progressSharedTransitions_.erase(tag);
-    sharedTransitionManager_->tagToName_.erase(tag);
+    sharedTransitionManager_->eraseName(tag);
   }
 }
 
@@ -198,8 +205,8 @@ void LayoutAnimationsManager::transferConfigFromNativeID(const int nativeId, con
 
   const auto sharedTransitionConfig = sharedTransitionsForNativeID_[nativeId];
   if (sharedTransitionConfig.animation) {
+    sharedTransitionManager_->setName(tag, sharedTransitionManager_->nativeIDToName_[nativeId]);
     sharedTransitions_.insert_or_assign(tag, sharedTransitionConfig);
-    sharedTransitionManager_->tagToName_[tag] = sharedTransitionManager_->nativeIDToName_[nativeId];
   }
   sharedTransitionsForNativeID_.erase(nativeId);
   sharedTransitionManager_->nativeIDToName_.erase(nativeId);

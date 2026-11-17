@@ -23,6 +23,10 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -37,6 +41,10 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -56,6 +64,7 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
       SANITIZER_FLAG: ${{ inputs.sanitizer && format('--sanitizer {0}', inputs.sanitizer) || '' }}
+      FULL_FLAG: ${{ inputs.full && '--full' || '' }}
       SANITIZER_SKIP_BUILD_FLAG: ${{ inputs.sanitizer && '--skip-build' || '' }}
       USE_CCACHE_LAUNCHER: 1
     concurrency:
@@ -149,13 +158,13 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library worklets
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG $FULL_FLAG
 
       - name: Run Reanimated runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
           node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library reanimated
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG $FULL_FLAG
 
       - name: Upload crash reports
         if: failure()

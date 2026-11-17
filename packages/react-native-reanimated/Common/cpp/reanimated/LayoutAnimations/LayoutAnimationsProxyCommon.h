@@ -32,7 +32,29 @@ struct ContentOpacityRange {
   double to;
 };
 
+#ifdef ANDROID
+// The last frame of an animation that sends only its changed props to the view. The raw props of the frame are
+// `style` over the raw props of `base`.
+struct SentFrame {
+  Props::Shared base;
+  folly::dynamic style;
+  // False while the props of the current view hold only the props that the frame changed.
+  bool holdsAllRawProps;
+};
+#endif
+
+// The clip of a shared transition carrier moves with the carrier.
+struct AncestorClipRange {
+  AncestorClip from;
+  AncestorClip to;
+};
+
+// Writes currentClip* and targetClip* to the values of a shared transition.
+void setClipValues(jsi::Runtime &runtime, const jsi::Object &values, const AncestorClipRange &clip);
+
 struct LayoutAnimation {
+  // On Android, the props of currentView can hold only the props that the last frame changed. Read currentView with
+  // LayoutAnimationsProxyCommon::currentViewOf.
   ShadowView finalView, currentView, startView;
   // The props that each frame starts from. When it is null, the frames start from the props of finalView.
   Props::Shared frameProps;
@@ -42,6 +64,12 @@ struct LayoutAnimation {
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
   std::optional<double> contentOpacity;
+  // A built-in timed shared transition interpolates the frame and the transform from startView to finalView.
+  std::optional<double> geometryProgress;
+#ifdef ANDROID
+  std::optional<SentFrame> sentFrame;
+#endif
+  std::optional<AncestorClip> clip;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -71,6 +99,7 @@ struct ManagedLayoutAnimationStart {
   std::optional<double> opacity;
   std::shared_ptr<Serializable> config;
   std::optional<ContentOpacityRange> contentOpacity;
+  std::optional<AncestorClipRange> clip;
   // A shared transition content fade-in gets the target opacity of the view.
   bool isContentFadeIn = false;
 };
@@ -100,9 +129,11 @@ struct LayoutAnimationsProxyDependencies {
   SharedComponentDescriptorRegistry componentDescriptorRegistry;
   std::shared_ptr<const ContextContainer> contextContainer;
   jsi::Runtime &uiRuntime;
+  std::weak_ptr<WorkletRuntime> uiRuntimeWeak;
   std::shared_ptr<UIScheduler> uiScheduler;
   std::shared_ptr<facebook::react::UIManager> uiManager;
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
+  std::function<void(std::function<void()>)> scheduleOnNextUIFrame;
   std::function<std::optional<double>(Tag)> readSynchronousOpacity;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
@@ -151,7 +182,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual bool deferSharedTransitionConfigRelease(Tag /*tag*/) {
     return false;
   }
-  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle);
+  std::optional<SurfaceId> progressLayoutAnimation(int tag, const jsi::Object &newStyle) const;
   virtual std::optional<SurfaceId> endLayoutAnimation(int tag, bool shouldRemove) const = 0;
   virtual void startSurface(
       const facebook::react::ShadowTree &shadowTree,
@@ -171,6 +202,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void applySynchronousPropsToLayoutAnimation(Tag tag, const folly::dynamic &props) const;
   virtual void clearSurfaceState() const;
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
+  void writeSharedTransitionGeometry(Tag tag, LayoutAnimation &animation) const;
+  virtual void followTargetsPlacedNatively() const {}
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
@@ -183,7 +216,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const ShadowView &finalView,
       const Props::Shared &frameProps,
       const std::shared_ptr<Serializable> &config = nullptr,
-      std::optional<ContentOpacityRange> contentOpacity = std::nullopt) const;
+      std::optional<ContentOpacityRange> contentOpacity = std::nullopt,
+      std::optional<AncestorClipRange> clip = std::nullopt) const;
   std::shared_ptr<Serializable> getRetargetLayoutAnimationConfig(Tag tag) const;
   bool updateEnteringAnimationTarget(Tag tag, const ShadowView &finalView) const;
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
@@ -199,6 +233,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const PropsParserContext &propsParserContext,
       bool preserveRemovals = false,
       const std::unordered_set<Tag> &preservedTags = {}) const;
+  const ShadowView &currentViewOf(LayoutAnimation &animation) const;
+  ShadowViewMutation frameUpdate(LayoutAnimation &animation, const UpdateValues &frame, bool sendsOnlyChangedProps)
+      const;
   ShadowView cloneViewWithOpacity(
       const ShadowView &shadowView,
       double opacity,
@@ -255,6 +292,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   };
 #endif
 
+  std::optional<SurfaceId> progressSharedTransitionGeometry(Tag tag, const jsi::Object &newStyle) const;
+  UpdateValues frameValues(
+      const LayoutAnimation &animation,
+      const Props::Shared &base,
+      folly::dynamic style,
+      const Frame &frame,
+      bool animatesOpacity) const;
   void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
@@ -276,6 +320,11 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       LayoutAnimationType type,
       const std::shared_ptr<Serializable> &config) const;
 #ifdef ANDROID
+  ShadowViewMutation changedPropsUpdate(LayoutAnimation &animation, const UpdateValues &frame, ShadowView newView)
+      const;
+  void resolveCurrentProps(LayoutAnimation &animation) const;
+  Props::Shared frameProps(const LayoutAnimation &animation, const Props::Shared &base, const folly::dynamic &style)
+      const;
   void restoreOpacityInShadowTree(std::vector<OpacityRestoration> restorations) const;
 #endif
 

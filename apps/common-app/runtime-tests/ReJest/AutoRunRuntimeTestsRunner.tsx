@@ -5,6 +5,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { RuntimeTestSuite } from '../types';
 import type { TestConfiguration, TestProgress, TestRunSummary } from './types';
+import { setFullRun } from './utils/fullRun';
 import { applyIsolationCheck } from './utils/isolationCheck';
 import { runWithRemoteReporter } from './utils/remoteReporter';
 import { RenderLock } from './utils/RenderLock';
@@ -56,6 +57,7 @@ export default function AutoRunRuntimeTestsRunner({
     const declaredSuites = tests.map((test) => ({
       name: test.testSuiteName,
       skipByDefault: !!test.skipByDefault,
+      fullRunOnly: !!test.fullRunOnly,
       disabled: !!test.disabled,
     }));
 
@@ -68,7 +70,8 @@ export default function AutoRunRuntimeTestsRunner({
           setStatus(message);
         }
       },
-      onStart: async ({ only, reportSuiteFinished, requestReload }) => {
+      onStart: async ({ only, full, reportSuiteFinished, requestReload }) => {
+        setFullRun(!!full);
         const filterSet = only ? new Set(only) : null;
         const selected = tests.filter((test) => {
           if (test.disabled) {
@@ -77,7 +80,7 @@ export default function AutoRunRuntimeTestsRunner({
           if (filterSet) {
             return filterSet.has(test.testSuiteName);
           }
-          return !test.skipByDefault;
+          return !test.skipByDefault && (!!full || !test.fullRunOnly);
         });
 
         const known = new Set(tests.map((test) => test.testSuiteName));

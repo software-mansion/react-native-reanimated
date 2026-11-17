@@ -259,6 +259,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  requestNativeRender_ = platformDepMethodsHolder.requestRender;
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Backend path: callbacks are drained later inside runGrandCallback under
     // the manager lock; no wrap needed here.
@@ -530,6 +531,14 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
       batchItem.config = extractSerializable(
           rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
     }
+    const auto sharedCallback = item.getProperty(rt, "sharedTransitionCallback");
+    if (!sharedCallback.isUndefined()) {
+      batchItem.sharedTransitionCallback = extractSerializable(
+          rt,
+          sharedCallback,
+          "[Reanimated] Shared transition callback must be serializable.",
+          Serializable::ValueType::ObjectType);
+    }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
       if (!sharedTag.isString()) {
@@ -548,6 +557,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           .fadeOutEnd = fadeOutEnd(rt, contentFadeObject),
       };
     }
+    const auto followsTarget = item.getProperty(rt, "sharedTransitionFollowsTarget");
+    batchItem.sharedTransitionFollowsTarget = followsTarget.isBool() && followsTarget.getBool();
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -718,7 +729,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -728,15 +739,14 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi:
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
-  std::unordered_set<Tag> viewTags;
-  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
-  }
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
+  return animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, [&](const Tag viewTag) {
+        return isViewRegisteredFunction.call(rt, viewTag).asBool();
+      });
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -785,35 +795,21 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (eventType == "onTransitionProgress") {
+    std::optional<SurfaceId> surfaceId;
+    if (layoutAnimationsProxyRegistry_ && eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
       auto closing = static_cast<bool>(payload.getProperty(uiRuntime, "closing").asNumber());
       auto goingForward = static_cast<bool>(payload.getProperty(uiRuntime, "goingForward").asNumber());
-
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
-      if (!surfaceId) {
-        return false;
-      }
+      surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
+    } else if (layoutAnimationsProxyRegistry_ && eventType == "onGestureCancel") {
+      surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
+    }
+    if (surfaceId) {
       uiManager_->getShadowTreeRegistry().visit(
           *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
-    } else if (eventType == "onGestureCancel") {
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
-      if (!surfaceId) {
-        return false;
-      }
-      uiManager_->getShadowTreeRegistry().visit(
-          *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
     }
   }
 
@@ -1390,9 +1386,19 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       componentDescriptorRegistry,
       scheduler->getContextContainer(),
       getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+      uiRuntime_,
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      [weakThis = weak_from_this()](std::function<void()> callback) {
+        if (const auto strongThis = weakThis.lock()) {
+          scheduleOnUI(strongThis->uiScheduler_, [weakThis, callback = std::move(callback)]() mutable {
+            if (const auto strongThis = weakThis.lock()) {
+              strongThis->requestNativeRender_([callback = std::move(callback)](const double) { callback(); });
+            }
+          });
+        }
+      },
       // A proxy calls this with the proxy mutex held.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();

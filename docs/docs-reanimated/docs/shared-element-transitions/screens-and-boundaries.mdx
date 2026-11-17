@@ -294,10 +294,13 @@ A React Native [`Modal`](https://reactnative.dev/docs/modal) is not a screen, so
 </Modal>
 ```
 
+On Android, a view does not move between the screen and a `Modal`. See [Modals and windows](./limitations.mdx#modals-and-windows).
+
 ## Remarks
 
 - Reanimated runs a transition only between two boundaries. A view outside of all boundaries does not take part.
 - Only one boundary should be active at a time. If more boundaries are active, Reanimated uses the one that React renders last.
+- A shared view that mounts under an inactive boundary shows as usual, for example in a list under a sheet. Reanimated hides it only when the active boundary shows a view with the same tag, or when a transition moves that tag.
 - When a new boundary becomes active during a transition, for example when the user goes back before the transition ends, the view turns and moves to its match in the new boundary. If the new boundary has no match, the transition stops and the views show in their own places at once.
 
 ## Platform compatibility

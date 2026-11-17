@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+import { isBundleModeEnabled } from 'react-native-worklets';
+
 import type { RuntimeTestSuite } from '../types';
 
 type Describe = (name: string, buildSuite: () => void) => void;
 
-export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
+const SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'matrixInterpolation',
     importTest: () =>
@@ -170,6 +172,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations entering',
     importTest: () => {
       require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+      require('./tests/layoutAnimations/entering/userNativeID.test');
       require('./tests/layoutAnimations/startError.test');
     },
   },
@@ -198,7 +201,9 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrier.test');
       require('./tests/layoutAnimations/sharedTransitionAnimatedStyle.test');
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
+      require('./tests/layoutAnimations/sharedTransitionMovingTarget.test');
       require('./tests/layoutAnimations/sharedTransitionGesture.test');
+      require('./tests/layoutAnimations/sharedTransitionWindow.test');
       require('./tests/layoutAnimations/sharedTransitionFadeContent.test');
       require('./tests/layoutAnimations/sharedTransitionFadeProgress.test');
       require('./tests/layoutAnimations/sharedTransitionNested.test');
@@ -207,6 +212,13 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
       require('./tests/layoutAnimations/sharedTransitionStart.test');
+      require('./tests/layoutAnimations/sharedTransitionCallback.test');
+    },
+  },
+  {
+    testSuiteName: 'screen transition events',
+    importTest: () => {
+      require('./tests/layoutAnimations/screenTransitionEvents.test');
     },
   },
   {
@@ -274,3 +286,23 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
 ];
+
+// Bundle Mode and Legacy Eval differ only in how worklets are loaded, so a
+// short run checks Legacy Eval in a subset of suites that load worklets in
+// different ways: animations, hooks, event handlers and layout animation
+// builders.
+const LEGACY_EVAL_SHORT_RUN_SUITES = [
+  'animations',
+  'core',
+  'event handlers',
+  'layout animations entering',
+];
+
+export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES.map(
+  (suite) => ({
+    ...suite,
+    fullRunOnly:
+      !isBundleModeEnabled() &&
+      !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName),
+  })
+);

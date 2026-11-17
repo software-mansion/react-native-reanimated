@@ -6,9 +6,14 @@ import {
   scheduleOnRuntime,
 } from 'react-native-worklets';
 
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  isFullRun,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 
-const ITERATIONS = 100;
+const ITERATIONS = isFullRun() ? 100 : 10;
 
 interface IReuseCarrier {
   __isReuseCarrier: true;
