@@ -270,7 +270,6 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
-  bool flushesSubtreeRemovals = false;
   // the sources of the runs that start in this pull, which leave their places as hidden views or as carriers
   std::vector<std::shared_ptr<LightNode>> startedSources;
   std::vector<RestoreRequest> restoreRequests;
@@ -593,13 +592,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  void stopSharedTransitions(const std::vector<SharedTransitionRun *> &runs, TransactionMeta &transaction) const;
   void stopCarrierInPlace(
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
-  react::Point nativeOriginOnScreen(const std::shared_ptr<LightNode> &node) const;
   std::vector<SharedTransitionRun *> runsEndedBy(const std::shared_ptr<LightNode> &node) const;
-  void stopRunsEndedBy(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void removeCarriersHostedIn(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainCarrierContent(const std::shared_ptr<LightNode> &node) const;
@@ -620,6 +618,10 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   react::Point carriedDistance(const std::shared_ptr<LightNode> &carrier) const;
   ShadowView movedCarrierTarget(Tag tag, react::Point offset) const;
   ShadowView inParentSpace(const ShadowView &snapshot, const std::shared_ptr<LightNode> &node) const;
+  ShadowView inParentOnScreen(
+      const ShadowView &onScreen,
+      const std::shared_ptr<LightNode> &node,
+      const PropsParserContext &propsParserContext) const;
   react::Point originOnScreen(const std::shared_ptr<LightNode> &node) const;
   Tag carrierParentTag(const std::shared_ptr<LightNode> &carrier) const;
   ShadowView targetInCarrierSpace(
@@ -641,6 +643,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void retireSharedTransition(SharedTransitionRun &run) const;
+  void endSharedTransition(
+      SharedTransitionRun &run,
+      TransactionMeta &transaction,
+      const PropsParserContext &propsParserContext) const;
+  bool carrierWaitsToReturn(const SharedTransitionRun &run, const TransactionMeta &transaction) const;
+  void restoreEndsOf(const SharedTransitionRun &run, TransactionMeta &transaction) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
@@ -868,7 +876,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   bool hasRunningAnimations() const;
-  bool holdsModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
+  bool holdsModal(
+      const std::shared_ptr<LightNode> &node,
+      const std::vector<SharedTransitionRun *> &endedRuns,
+      const TransactionMeta &transaction) const;
+  bool isInModalOf(const std::shared_ptr<LightNode> &view, const std::shared_ptr<LightNode> &root) const;
   bool isInHeldModal(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;

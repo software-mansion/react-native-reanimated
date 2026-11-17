@@ -1104,14 +1104,15 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
   const bool defersTeardown = holdsSnapshottedScreen(node);
-  const bool heldModal = !defersTeardown && holdsModal(node, transaction);
+  const auto endedRuns = runsEndedBy(node);
+  const bool heldModal = !defersTeardown && holdsModal(node, endedRuns, transaction);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (!transaction.surfaceDropped) {
       moveNestedCarriersOutOf(node, transaction);
     }
     removeCarriersHostedIn(node, transaction);
     if (heldModal && !transaction.surfaceDropped) {
-      stopRunsEndedBy(node, transaction);
+      stopSharedTransitions(endedRuns, transaction);
     }
     retainRemovedCarriers(node, transaction);
     if (node->presence() == ReactPresence::REMOVED) {
@@ -1185,29 +1186,31 @@ bool LayoutAnimationsProxy::hasRunningAnimations() const {
 // screen.
 bool LayoutAnimationsProxy::holdsModal(
     [[maybe_unused]] const std::shared_ptr<LightNode> &node,
+    [[maybe_unused]] const std::vector<SharedTransitionRun *> &endedRuns,
     [[maybe_unused]] const TransactionMeta &transaction) const {
 #ifdef __APPLE__
-  react_native_assert(
-      (transaction.flushesSubtreeRemovals || transaction.surfaceDropped || !defersSubtreeRemoval(node)) &&
-      "A removal that can hold a modal waits for the runs that start in its pull");
-  const auto isInModal = [&node](const std::shared_ptr<LightNode> &view) {
-    bool insideModal = false;
-    for (auto ancestor = view->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
-      insideModal = insideModal || !strcmp(ancestor->current.componentName, "ModalHostView");
-      if (ancestor == node) {
-        return insideModal;
-      }
-    }
-    return false;
+  const auto isInModal = [&](const std::shared_ptr<LightNode> &view) {
+    return isInModalOf(view, node);
   };
   return std::ranges::any_of(transaction.startedSources, isInModal) ||
-      std::ranges::any_of(runsEndedBy(node), [&](const SharedTransitionRun *run) { return isInModal(run->carrier); });
+      std::ranges::any_of(endedRuns, [&](const SharedTransitionRun *run) { return isInModal(run->carrier); });
 #else
   return false;
 #endif
 }
 
-// The views of a held modal stay as they are on screen until its teardown.
+bool LayoutAnimationsProxy::isInModalOf(const std::shared_ptr<LightNode> &view, const std::shared_ptr<LightNode> &root)
+    const {
+  bool insideModal = false;
+  for (auto ancestor = view->parent.lock(); ancestor; ancestor = ancestor->parent.lock()) {
+    insideModal = insideModal || !strcmp(ancestor->current.componentName, "ModalHostView");
+    if (ancestor == root) {
+      return insideModal;
+    }
+  }
+  return false;
+}
+
 bool LayoutAnimationsProxy::isInHeldModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
 #ifdef __APPLE__
   return std::ranges::any_of(heldModals_, [&node](const HeldModal &held) { return isInSubtree(node, held.node); });
