@@ -181,6 +181,46 @@ const CakeShopFormSheet: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/CakeShop/BoundaryFormSheet').default
   );
+const CakeShopBasicsGallery: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BasicsGallery').default
+  );
+const CakeShopChildrenCard: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ChildrenCard').default
+  );
+const CakeShopControlToss: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ControlToss').default
+  );
+const CakeShopControlSwipe: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ControlSwipe').default
+  );
+const CakeShopBasicsNative: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BasicsNative').default
+  );
+const CakeShopBasicsAlt: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/BasicsAlt').default
+  );
+const CakeShopChildrenNative: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ChildrenNative').default
+  );
+const CakeShopChildrenAlt: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ChildrenAlt').default
+  );
+const CakeShopControlNative: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ControlNative').default
+  );
+const CakeShopControlAlt: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CakeShop/ControlAlt').default
+  );
 const CakeShopOrderDelivered: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/CakeShop/OrderDelivered').default
@@ -1142,6 +1182,96 @@ const ALL_EXAMPLES: Record<string, Example> = {
   CakeShopFormSheet: {
     title: '[SET] Cake shop: native form sheet',
     screen: CakeShopFormSheet,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopBasicsGallery: {
+    title: '[SET] Cake shop: basics gallery',
+    screen: CakeShopBasicsGallery,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopChildrenCard: {
+    title: '[SET] Cake shop: children of shared views',
+    screen: CakeShopChildrenCard,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopControlToss: {
+    title: '[SET] Cake shop: custom animation toss',
+    screen: CakeShopControlToss,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopControlSwipe: {
+    title: '[SET] Cake shop: progress animation swipe',
+    screen: CakeShopControlSwipe,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopBasicsNative: {
+    title: '[SET] Cake shop: basics native',
+    screen: CakeShopBasicsNative,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopBasicsAlt: {
+    title: '[SET] Cake shop: basics alt',
+    screen: CakeShopBasicsAlt,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopChildrenNative: {
+    title: '[SET] Cake shop: children native',
+    screen: CakeShopChildrenNative,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopChildrenAlt: {
+    title: '[SET] Cake shop: children alt',
+    screen: CakeShopChildrenAlt,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopControlNative: {
+    title: '[SET] Cake shop: control native',
+    screen: CakeShopControlNative,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  CakeShopControlAlt: {
+    title: '[SET] Cake shop: control alt',
+    screen: CakeShopControlAlt,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
