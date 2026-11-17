@@ -166,7 +166,6 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      // Source maps stay on: with them off the plugin never looked for the file.
       const { code } = runPlugin(
         input,
         undefined,

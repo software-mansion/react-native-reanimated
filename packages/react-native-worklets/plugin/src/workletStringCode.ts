@@ -122,7 +122,6 @@ export function buildWorkletString(
 
   const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
 
-  // Both branches below discard `sourcesContent`, so no source is read here.
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
     extraPlugins: [
