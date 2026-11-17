@@ -615,6 +615,11 @@ describe('Back transition to a screen out of the window', () => {
     const source = getTestComponent(`detached-view-${count - 1}`).getTag();
     const originalParent = await observer().observeParent(source);
     expect(originalParent !== null).toBe(true);
+    expect(
+      await observer().observeParent(
+        getTestComponent('detached-view-0').getTag()
+      )
+    ).toBe(null);
 
     await emitPopProgress(closingScreen, revealedScreen, 0);
     await expectEventually(async () => {
@@ -646,6 +651,11 @@ describe('Back transition to a screen out of the window', () => {
     const source = getTestComponent('coveredTabsSource').getTag();
     const originalParent = await observer().observeParent(source);
     expect(originalParent !== null).toBe(true);
+    expect(
+      await observer().observeParent(
+        getTestComponent('coveredTabsShownTarget').getTag()
+      )
+    ).toBe(null);
 
     await emitPopProgress(closingScreen, revealedScreen, 0);
     await expectEventually(async () => {
