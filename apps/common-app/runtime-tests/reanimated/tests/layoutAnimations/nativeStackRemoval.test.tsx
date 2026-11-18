@@ -133,9 +133,9 @@ function App() {
 function SignInLoop() {
   const [step, setStep] = useState(0);
   const signedIn = step % 2 === 1;
+  const lastSignOut = step === SIGN_OUTS * 2;
   useEffect(() => {
-    if (step === SIGN_OUTS * 2) {
-      notify(SIGNED_OUT);
+    if (lastSignOut) {
       return;
     }
     const timeout = setTimeout(
@@ -143,7 +143,7 @@ function SignInLoop() {
       DELAYS[step % DELAYS.length]
     );
     return () => clearTimeout(timeout);
-  }, [step]);
+  }, [lastSignOut, step]);
   return (
     <View style={styles.root}>
       <NavigationContainer>
@@ -159,6 +159,14 @@ function SignInLoop() {
               name="SignIn"
               component={SignIn}
               options={headerOptions('SignIn')}
+              listeners={{
+                // On iOS, a stack removed during its animation makes the next stack drop pushes and pops.
+                transitionEnd: (event) => {
+                  if (lastSignOut && !event.data.closing) {
+                    notify(SIGNED_OUT);
+                  }
+                },
+              }}
             />
           )}
         </Outer.Navigator>
