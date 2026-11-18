@@ -27,6 +27,7 @@ Our plugin offers several optional functionalities that you may need to employ a
     hermesBytecode?: boolean;
     omitNativeOnlyData?: boolean;
     relativeSourceLocation?: boolean;
+    silenceDangerousPathsWarning?: boolean;
     strictGlobal?: boolean;
     substituteWebPlatformChecks?: boolean;
     importForwarding?: {
@@ -262,6 +263,19 @@ This option comes in handy for Web apps. Because Babel ordinarily doesn't get in
 Defaults to `false`.
 
 This option dictates the passed file location for a worklet function's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
+
+<Badges version="0.14.0">
+  ### silenceDangerousPathsWarning
+</Badges>
+
+Defaults to `false`.
+
+In Bundle Mode, the plugin prints a warning when an
+[`importForwarding.relativePaths`](#importforwardingrelativepaths) entry has only
+common folder names, such as `src`, `lib`, `app` or `app/src`. Such a path also
+matches folders inside packages in `node_modules`. Set this option to `true` to
+hide the warning, for example when you have checked that the path matches only
+your code.
 
 <Badges version="0.8.0">
   ### strictGlobal
@@ -532,6 +546,9 @@ Use a sequence of segments that only your code has, for example
 `@my-scope/my-library/src` or a folder name that is unique to your app. Check that
 the sequence does not also occur in the paths of your dependencies. For example,
 `my-library` also matches `node_modules/other-lib/my-library/index.js`.
+
+In Bundle Mode, the plugin prints a warning when a path has only common folder names. You can
+hide it with [`silenceDangerousPathsWarning`](#silencedangerouspathswarning).
 :::
 
 `moduleNames` won't work here: adding `'./utils'` to it would forward every

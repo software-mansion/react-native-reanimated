@@ -108,6 +108,17 @@ export interface PluginOptions {
    */
   relativeSourceLocation?: boolean;
   /**
+   * Turns off the warning that the plugin prints in Bundle Mode when an
+   * `importForwarding.relativePaths` entry has only common folder names, such
+   * as `'src'` or `'app/src'`. Such a path can also match folders inside
+   * packages in `node_modules`.
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#silencedangerouspathswarning}
+   *
+   * - Defaults to `false`.
+   */
+  silenceDangerousPathsWarning?: boolean;
+  /**
    * This option makes it so no global identifiers are implicitly captured in
    * worklets' closures between runtimes.
    *
