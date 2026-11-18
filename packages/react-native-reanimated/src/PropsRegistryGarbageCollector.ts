@@ -1,5 +1,8 @@
 'use strict';
 
+import { createSynchronizable, scheduleOnRN } from 'react-native-worklets';
+
+import { IS_JEST } from './common';
 import type {
   ProcessedBackgroundImageValue,
   ProcessedColorStop,
@@ -14,9 +17,38 @@ import { unprocessObjectFit } from './common/style/processors/image';
 import { unprocessVerticalAlign } from './common/style/processors/text';
 import type { SettledUpdate } from './commonTypes';
 import type { IAnimatedComponentInternal } from './createAnimatedComponent/commonTypes';
+import { getStaticFeatureFlag } from './featureFlags';
 import { ReanimatedModule } from './ReanimatedModule';
 
 const FLUSH_INTERVAL_MS = 500;
+
+const SYNC_SETTLED_PROPS =
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
+  !getStaticFeatureFlag('USE_ANIMATION_BACKEND');
+
+const syncRequested =
+  SYNC_SETTLED_PROPS && !IS_JEST
+    ? createSynchronizable(false, { fixedType: true })
+    : null;
+
+export function requestSettledPropsSync() {
+  'worklet';
+  if (!syncRequested) {
+    return;
+  }
+  let shouldStartSync = false;
+  syncRequested.setBlocking((requested) => {
+    shouldStartSync = !requested;
+    return true;
+  });
+  if (shouldStartSync) {
+    scheduleOnRN(startSettledPropsSync);
+  }
+}
+
+function startSettledPropsSync() {
+  PropsRegistryGarbageCollector.startSync();
+}
 
 export const PropsRegistryGarbageCollector = {
   viewsMap: new Map<number, IAnimatedComponentInternal>(),
@@ -32,15 +64,24 @@ export const PropsRegistryGarbageCollector = {
       return;
     }
     this.viewsMap.set(viewTag, component);
-    if (this.viewsMap.size === 1) {
-      this.registerInterval();
-    }
+    this.startSync();
   },
 
   unregisterView(viewTag: number) {
     const deleted = this.viewsMap.delete(viewTag);
     if (deleted && this.viewsMap.size === 0) {
       this.unregisterInterval();
+      syncRequested?.setBlocking(false);
+    }
+  },
+
+  startSync() {
+    if (this.viewsMap.size === 0) {
+      syncRequested?.setBlocking(false);
+      return;
+    }
+    if (this.intervalId === null) {
+      this.registerInterval();
     }
   },
 
@@ -56,6 +97,10 @@ export const PropsRegistryGarbageCollector = {
       const component = this.viewsMap.get(viewTag);
       unprocessSettledUpdate(settledUpdate);
       component?._syncStylePropsBackToReact(props, style);
+    }
+    syncRequested?.setBlocking(false);
+    if (!ReanimatedModule.hasPendingSettledUpdates(this.isViewRegistered)) {
+      this.unregisterInterval();
     }
   },
 

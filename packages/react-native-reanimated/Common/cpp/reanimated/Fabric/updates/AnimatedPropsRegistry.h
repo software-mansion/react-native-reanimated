@@ -30,6 +30,11 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) override;
   void handleRemount(Tag tag) override;
 
+  /// Returns true while an update of a registered view is not yet synced to
+  /// React or not yet evicted, so `collectSettledUpdates` still has work to do.
+  /// Views that are not registered are skipped, as in `collectSettledUpdates`.
+  [[nodiscard]] bool hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const;
+
  private:
   static constexpr size_t MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD = 256;
 

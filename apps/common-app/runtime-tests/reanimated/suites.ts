@@ -92,6 +92,7 @@ const SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
+      require('./tests/props/settledPropsSyncInterval.test');
       require('./tests/props/boxShadow.test');
       require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');

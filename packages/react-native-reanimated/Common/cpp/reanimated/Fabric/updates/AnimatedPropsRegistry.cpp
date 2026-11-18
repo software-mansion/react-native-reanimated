@@ -221,6 +221,15 @@ void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
   unmountedFamiliesPruneThreshold_ = std::max(MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD, 2 * unmountedFamilies_.size());
 }
 
+bool AnimatedPropsRegistry::hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  return std::any_of(updatesRegistry_.begin(), updatesRegistry_.end(), [&](const auto &entry) {
+    const auto viewTag = entry.first;
+    const bool hasWork = syncedTags_.contains(viewTag) || writeHistories_.contains(viewTag);
+    return hasWork && isViewRegistered(viewTag);
+  });
+}
+
 void AnimatedPropsRegistry::removeTag(const Tag tag) {
   updatesRegistry_.erase(tag);
   writeHistories_.erase(tag);

@@ -8,6 +8,7 @@ import type {
   AnimatedRefOnRN,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
+import { requestSettledPropsSync } from '../PropsRegistryGarbageCollector';
 
 type SetNativeProps = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
@@ -50,6 +51,7 @@ function setNativePropsNative(
   global._updateProps!([
     { shadowNodeWrapper, updates, isAnimatedProps: false },
   ]);
+  requestSettledPropsSync();
 }
 
 function setNativePropsJest() {
