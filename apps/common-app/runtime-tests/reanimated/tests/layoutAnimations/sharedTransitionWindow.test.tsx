@@ -18,10 +18,12 @@ import {
   expectEventually,
   getTestComponent,
   mockAnimationTimer,
+  notify,
   render,
   test,
   useTestRef,
   waitForFrames,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
@@ -193,11 +195,20 @@ function OffWindowSourceScreens({
   );
 }
 
+const MODAL_SHOWN = 'windowModalShown';
+const INSTANT_MODAL = { transparent: true, animationType: 'none' } as const;
+const PAGE_SHEET_MODAL = {
+  presentationStyle: 'pageSheet',
+  animationType: 'slide',
+} as const;
+
 function InModal({
   open = true,
+  pageSheet = false,
   children,
 }: {
   open?: boolean;
+  pageSheet?: boolean;
   children: ReactNode;
 }) {
   const ref = useTestRef('window-modal-offset');
@@ -206,7 +217,9 @@ function InModal({
     <View style={styles.root}>
       <View ref={ref} collapsable={false} style={styles.modalOffset}>
         {open && (
-          <Modal transparent animationType="none">
+          <Modal
+            {...(pageSheet ? PAGE_SHEET_MODAL : INSTANT_MODAL)}
+            onShow={() => notify(MODAL_SHOWN)}>
             {children}
           </Modal>
         )}
@@ -739,15 +752,21 @@ describe('Shared transitions inside an iOS Modal', () => {
     await expectLandedAtHome(home);
   });
 
-  iosTest.each([[true], [false]] as const)(
-    'ends the run when the Modal closes, with the moving view where it is on screen (source kept: ${0})',
-    async ([keepSource]) => {
+  iosTest.each([
+    [true, false],
+    [false, false],
+    [true, true],
+  ] as const)(
+    'ends the run when the Modal closes, with the moving view where it is on screen (source kept: ${0}, page sheet: ${1})',
+    async ([keepSource, pageSheet]) => {
       const results: boolean[] = [];
       const transition = recordingTransition(results);
+      await render(modalScreens(transition, { active: false, pageSheet }));
+      await waitForNotification(MODAL_SHOWN);
       const { sourceTag } = await startFlight((active) =>
-        modalScreens(transition, { active })
+        modalScreens(transition, { active, pageSheet })
       );
-      await renderInModal(transition, { active: true, keepSource });
+      await renderInModal(transition, { active: true, keepSource, pageSheet });
       const targetTag = getTestComponent('window-target').getTag();
       const markerTag = getTestComponent('window-closed-marker').getTag();
       expect(results).toBe([]);
@@ -755,7 +774,12 @@ describe('Shared transitions inside an iOS Modal', () => {
         [sourceTag, targetTag, markerTag],
         async () => {
           await render(
-            modalScreens(transition, { active: true, keepSource, open: false })
+            modalScreens(transition, {
+              active: true,
+              keepSource,
+              open: false,
+              pageSheet,
+            })
           );
           await expectEventually(
             async () => (await mountedWidth(targetTag)) === undefined
@@ -836,6 +860,7 @@ function modalScreens(
     candidateTransition = transition,
     keepSource = true,
     sourceTransform = false,
+    pageSheet = false,
   }: {
     active: boolean;
     keepTarget?: boolean;
@@ -844,10 +869,11 @@ function modalScreens(
     candidateTransition?: SharedTransition;
     keepSource?: boolean;
     sourceTransform?: boolean;
+    pageSheet?: boolean;
   }
 ) {
   return (
-    <InModal open={open}>
+    <InModal open={open} pageSheet={pageSheet}>
       <RetargetScreens
         active={active}
         candidate={candidate}
