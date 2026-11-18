@@ -29,9 +29,18 @@ import {
 type OrderSetter = ReturnType<typeof createOrderConstraint>[1];
 
 const MICROTASK_NOT_RUN = 0;
-const MICROTASK_RAN_OUTSIDE_FRAME = 1;
-const MICROTASK_RAN_IN_FRAME = 2;
+const MICROTASK_RAN_IN_SAME_CALL = 1;
+const MICROTASK_RAN_IN_LATER_CALL = 2;
 const NESTED_CALL_RESULT = 42;
+
+type RootTaskIdGlobal = typeof globalThis & {
+  __getRootTaskId: () => number;
+};
+
+function getRootTaskId() {
+  'worklet';
+  return (globalThis as RootTaskIdGlobal).__getRootTaskId();
+}
 
 describe('microtask draining', () => {
   const [workletRuntime] = getWorkletRuntimesFromPool(1);
@@ -46,11 +55,12 @@ describe('microtask draining', () => {
 
   const pendingMicrotaskProbe = (state: Synchronizable<number>) => {
     'worklet';
+    const rootTaskId = getRootTaskId();
     queueMicrotask(() => {
       state.setBlocking(
-        globalThis.__frameTimestamp === undefined
-          ? MICROTASK_RAN_OUTSIDE_FRAME
-          : MICROTASK_RAN_IN_FRAME
+        getRootTaskId() === rootTaskId
+          ? MICROTASK_RAN_IN_SAME_CALL
+          : MICROTASK_RAN_IN_LATER_CALL
       );
     });
   };
@@ -156,7 +166,7 @@ describe('microtask draining', () => {
 
         invoke(state);
 
-        expect(state.getBlocking()).toBe(MICROTASK_RAN_OUTSIDE_FRAME);
+        expect(state.getBlocking()).toBe(MICROTASK_RAN_IN_SAME_CALL);
       });
     });
   });
@@ -177,23 +187,20 @@ describe('microtask draining', () => {
     notify(`${NESTED_NOTIFICATION}_${token}`);
   };
 
-  const nestedMicrotaskRanInFrame = new Map<number, boolean>();
+  const nestedMicrotaskRanInOuterTask = new Map<number, boolean>();
 
-  const onNestedMicrotask = (token: number, ranInFrame: boolean) => {
-    nestedMicrotaskRanInFrame.set(token, ranInFrame);
+  const onNestedMicrotask = (token: number, ranInOuterTask: boolean) => {
+    nestedMicrotaskRanInOuterTask.set(token, ranInOuterTask);
     notify(`${NESTED_MICROTASK_NOTIFICATION}_${token}`);
   };
 
   const nestedSyncCallProbe = (runtimeId: number, token: number) => {
     'worklet';
+    const rootTaskId = getRootTaskId();
     let microtaskRan = false;
     queueMicrotask(() => {
       microtaskRan = true;
-      scheduleOnRN(
-        onNestedMicrotask,
-        token,
-        globalThis.__frameTimestamp !== undefined
-      );
+      scheduleOnRN(onNestedMicrotask, token, getRootTaskId() === rootTaskId);
     });
     const nestedCallResult = runOnRuntimeSyncWithId(runtimeId, () => {
       'worklet';
@@ -216,12 +223,10 @@ describe('microtask draining', () => {
 
   const nestedCases: {
     name: string;
-    outerTaskRunsInFrame: boolean;
     invoke: (token: number) => void;
   }[] = [
     {
       name: 'in a scheduled worklet, UI Runtime',
-      outerTaskRunsInFrame: false,
       invoke: (token) =>
         scheduleOnRuntimeWithId(
           UIRuntimeId,
@@ -232,7 +237,6 @@ describe('microtask draining', () => {
     },
     {
       name: 'in a scheduled worklet, Worker Runtime',
-      outerTaskRunsInFrame: false,
       invoke: (token) =>
         scheduleOnRuntimeWithId(
           workletRuntime.runtimeId,
@@ -243,7 +247,6 @@ describe('microtask draining', () => {
     },
     {
       name: 'in a setTimeout callback, UI Runtime',
-      outerTaskRunsInFrame: true,
       invoke: (token) =>
         scheduleOnRuntimeWithId(
           UIRuntimeId,
@@ -254,7 +257,6 @@ describe('microtask draining', () => {
     },
     {
       name: 'in a setTimeout callback, Worker Runtime',
-      outerTaskRunsInFrame: false,
       invoke: (token) =>
         scheduleOnRuntimeWithId(
           workletRuntime.runtimeId,
@@ -267,14 +269,14 @@ describe('microtask draining', () => {
 
   const nestedTest = isBundleModeEnabled() ? test : test.skip;
 
-  nestedCases.forEach(({ name, outerTaskRunsInFrame, invoke }, token) => {
+  nestedCases.forEach(({ name, invoke }, token) => {
     describe(`synchronous call into the same runtime ${name}`, () => {
       nestedTest(
         'runs queued microtasks only after the outer task ends',
         async () => {
           nestedResults.delete(token);
           nestedCallsExecuted.delete(token);
-          nestedMicrotaskRanInFrame.delete(token);
+          nestedMicrotaskRanInOuterTask.delete(token);
 
           invoke(token);
           await waitForNotification(`${NESTED_NOTIFICATION}_${token}`);
@@ -284,9 +286,7 @@ describe('microtask draining', () => {
           await waitForNotification(
             `${NESTED_MICROTASK_NOTIFICATION}_${token}`
           );
-          expect(nestedMicrotaskRanInFrame.get(token)).toBe(
-            outerTaskRunsInFrame
-          );
+          expect(nestedMicrotaskRanInOuterTask.get(token)).toBe(true);
         }
       );
     });

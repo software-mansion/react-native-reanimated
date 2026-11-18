@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace worklets {
 
 /**
@@ -19,6 +21,12 @@ struct RuntimeTaskState {
    * checkpoint. The outermost call runs the checkpoint when it completes.
    */
   bool microtaskCheckpointRequested{false};
+  /**
+   * Number of outermost calls into the runtime that have started. The runtime
+   * tests read it to tell whether two pieces of code ran in the same outermost
+   * call.
+   */
+  uint64_t rootTaskId{0};
 };
 
 } // namespace worklets

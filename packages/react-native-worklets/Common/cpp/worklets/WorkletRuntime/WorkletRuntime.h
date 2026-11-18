@@ -415,6 +415,9 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     auto &taskState = *taskState_;
     const bool isRootTask = !taskState.rootTaskRunning;
     taskState.rootTaskRunning = true;
+    if (isRootTask) {
+      taskState.rootTaskId++;
+    }
     if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
       taskState.microtaskCheckpointRequested = true;
     }
