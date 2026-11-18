@@ -1,4 +1,5 @@
 import { Platform, StyleSheet, View } from 'react-native';
+import type { SharedTransitionAnimationsValues } from 'react-native-reanimated';
 import Animated, {
   ReduceMotion,
   SharedTransition,
@@ -36,6 +37,7 @@ function Screens({
   targetTranslateX = 0,
   targetColor = styles.target.backgroundColor,
   sourceColor = styles.source.backgroundColor,
+  sourceTopLeftRadius,
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
@@ -48,6 +50,7 @@ function Screens({
   targetTranslateX?: number;
   targetColor?: string;
   sourceColor?: string;
+  sourceTopLeftRadius?: number;
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
@@ -96,7 +99,13 @@ function Screens({
                 ref={source}
                 sharedTransitionTag={tagged ? sourceTag : undefined}
                 sharedTransitionStyle={transitionStyle}
-                style={[styles.source, { backgroundColor: sourceColor }]}>
+                style={[
+                  styles.source,
+                  {
+                    backgroundColor: sourceColor,
+                    borderTopLeftRadius: sourceTopLeftRadius,
+                  },
+                ]}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
             )}
@@ -1216,33 +1225,45 @@ describe('Target style change during native Screen progress', () => {
 describe('Source style change during native Screen progress', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
+  function geometryAt(
+    values: SharedTransitionAnimationsValues,
+    progress: number
+  ) {
+    'worklet';
+    const at = (current: number, target: number) =>
+      current + progress * (target - current);
+    return {
+      width: at(values.currentWidth, values.targetWidth),
+      height: at(values.currentHeight, values.targetHeight),
+      originX: at(values.currentOriginX, values.targetOriginX),
+      originY: at(values.currentOriginY, values.targetOriginY),
+    };
+  }
+
+  function geometryOnly() {
+    return SharedTransition.custom((values) => {
+      'worklet';
+      return {
+        width: values.targetWidth,
+        height: values.targetHeight,
+        originX: values.targetOriginX,
+        originY: values.targetOriginY,
+      };
+    });
+  }
+
   gestureTest(
     'shows a style that the transition does not animate before the next progress',
     async () => {
       const newColor = '#22aa55';
-      const geometryOnly = SharedTransition.custom((values) => {
-        'worklet';
-        return {
-          width: values.targetWidth,
-          height: values.targetHeight,
-          originX: values.targetOriginX,
-          originY: values.targetOriginY,
-        };
-      }).progressAnimation((values, progress) => {
-        'worklet';
-        const at = (current: number, target: number) =>
-          current + progress * (target - current);
-        return {
-          width: at(values.currentWidth, values.targetWidth),
-          height: at(values.currentHeight, values.targetHeight),
-          originX: at(values.currentOriginX, values.targetOriginX),
-          originY: at(values.currentOriginY, values.targetOriginY),
-        };
-      });
-      const tags = await startGesture(geometryOnly);
+      const geometryOnlyProgress = geometryOnly().progressAnimation(geometryAt);
+      const tags = await startGesture(geometryOnlyProgress);
 
       await render(
-        <Screens transitionStyle={geometryOnly} sourceColor={newColor} />
+        <Screens
+          transitionStyle={geometryOnlyProgress}
+          sourceColor={newColor}
+        />
       );
       await expectEventually(() => carrierColor(tags.source)).toBe(
         newColor,
@@ -1261,6 +1282,35 @@ describe('Source style change during native Screen progress', () => {
         newColor,
         ComparisonMode.COLOR
       );
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+    }
+  );
+
+  gestureTest(
+    'shows a corner that React changes next to an animated corner before the next progress',
+    async () => {
+      const cornerProgress = geometryOnly().progressAnimation(
+        (values, progress) => {
+          'worklet';
+          return {
+            ...geometryAt(values, progress),
+            borderTopRightRadius: progress * 20,
+          };
+        }
+      );
+      const tags = await startGesture(cornerProgress);
+
+      await render(
+        <Screens transitionStyle={cornerProgress} sourceTopLeftRadius={10} />
+      );
+      await expectEventually(
+        async () => (await observer().observeBorderRadii(tags.source))?.topLeft
+      ).toBe(10);
+      expect((await observer().observeBorderRadii(tags.source))?.topRight).toBe(
+        5
+      );
+      await expectCarrier(tags.source, 82.5);
       await observer().emitScreenGestureCancel(tags.sourceScreen);
       await expectCarrier(tags.source, 60);
     }

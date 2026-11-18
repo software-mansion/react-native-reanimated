@@ -46,12 +46,26 @@ test('the iOS carrier copies the typed fields and border edges that SharedTransi
   const fields = [...methods.matchAll(/sourceViewProps\.(\w+)/g)]
     .map(([, name]) => name)
     .filter((name) => !['getBorderWidths', 'elevation'].includes(name));
-  const copied = [...copy.matchAll(/copy\(&ViewProps::(\w+)\)/g)].map(
-    ([, name]) => name
-  );
+  const copied = [
+    ...copy.matchAll(/copy\(&ViewProps::(\w+)\)|sourceProps\.(\w+)\.\*/g),
+  ].map(([, field, group]) => field ?? group);
   expect(sorted(copied)).toEqual(
     sorted([...fields.filter((name) => name !== 'opacity'), 'boxShadow'])
   );
+  for (const [type, animated] of [
+    ['CascadedBorderRadii', 'sourceBorderRadii'],
+    ['CascadedBorderColors', 'sourceBorderColors'],
+  ]) {
+    const copiedFields = [
+      ...copy.matchAll(new RegExp(`&${type}::(\\w+)`, 'g')),
+    ].map(([, name]) => name);
+    const animatedFields = [
+      ...methods.matchAll(new RegExp(`${animated}\\.(\\w+)`, 'g')),
+    ].map(([, name]) => name);
+    expect(sorted(copiedFields)).toEqual(
+      expect.arrayContaining(sorted(animatedFields))
+    );
+  }
   const widths = [...methods.matchAll(/sourceBorderWidths\.(\w+)/g)].map(
     ([, name]) => name.toLowerCase()
   );

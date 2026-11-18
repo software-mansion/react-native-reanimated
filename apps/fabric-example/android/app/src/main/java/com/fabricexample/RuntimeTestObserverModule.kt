@@ -115,6 +115,10 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
     }
   }
 
+  override fun observeBorderRadii(tag: Double, promise: Promise) {
+    promise.resolve(null)
+  }
+
   override fun translateNativeParent(tag: Double, y: Double, presentedY: Double, promise: Promise) {
     promise.reject("E_PLATFORM", "Native parent tests require iOS")
   }
