@@ -20,6 +20,20 @@ const BASE_URL = deriveEchoServerUrl();
 /** The echo endpoint of `apps/fabric-example/scripts/runtime-tests-server.js`. */
 const SOCKET_URL = `${BASE_URL.replace(/^http/, 'ws')}/echo/ws`;
 
+type CloseRecord = { code: number; reason: string };
+
+async function fetchCloseRecord(recordUrl: string): Promise<CloseRecord> {
+  'worklet';
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const response = await fetch(recordUrl);
+    if (response.ok) {
+      return (await response.json()) as CloseRecord;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  throw new Error('no close record after 100 attempts');
+}
+
 const describeFn = isBundleModeEnabled() ? describe : describe.skip;
 const testFn = isBundleModeEnabled() ? test : test.skip;
 
@@ -272,9 +286,8 @@ describeFn('WebSocket (live)', () => {
         socket.onerror = () => setFlag('socket errored', notification);
         socket.onopen = () => socket.close();
         socket.onclose = (event: { code: number; wasClean: boolean }) => {
-          fetch(recordUrl)
-            .then((response) => response.json())
-            .then((record: { code: number; reason: string }) => {
+          fetchCloseRecord(recordUrl)
+            .then((record) => {
               if (record.code !== 1005) {
                 setFlag(`server saw code ${record.code}`, notification);
               } else if (record.reason !== '') {
@@ -313,9 +326,8 @@ describeFn('WebSocket (live)', () => {
         socket.onerror = () => setFlag('socket errored', notification);
         socket.onopen = () => socket.close(4321, 'bye');
         socket.onclose = (event: { code: number; reason: string }) => {
-          fetch(recordUrl)
-            .then((response) => response.json())
-            .then((record: { code: number; reason: string }) => {
+          fetchCloseRecord(recordUrl)
+            .then((record) => {
               if (record.code !== 4321 || record.reason !== 'bye') {
                 setFlag(
                   `server saw ${record.code} ${record.reason}`,
@@ -521,7 +533,7 @@ describeFn('WebSocket (live)', () => {
   );
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
-    'WebSocket survives invalid UTF-8 in a text frame, runtime: **%s**',
+    'WebSocket fails the connection on invalid UTF-8 in a text frame, runtime: **%s**',
     async (runtimeKind) => {
       const notification = `ws_bad_utf8_done_${runtimeKind}`;
       const [flag, setFlag] = createTestValue('not_ok');
@@ -529,27 +541,28 @@ describeFn('WebSocket (live)', () => {
 
       dispatchWorklet(() => {
         'worklet';
-        /**
-         * The platforms disagree. NSURLSession fails the connection, which is
-         * what https://www.rfc-editor.org/rfc/rfc6455#section-8.1 requires.
-         * OkHttp decodes the bytes with replacement characters and delivers the
-         * frame, and by then the original bytes are gone, so a repaired frame
-         * cannot be told from a genuine U+FFFD. Either outcome is safe, which
-         * is what this asserts.
-         */
         const socket = new globalThis.WebSocket(`${socketUrl}?invalidUtf8=1`);
+        let errored = false;
+        let delivered = false;
         socket.onmessage = (event: { data: string | ArrayBuffer }) => {
-          const codes = Array.from(String(event.data))
-            .map((character) => character.charCodeAt(0).toString(16))
-            .join(',');
-          setFlag(
-            codes === '61,fffd,62' ? 'ok' : `wrong: ${codes}`,
-            notification
-          );
+          delivered = true;
+          setFlag(`delivered: ${String(event.data)}`, notification);
           socket.close();
         };
-        socket.onclose = (event: { wasClean: boolean }) => {
-          if (event.wasClean === false) {
+        socket.onerror = () => {
+          errored = true;
+        };
+        socket.onclose = (event: { code: number; wasClean: boolean }) => {
+          if (delivered) {
+            return;
+          }
+          if (!errored) {
+            setFlag('closed without an error event', notification);
+          } else if (event.wasClean !== false) {
+            setFlag('reported a clean close', notification);
+          } else if (event.code !== 1007 && event.code !== 1006) {
+            setFlag(`wrong code: ${event.code}`, notification);
+          } else {
             setFlag('ok', notification);
           }
         };
