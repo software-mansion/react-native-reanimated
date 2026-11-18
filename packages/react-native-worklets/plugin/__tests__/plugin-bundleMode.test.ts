@@ -255,11 +255,69 @@ describe('babel plugin in bundleMode', () => {
         }
       `,
         {},
-        { importForwarding: { relativePaths } },
+        {
+          importForwarding: { relativePaths },
+          silenceDangerousPathsWarning: true,
+        },
         filename
       );
       expect(files).toHaveLength(1);
       expect(files[0].content.includes('helperModule')).toBe(forwarded);
+    });
+  });
+
+  describe('dangerous relative paths warning', () => {
+    const input = `
+      function foo() {
+        'worklet';
+        return 1;
+      }
+    `;
+
+    function warningsFor(pluginOpts: PluginOptions) {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        runPlugin(input, {}, pluginOpts);
+        return warn.mock.calls
+          .map(([message]) => String(message))
+          .filter((message) => message.includes('importForwarding.relativePaths'));
+      } finally {
+        warn.mockRestore();
+      }
+    }
+
+    test('warns about a path with only common folder names', () => {
+      const warnings = warningsFor({
+        importForwarding: { relativePaths: ['dist', 'build/esm'] },
+      });
+      expect(warnings).toHaveLength(2);
+      expect(warnings[0]).toContain("'dist'");
+      expect(warnings[0]).toContain('silenceDangerousPathsWarning');
+      expect(warnings[1]).toContain("'build/esm'");
+    });
+
+    test('warns about each path only once', () => {
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['shared'] } })
+      ).toHaveLength(1);
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['shared'] } })
+      ).toHaveLength(0);
+    });
+
+    test('does not warn about a path with a specific folder name', () => {
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['my-lib/dist'] } })
+      ).toHaveLength(0);
+    });
+
+    test('does not warn when silenced', () => {
+      expect(
+        warningsFor({
+          importForwarding: { relativePaths: ['lib'] },
+          silenceDangerousPathsWarning: true,
+        })
+      ).toHaveLength(0);
     });
   });
 

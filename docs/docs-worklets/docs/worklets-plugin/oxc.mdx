@@ -24,6 +24,7 @@ The Oxc plugin is a port of the [Worklets Babel plugin](./about.mdx) to Rust, bu
       moduleNames?: string[];
       relativePaths?: string[];
     };
+    silenceDangerousPathsWarning?: boolean;
   }
   ```
 </details>
@@ -87,6 +88,14 @@ List of paths that determine whether a module forwards its **relative** imports 
 The Oxc plugin always does this for modules of `react-native-worklets`. The paths in this list are added to it.
 
 A common folder name, such as `src`, also matches packages in `node_modules` that have a folder with that name. See the [warning on the Babel plugin page](./options.mdx#importforwardingrelativepaths).
+
+<Badges version="0.14.0">
+  ### silenceDangerousPathsWarning
+</Badges>
+
+Defaults to `false`.
+
+Hides the warning that the plugin prints when an `importForwarding.relativePaths` entry has only common folder names, such as `src`. It works the same way as [`silenceDangerousPathsWarning`](./options.mdx#silencedangerouspathswarning) of the Babel plugin.
 
 ### extraPlugins
 
