@@ -161,6 +161,7 @@ describe('microtask draining', () => {
   });
 
   const NESTED_NOTIFICATION = 'NESTED_SYNC_CALL';
+  const NESTED_MICROTASK_NOTIFICATION = 'NESTED_SYNC_CALL_MICROTASK';
   const nestedResults = new Map<number, boolean>();
 
   const onNestedResult = (token: number, ranDuringTask: boolean) => {
@@ -168,11 +169,16 @@ describe('microtask draining', () => {
     notify(`${NESTED_NOTIFICATION}_${token}`);
   };
 
+  const onNestedMicrotask = (token: number) => {
+    notify(`${NESTED_MICROTASK_NOTIFICATION}_${token}`);
+  };
+
   const nestedSyncCallProbe = (runtimeId: number, token: number) => {
     'worklet';
     let microtaskRan = false;
     queueMicrotask(() => {
       microtaskRan = true;
+      scheduleOnRN(onNestedMicrotask, token);
     });
     runOnRuntimeSyncWithId(runtimeId, () => {
       'worklet';
@@ -235,7 +241,7 @@ describe('microtask draining', () => {
   nestedCases.forEach(({ name, invoke }, token) => {
     describe(`synchronous call into the same runtime ${name}`, () => {
       nestedTest(
-        'does not run queued microtasks before the outer task ends',
+        'runs queued microtasks only after the outer task ends',
         async () => {
           nestedResults.delete(token);
 
@@ -243,6 +249,9 @@ describe('microtask draining', () => {
           await waitForNotification(`${NESTED_NOTIFICATION}_${token}`);
 
           expect(nestedResults.get(token)).toBe(false);
+          await waitForNotification(
+            `${NESTED_MICROTASK_NOTIFICATION}_${token}`
+          );
         }
       );
     });
