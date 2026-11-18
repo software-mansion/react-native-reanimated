@@ -155,7 +155,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
   void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
 
-  jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags);
+  jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered);
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -232,6 +232,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::unique_ptr<UIEventHandlerRegistry> eventHandlerRegistry_;
   RequestRenderFunction requestRender_;
+  RequestRenderFunction requestNativeRender_;
   bool isAnimationRunning_{false};
 
   CallbackId animationBackendCallbackId_{0};

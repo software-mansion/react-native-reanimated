@@ -36,7 +36,13 @@ void ReanimatedMountHook::shadowTreeDidMount(
   ReanimatedSystraceSection s("ReanimatedMountHook::shadowTreeDidMount");
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // With the animation backend this hook only tracks surface unmounts.
+    std::vector<Tag> removedTags;
+    {
+      auto lock = updatesRegistryManager_->lock();
+      mountedRootsRegistry_->set(rootShadowNode);
+      removedTags = updatesRegistryManager_->handleNodeRemovals(rootShadowNode->getSurfaceId());
+    }
+    releaseSharedTransitionConfigs(removedTags);
     return;
   }
 
@@ -57,7 +63,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
     // animations run every mount carries the mount trait, so returning early here
     // would skip removals for the whole animation and leak unmounted nodes if the
     // tree is torn down mid-animation.
-    removedTags = updatesRegistryManager_->handleNodeRemovals();
+    removedTags = updatesRegistryManager_->handleNodeRemovals(rootShadowNode->getSurfaceId());
 
     if (!isReanimatedMount) {
       // When a commit from React Native has finished, we reset the skip commit
@@ -69,13 +75,13 @@ void ReanimatedMountHook::shadowTreeDidMount(
     }
   }
 
-  // Outside the registry lock: a pull holds the layout animations lock while it reads synchronous props.
-  // Only after the mount: the pull that deletes a shared transition source still reads its config.
-  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (!removedTags.empty() && layoutAnimationsProxyRegistry_) {
-      layoutAnimationsManager_->clearSharedTransitionConfigs(
-          layoutAnimationsProxyRegistry_->sharedTransitionConfigsToRelease(removedTags));
-    }
+  releaseSharedTransitionConfigs(removedTags);
+}
+
+// Only after the mount: the pull that deletes a shared transition source still reads its config.
+void ReanimatedMountHook::releaseSharedTransitionConfigs(const std::vector<Tag> &removedTags) const {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->releaseSharedTransitionConfigs(removedTags, *layoutAnimationsManager_);
   }
 }
 

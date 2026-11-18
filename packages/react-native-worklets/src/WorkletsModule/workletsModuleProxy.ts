@@ -119,6 +119,20 @@ export interface WorkletsModuleProxy {
     shouldPersistRemote: boolean
   ): SerializableRef<object>;
 
+  /**
+   * Returns an opaque marker that refers to `serializable` without owning it.
+   * `serializableMappingCache` stores it for clones that hold a JS function.
+   */
+  makeWeakSerializableRef(serializable: SerializableRef<unknown>): object;
+
+  /**
+   * Returns a new reference to the marker's serializable while something else
+   * keeps it alive, or `undefined` once it was released.
+   */
+  derefWeakSerializableRef(
+    marker: object
+  ): SerializableRef<unknown> | undefined;
+
   createCustomSerializable(
     data: SerializableRef<unknown>,
     typeId: number
