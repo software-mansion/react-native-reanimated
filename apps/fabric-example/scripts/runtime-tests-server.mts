@@ -93,6 +93,9 @@ const BOOLEAN_FLAGS = new Set([
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 const ANDROID_HEADLESS_TASK_SERVICE = '.RuntimeTestsHeadlessTaskService';
+const ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS = 30_000;
+// As long as the timeout of the task in RuntimeTestsHeadlessTaskService.
+const ANDROID_HEADLESS_TASK_EXEMPTION_MS = 15 * 60 * 1000;
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
@@ -238,7 +241,6 @@ let metroChild: ChildProcess | null = null;
 let androidSerial: string | null = null;
 let androidLaunchSerial: string | null = null;
 let androidHeadlessTaskStartup: Promise<void> | null = null;
-let addedAndroidPowerSaveExemption = false;
 let iosUdid: string | null = null;
 let crashDiagnosticsPromise: Promise<void> | null = null;
 let afterSuiteChain: Promise<void> = Promise.resolve();
@@ -1712,10 +1714,10 @@ async function exitAfterSuiteCommands(code: number) {
       ['shell', 'am', 'force-stop', ANDROID_APP_ID],
       { timeout: 5000 }
     ).catch(() => {});
-    if (addedAndroidPowerSaveExemption) {
+    if (HEADLESS_TASK) {
       await adb(
         androidLaunchSerial,
-        ['shell', 'cmd', 'deviceidle', 'whitelist', `-${ANDROID_APP_ID}`],
+        ['shell', 'cmd', 'deviceidle', 'tempwhitelist', '-r', ANDROID_APP_ID],
         { timeout: 5000 }
       ).catch(() => {});
     }
@@ -2170,15 +2172,31 @@ async function installAndLaunchAndroid(serial: string) {
 /**
  * Starts the runtime tests in a headless JS task of a process that has no
  * Activity. Android refuses a service start for an app in the background, so
- * the app stays on the power-save allowlist until the run ends.
+ * the app gets a temporary power-save exemption, which expires on its own.
  */
 async function startAndroidHeadlessTask(serial: string) {
   console.log(
     `[runtime-tests] starting ${ANDROID_HEADLESS_TASK_SERVICE} of ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
   const steps = [
-    () => adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]),
-    () => addAndroidPowerSaveExemption(serial),
+    () =>
+      adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID], {
+        timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS,
+      }),
+    () =>
+      adb(
+        serial,
+        [
+          'shell',
+          'cmd',
+          'deviceidle',
+          'tempwhitelist',
+          '-d',
+          String(ANDROID_HEADLESS_TASK_EXEMPTION_MS),
+          ANDROID_APP_ID,
+        ],
+        { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
+      ),
     () => startAndroidHeadlessTaskService(serial),
   ];
   for (const step of steps) {
@@ -2189,40 +2207,24 @@ async function startAndroidHeadlessTask(serial: string) {
   }
 }
 
-async function addAndroidPowerSaveExemption(serial: string) {
-  const { stdout } = await adb(serial, [
-    'shell',
-    'cmd',
-    'deviceidle',
-    'whitelist',
-  ]);
-  if (stdout.includes(`,${ANDROID_APP_ID},`)) {
-    return;
-  }
-  addedAndroidPowerSaveExemption = true;
-  await adb(serial, [
-    'shell',
-    'cmd',
-    'deviceidle',
-    'whitelist',
-    `+${ANDROID_APP_ID}`,
-  ]);
-}
-
 async function startAndroidHeadlessTaskService(serial: string) {
-  const { stdout, stderr } = await adb(serial, [
-    'shell',
-    'am',
-    'startservice',
-    '-n',
-    `${ANDROID_APP_ID}/${ANDROID_HEADLESS_TASK_SERVICE}`,
-    '--es',
-    'RUNTIME_TESTS_LIBRARY',
-    LIBRARY,
-    '--es',
-    'RUNTIME_TESTS_WS_URL',
-    WS_URL,
-  ]);
+  const { stdout, stderr } = await adb(
+    serial,
+    [
+      'shell',
+      'am',
+      'startservice',
+      '-n',
+      `${ANDROID_APP_ID}/${ANDROID_HEADLESS_TASK_SERVICE}`,
+      '--es',
+      'RUNTIME_TESTS_LIBRARY',
+      LIBRARY,
+      '--es',
+      'RUNTIME_TESTS_WS_URL',
+      WS_URL,
+    ],
+    { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
+  );
   const output = `${stdout}${stderr}`;
   if (/^Error/m.test(output)) {
     throw new Error(`The headless task service did not start: ${output}`);
