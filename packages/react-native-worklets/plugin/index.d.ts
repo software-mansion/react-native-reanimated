@@ -78,17 +78,17 @@ export interface PluginOptions {
   /**
    * _EXPERIMENTAL_
    *
-   * This option is required to specify the path to the Hermes bytecode compiler
-   * binary. It is used only when `hermesBytecode` is enabled.
+   * This option is required to specify the path to the Hermes bytecode
+   * compiler binary. It is used only when `hermesBytecode` is enabled.
    */
   getHBCBinary?: () => string;
   /** Temporary internal option to create ShareableUnpacker. */
   limitInitDataHoisting?: boolean;
   /**
    * This option comes in handy for Web apps. Because Babel ordinarily doesn't
-   * get information about the target platform, it includes worklet data in the
-   * bundle that only Native apps find relevant. If you enable this option, your
-   * bundle size will be smaller.
+   * get information about the target platform, it includes worklet data in
+   * the bundle that only Native apps find relevant. If you enable this
+   * option, your bundle size will be smaller.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#omitnativeonlydata}
    *
@@ -97,9 +97,10 @@ export interface PluginOptions {
   omitNativeOnlyData?: boolean;
   /**
    * This option dictates the passed file location for a worklet's source map.
-   * If you enable this option, the file paths will be relative to `process.cwd`
-   * (the current directory where Babel executes). This can be handy for Jest
-   * test snapshots to ensure consistent results across machines.
+   * If you enable this option, the file paths will be relative to
+   * `process.cwd` (the current directory where Babel executes). This can be
+   * handy for Jest test snapshots to ensure consistent results across
+   * machines.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#relativesourcelocation}
    *
@@ -118,9 +119,9 @@ export interface PluginOptions {
   /**
    * This option can also be useful for Web apps. In Reanimated, there are
    * numerous checks to determine the right function implementation for a
-   * specific target platform. Enabling this option changes all the checks that
-   * identify if the target is a Web app to `true`. This alteration can aid in
-   * tree-shaking and contribute to reducing the bundle size.
+   * specific target platform. Enabling this option changes all the checks
+   * that identify if the target is a Web app to `true`. This alteration can
+   * aid in tree-shaking and contribute to reducing the bundle size.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#substitutewebplatformchecks}
    *
@@ -136,14 +137,14 @@ export interface PluginOptions {
    */
   importForwarding?: {
     /**
-     * Modules in this list, along with their subpaths, are forwarded as imports
-     * inside worklets.
+     * Modules in this list, along with their subpaths, are forwarded as
+     * imports inside worklets.
      *
      * For example, adding `'my-library'` also forwards imports from
      * `'my-library/some-file'`, but not from `'my-library-extra'`.
      *
-     * Only named and default imports are forwarded. Namespace imports such as
-     * `import * as lib from 'my-library'` are captured from the closure
+     * Only named and default imports are forwarded. Namespace imports such
+     * as `import * as lib from 'my-library'` are captured from the closure
      * instead.
      *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
@@ -158,9 +159,9 @@ export interface PluginOptions {
      * If a module's path matches any of the provided paths, all relative
      * imports inside that module's worklets will be forwarded.
      *
-     * Use this instead of {@link moduleNames} when you want to forward relative
-     * imports (like `'./utils'`) from a specific package, without affecting
-     * identically-named relative imports in other packages.
+     * Use this instead of {@link moduleNames} when you want to forward
+     * relative imports (like `'./utils'`) from a specific package, without
+     * affecting identically-named relative imports in other packages.
      *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths}
      *
