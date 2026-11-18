@@ -212,6 +212,57 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
+  describe('import forwarding by relative path', () => {
+    test.each([
+      ['forwards in an app folder', '/app/src/screen.js', ['src'], true],
+      [
+        'forwards in a package folder with the same name',
+        '/app/node_modules/some-lib/src/index.js',
+        ['src'],
+        true,
+      ],
+      [
+        'forwards in a package matched by its name',
+        '/app/node_modules/some-lib/src/index.js',
+        ['some-lib'],
+        true,
+      ],
+      [
+        'ignores the folders before the last node_modules',
+        '/my-app/node_modules/some-lib/index.js',
+        ['my-app'],
+        false,
+      ],
+      [
+        'ignores a package before a nested node_modules',
+        '/app/node_modules/outer/node_modules/inner/index.js',
+        ['outer'],
+        false,
+      ],
+      [
+        'does not match part of a folder name',
+        '/app/src-backup/screen.js',
+        ['src'],
+        false,
+      ],
+    ])('%s', (_label, filename, relativePaths, forwarded) => {
+      const { files } = runPlugin(
+        `
+        import { helperValue } from './helperModule';
+        function foo() {
+          'worklet';
+          return helperValue;
+        }
+      `,
+        {},
+        { importForwarding: { relativePaths } },
+        filename
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content.includes('helperModule')).toBe(forwarded);
+    });
+  });
+
   describe('worklet file emission', () => {
     test('writes one worklet file per worklet', () => {
       const input = html`<script>
