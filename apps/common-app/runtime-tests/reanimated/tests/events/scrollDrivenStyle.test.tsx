@@ -17,7 +17,7 @@ import {
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 
-type LogEntry = [kind: number, time: number, offset: number];
+type LogEntry = [kind: number, offset: number, frameTimestamp: number];
 
 type LogGlobal = typeof globalThis & { __scrollDrivenStyleLog?: LogEntry[] };
 
@@ -27,9 +27,11 @@ const ROW_COUNT = 40;
 const ROW_HEIGHT = 80;
 const SCROLL_ATTEMPTS = 5;
 const SCROLL_STEP = 300;
-const SCROLL_SETTLE_MS = 1200;
+const SCROLL_START_MS = 700;
+const SCROLL_SETTLE_MS = 500;
+const INITIAL_OFFSET = 0;
+const OUTSIDE_FRAME = -1;
 const MIN_EVENTS = 5;
-const SAME_CALL_MAX_DELAY_MS = 4;
 
 let scrollViewRef: AnimatedRef<Animated.ScrollView> | null = null;
 
@@ -42,10 +44,10 @@ describe('scroll-driven animated style', () => {
     await render(<Scene />);
     startLog();
 
-    const delays = await scrollUntilEventsArrive();
+    const { offsetChanges, lateStyles } = await scrollUntilEventsArrive();
 
-    expect(delays.length >= MIN_EVENTS).toBe(true);
-    expect(Math.max(...delays) < SAME_CALL_MAX_DELAY_MS).toBe(true);
+    expect(offsetChanges >= MIN_EVENTS).toBe(true);
+    expect(lateStyles).toBe(0);
   });
 });
 
@@ -55,30 +57,48 @@ async function scrollUntilEventsArrive() {
       y: attempt * SCROLL_STEP,
       animated: true,
     });
-    await wait(SCROLL_SETTLE_MS);
-    const delays = getDelays(readLog());
-    if (delays.length >= MIN_EVENTS) {
-      return delays;
+    const result = analyzeLog(await readSettledLog());
+    if (result.offsetChanges >= MIN_EVENTS) {
+      return result;
     }
   }
-  return getDelays(readLog());
+  return analyzeLog(await readSettledLog());
 }
 
-function getDelays(entries: LogEntry[]) {
-  const eventTimeByOffset = new Map<number, number>();
-  const delays: number[] = [];
-  for (const [kind, time, offset] of entries) {
-    if (kind === KIND_EVENT) {
-      eventTimeByOffset.set(offset, time);
-    } else {
-      const eventTime = eventTimeByOffset.get(offset);
-      if (eventTime !== undefined) {
-        delays.push(time - eventTime);
-        eventTimeByOffset.delete(offset);
-      }
+async function readSettledLog() {
+  await wait(SCROLL_START_MS);
+  let entries = readLog();
+  for (;;) {
+    await wait(SCROLL_SETTLE_MS);
+    const nextEntries = readLog();
+    if (nextEntries.length === entries.length) {
+      return nextEntries;
     }
+    entries = nextEntries;
   }
-  return delays;
+}
+
+function analyzeLog(entries: LogEntry[]) {
+  let offsetChanges = 0;
+  let lateStyles = 0;
+  let lastOffset = INITIAL_OFFSET;
+  entries.forEach(([kind, offset], index) => {
+    if (kind !== KIND_EVENT || offset === lastOffset) {
+      return;
+    }
+    lastOffset = offset;
+    offsetChanges++;
+    const next = entries[index + 1];
+    const isComputedInEventCall =
+      next !== undefined &&
+      next[0] === KIND_STYLE &&
+      next[1] === offset &&
+      next[2] === OUTSIDE_FRAME;
+    if (!isComputedInEventCall) {
+      lateStyles++;
+    }
+  });
+  return { offsetChanges, lateStyles };
 }
 
 function startLog() {
@@ -98,14 +118,14 @@ function readLog() {
 function Scene() {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   scrollViewRef = scrollRef;
-  const scrollY = useSharedValue(0);
+  const scrollY = useSharedValue(INITIAL_OFFSET);
 
   const onScroll = useAnimatedScrollHandler((event) => {
     const offset = event.contentOffset.y;
     (globalThis as LogGlobal).__scrollDrivenStyleLog?.push([
       KIND_EVENT,
-      performance.now(),
       offset,
+      OUTSIDE_FRAME,
     ]);
     scrollY.value = offset;
   });
@@ -114,8 +134,8 @@ function Scene() {
     const offset = scrollY.value;
     (globalThis as LogGlobal).__scrollDrivenStyleLog?.push([
       KIND_STYLE,
-      performance.now(),
       offset,
+      globalThis.__frameTimestamp ?? OUTSIDE_FRAME,
     ]);
     return { transform: [{ translateY: offset }] };
   });
