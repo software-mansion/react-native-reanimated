@@ -84,8 +84,7 @@ enum class SharedTransitionDriver : std::uint8_t {
 enum class SharedTransitionLifecycle : std::uint8_t {
   ACTIVE,
   RETIRING,
-  // The run ended where its carrier is on screen, and its carrier stays in a held modal. The run finishes when React
-  // Native removes the modal.
+  // The carrier stays where it is in a held modal until React Native removes the modal.
   STOPPED,
   FINISHED,
 };
@@ -274,7 +273,6 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
 #ifdef __APPLE__
-  // the sources of the runs that start in this pull, which leave their places as hidden views or as carriers
   std::vector<std::shared_ptr<LightNode>> startedSources;
 #endif
   std::vector<RestoreRequest> restoreRequests;

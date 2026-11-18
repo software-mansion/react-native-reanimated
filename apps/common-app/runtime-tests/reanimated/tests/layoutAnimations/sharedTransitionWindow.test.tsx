@@ -788,7 +788,6 @@ async function recordPresentedFrames(
   return frames;
 }
 
-// The Modal stays in the window after the close shows the marker.
 function expectOnScreenUntilModalLeaves(
   frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>
 ) {
@@ -805,7 +804,9 @@ function expectOnScreenUntilModalLeaves(
       ComparisonMode.FLOAT_DISTANCE
     );
   }
-  expect(modalShown.some(([, , marker]) => marker?.opacity === 1)).toBe(true);
+  expect(
+    modalShown.some(([, , closedMarker]) => closedMarker?.opacity === 1)
+  ).toBe(true);
 }
 
 async function modalHostOf(tag: number) {

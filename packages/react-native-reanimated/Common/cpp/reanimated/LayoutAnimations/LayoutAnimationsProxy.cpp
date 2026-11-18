@@ -1189,9 +1189,8 @@ bool LayoutAnimationsProxy::hasRunningAnimations() const {
 
 #ifdef __APPLE__
 // React Native animates a modal that it removes while presented from a snapshot of what the screen shows, which lags a
-// mount by up to two frames. A modal stays mounted until 34 ms, two frames of a 60 Hz display, after the mount in which
-// a source leaves it or a run that its removal ends stops. Then the snapshot shows the views of the runs as they are on
-// screen.
+// mount by up to two frames. A modal stays mounted until 34 ms, two frames of a 60 Hz display, after a source leaves it
+// or a run in it stops.
 bool LayoutAnimationsProxy::holdsModal(
     const std::shared_ptr<LightNode> &node,
     const std::vector<SharedTransitionRun *> &endedRuns,
@@ -1205,8 +1204,7 @@ bool LayoutAnimationsProxy::holdsModal(
 }
 #endif
 
-// A carrier that React removed, and a nested carrier in it, have no path to the modal, so the target of the run shows
-// the modal.
+// A removed carrier, and a carrier nested in it, have no path to the modal, so find the modal from the target.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOfRun(
     const SharedTransitionRun &run,
     const std::shared_ptr<LightNode> &root) const {
@@ -1215,7 +1213,6 @@ std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOfRun(
   return modalContentOf(removed ? run.target : run.carrier, root);
 }
 
-// The child of the innermost modal that shows the view, when the modal is in the subtree of the root.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(
     const std::shared_ptr<LightNode> &view,
     const std::shared_ptr<LightNode> &root) const {

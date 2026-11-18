@@ -369,7 +369,6 @@ class CarrierPlacements {
     leave(node);
   }
 
-  // The carrier moves to the carrier layer of another host, after the carriers there.
   void rehost(const std::shared_ptr<LightNode> &node, std::shared_ptr<LightNode> host) {
     const auto position = static_cast<std::ptrdiff_t>(positionAtRoot(node));
     atRoot_.erase(atRoot_.begin() + position);
