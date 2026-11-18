@@ -1246,8 +1246,7 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
     const ShadowView &source,
     const std::shared_ptr<LightNode> &carrier,
     const PropsParserContext &propsParserContext) const {
-  const auto view = ownCarrierView(source, carrier, propsParserContext);
-  return withStyleOf(view, source, view, propsParserContext);
+  return withStyleOf(ownCarrierView(source, carrier, propsParserContext), source, propsParserContext);
 }
 
 Props::Shared LayoutAnimationsProxy::carrierFrameProps(
@@ -1255,12 +1254,17 @@ Props::Shared LayoutAnimationsProxy::carrierFrameProps(
     const ShadowView &target,
     const ShadowView &legStart,
     const PropsParserContext &propsParserContext) const {
-  const auto view = ownCarrierView(target, run.carrier, propsParserContext);
-  return withStyleOf(view, legStart, view, propsParserContext).props;
+  return withStyleOf(ownCarrierView(target, run.carrier, propsParserContext), legStart, propsParserContext).props;
 }
 
-// The view with each animated style value in which source differs from reference.
 ShadowView LayoutAnimationsProxy::withStyleOf(
+    ShadowView view,
+    const ShadowView &source,
+    const PropsParserContext &propsParserContext) const {
+  return withChangedStyleOf(view, source, view, propsParserContext);
+}
+
+ShadowView LayoutAnimationsProxy::withChangedStyleOf(
     ShadowView view,
     const ShadowView &source,
     const ShadowView &reference,
@@ -1521,8 +1525,8 @@ react::Point LayoutAnimationsProxy::nativeOriginOnScreen(const std::shared_ptr<L
   return positions[0];
 }
 
-// React props of a carrier show while it moves. A style prop that React changes replaces the same prop in the frame
-// base, and the frames keep the values that they animate.
+// A style prop that React changes replaces the same prop in the frame base, and the frames keep the values that they
+// animate.
 void LayoutAnimationsProxy::showCarrierReactProps(
     SharedTransitionRun &run,
     const Props::Shared &previousProps,
@@ -1532,7 +1536,7 @@ void LayoutAnimationsProxy::showCarrierReactProps(
   resolveLightNodeProps(carrier);
   const auto previousView = withProps(carrier->current, previousProps);
   const auto withReactProps = [&](const ShadowView &base) {
-    return withStyleOf(
+    return withChangedStyleOf(
         carrierViewWithStyleOf(base, carrier, propsParserContext), carrier->current, previousView, propsParserContext);
   };
   const auto tag = carrier->current.tag;
@@ -1576,13 +1580,13 @@ void LayoutAnimationsProxy::showCarrierReactProps(
 #endif
 }
 
-// The frame with base in place of previousBase. The geometry and the style values that the frame animates stay.
+// A value that differs from the base comes from a frame.
 ShadowView LayoutAnimationsProxy::withFrameBase(
     const ShadowView &frame,
     const Props::Shared &previousBase,
     const Props::Shared &base,
     const PropsParserContext &propsParserContext) const {
-  return withStyleOf(
+  return withChangedStyleOf(
       withGeometryOf(withProps(frame, base), frame, propsParserContext),
       frame,
       withProps(frame, previousBase),
