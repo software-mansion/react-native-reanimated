@@ -1989,8 +1989,10 @@ void LayoutAnimationsProxy::ensureCarrierLayer(
       propsParserContext,
       nullptr,
       RawProps(folly::dynamic::object("pointerEvents", "none")("importantForAccessibility", "no-hide-descendants")));
+#ifdef __APPLE__
   // iOS mounts a view only with a view event emitter.
   layer.eventEmitter = host->current.eventEmitter;
+#endif
   layer.layoutMetrics.frame.size = host->current.layoutMetrics.frame.size;
   layer.layoutMetrics.layoutDirection = host->current.layoutMetrics.layoutDirection;
   layer.layoutMetrics.pointScaleFactor = host->current.layoutMetrics.pointScaleFactor;
