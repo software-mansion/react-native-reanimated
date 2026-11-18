@@ -193,6 +193,10 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
     Handler(Looper.getMainLooper()).postDelayed({ promise.resolve(null) }, milliseconds.toLong())
   }
 
+  override fun hasCurrentActivity(promise: Promise) {
+    promise.resolve(reactApplicationContext.hasCurrentActivity())
+  }
+
   override fun onHeadlessJsTaskStart(taskId: Int) {}
 
   override fun onHeadlessJsTaskFinish(taskId: Int) {
