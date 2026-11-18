@@ -1205,11 +1205,13 @@ bool LayoutAnimationsProxy::holdsModal(
 }
 #endif
 
-// A carrier that React removed has no parent, so the target of its run shows the modal.
+// A carrier that React removed, and a nested carrier in it, have no path to the modal, so the target of the run shows
+// the modal.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOfRun(
     const SharedTransitionRun &run,
     const std::shared_ptr<LightNode> &root) const {
-  const bool removed = run.carrier->presence() == ReactPresence::REMOVED;
+  const auto detachedCarrier = detachedCarrierOf(run.carrier);
+  const bool removed = detachedCarrier && detachedCarrier->presence() == ReactPresence::REMOVED;
   return modalContentOf(removed ? run.target : run.carrier, root);
 }
 
