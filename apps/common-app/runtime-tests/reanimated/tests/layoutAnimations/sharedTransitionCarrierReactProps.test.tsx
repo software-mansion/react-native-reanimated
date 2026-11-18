@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   interpolateColor,
@@ -6,6 +6,7 @@ import Animated, {
   SharedTransitionBoundary,
   withTiming,
 } from 'react-native-reanimated';
+import { Screen, ScreenContainer } from 'react-native-screens';
 
 import {
   advanceAnimationTimer,
@@ -24,6 +25,7 @@ import {
 import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
+const iosTest = Platform.OS === 'ios' ? test : test.skip;
 const DURATION = 1200;
 const START_COLOR = '#dd5522';
 const NEW_COLOR = '#22aa55';
@@ -43,6 +45,18 @@ const geometryTransition = SharedTransition.custom((values) => {
     height: withTiming(values.targetHeight, config),
     originX: withTiming(values.targetOriginX, config),
     originY: withTiming(values.targetOriginY, config),
+  };
+}).withCallback(notifyFinished);
+
+const colorTransition = SharedTransition.custom((values) => {
+  'worklet';
+  const config = { duration: DURATION, easing: Easing.linear };
+  return {
+    width: withTiming(values.targetWidth, config),
+    height: withTiming(values.targetHeight, config),
+    originX: withTiming(values.targetOriginX, config),
+    originY: withTiming(values.targetOriginY, config),
+    backgroundColor: withTiming(values.targetBackgroundColor, config),
   };
 }).withCallback(notifyFinished);
 
@@ -79,6 +93,45 @@ function Screens({
           style={styles.target}
         />
       </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+// The container detaches the screen of the target, so a custom transition waits for the target to enter the window.
+function OffWindowTargetScreens({
+  active,
+  targetOnWindow,
+  sourceColor = START_COLOR,
+}: {
+  active: boolean;
+  targetOnWindow: boolean;
+  sourceColor?: string;
+}) {
+  const source = useTestRef('source');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          ref={source}
+          sharedTransitionTag="react-props"
+          sharedTransitionStyle={colorTransition}
+          style={[styles.source, { backgroundColor: sourceColor }]}
+        />
+      </SharedTransitionBoundary>
+      <ScreenContainer style={StyleSheet.absoluteFill}>
+        <Screen
+          activityState={targetOnWindow ? 2 : 0}
+          freezeOnBlur={false}
+          style={StyleSheet.absoluteFill}>
+          <SharedTransitionBoundary isActive={active}>
+            <Animated.View
+              sharedTransitionTag="react-props"
+              sharedTransitionStyle={colorTransition}
+              style={styles.target}
+            />
+          </SharedTransitionBoundary>
+        </Screen>
+      </ScreenContainer>
     </View>
   );
 }
@@ -163,6 +216,48 @@ describe('Shared transition shows React props of the moving view', () => {
     await advanceAnimationTimer(DURATION / 4);
     await waitForNotification('react-props-finished');
   });
+
+  iosTest(
+    'starts from a style that React changes while the start waits for the target',
+    async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(
+        <OffWindowTargetScreens active={false} targetOnWindow={false} />
+      );
+      await waitForFrames();
+      const carrierTag = getTestComponent('source').getTag();
+      await render(<OffWindowTargetScreens active targetOnWindow={false} />);
+      await waitForFrames(3);
+
+      await render(
+        <OffWindowTargetScreens
+          active
+          targetOnWindow={false}
+          sourceColor={NEW_COLOR}
+        />
+      );
+      await expectEventually(
+        async () => (await carrierProps(carrierTag))?.backgroundColor
+      ).toBe(NEW_COLOR, ComparisonMode.COLOR);
+
+      await render(
+        <OffWindowTargetScreens active targetOnWindow sourceColor={NEW_COLOR} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(DURATION / 2);
+      expect((await carrierProps(carrierTag))?.backgroundColor).toBe(
+        interpolateColor(
+          0.5,
+          [0, 1],
+          [NEW_COLOR, styles.target.backgroundColor]
+        ),
+        ComparisonMode.COLOR
+      );
+
+      await advanceAnimationTimer(DURATION / 2);
+      await waitForNotification('react-props-finished');
+    }
+  );
 });
 
 const styles = StyleSheet.create({

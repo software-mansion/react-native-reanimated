@@ -1536,8 +1536,9 @@ void LayoutAnimationsProxy::showCarrierReactProps(
         carrierViewWithStyleOf(base, carrier, propsParserContext), carrier->current, previousView, propsParserContext);
   };
   const auto tag = carrier->current.tag;
-  for (auto *frameProps : queuedFrameProps(tag)) {
+  for (const auto [before, frameProps] : queuedCarrierStarts(tag)) {
     *frameProps = withReactProps(withProps(carrier->current, *frameProps)).props;
+    before->props = withReactProps(*before).props;
   }
   LayoutAnimation *animation = nullptr;
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
