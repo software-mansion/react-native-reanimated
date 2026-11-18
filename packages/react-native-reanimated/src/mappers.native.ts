@@ -78,9 +78,13 @@ function createMapperRegistry() {
   let mapperRunFinalizers: (() => void)[] = [];
   global.__requestMapperRunFinalizer = (finalizer: () => void) => {
     mapperRunFinalizers.push(finalizer);
+    if (!processingMappers) {
+      requestMapperRun();
+    }
   };
 
   let isAnyMapperDirty = false;
+  let mapperRunRequested = false;
 
   function mapperRun() {
     if (processingMappers) {
@@ -99,9 +103,13 @@ function createMapperRegistry() {
             mapper.worklet();
           }
         }
+        isAnyMapperDirty = sortedMappers.some((mapper) => mapper.dirty);
       }
     } finally {
       processingMappers = false;
+      if (isAnyMapperDirty) {
+        requestMapperRun();
+      }
       const finalizers = mapperRunFinalizers;
       mapperRunFinalizers = [];
       for (const finalizer of finalizers) {
@@ -110,15 +118,18 @@ function createMapperRegistry() {
     }
   }
 
-  const schedulingFunction = globalThis.requestAnimationFrameFinalizer;
-
   function scheduledMapperRun() {
+    mapperRunRequested = false;
     mapperRun();
-    // We always run mappers on native.
-    schedulingFunction(scheduledMapperRun);
   }
 
-  schedulingFunction(scheduledMapperRun);
+  function requestMapperRun() {
+    if (mapperRunRequested) {
+      return;
+    }
+    mapperRunRequested = true;
+    globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
+  }
 
   global.__mapperRun = mapperRun;
 
@@ -168,8 +179,12 @@ function createMapperRegistry() {
         sv.addListener(mapper.id, () => {
           mapper.dirty = true;
           isAnyMapperDirty = true;
+          if (!processingMappers) {
+            requestMapperRun();
+          }
         });
       }
+      requestMapperRun();
     },
     stop: (mapperID: number) => {
       const mapper = mappers.get(mapperID);

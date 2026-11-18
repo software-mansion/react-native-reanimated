@@ -95,11 +95,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
   // `_maybeFlushUIUpdatesQueue` path as animated-prop updates.
-  // This finalizer runs after the mapper run (which re-queues itself a frame
-  // ahead, so it sits earlier in the finalizer queue). When a mapper-driven
-  // animation is also active, its flush runs first and already commits the
-  // layout-animation updates too, so our `_maybeFlushUIUpdatesQueue` here is a
-  // no-op; when only layout animations run, this is the single flush.
+  // The mapper run is requested on demand, so its finalizer can sit before or
+  // after this one. Running the mappers here first lets a mapper-driven
+  // animation in the same frame flush together with the layout-animation
+  // updates, so the mapper finalizer that follows is a no-op.
   // The backend drives its own flush from `runGrandCallback`, so this is non-backend only.
   let flushRequested = false;
   const scheduleFlush = () => {
@@ -109,6 +108,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     flushRequested = true;
     globalThis.requestAnimationFrameFinalizer(() => {
       flushRequested = false;
+      global.__mapperRun?.();
       global._maybeFlushUIUpdatesQueue();
     });
   };

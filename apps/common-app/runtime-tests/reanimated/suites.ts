@@ -72,6 +72,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useDerivedValue/chain.test');
       require('./tests/core/useSharedValue/animationsCompilerApi.test');
       require('./tests/core/updatesWithoutAnimation.test');
+      require('./tests/core/idleFrames.test');
       // TODO: onLayout event isn't working on Android
       // require('./tests/core/onLayout.test');
     },
