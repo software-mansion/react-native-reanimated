@@ -49,6 +49,7 @@ A shared view moves only between two views in the same window.
 - Reanimated does not see screen animations that run with the native driver of React Native `Animated`, for example the screen animations of `@react-navigation/stack` or the `fade` animation of bottom tabs. A view that moves to such a screen goes to the place where the screen starts its animation, and then jumps when the animation ends. Use `@react-navigation/native-stack`, or bottom tabs without an animation.
 - On Android, a view that moves into a sheet that a native library positions, for example the sheet of `@swmansion/react-native-bottom-sheet`, moves to a place without the offset of the sheet and then jumps to its target. A sheet that React positions, for example `@gorhom/bottom-sheet`, does not have this issue. On iOS, a built-in transition follows the sheet.
 - A view between a [nested shared view](./children-of-shared-views.mdx#children-with-their-own-tag) and its shared parent keeps its source size and place during the move, so its `overflow: hidden` and its background can look wrong. Put the clipping and the background on the shared parent, or give that view its own `sharedTransitionTag`.
+- The clip of the moving view does not follow the transforms of the ancestors that clip it, for example a card that a press animation scales. Scale or move the shared view itself.
 - During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
 
 ## Videos and media
