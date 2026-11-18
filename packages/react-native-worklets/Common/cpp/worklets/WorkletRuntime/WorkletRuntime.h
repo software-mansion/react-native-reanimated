@@ -144,6 +144,18 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /**
+   * Runs a jsi::Function or SerializableWorklet synchronously and discards the
+   * result while the runtime lock is still held.
+   *
+   * Requests a microtask checkpoint.
+   */
+  template <RuntimeCallable TCallable, typename... TArgs>
+  void runSyncAndDiscardAndDrainMicrotasks(const TCallable &callable, TArgs &&...args) const {
+    auto lock = acquireRuntimeLock();
+    static_cast<void>(runSyncImpl<MicrotaskCheckpoint::Run>(callable, std::forward<TArgs>(args)...));
+  }
+
+  /**
    * Runs a jsi::Function or SerializableWorklet synchronously and returns its
    * serialized result.
    *
