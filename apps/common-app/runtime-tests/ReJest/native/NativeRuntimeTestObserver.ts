@@ -80,11 +80,6 @@ export interface Spec extends TurboModule {
     presentedY: number
   ): Promise<void>;
 
-  /** IOS only. Android returns null. */
-  observePresentedFrame(
-    tag: CodegenTypes.Int32
-  ): Promise<PresentedFrame | null>;
-
   /** IOS only. The display link that takes the samples can skip frames. */
   startFrameRecording(tags: ReadonlyArray<CodegenTypes.Int32>): Promise<void>;
 

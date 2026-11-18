@@ -119,10 +119,6 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
     promise.reject("E_PLATFORM", "Native parent tests require iOS")
   }
 
-  override fun observePresentedFrame(tag: Double, promise: Promise) {
-    promise.resolve(null)
-  }
-
   override fun startFrameRecording(tags: ReadableArray, promise: Promise) {
     promise.resolve(null)
   }
