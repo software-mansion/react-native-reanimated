@@ -17,6 +17,7 @@ using namespace worklets;
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
@@ -25,7 +26,8 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
 {
   REAAssertJavaScriptQueue();
 
-  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
+  PlatformDepMethodsHolder platformDepMethodsHolder =
+      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, keyboardObserver);
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
