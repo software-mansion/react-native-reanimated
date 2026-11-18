@@ -84,6 +84,9 @@ describe('Shared transition while a native stack moves its screens', () => {
       expect(samples[landing]?.[0]?.inContainerTransition).toBe(
         presentation === 'modal'
       );
+      expect(samples[samples.length - 1]?.[0]?.inContainerTransition).toBe(
+        false
+      );
       await render(null);
     }
   );
