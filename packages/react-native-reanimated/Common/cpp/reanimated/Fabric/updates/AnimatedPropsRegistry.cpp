@@ -223,6 +223,10 @@ void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
 
 bool AnimatedPropsRegistry::hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto pendingTags = getPendingTags();
+  if (std::any_of(pendingTags.begin(), pendingTags.end(), isViewRegistered)) {
+    return true;
+  }
   return std::any_of(updatesRegistry_.begin(), updatesRegistry_.end(), [&](const auto &entry) {
     const auto viewTag = entry.first;
     const bool hasWork = syncedTags_.contains(viewTag) || writeHistories_.contains(viewTag);

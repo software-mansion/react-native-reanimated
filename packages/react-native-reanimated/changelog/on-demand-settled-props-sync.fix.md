@@ -1,1 +1,1 @@
-Run the settled-props sync only while there are animated props updates that are not yet synced to React, so an app with static animated components can go idle.
+Stop the settled-props polling when no registered view has updates left to sync or evict.
