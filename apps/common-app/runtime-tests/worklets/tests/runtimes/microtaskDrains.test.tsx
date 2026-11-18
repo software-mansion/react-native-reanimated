@@ -214,18 +214,21 @@ describe('microtask draining', () => {
     },
   ];
 
-  const runnableNestedCases = isBundleModeEnabled() ? nestedCases : [];
+  const nestedTest = isBundleModeEnabled() ? test : test.skip;
 
-  runnableNestedCases.forEach(({ name, invoke }) => {
+  nestedCases.forEach(({ name, invoke }) => {
     describe(`synchronous call into the same runtime ${name}`, () => {
-      test('does not run queued microtasks before the outer task ends', async () => {
-        microtaskRanDuringTask = true;
+      nestedTest(
+        'does not run queued microtasks before the outer task ends',
+        async () => {
+          microtaskRanDuringTask = true;
 
-        invoke();
-        await waitForNotification(NESTED_NOTIFICATION);
+          invoke();
+          await waitForNotification(NESTED_NOTIFICATION);
 
-        expect(microtaskRanDuringTask).toBe(false);
-      });
+          expect(microtaskRanDuringTask).toBe(false);
+        }
+      );
     });
   });
 });
