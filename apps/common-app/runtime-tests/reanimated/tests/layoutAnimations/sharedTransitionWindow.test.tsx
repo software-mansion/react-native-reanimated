@@ -212,6 +212,7 @@ function InModal({
           </Modal>
         )}
       </View>
+      <ClosedMarker open={open} />
     </View>
   );
 }
@@ -1072,6 +1073,36 @@ describe('Shared transitions in a Modal that closes', () => {
       await advanceAnimationTimer(1300);
       await expectEventually(() => results.length).toBe(1);
       expect(results).toBe([true]);
+    }
+  );
+
+  iosTest(
+    'keeps the Modal on screen when it closes after the source of its run unmounts',
+    async () => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      const { sourceTag } = await startFlight((active) =>
+        modalScreens(transition, { active })
+      );
+      await renderInModal(transition, { active: true, keepSource: false });
+      const targetTag = getTestComponent('window-target').getTag();
+      const markerTag = getTestComponent('window-closed-marker').getTag();
+      const frames = await recordPresentedFrames(
+        [sourceTag, targetTag, markerTag],
+        () =>
+          closeUntilUnmounted(
+            modalScreens(transition, {
+              active: true,
+              keepSource: false,
+              open: false,
+            }),
+            [targetTag]
+          )
+      );
+      expectOnScreenWhileModalShows(frames, [0], 1);
+      expectHeldAfterClose(frames, 1);
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
     }
   );
 

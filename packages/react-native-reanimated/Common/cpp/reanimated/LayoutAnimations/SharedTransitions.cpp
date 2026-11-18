@@ -1386,20 +1386,18 @@ void LayoutAnimationsProxy::attachCarrier(
   }
 }
 
-// The runs that move a view of the subtree to another view of it. A nested carrier ends only with the carrier at the
-// root that holds it. The carriers at the root keep the order in which the host tree draws them.
+// The runs that move a view of the subtree, or a removed view, to a view of the subtree. A nested carrier ends only
+// with the carrier at the root that holds it. The carriers at the root keep the order in which the host tree draws
+// them.
 std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std::shared_ptr<LightNode> &node) const {
   std::vector<SharedTransitionRun *> runs;
-  for (auto &run : activeSharedTransitionRuns()) {
-    if (run.carrier->placement() == CarrierPlacement::AT_ROOT && isInSubtree(run.carrier, node) &&
-        isInSubtree(run.target, node)) {
-      runs.push_back(&run);
+  for (const auto &carrier : carrierPlacements_.atRoot()) {
+    auto *run = sharedTransitionRun(carrier->current.tag, SharedTransitionLifecycle::ACTIVE);
+    const bool removedOrInSubtree = carrier->presence() == ReactPresence::REMOVED || isInSubtree(carrier, node);
+    if (run && removedOrInSubtree && isInSubtree(run->target, node)) {
+      runs.push_back(run);
     }
   }
-  const auto &atRoot = carrierPlacements_.atRoot();
-  std::ranges::sort(runs, {}, [&atRoot](const SharedTransitionRun *run) {
-    return std::ranges::find(atRoot, run->carrier) - atRoot.begin();
-  });
   for (auto &run : activeSharedTransitionRuns()) {
     if (run.carrier->placement() == CarrierPlacement::NESTED &&
         std::ranges::any_of(
@@ -1417,7 +1415,7 @@ void LayoutAnimationsProxy::stopSharedTransitions(
     TransactionMeta &transaction) const {
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   for (auto *run : runs) {
-    const auto modalContent = modalContentOf(run->carrier, node);
+    const auto modalContent = modalContentOf(run->target, node);
     if (!modalContent) {
       continue;
     }
