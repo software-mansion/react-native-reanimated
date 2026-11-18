@@ -22,7 +22,7 @@ describe('errors thrown by mappers', () => {
         () => copy.value,
         (current) => {
           if (current === THROWING_VALUE) {
-            throw new Error(MAPPER_ERROR);
+            throw new Error('[Reanimated] error thrown by a mapper');
           }
         }
       );
