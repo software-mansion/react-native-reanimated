@@ -38,6 +38,7 @@ function Screens({
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
+  targetScreenClips = false,
 }: {
   transitionStyle?: SharedTransition;
   sourceMounted?: boolean;
@@ -48,6 +49,7 @@ function Screens({
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
+  targetScreenClips?: boolean;
 }) {
   const sourceScreen = useTestRef('gestureSourceScreen');
   const targetScreen = useTestRef('gestureTargetScreen');
@@ -61,7 +63,7 @@ function Screens({
         onAppear={() => notify('gesture-target-appeared')}
         enabled
         activityState={2}
-        style={styles.screen}>
+        style={[styles.screen, targetScreenClips && styles.clips]}>
         <SharedTransitionBoundary
           isActive={!sourceScreenMounted || !sourceActive}>
           <Animated.View
@@ -1390,8 +1392,44 @@ describe('Target moved during native Screen progress', () => {
   });
 });
 
-async function startGesture(transitionStyle = transition) {
-  await render(<Screens transitionStyle={transitionStyle} />);
+describe('Clip of a native Screen gesture', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('moves the clip with the progress of the gesture', async () => {
+    const tags = await startGesture(transition, true);
+    const screenY = (await observer().observeLocationOnScreen(
+      tags.targetScreen
+    ))!.y;
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.75,
+      false,
+      false
+    );
+    // The source has no clipping parent, so its clip is the window.
+    await expectEventually(() => carrierClipY(tags.source)).toBe(
+      0.75 * screenY,
+      ComparisonMode.PIXEL
+    );
+  });
+});
+
+async function carrierClipY(carrier: number) {
+  const content = await observer().observeParent(carrier);
+  const clip = await observer().observeParent(content ?? -1);
+  return (await observer().observeLocationOnScreen(clip ?? -1))?.y;
+}
+
+async function startGesture(
+  transitionStyle = transition,
+  targetScreenClips = false
+) {
+  await render(
+    <Screens
+      transitionStyle={transitionStyle}
+      targetScreenClips={targetScreenClips}
+    />
+  );
   await waitForNotification('gesture-source-appeared');
   await waitForNotification('gesture-target-appeared');
   await expectEventually(
@@ -1495,6 +1533,7 @@ async function expectGone(...tags: number[]) {
 const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
   screen: { position: 'absolute', left: 0, top: 0, width: 300, height: 400 },
+  clips: { overflow: 'hidden' },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: { width: 150, height: 150, backgroundColor: '#2277dd' },
   hiddenTabTarget: { width: 240, height: 240, backgroundColor: '#22aa55' },

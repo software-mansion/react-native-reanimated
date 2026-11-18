@@ -346,6 +346,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (commits) {
       followSharedTransitionTargets(propsParserContext, false);
+      moveWithScrolledTargets();
     }
   }
   addOngoingAnimations(transaction);
@@ -1318,7 +1319,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
         layoutAnimation,
         updateValues,
         layoutAnimation.frameProps || layoutAnimation.type == LayoutAnimationType::EXITING));
-    if (layoutAnimation.clip) {
+    if (isSharedTransition(layoutAnimation.type)) {
       updateCarrierClip(tag, layoutAnimation, mutations, {surfaceId_, *contextContainer_});
     }
     if (layoutAnimation.opacity &&
@@ -1866,13 +1867,15 @@ void LayoutAnimationsProxy::startLayoutAnimation(
 }
 
 void LayoutAnimationsProxy::startSharedTransition(
-    const std::shared_ptr<LightNode> &carrier,
+    SharedTransitionRun &run,
     const ShadowView &before,
     const ShadowView &after,
     const Props::Shared &frameProps,
     const std::shared_ptr<Serializable> &config,
     const std::optional<ContentOpacityRange> contentOpacity,
     const std::optional<AncestorClipRange> clip) const {
+  const auto &carrier = run.carrier;
+  takeTargetScroll(run);
   enqueueLayoutAnimation(ManagedLayoutAnimationStart{
       .tag = carrier->current.tag,
       .type = LayoutAnimationType::SHARED_ELEMENT_TRANSITION,

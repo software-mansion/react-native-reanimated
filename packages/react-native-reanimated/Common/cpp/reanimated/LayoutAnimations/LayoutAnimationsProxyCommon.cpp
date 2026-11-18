@@ -36,38 +36,50 @@ void assertUpdatesRegistryUnlocked() {
 namespace {
 constexpr auto kContentOpacity = "contentOpacity";
 constexpr auto kGeometryProgress = "sharedTransitionGeometryProgress";
-constexpr std::array kClipKeys{"clipOriginX", "clipOriginY", "clipWidth", "clipHeight", "clipBorderRadius"};
+constexpr auto kClipProgress = "sharedTransitionClipProgress";
+struct ClipKey {
+  const char *name;
+  std::optional<Float> AnimatedClip::*animatedValue;
+};
+constexpr std::array kClipKeys{
+    ClipKey{"clipOriginX", &AnimatedClip::originX},
+    ClipKey{"clipOriginY", &AnimatedClip::originY},
+    ClipKey{"clipWidth", &AnimatedClip::width},
+    ClipKey{"clipHeight", &AnimatedClip::height},
+    ClipKey{"clipBorderRadius", &AnimatedClip::borderRadius}};
 
 // The values name each style key after the end, for example currentClipOriginX.
 void setClip(jsi::Runtime &runtime, const jsi::Object &values, const std::string &end, const AncestorClip &clip) {
   const auto &[origin, size] = clip.frame;
   const std::array clipValues{origin.x, origin.y, size.width, size.height, clip.borderRadius};
   for (size_t i = 0; i < kClipKeys.size(); i++) {
-    const std::string key = kClipKeys[i];
+    const std::string key = kClipKeys[i].name;
     const auto name = end + static_cast<char>(std::toupper(key[0])) + key.substr(1);
     values.setProperty(runtime, name.c_str(), clipValues[i]);
   }
 }
 
-// A frame animates only the keys whose ends differ, so the other keys keep their values. A spring can overshoot below
-// zero.
-AncestorClip readClip(jsi::Runtime &runtime, const jsi::Object &style, const AncestorClip &clip) {
-  const auto &[origin, size] = clip.frame;
-  std::array<Float, kClipKeys.size()> clipValues{origin.x, origin.y, size.width, size.height, clip.borderRadius};
-  for (size_t i = 0; i < kClipKeys.size(); i++) {
-    if (style.hasProperty(runtime, kClipKeys[i])) {
-      clipValues[i] = static_cast<Float>(style.getProperty(runtime, kClipKeys[i]).asNumber());
-    }
+// A clip key without a number in a frame uses the default clip, which moves with the clip progress.
+bool readClip(jsi::Runtime &runtime, const jsi::Object &style, LayoutAnimation &animation) {
+  animation.animatedClip = {};
+  bool readsClip = false;
+  if (const auto progress = style.getProperty(runtime, kClipProgress); progress.isNumber()) {
+    animation.clipProgress = progress.asNumber();
+    readsClip = true;
   }
-  const auto [x, y, width, height, borderRadius] = clipValues;
-  return {
-      .frame = {.origin = {x, y}, .size = {std::max<Float>(width, 0), std::max<Float>(height, 0)}},
-      .borderRadius = std::max<Float>(borderRadius, 0),
-  };
+  for (const auto &clipKey : kClipKeys) {
+    const auto value = style.getProperty(runtime, clipKey.name);
+    if (value.isNumber()) {
+      animation.animatedClip.*clipKey.animatedValue = static_cast<Float>(value.asNumber());
+    }
+    readsClip = readsClip || !value.isUndefined();
+  }
+  return readsClip;
 }
 
 bool isCarrierKey(const std::string &name) {
-  return name == kContentOpacity || std::ranges::find(kClipKeys, name) != kClipKeys.end();
+  return name == kContentOpacity || name == kClipProgress ||
+      std::ranges::find(kClipKeys, name, &ClipKey::name) != kClipKeys.end();
 }
 
 SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation) {
@@ -204,10 +216,7 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   if (animatesContentOpacity) {
     layoutAnimation.contentOpacity = std::clamp(newStyle.getProperty(uiRuntime_, kContentOpacity).asNumber(), 0.0, 1.0);
   }
-  const bool animatesClip = layoutAnimation.clip.has_value();
-  if (animatesClip) {
-    layoutAnimation.clip = readClip(uiRuntime_, newStyle, *layoutAnimation.clip);
-  }
+  const bool animatesClip = isSharedTransition(layoutAnimation.type) && readClip(uiRuntime_, newStyle, layoutAnimation);
   const auto viewStyle = animatesContentOpacity || animatesClip ? withoutCarrierKeys(uiRuntime_, newStyle)
                                                                 : jsi::Value(uiRuntime_, newStyle).asObject(uiRuntime_);
 
@@ -269,25 +278,48 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressSharedTransitionGe
   return surfaceId_;
 }
 
-// Without a frame that waits for a pull, the frame on screen is the base.
 void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, LayoutAnimation &animation) const {
   react_native_assert(animation.geometryProgress && "The animation does not interpolate the geometry");
   auto geometry = interpolateGeometryOf(animation);
+  writeFrame(tag, animation, std::move(geometry.props), geometry.frame);
+}
+
+// A frame that waits for a pull moves when the pull sends it. Without such a frame, the frame on screen moves.
+void LayoutAnimationsProxyCommon::moveLayoutAnimationPath(
+    const Tag tag,
+    LayoutAnimation &animation,
+    const react::Point offset) const {
+  const auto previousPathOffset = animation.pathOffset;
+  animation.pathOffset += offset;
+  animation.finalView.layoutMetrics.frame.origin += offset;
+  if (!updateMap_.contains(tag)) {
+    const auto &[origin, size] = animation.currentView.layoutMetrics.frame;
+    const auto workletOrigin = origin - animation.frameOffset - previousPathOffset;
+    writeFrame(
+        tag, animation, folly::dynamic::object(), Frame(workletOrigin.x, workletOrigin.y, size.width, size.height));
+  }
+}
+
+// Without a frame that waits for a pull, the frame on screen is the base.
+void LayoutAnimationsProxyCommon::writeFrame(
+    const Tag tag,
+    LayoutAnimation &animation,
+    folly::dynamic props,
+    const Frame &frame) const {
   const auto pending = updateMap_.find(tag);
 #ifdef ANDROID
   if (pending != updateMap_.end()) {
-    pending->second.style.update(geometry.props);
-    pending->second.frame = geometry.frame;
+    pending->second.style.update(props);
+    pending->second.frame = frame;
     return;
   }
   if (const auto &sentFrame = animation.sentFrame) {
     auto style = sentFrame->style;
-    style.update(geometry.props);
-    updateMap_.insert_or_assign(tag, UpdateValues{sentFrame->base, std::move(style), geometry.frame, false});
+    style.update(props);
+    updateMap_.insert_or_assign(tag, UpdateValues{sentFrame->base, std::move(style), frame, false});
     return;
   }
-  updateMap_.insert_or_assign(
-      tag, UpdateValues{animation.currentView.props, std::move(geometry.props), geometry.frame, false});
+  updateMap_.insert_or_assign(tag, UpdateValues{animation.currentView.props, std::move(props), frame, false});
 #else
   const bool hasPendingFrame = pending != updateMap_.end() && pending->second.newProps;
   updateMap_.insert_or_assign(
@@ -295,8 +327,8 @@ void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, L
       frameValues(
           animation,
           hasPendingFrame ? pending->second.newProps : animation.currentView.props,
-          std::move(geometry.props),
-          geometry.frame,
+          std::move(props),
+          frame,
           hasPendingFrame && pending->second.animatesOpacity));
 #endif
 }
@@ -546,6 +578,9 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
   auto operation = std::move(operations.front());
   operations.pop_front();
   if (auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&operation)) {
+    const auto replacedIt = layoutAnimations_.find(managedStart->tag);
+    const bool stopsReplacedAnimation =
+        replacedIt != layoutAnimations_.end() && replacedIt->second.pathOffset != react::Point{};
     managedStart->before = materializeLayoutAnimation(
         managedStart->tag,
         managedStart->before,
@@ -558,6 +593,7 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
     return PreparedLayoutAnimationStart{
         .start = std::move(*managedStart),
         .window = window_,
+        .stopsReplacedAnimation = stopsReplacedAnimation,
     };
   }
   if (const auto *progressStart = std::get_if<ProgressLayoutAnimationStart>(&operation)) {
@@ -629,6 +665,9 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     }
     const auto &start = preparedStart->start;
     const auto &window = preparedStart->window;
+    if (preparedStart->stopsReplacedAnimation) {
+      layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, start.tag);
+    }
 
     jsi::Object values(uiRuntime_);
     if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
@@ -639,7 +678,6 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
       }
       if (start.clip) {
         setClipValues(uiRuntime_, values, *start.clip);
-        layoutAnimations_.at(start.tag).clip = start.clip->from;
       }
     } else {
       const Snapshot current(start.before, window);
@@ -1042,7 +1080,7 @@ ShadowViewMutation LayoutAnimationsProxyCommon::frameUpdate(
     const UpdateValues &frame,
     [[maybe_unused]] const bool sendsOnlyChangedProps) const {
   auto newView = animation.finalView;
-  updateLayoutMetrics(newView.layoutMetrics, frame.frame, animation.frameOffset);
+  updateLayoutMetrics(newView.layoutMetrics, frame.frame, animation.frameOffset + animation.pathOffset);
 #ifdef ANDROID
   if (sendsOnlyChangedProps && !ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return changedPropsUpdate(animation, frame, std::move(newView));
