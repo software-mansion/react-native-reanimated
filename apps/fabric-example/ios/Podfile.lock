@@ -2160,7 +2160,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
-  - RNGestureHandler (3.3.0-nightly-20260821-439ded45d):
+  - RNGestureHandler (3.5.0):
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -2850,14 +2850,14 @@ SPEC CHECKSUMS:
   ReactNativeDependencies: 250df9f16bb046d86ba35768569ad59fc53945bb
   RNCClipboard: f9431aff11c3a0f6b4fb92d57ea719385594ddb3
   RNCMaskedView: 3c083fa3b863ec66f3b4ac1f55d8b1104c5514f7
-  RNGestureHandler: 448d29cfef9ac77b8da01d405eae0207947f4620
+  RNGestureHandler: ad0afd71e674c1d676faa813eed2a861f46082f6
   RNReanimated: 956129c1b6ceb3f63418b8b1ecf911d6041a6e58
   RNScreens: d1a5255602d993f523f7d7e44a9f7bf058c2ea51
   RNSVG: ac4b01d92ed3f87daea3b4041738a9269d1a96cc
-  RNWorklets: dc8a871d9339e07053e53d81a9dbb3fd22197f8e
+  RNWorklets: e27ff59cc70db5a13a199eb29f7a835da5859197
   SocketRocket: 37aec555668fb852ec12e3c0de59a86ca58f0871
   Yoga: d1c536142c5ff8ec8cd856ab2a7c227a1d875c8e
 
-PODFILE CHECKSUM: aa02e3edc3e22bef4dfdc0540896354be538aac1
+PODFILE CHECKSUM: 0c348e1e9f4eff17f4478b1e3812e5b28d5c2774
 
 COCOAPODS: 1.15.2
