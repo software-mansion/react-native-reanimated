@@ -528,7 +528,9 @@ describe('Nested shared transitions', () => {
     expect(reversed?.y).toBe(waiting.y, ComparisonMode.PIXEL);
     expect(reversed?.width).toBe(waiting.width, ComparisonMode.PIXEL);
     await advanceAnimationTimer(retargetOuterDuration);
-    await expectEventually(() => opacityOf('sourceInner')).toBe(1);
+    await expectEventually(
+      async () => (await readInnerViewState()).inner?.width
+    ).toBe(30, ComparisonMode.PIXEL);
   });
 
   test('keeps a completed retained carrier at its current target while it waits to land', async () => {
