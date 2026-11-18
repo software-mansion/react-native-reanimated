@@ -1,6 +1,6 @@
 'use strict';
 import type { IAnimatedComponentInternal } from '../createAnimatedComponent/commonTypes';
-import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
+import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector.native';
 import { ReanimatedModule } from '../ReanimatedModule';
 
 jest.mock('../ReanimatedModule', () => ({
