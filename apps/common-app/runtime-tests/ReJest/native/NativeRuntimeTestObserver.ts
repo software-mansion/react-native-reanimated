@@ -79,7 +79,11 @@ export interface Spec extends TurboModule {
 
   resumeHost(): Promise<void>;
 
-  startHeadlessTask(taskKey: string): Promise<void>;
+  startHeadlessTask(taskKey: string): Promise<CodegenTypes.Int32>;
+
+  waitForHeadlessTaskFinish(taskId: CodegenTypes.Int32): Promise<void>;
+
+  delay(milliseconds: CodegenTypes.Int32): Promise<void>;
 }
 
 export default TurboModuleRegistry.get<Spec>('RuntimeTestObserver');

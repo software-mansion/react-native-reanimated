@@ -210,6 +210,18 @@ RCT_EXPORT_MODULE()
   reject(@"E_PLATFORM", @"Headless JS tasks require Android", nil);
 }
 
+- (void)waitForHeadlessTaskFinish:(NSInteger)taskId
+                          resolve:(RCTPromiseResolveBlock)resolve
+                           reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Headless JS tasks require Android", nil);
+}
+
+- (void)delay:(NSInteger)milliseconds resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Host pause tests require Android", nil);
+}
+
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {

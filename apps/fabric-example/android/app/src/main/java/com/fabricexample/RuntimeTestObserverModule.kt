@@ -1,6 +1,8 @@
 package com.fabricexample
 
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.view.View
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
@@ -10,6 +12,7 @@ import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.jstasks.HeadlessJsTaskConfig
 import com.facebook.react.jstasks.HeadlessJsTaskContext
+import com.facebook.react.jstasks.HeadlessJsTaskEventListener
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
@@ -19,7 +22,13 @@ import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
 
-class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntimeTestObserverSpec(context) {
+class RuntimeTestObserverModule(context: ReactApplicationContext) :
+  NativeRuntimeTestObserverSpec(context),
+  HeadlessJsTaskEventListener {
+  private var observesHeadlessTasks = false
+  private val finishedHeadlessTasks = mutableSetOf<Int>()
+  private val headlessTaskFinishWaiters = mutableMapOf<Int, Promise>()
+
   override fun getName() = NAME
 
   override fun emitScreenTransitionProgress(
@@ -140,9 +149,42 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
 
   override fun startHeadlessTask(taskKey: String, promise: Promise) {
     UiThreadUtil.runOnUiThread {
-      HeadlessJsTaskContext.getInstance(reactApplicationContext)
-        .startTask(HeadlessJsTaskConfig(taskKey, Arguments.createMap(), HEADLESS_TASK_TIMEOUT_MS, true))
-      promise.resolve(null)
+      val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
+      if (!observesHeadlessTasks) {
+        observesHeadlessTasks = true
+        headlessJsTaskContext.addTaskEventListener(this)
+      }
+      val taskId =
+        headlessJsTaskContext
+          .startTask(HeadlessJsTaskConfig(taskKey, Arguments.createMap(), HEADLESS_TASK_TIMEOUT_MS, true))
+      promise.resolve(taskId)
+    }
+  }
+
+  override fun waitForHeadlessTaskFinish(taskId: Double, promise: Promise) {
+    UiThreadUtil.runOnUiThread {
+      if (finishedHeadlessTasks.remove(taskId.toInt())) {
+        promise.resolve(null)
+      } else {
+        headlessTaskFinishWaiters[taskId.toInt()] = promise
+      }
+    }
+  }
+
+  override fun delay(milliseconds: Double, promise: Promise) {
+    Handler(Looper.getMainLooper()).postDelayed({ promise.resolve(null) }, milliseconds.toLong())
+  }
+
+  override fun onHeadlessJsTaskStart(taskId: Int) {}
+
+  override fun onHeadlessJsTaskFinish(taskId: Int) {
+    UiThreadUtil.runOnUiThread {
+      val waiter = headlessTaskFinishWaiters.remove(taskId)
+      if (waiter == null) {
+        finishedHeadlessTasks.add(taskId)
+      } else {
+        waiter.resolve(null)
+      }
     }
   }
 
