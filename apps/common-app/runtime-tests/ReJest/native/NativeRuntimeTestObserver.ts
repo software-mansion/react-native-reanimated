@@ -38,12 +38,6 @@ export type PresentedFrame = {
   inContainerTransition: boolean;
 };
 
-/** The radii of the corners in the mounted props, in points. */
-export type BorderRadiiObservation = {
-  topLeft: number;
-  topRight: number;
-};
-
 /** A Remove that the iOS mounting layer applied. */
 export type UnmountObservation = {
   parentTag: number;
@@ -74,11 +68,6 @@ export interface Spec extends TurboModule {
   observeTextInput(
     tag: CodegenTypes.Int32
   ): Promise<TextInputObservation | null>;
-
-  /** IOS only. Android returns null. */
-  observeBorderRadii(
-    tag: CodegenTypes.Int32
-  ): Promise<BorderRadiiObservation | null>;
 
   /**
    * IOS only. Moves the native view between the mounted view and its React

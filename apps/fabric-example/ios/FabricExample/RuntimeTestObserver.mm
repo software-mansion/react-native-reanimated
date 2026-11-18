@@ -9,7 +9,6 @@
 #import <RuntimeTestObserverSpec/RuntimeTestObserverSpec.h>
 #import <objc/runtime.h>
 #import <react/renderer/components/rnscreens/EventEmitters.h>
-#import <react/renderer/components/view/ViewProps.h>
 #import <react/renderer/mounting/ShadowTree.h>
 #import <react/renderer/uimanager/UIManager.h>
 #include <vector>
@@ -200,20 +199,6 @@ RCT_EXPORT_MODULE()
         @(t.m31), @(t.m32), @(t.m33), @(t.m34), @(t.m41), @(t.m42), @(t.m43), @(t.m44)
       ]
     });
-  });
-}
-
-- (void)observeBorderRadii:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
-{
-  dispatch_async(dispatch_get_main_queue(), ^{
-    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
-    if (![view isKindOfClass:[RCTViewComponentView class]] || view.window == nil) {
-      resolve((id)kCFNull);
-      return;
-    }
-    const auto &props = static_cast<const facebook::react::ViewProps &>(*((RCTViewComponentView *)view).props);
-    const auto radii = props.borderRadii.resolve(false, {0, facebook::react::UnitType::Point});
-    resolve(@{@"topLeft" : @(radii.topLeft.value), @"topRight" : @(radii.topRight.value)});
   });
 }
 

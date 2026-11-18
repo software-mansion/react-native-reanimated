@@ -1297,41 +1297,8 @@ ShadowView LayoutAnimationsProxy::withStyleOf(
   copy(&ViewProps::shadowOffset);
   copy(&ViewProps::shadowOpacity);
   copy(&ViewProps::shadowRadius);
-  for (const auto corner :
-       {&CascadedBorderRadii::all,
-        &CascadedBorderRadii::topLeft,
-        &CascadedBorderRadii::topRight,
-        &CascadedBorderRadii::bottomLeft,
-        &CascadedBorderRadii::bottomRight,
-        &CascadedBorderRadii::topStart,
-        &CascadedBorderRadii::topEnd,
-        &CascadedBorderRadii::bottomStart,
-        &CascadedBorderRadii::bottomEnd,
-        &CascadedBorderRadii::endEnd,
-        &CascadedBorderRadii::endStart,
-        &CascadedBorderRadii::startEnd,
-        &CascadedBorderRadii::startStart}) {
-    if (sourceProps.borderRadii.*corner != referenceProps.borderRadii.*corner) {
-      viewProps.borderRadii.*corner = sourceProps.borderRadii.*corner;
-    }
-  }
-  for (const auto edge :
-       {&CascadedBorderColors::all,
-        &CascadedBorderColors::left,
-        &CascadedBorderColors::top,
-        &CascadedBorderColors::right,
-        &CascadedBorderColors::bottom,
-        &CascadedBorderColors::start,
-        &CascadedBorderColors::end,
-        &CascadedBorderColors::horizontal,
-        &CascadedBorderColors::vertical,
-        &CascadedBorderColors::block,
-        &CascadedBorderColors::blockStart,
-        &CascadedBorderColors::blockEnd}) {
-    if (sourceProps.borderColors.*edge != referenceProps.borderColors.*edge) {
-      viewProps.borderColors.*edge = sourceProps.borderColors.*edge;
-    }
-  }
+  copy(&ViewProps::borderRadii);
+  copy(&ViewProps::borderColors);
   for (const auto edge :
        {facebook::yoga::Edge::Left,
         facebook::yoga::Edge::Top,
