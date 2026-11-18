@@ -48,11 +48,14 @@ const STACK_READY = 'startStackReady';
 const FORWARD_FINISHED = 'startForwardFinished';
 const TARGET_WINDOW_WAIT = 500;
 
+const forwardFinishTime = makeMutable(0);
+
 const linearTransition = SharedTransition.duration(DURATION)
   .easing(Easing.linear)
   .withCallback((finished) => {
     'worklet';
     if (finished) {
+      forwardFinishTime.value = performance.now();
       notify(FORWARD_FINISHED);
     }
   });
@@ -236,8 +239,10 @@ function measureWindowY(ref: AnimatedRef<Animated.View>) {
 }
 
 // Records the source and target that each shared transition start gets, in root coordinates.
-async function recordSharedTransitionStarts() {
+// Blocks the main thread for `stall` ms after the first start, in the mount that runs it.
+async function recordSharedTransitionStarts(stall = 0) {
   const starts = makeMutable<SharedTransitionStart[]>([]);
+  const stallEnd = makeMutable(0);
   await runOnUIBlocking(() => {
     'worklet';
     const original = global.LayoutAnimationsManager;
@@ -255,6 +260,13 @@ async function recordSharedTransitionStarts() {
           ];
         }
         original.start(tag, type, values, config);
+        if (type === SHARED_ELEMENT_TRANSITION && stallEnd.value === 0) {
+          const end = performance.now() + stall;
+          while (performance.now() < end) {
+            // The main thread is busy.
+          }
+          stallEnd.value = performance.now();
+        }
       },
       stop: original.stop,
     };
@@ -262,6 +274,7 @@ async function recordSharedTransitionStarts() {
   });
   return {
     starts,
+    stallEnd,
     stop: () =>
       runOnUIBlocking(() => {
         'worklet';
@@ -331,6 +344,24 @@ describe('Shared transition to a new native stack screen', () => {
     } finally {
       await stop();
     }
+    await render(null);
+  });
+
+  test('flies for its duration after the mount of the new screen blocks the main thread', async () => {
+    await render(<StackWithHeader />);
+    await waitForNotification(STACK_READY);
+    await waitForFrames(10);
+    const { stallEnd, stop } = await recordSharedTransitionStarts(600);
+    try {
+      navigation.navigate('Second');
+      await waitForNotification(FORWARD_FINISHED);
+    } finally {
+      await stop();
+    }
+    expect(forwardFinishTime.value - stallEnd.value).toBeWithinRange(
+      DURATION - 50,
+      3 * DURATION
+    );
     await render(null);
   });
 });
