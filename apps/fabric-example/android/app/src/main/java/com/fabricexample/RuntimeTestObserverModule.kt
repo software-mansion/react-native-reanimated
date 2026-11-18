@@ -8,6 +8,7 @@ import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.bridge.WritableArray
 import com.facebook.react.jstasks.HeadlessJsTaskConfig
@@ -116,6 +117,14 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
 
   override fun translateNativeParent(tag: Double, y: Double, presentedY: Double, promise: Promise) {
     promise.reject("E_PLATFORM", "Native parent tests require iOS")
+  }
+
+  override fun startFrameRecording(tags: ReadableArray, promise: Promise) {
+    promise.resolve(null)
+  }
+
+  override fun takeFrameRecording(promise: Promise) {
+    promise.resolve(null)
   }
 
   override fun startUnmountRecording(promise: Promise) {

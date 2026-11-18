@@ -28,6 +28,85 @@ static void recordUnmountsOf(Class viewClass)
                            }));
 }
 
+static BOOL isInContainerTransition(UIView *view)
+{
+  for (UIView *current = view; current; current = current.superview) {
+    UIResponder *responder = current.nextResponder;
+    if ([responder isKindOfClass:[UIViewController class]] && ((UIViewController *)responder).transitionCoordinator) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+static id presentedFrame(UIView *view)
+{
+  if (view.window == nil) {
+    return (id)kCFNull;
+  }
+  CALayer *presentationLayer = view.layer.presentationLayer;
+  CALayer *layer = presentationLayer ?: view.layer;
+  CALayer *windowLayer = presentationLayer ? view.window.layer.presentationLayer : view.window.layer;
+  const CGRect frame = [layer convertRect:layer.bounds toLayer:windowLayer];
+  float opacity = 1;
+  for (CALayer *current = layer; current; current = current.superlayer) {
+    opacity *= current.hidden ? 0 : current.opacity;
+  }
+  return @{
+    @"x" : @(frame.origin.x),
+    @"y" : @(frame.origin.y),
+    @"width" : @(frame.size.width),
+    @"height" : @(frame.size.height),
+    @"opacity" : @(opacity),
+    @"inContainerTransition" : @(isInContainerTransition(view)),
+  };
+}
+
+@interface FrameRecorder : NSObject
+- (instancetype)initWithTags:(NSArray<NSNumber *> *)tags registry:(RCTComponentViewRegistry *)registry;
+- (NSArray<NSArray *> *)stop;
+@end
+
+@implementation FrameRecorder {
+  NSArray<NSNumber *> *_tags;
+  __weak RCTComponentViewRegistry *_registry;
+  NSMutableArray<NSArray *> *_samples;
+  CADisplayLink *_displayLink;
+}
+
+- (instancetype)initWithTags:(NSArray<NSNumber *> *)tags registry:(RCTComponentViewRegistry *)registry
+{
+  if (self = [super init]) {
+    _tags = tags;
+    _registry = registry;
+    _samples = [NSMutableArray new];
+    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(sample)];
+    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
+  return self;
+}
+
+- (void)sample
+{
+  // A mount earlier in this frame shows in the presentation layers only after a Core Animation commit.
+  [CATransaction flush];
+  NSMutableArray *frames = [NSMutableArray arrayWithCapacity:_tags.count];
+  for (NSNumber *tag in _tags) {
+    [frames addObject:presentedFrame([_registry findComponentViewWithTag:tag.intValue])];
+  }
+  [_samples addObject:frames];
+}
+
+- (NSArray<NSArray *> *)stop
+{
+  [_displayLink invalidate];
+  return _samples;
+}
+
+@end
+
+static FrameRecorder *frameRecorder;
+
 @interface RuntimeTestObserver : NSObject <NativeRuntimeTestObserverSpec>
 @property (nonatomic, weak) RCTSurfacePresenter *surfacePresenter;
 - (std::shared_ptr<const facebook::react::RNSScreenEventEmitter>)screenEventEmitter:(NSInteger)tag;
@@ -168,6 +247,24 @@ RCT_EXPORT_MODULE()
       [nativeParent.layer addAnimation:presented forKey:key];
     }
     resolve(nil);
+  });
+}
+
+- (void)startFrameRecording:(NSArray *)tags resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [frameRecorder stop];
+    frameRecorder = [[FrameRecorder alloc] initWithTags:tags
+                                               registry:self.surfacePresenter.mountingManager.componentViewRegistry];
+    resolve(nil);
+  });
+}
+
+- (void)takeFrameRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    resolve([frameRecorder stop] ?: @[]);
+    frameRecorder = nil;
   });
 }
 

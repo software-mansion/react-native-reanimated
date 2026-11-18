@@ -28,6 +28,16 @@ export type TransformObservation = {
   matrix: ReadonlyArray<number>;
 };
 
+/** The frame is in the window. The opacity includes the ancestor opacities. */
+export type PresentedFrame = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  inContainerTransition: boolean;
+};
+
 /** A Remove that the iOS mounting layer applied. */
 export type UnmountObservation = {
   parentTag: number;
@@ -69,6 +79,14 @@ export interface Spec extends TurboModule {
     y: number,
     presentedY: number
   ): Promise<void>;
+
+  /** IOS only. The display link that takes the samples can skip frames. */
+  startFrameRecording(tags: ReadonlyArray<CodegenTypes.Int32>): Promise<void>;
+
+  /** An entry is null when its view is not in a window. Android returns null. */
+  takeFrameRecording(): Promise<ReadonlyArray<
+    ReadonlyArray<PresentedFrame | null>
+  > | null>;
 
   startUnmountRecording(): Promise<void>;
 
