@@ -131,11 +131,13 @@ async function validUrls(filesByUrl) {
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
-  const linksToCheck = data.filter(
-    ({ url }) =>
+  const linksToCheck = data.filter(({ url }) => {
+    const urlWithoutFragment = url.split('#')[0];
+    return (
       !skippedExactUrls.includes(url) &&
-      !skippedUrls.some((skippedUrl) => url.includes(skippedUrl))
-  );
+      !skippedUrls.some((skippedUrl) => urlWithoutFragment.includes(skippedUrl))
+    );
+  });
   await validUrls(groupFilesByUrl(linksToCheck));
 }
 
