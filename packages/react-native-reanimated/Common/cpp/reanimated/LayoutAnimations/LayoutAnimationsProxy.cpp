@@ -1241,14 +1241,6 @@ bool LayoutAnimationsProxy::isInHeldModal([[maybe_unused]] const std::shared_ptr
 // Android can mount that JS-thread pull first.
 void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) const {
   std::vector<std::shared_ptr<LightNode>> finishedExits;
-  for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    const auto nodeIt = lightNodes_.find(tag);
-    if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
-        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second)) {
-      continue;
-    }
-    finishedExits.push_back(nodeIt->second);
-  }
 #ifdef __APPLE__
   const auto now = std::chrono::steady_clock::now();
   for (auto &node : transaction.modalsToHold) {
@@ -1267,6 +1259,14 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
     return false;
   });
 #endif
+  for (const auto &[tag, completedAnimation] : completedAnimations_) {
+    const auto nodeIt = lightNodes_.find(tag);
+    if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
+        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second)) {
+      continue;
+    }
+    finishedExits.push_back(nodeIt->second);
+  }
   transaction.dueRemovals = collectRemovals(finishedExits);
 }
 
