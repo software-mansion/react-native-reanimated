@@ -161,9 +161,9 @@ const labelTransition = SharedTransition.duration(1500)
   });
 
 const LABELED_BOXES = {
-  small: { width: 100, height: 60, borderRadius: 10 },
-  round: { top: 100, width: 200, height: 100, borderRadius: 30 },
-  wide: { top: 250, width: 200, height: 60, borderRadius: 10 },
+  small: { width: 100, height: 60 },
+  large: { top: 100, width: 200, height: 100, backgroundColor: '#2277dd' },
+  wide: { top: 250, width: 200, height: 60 },
 } as const;
 
 type LabeledScreen = keyof typeof LABELED_BOXES;
@@ -201,6 +201,13 @@ function LabeledBox({ screen }: { screen: LabeledScreen }) {
 
 async function mountedWidth(name: string) {
   return (await getTestComponent(name).getMountedViewProps())?.width;
+}
+
+function carrierProps(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false);
+  });
 }
 
 describe('Shared transition carrier changes during a run', () => {
@@ -305,45 +312,33 @@ describe('Shared transition carrier changes during a run', () => {
     }
   );
 
-  observerTest(
-    'keeps the style on screen when a new screen continues a run that waits to land',
-    async () => {
-      await mockAnimationTimer({ autoAdvance: false });
-      await render(<LabeledScreens stack={['small', 'round']} />);
-      await waitForFrames();
-      const carrierTag = getTestComponent('round').getTag();
+  test('keeps the style on screen when a new screen continues a run that waits to land', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<LabeledScreens stack={['small', 'large']} />);
+    await waitForFrames();
+    const carrierTag = getTestComponent('large').getTag();
 
-      await render(<LabeledScreens stack={['small']} />);
-      await waitForFrames(3);
-      await advanceAnimationTimer(400);
-      expect(await RuntimeTestObserver!.observeBorderRadius(carrierTag)).toBe(
-        10,
-        ComparisonMode.PIXEL
-      );
+    await render(<LabeledScreens stack={['small']} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(400);
 
-      await render(<LabeledScreens stack={['small', 'wide']} />);
-      await waitForFrames(3);
-      await advanceAnimationTimer(150);
-      const carrierWidth = await runOnUIBlocking(() => {
-        'worklet';
-        return global._obtainMountedViewProps(carrierTag, false)?.width;
-      });
-      expect(carrierWidth).toBeWithinRange(101, 199);
-      expect(await RuntimeTestObserver!.observeBorderRadius(carrierTag)).toBe(
-        10,
-        ComparisonMode.PIXEL
-      );
+    await render(<LabeledScreens stack={['small', 'wide']} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(150);
+    const carrier = await carrierProps(carrierTag);
+    expect(carrier?.width).toBeWithinRange(101, 199);
+    expect(carrier?.backgroundColor).toBe(
+      styles.labeled.backgroundColor,
+      ComparisonMode.COLOR
+    );
 
-      await advanceAnimationTimer(1500);
-      await waitForNotification('label-finished');
-      await expectEventually(async () => {
-        const target = getTestComponent('wide');
-        const props = await target.getMountedViewProps();
-        const radius = await target.getBorderRadiusObservation();
-        return props?.opacity === 1 && Math.abs((radius ?? 0) - 10) < 0.5;
-      }).toBe(true);
-    }
-  );
+    await advanceAnimationTimer(1500);
+    await waitForNotification('label-finished');
+    await expectEventually(
+      async () =>
+        (await getTestComponent('wide').getMountedViewProps())?.opacity
+    ).toBe(1);
+  });
 });
 
 const styles = StyleSheet.create({

@@ -48,15 +48,6 @@ export class TestComponent {
     return RuntimeTestObserver.observeTransform(this.getTag());
   }
 
-  public getBorderRadiusObservation() {
-    if (!RuntimeTestObserver) {
-      throw new Error(
-        'RuntimeTestObserver requires a FabricExample runtime-test build'
-      );
-    }
-    return RuntimeTestObserver.observeBorderRadius(this.getTag());
-  }
-
   public getTextInputObservation() {
     if (!RuntimeTestObserver) {
       throw new Error(

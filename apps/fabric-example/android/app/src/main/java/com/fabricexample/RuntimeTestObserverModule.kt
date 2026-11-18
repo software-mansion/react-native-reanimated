@@ -6,12 +6,10 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.bridge.WritableArray
-import com.facebook.react.uimanager.BackgroundStyleApplicator
 import com.facebook.react.uimanager.IllegalViewOperationException
 import com.facebook.react.uimanager.PixelUtil
 import com.facebook.react.uimanager.UIManagerHelper
 import com.facebook.react.uimanager.common.UIManagerType
-import com.facebook.react.uimanager.style.BorderRadiusProp
 import com.facebook.react.views.textinput.ReactEditText
 import java.util.Locale
 import kotlin.math.cos
@@ -86,17 +84,6 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) : NativeRuntim
         Locale.ROOT, "#%06x%02x", view.currentHintTextColor and 0xffffff, view.currentHintTextColor ushr 24
       ))
       promise.resolve(observation)
-    }
-  }
-
-  override fun observeBorderRadius(tag: Double, promise: Promise) {
-    UiThreadUtil.runOnUiThread {
-      val view = mountedView(tag)
-      val radius = view?.let {
-        BackgroundStyleApplicator.getBorderRadius(it, BorderRadiusProp.BORDER_TOP_LEFT_RADIUS)
-          ?: BackgroundStyleApplicator.getBorderRadius(it, BorderRadiusProp.BORDER_RADIUS)
-      }
-      promise.resolve(view?.let { radius?.resolve(PixelUtil.toDIPFromPixel(it.width.toFloat()))?.toDouble() ?: 0.0 })
     }
   }
 

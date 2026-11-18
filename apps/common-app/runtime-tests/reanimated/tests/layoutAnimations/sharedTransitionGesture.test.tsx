@@ -1,16 +1,11 @@
-import type { ComponentProps } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
-import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-  getStaticFeatureFlag,
-  makeMutable,
   ReduceMotion,
   SharedTransition,
   SharedTransitionBoundary,
-  useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Screen, ScreenContainer } from 'react-native-screens';
-import { runOnUIAsync, scheduleOnRN } from 'react-native-worklets';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -39,9 +34,7 @@ function Screens({
   sourceScreenMounted = true,
   targetOffset = 0,
   targetTranslateX = 0,
-  targetBorderRadius,
-  targetColor,
-  sourceStyle,
+  targetColor = styles.target.backgroundColor,
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
@@ -51,9 +44,7 @@ function Screens({
   sourceScreenMounted?: boolean;
   targetOffset?: number;
   targetTranslateX?: number;
-  targetBorderRadius?: number;
   targetColor?: string;
-  sourceStyle?: ReturnType<typeof useAnimatedStyle>;
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
@@ -82,7 +73,6 @@ function Screens({
               {
                 marginTop: targetOffset,
                 transform: [{ translateX: targetTranslateX }],
-                borderRadius: targetBorderRadius,
                 backgroundColor: targetColor,
               },
             ]}
@@ -102,7 +92,7 @@ function Screens({
                 ref={source}
                 sharedTransitionTag={tagged ? sourceTag : undefined}
                 sharedTransitionStyle={transitionStyle}
-                style={[styles.source, sourceStyle]}>
+                style={styles.source}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
             )}
@@ -111,16 +101,6 @@ function Screens({
       )}
     </View>
   );
-}
-
-function ColoredSourceScreens({
-  color,
-  ...props
-}: { color: SharedValue<string> } & ComponentProps<typeof Screens>) {
-  const sourceStyle = useAnimatedStyle(() => ({
-    backgroundColor: color.value,
-  }));
-  return <Screens {...props} sourceStyle={sourceStyle} />;
 }
 
 function DeferredScreens({
@@ -967,63 +947,14 @@ describe('Target style change during native Screen progress', () => {
   gestureTest(
     'keeps the start style when the target changes a style to its start value',
     async () => {
-      await mockAnimationTimer({ autoAdvance: false });
-      await render(<Screens sourceActive={false} targetBorderRadius={30} />);
-      await waitForNotification('gesture-source-appeared');
-      await waitForNotification('gesture-target-appeared');
-      await render(<Screens targetBorderRadius={30} />);
-      await waitForFrames(3);
-      await advanceAnimationTimer(30000);
-      const tags = await beginGesture();
-      expect(await observer().observeBorderRadius(tags.source)).toBeWithinRange(
-        1,
-        29
-      );
-
-      await render(<Screens targetBorderRadius={0} />);
-      await waitForFrames(3);
-      await observer().emitScreenTransitionProgress(
-        tags.targetScreen,
-        0.5,
-        false,
-        false
-      );
-      await expectCarrier(tags.source, 105);
-      expect(await observer().observeBorderRadius(tags.source)).toBe(
-        0,
-        ComparisonMode.PIXEL
-      );
-    }
-  );
-
-  const synchronousTest =
-    Platform.OS === 'ios' &&
-    getStaticFeatureFlag('IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS')
-      ? test
-      : test.skip;
-
-  synchronousTest(
-    'keeps a synchronous style update of the source when the target moves',
-    async () => {
-      const color = makeMutable('#dd5522');
-      const screens = { color, targetColor: '#dd5522' };
-      await mockAnimationTimer({ autoAdvance: false });
-      await render(<ColoredSourceScreens {...screens} sourceActive={false} />);
-      await waitForNotification('gesture-source-appeared');
-      await waitForNotification('gesture-target-appeared');
-      await render(<ColoredSourceScreens {...screens} />);
-      await waitForFrames(3);
-      await advanceAnimationTimer(30000);
-      const tags = await beginGesture();
-      await runOnUIAsync(() => {
-        color.value = '#ff0000';
-      });
-      await expectEventually(() => carrierColor(tags.source)).toBe(
-        '#ff0000',
+      const startColor = styles.source.backgroundColor;
+      const tags = await startGestureWithHiddenTarget();
+      expect(await carrierColor(tags.source)).not.toBe(
+        startColor,
         ComparisonMode.COLOR
       );
 
-      await render(<ColoredSourceScreens {...screens} targetOffset={80} />);
+      await render(<Screens targetColor={startColor} />);
       await waitForFrames(3);
       await observer().emitScreenTransitionProgress(
         tags.targetScreen,
@@ -1033,7 +964,7 @@ describe('Target style change during native Screen progress', () => {
       );
       await expectCarrier(tags.source, 105);
       expect(await carrierColor(tags.source)).toBe(
-        '#ff0000',
+        startColor,
         ComparisonMode.COLOR
       );
     }

@@ -123,18 +123,6 @@ RCT_EXPORT_MODULE()
   });
 }
 
-- (void)observeBorderRadius:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
-{
-  dispatch_async(dispatch_get_main_queue(), ^{
-    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
-    if (view.window == nil) {
-      resolve((id)kCFNull);
-      return;
-    }
-    resolve(@(view.layer.cornerRadius));
-  });
-}
-
 - (void)observeTextInput:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{

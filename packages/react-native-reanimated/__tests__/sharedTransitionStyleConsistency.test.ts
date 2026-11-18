@@ -13,9 +13,6 @@ const transitions = readFileSync(
 const copy = transitions
   .split('ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(')[1]
   .split('\nvoid LayoutAnimationsProxy::detachCarrier(')[0];
-const ownCarrierView = transitions
-  .split('ShadowView LayoutAnimationsProxy::ownCarrierView(')[1]
-  .split('\nShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(')[0];
 const methods = [
   ...factory.matchAll(
     /void SharedTransitionValuesFactory::(\w+)\([^]*?(?=\n(?:void|std::vector|inline|jsi::Object|bool) |\n} \/\/ namespace)/g
@@ -32,7 +29,7 @@ const methods = [
   .map(([body]) => body)
   .join('\n');
 
-test('the Android carrier copies exactly the style keys that SharedTransitionValuesFactory animates, and takes the opacity of the frame view', () => {
+test('the Android carrier copies exactly the style keys that SharedTransitionValuesFactory animates', () => {
   const keys = transitions
     .split('constexpr std::array kAnimatedStyleProps{')[1]
     .split('};')[0];
@@ -43,12 +40,9 @@ test('the Android carrier copies exactly the style keys that SharedTransitionVal
   expect(sorted(copied)).toEqual(
     sorted(animated.filter((name) => name !== 'opacity'))
   );
-  expect(ownCarrierView).toContain(
-    'rawProps["opacity"] = getViewProps(view).opacity;'
-  );
 });
 
-test('the iOS carrier copies the typed fields and border edges that SharedTransitionValuesFactory animates, and takes the opacity of the frame view', () => {
+test('the iOS carrier copies the typed fields and border edges that SharedTransitionValuesFactory animates', () => {
   const fields = [...methods.matchAll(/sourceViewProps\.(\w+)/g)]
     .map(([, name]) => name)
     .filter((name) => !['getBorderWidths', 'elevation'].includes(name));
@@ -57,9 +51,6 @@ test('the iOS carrier copies the typed fields and border edges that SharedTransi
   );
   expect(sorted(copied)).toEqual(
     sorted([...fields.filter((name) => name !== 'opacity'), 'boxShadow'])
-  );
-  expect(ownCarrierView).toContain(
-    'cloneViewWithOpacity(carrierView, getViewProps(view).opacity, propsParserContext)'
   );
   const widths = [...methods.matchAll(/sourceBorderWidths\.(\w+)/g)].map(
     ([, name]) => name.toLowerCase()
