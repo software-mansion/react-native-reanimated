@@ -233,6 +233,18 @@ describe('babel plugin in bundleMode', () => {
         ['my-app'],
         false,
       ],
+      [
+        'ignores a package before a nested node_modules',
+        '/app/node_modules/outer/node_modules/inner/index.js',
+        ['outer'],
+        false,
+      ],
+      [
+        'does not match part of a folder name',
+        '/app/src-backup/screen.js',
+        ['src'],
+        false,
+      ],
     ])('%s', (_label, filename, relativePaths, forwarded) => {
       const { files } = runPlugin(
         `
