@@ -13,6 +13,21 @@ export function setupRequestAnimationFrame() {
 
   let queuedFinalizers: (() => void)[] = [];
 
+  /*
+   * The native frame is requested only while there is work for it: a queued
+   * callback, a queued finalizer, or a microtask queued outside of a task that
+   * drains them. An idle UI runtime doesn't request frames, so the display can
+   * drop its refresh rate and the main thread can sleep.
+   */
+  let nativeFrameRequested = false;
+
+  function requestNativeFrame() {
+    if (!nativeFrameRequested) {
+      nativeFrameRequested = true;
+      globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+    }
+  }
+
   function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
@@ -44,6 +59,7 @@ export function setupRequestAnimationFrame() {
   ): number {
     const handle = queuedCallbacksEnd++;
     queuedCallbacks.push(callback);
+    requestNativeFrame();
     return handle;
   }
 
@@ -60,10 +76,9 @@ export function setupRequestAnimationFrame() {
   }
 
   function nativeFlushQueue(timestamp: number) {
+    // Work queued while the frame is flushed requests the next frame.
+    nativeFrameRequested = false;
     flushQueue(timestamp);
-
-    /* Schedule next frame */
-    globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
   }
 
   function flushQueue(timestamp: number) {
@@ -77,10 +92,21 @@ export function setupRequestAnimationFrame() {
     cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
   globalThis.requestAnimationFrameFinalizer = (callback: () => void) => {
     queuedFinalizers.push(callback);
+    requestNativeFrame();
   };
 
-  /* Start the loop */
-  globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+  /*
+   * A microtask queued outside of a task that drains microtasks (for example
+   * from a native callback) is drained by the next frame, so request one.
+   */
+  const enqueueMicrotask = globalThis.queueMicrotask;
+  globalThis.queueMicrotask = (callback: () => void) => {
+    enqueueMicrotask(callback);
+    requestNativeFrame();
+  };
+
+  /* Run the first frame */
+  requestNativeFrame();
 
   // TODO: Remove it after support for Reanimated 4.3 is dropped.
   globalThis.__flushAnimationFrame = (eventTimestamp: number) => {
