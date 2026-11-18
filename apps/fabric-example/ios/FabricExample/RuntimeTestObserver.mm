@@ -86,9 +86,9 @@ static id presentedFrame(UIView *view)
   return self;
 }
 
-// A mount can come before the display link in the same frame, so the samples see it only after a commit.
 - (void)sample
 {
+  // A mount earlier in this frame shows in the presentation layers only after a Core Animation commit.
   [CATransaction flush];
   NSMutableArray *frames = [NSMutableArray arrayWithCapacity:_tags.count];
   for (NSNumber *tag in _tags) {

@@ -28,17 +28,13 @@ export type TransformObservation = {
   matrix: ReadonlyArray<number>;
 };
 
-/**
- * The frame of the view in the window and its opacity with the opacity of its
- * ancestors, as the screen shows them.
- */
+/** The frame is in the window. The opacity includes the ancestor opacities. */
 export type PresentedFrame = {
   x: number;
   y: number;
   width: number;
   height: number;
   opacity: number;
-  /** True while UIKit runs a transition of a view controller of the view. */
   inContainerTransition: boolean;
 };
 
@@ -84,17 +80,10 @@ export interface Spec extends TurboModule {
     presentedY: number
   ): Promise<void>;
 
-  /**
-   * IOS only. Records the presented frames of the views in each callback of a
-   * display link until `takeFrameRecording`. The display link can skip frames.
-   */
+  /** IOS only. The display link that takes the samples can skip frames. */
   startFrameRecording(tags: ReadonlyArray<CodegenTypes.Int32>): Promise<void>;
 
-  /**
-   * Returns one sample for each callback of the display link, with one entry
-   * for each tag. The entry is null when the view is not in a window. Android
-   * returns null.
-   */
+  /** An entry is null when its view is not in a window. Android returns null. */
   takeFrameRecording(): Promise<ReadonlyArray<
     ReadonlyArray<PresentedFrame | null>
   > | null>;
