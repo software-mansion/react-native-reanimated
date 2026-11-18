@@ -120,12 +120,12 @@ describe('Shared transition shows React props of the moving view', () => {
       ComparisonMode.PIXEL
     );
 
-    await advanceAnimationTimer(DURATION / 4);
+    await advanceAnimationTimer(DURATION / 6);
     const carrier = await carrierProps(carrierTag);
-    expect(carrier?.width).toBe(127.5, ComparisonMode.PIXEL);
+    expect(carrier?.width).toBe(120, ComparisonMode.PIXEL);
     expect(carrier?.backgroundColor).toBe(NEW_COLOR, ComparisonMode.COLOR);
 
-    await advanceAnimationTimer(DURATION / 4);
+    await advanceAnimationTimer(DURATION / 3);
     await waitForNotification('react-props-finished');
     await expectEventually(
       async () =>
