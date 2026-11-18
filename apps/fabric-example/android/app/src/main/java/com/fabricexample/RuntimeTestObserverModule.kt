@@ -26,10 +26,24 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
   NativeRuntimeTestObserverSpec(context),
   HeadlessJsTaskEventListener {
   private var observesHeadlessTasks = false
+  private var isInvalidated = false
   private val finishedHeadlessTasks = mutableSetOf<Int>()
   private val headlessTaskFinishWaiters = mutableMapOf<Int, Promise>()
 
   override fun getName() = NAME
+
+  override fun invalidate() {
+    UiThreadUtil.runOnUiThread {
+      isInvalidated = true
+      if (observesHeadlessTasks) {
+        observesHeadlessTasks = false
+        HeadlessJsTaskContext.getInstance(reactApplicationContext).removeTaskEventListener(this)
+      }
+      finishedHeadlessTasks.clear()
+      headlessTaskFinishWaiters.clear()
+    }
+    super.invalidate()
+  }
 
   override fun emitScreenTransitionProgress(
     tag: Double,
@@ -149,6 +163,10 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
 
   override fun startHeadlessTask(taskKey: String, promise: Promise) {
     UiThreadUtil.runOnUiThread {
+      if (isInvalidated) {
+        promise.reject("E_INVALIDATED", "The React instance is gone")
+        return@runOnUiThread
+      }
       val headlessJsTaskContext = HeadlessJsTaskContext.getInstance(reactApplicationContext)
       if (!observesHeadlessTasks) {
         observesHeadlessTasks = true

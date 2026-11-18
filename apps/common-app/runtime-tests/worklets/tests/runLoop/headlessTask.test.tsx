@@ -166,12 +166,10 @@ function watchUICallbacks(): UICallbacksWatch {
   return {
     snapshot: () => ({ ...fired }),
     waitForAll: async () => {
-      let timeout: ReturnType<typeof setTimeout> | undefined;
-      const deadline = new Promise<void>((resolve) => {
-        timeout = setTimeout(resolve, UI_CALLBACKS_TIMEOUT_MS);
-      });
-      await Promise.race([allFired, deadline]);
-      clearTimeout(timeout);
+      await Promise.race([
+        allFired,
+        RuntimeTestObserver!.delay(UI_CALLBACKS_TIMEOUT_MS),
+      ]);
       return { ...fired };
     },
   };
