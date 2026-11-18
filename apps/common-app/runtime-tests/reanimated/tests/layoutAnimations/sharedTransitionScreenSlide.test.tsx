@@ -72,14 +72,15 @@ describe('Shared transition while a native stack moves its screens', () => {
       samples.forEach((frames, index) => {
         const visible = frames.filter(isVisible);
         expect(visible.length).toBe(1);
+        expect(visible[0] === frames[0]).toBe(index >= landing);
         const keys = index < landing ? (['x'] as const) : FRAME_KEYS;
         for (const key of keys) {
           expect(visible[0]?.[key]).toBe(settled?.[key], ComparisonMode.PIXEL);
         }
       });
-      if (presentation === 'modal') {
-        expect(samples[landing]?.[0]?.inContainerTransition).toBe(true);
-      }
+      expect(samples[landing]?.[0]?.inContainerTransition).toBe(
+        presentation === 'modal'
+      );
       await render(null);
     }
   );
