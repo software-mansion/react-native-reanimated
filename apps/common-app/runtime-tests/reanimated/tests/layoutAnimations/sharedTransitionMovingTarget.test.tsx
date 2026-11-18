@@ -337,9 +337,15 @@ describe('Shared transition live target geometry', () => {
     );
   });
 
-  test.each(['builtIn', 'custom', 'progress'] as const)(
-    'keeps one clock while a scroll view moves the target, transition: %s',
-    async (kind) => {
+  test.each([
+    ['builtIn', 'row'],
+    ['custom', 'row'],
+    ['progress', 'row'],
+    ['custom', 'scrollView'],
+    ['progress', 'scrollView'],
+  ] as const)(
+    'keeps one clock while a scroll view moves the target, transition: ${0}, clipped by: ${1}',
+    async ([kind, clippedBy]) => {
       const state = counters();
       const transition = {
         builtIn: () => countedTransition(1200, state),
@@ -349,14 +355,16 @@ describe('Shared transition live target geometry', () => {
             SharedTransitionType.PROGRESS_ANIMATION
           ),
       }[kind]();
+      const screens = { clippedBy, transition };
       await mockAnimationTimer({ autoAdvance: false });
-      await render(<ScrollScreens active={false} transition={transition} />);
+      await render(<ScrollScreens active={false} {...screens} />);
       await waitForFrames();
       const source = await geometryOf('source');
       const stop = await recordStarts(state);
       try {
-        await render(<ScrollScreens active transition={transition} />);
+        await render(<ScrollScreens active {...screens} />);
         await waitForFrames(3);
+        const startClipY = await carrierClipY();
         await advanceAnimationTimer(300);
         const target = await geometryOf('target');
         const carrier = await geometryOf('source');
@@ -371,15 +379,29 @@ describe('Shared transition live target geometry', () => {
           carrier.y - shift,
           ComparisonMode.PIXEL
         );
-        expect(await carrierClipY()).toBe(clipY - shift, ComparisonMode.PIXEL);
-        await render(<ScrollScreens active extraRow transition={transition} />);
+        // The end of a ScrollView clip does not scroll, so the clip moves by three quarters of the scroll.
+        const clipShift = clippedBy === 'row' ? shift : 75;
+        expect(await carrierClipY()).toBe(
+          clipY - clipShift,
+          ComparisonMode.PIXEL
+        );
+        await render(<ScrollScreens active extraRow {...screens} />);
         await waitForFrames(3);
         expect(state.value.starts).toBe(1);
         await advanceAnimationTimer(300);
+        const startShift = kind === 'builtIn' ? 0 : 100;
         await expectCarrierBetween(
-          kind === 'builtIn' ? source : { ...source, y: source.y - 100 },
+          { ...source, y: source.y - startShift },
           scrolledTarget,
           0.5
+        );
+        const endClipY =
+          clippedBy === 'row'
+            ? scrolledTarget.y
+            : source.y + styles.scrollView.top;
+        expect(await carrierClipY()).toBe(
+          (startClipY - startShift + endClipY) / 2,
+          ComparisonMode.PIXEL
         );
         await advanceAnimationTimer(600);
         await expectEventually(() => state.value.success).toBe(1);
@@ -658,13 +680,17 @@ function NativeParentScreens({
 
 const scrollRef = createRef<ComponentRef<typeof ScrollView>>();
 
+type ClippedBy = 'row' | 'scrollView';
+
 function ScrollScreens({
   active,
+  clippedBy = 'row',
   extraRow = false,
   targetWidth = 90,
   transition,
 }: {
   active: boolean;
+  clippedBy?: ClippedBy;
   extraRow?: boolean;
   targetWidth?: number;
   transition: SharedTransition;
@@ -681,6 +707,7 @@ function ScrollScreens({
       </SharedTransitionBoundary>
       {active && (
         <ScrolledTarget
+          clippedBy={clippedBy}
           extraRow={extraRow}
           targetWidth={targetWidth}
           transition={transition}
@@ -691,10 +718,12 @@ function ScrollScreens({
 }
 
 function ScrolledTarget({
+  clippedBy,
   extraRow,
   targetWidth,
   transition,
 }: {
+  clippedBy: ClippedBy;
   extraRow: boolean;
   targetWidth: number;
   transition: SharedTransition;
@@ -703,7 +732,7 @@ function ScrolledTarget({
     <ScrollView ref={scrollRef} style={styles.scrollView}>
       <SharedTransitionBoundary isActive>
         <View style={styles.scrollContent}>
-          <View style={styles.clippedRow}>
+          <View style={[styles.row, clippedBy === 'row' && styles.clipped]}>
             <Animated.View
               ref={useTestRef('target')}
               sharedTransitionTag="scrolled-target"
@@ -711,7 +740,7 @@ function ScrolledTarget({
               style={[styles.target, { width: targetWidth }]}
             />
           </View>
-          {extraRow && <View style={styles.clippedRow} />}
+          {extraRow && <View style={styles.row} />}
         </View>
       </SharedTransitionBoundary>
     </ScrollView>
@@ -925,7 +954,10 @@ function linearCustomTransition(
       width: withTiming(values.targetWidth, config),
       height: withTiming(values.targetHeight, config),
     };
-  }).withCallback(completionCounter(state));
+  })
+    .duration(duration)
+    .easing(Easing.linear)
+    .withCallback(completionCounter(state));
 }
 
 function springOriginYTransition() {
@@ -1032,7 +1064,8 @@ const styles = StyleSheet.create({
   sameGeometry: { width: 30, height: 30 },
   scrollView: { position: 'absolute', top: 100, width: 380, height: 400 },
   scrollContent: { paddingTop: 200, paddingBottom: 800, paddingLeft: 120 },
-  clippedRow: { width: 120, height: 120, overflow: 'hidden' },
+  row: { width: 120, height: 120 },
+  clipped: { overflow: 'hidden' },
   nativeParentHost: {
     marginTop: 40,
     marginLeft: 120,
