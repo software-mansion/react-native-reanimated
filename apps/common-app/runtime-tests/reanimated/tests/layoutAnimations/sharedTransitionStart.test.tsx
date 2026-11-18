@@ -918,7 +918,7 @@ function NestedPendingScreen({
       <Animated.View
         sharedTransitionTag="nestedInner"
         sharedTransitionStyle={innerTransition}
-        style={styles.nestedInner}
+        style={isSource ? styles.nestedInner : styles.nestedInnerTarget}
       />
     </Animated.View>
   );
@@ -1602,6 +1602,12 @@ const styles = StyleSheet.create({
   nestedInner: {
     width: 40,
     height: 40,
+    margin: 20,
+    backgroundColor: '#22aa55',
+  },
+  nestedInnerTarget: {
+    width: 60,
+    height: 60,
     margin: 20,
     backgroundColor: '#22aa55',
   },
