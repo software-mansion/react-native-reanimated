@@ -1246,7 +1246,8 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
     const ShadowView &source,
     const std::shared_ptr<LightNode> &carrier,
     const PropsParserContext &propsParserContext) const {
-  return withStyleOf(ownCarrierView(source, carrier, propsParserContext), source, propsParserContext);
+  const auto view = ownCarrierView(source, carrier, propsParserContext);
+  return withStyleOf(view, source, view, propsParserContext);
 }
 
 Props::Shared LayoutAnimationsProxy::carrierFrameProps(
@@ -1254,25 +1255,27 @@ Props::Shared LayoutAnimationsProxy::carrierFrameProps(
     const ShadowView &target,
     const ShadowView &legStart,
     const PropsParserContext &propsParserContext) const {
-  return withStyleOf(ownCarrierView(target, run.carrier, propsParserContext), legStart, propsParserContext).props;
+  const auto view = ownCarrierView(target, run.carrier, propsParserContext);
+  return withStyleOf(view, legStart, view, propsParserContext).props;
 }
 
+// The view with each animated style value in which source differs from reference.
 ShadowView LayoutAnimationsProxy::withStyleOf(
     ShadowView view,
     const ShadowView &source,
+    const ShadowView &reference,
     const PropsParserContext &propsParserContext) const {
   if (source.componentHandle != view.componentHandle) {
     return view;
   }
 #ifdef ANDROID
   const auto &sourceRawProps = source.props->rawProps;
-  const auto &ownRawProps = view.props->rawProps;
-  auto rawProps = ownRawProps;
+  const auto &referenceRawProps = reference.props->rawProps;
+  auto rawProps = view.props->rawProps;
   for (const auto *name : kAnimatedStyleProps) {
-    if (sourceRawProps.count(name) > 0) {
-      rawProps[name] = sourceRawProps[name];
-    } else if (ownRawProps.count(name) > 0) {
-      rawProps[name] = nullptr;
+    const auto value = sourceRawProps.getDefault(name, nullptr);
+    if (value != referenceRawProps.getDefault(name, nullptr)) {
+      rawProps[name] = value;
     }
   }
   view.props = componentDescriptorRegistry_->at(view.componentHandle)
@@ -1281,22 +1284,30 @@ ShadowView LayoutAnimationsProxy::withStyleOf(
   auto props = componentDescriptorRegistry_->at(view.componentHandle).cloneProps(propsParserContext, view.props, {});
   auto &viewProps = *std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(props));
   const auto &sourceProps = getViewProps(source);
-  viewProps.backgroundColor = sourceProps.backgroundColor;
-  viewProps.transformOrigin = sourceProps.transformOrigin;
-  viewProps.boxShadow = sourceProps.boxShadow;
-  viewProps.shadowColor = sourceProps.shadowColor;
-  viewProps.shadowOffset = sourceProps.shadowOffset;
-  viewProps.shadowOpacity = sourceProps.shadowOpacity;
-  viewProps.shadowRadius = sourceProps.shadowRadius;
-  viewProps.borderRadii = sourceProps.borderRadii;
-  viewProps.borderColors = sourceProps.borderColors;
+  const auto &referenceProps = getViewProps(reference);
+  const auto copy = [&](const auto field) {
+    if (sourceProps.*field != referenceProps.*field) {
+      viewProps.*field = sourceProps.*field;
+    }
+  };
+  copy(&ViewProps::backgroundColor);
+  copy(&ViewProps::transformOrigin);
+  copy(&ViewProps::boxShadow);
+  copy(&ViewProps::shadowColor);
+  copy(&ViewProps::shadowOffset);
+  copy(&ViewProps::shadowOpacity);
+  copy(&ViewProps::shadowRadius);
+  copy(&ViewProps::borderRadii);
+  copy(&ViewProps::borderColors);
   for (const auto edge :
        {facebook::yoga::Edge::Left,
         facebook::yoga::Edge::Top,
         facebook::yoga::Edge::Right,
         facebook::yoga::Edge::Bottom,
         facebook::yoga::Edge::All}) {
-    viewProps.yogaStyle.setBorder(edge, sourceProps.yogaStyle.border(edge));
+    if (sourceProps.yogaStyle.border(edge) != referenceProps.yogaStyle.border(edge)) {
+      viewProps.yogaStyle.setBorder(edge, sourceProps.yogaStyle.border(edge));
+    }
   }
   view.props = props;
 #endif
@@ -1508,6 +1519,73 @@ react::Point LayoutAnimationsProxy::nativeOriginOnScreen(const std::shared_ptr<L
   auto positions = getAbsolutePositionsForRootPathView(node, true);
   placeNatively(ancestors, positions, false);
   return positions[0];
+}
+
+// React props of a carrier show while it moves. A style prop that React changes replaces the same prop in the frame
+// base, and the frames keep the values that they animate.
+void LayoutAnimationsProxy::showCarrierReactProps(
+    SharedTransitionRun &run,
+    const Props::Shared &previousProps,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto &carrier = run.carrier;
+  resolveLightNodeProps(carrier);
+  const auto previousView = withProps(carrier->current, previousProps);
+  const auto withReactProps = [&](const ShadowView &base) {
+    return withStyleOf(
+        carrierViewWithStyleOf(base, carrier, propsParserContext), carrier->current, previousView, propsParserContext);
+  };
+  const auto tag = carrier->current.tag;
+  if (auto *frameProps = queuedFrameProps(tag)) {
+    *frameProps = withReactProps(withProps(carrier->current, *frameProps)).props;
+  }
+  LayoutAnimation *animation = nullptr;
+  if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
+    animation = &it->second;
+  } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    animation = &it->second.animation;
+  }
+  if (!animation) {
+    const auto mounted = run.carrierStartView;
+    run.carrierStartView = withReactProps(mounted);
+    mutations.push_back(
+        createPropsUpdate(mounted, run.carrierStartView, carrierParentTag(carrier), propsParserContext));
+    return;
+  }
+  const auto previousBase = animation->framePropsBase();
+  animation->frameProps = withReactProps(withProps(animation->finalView, previousBase)).props;
+  const auto mounted = currentViewOf(*animation);
+  animation->currentView = withFrameBase(mounted, previousBase, animation->frameProps, propsParserContext);
+  mutations.push_back(createPropsUpdate(mounted, animation->currentView, animation->parentTag, propsParserContext));
+  const auto pending = updateMap_.find(tag);
+#ifdef ANDROID
+  animation->sentFrame.reset();
+  if (pending != updateMap_.end()) {
+    auto &frame = pending->second;
+    frame.base =
+        withFrameBase(withProps(mounted, frame.base), previousBase, animation->frameProps, propsParserContext).props;
+  }
+#else
+  if (pending != updateMap_.end() && pending->second.newProps) {
+    auto &frame = pending->second;
+    frame.newProps =
+        withFrameBase(withProps(mounted, frame.newProps), previousBase, animation->frameProps, propsParserContext)
+            .props;
+  }
+#endif
+}
+
+// The frame with base in place of previousBase. The geometry and the style values that the frame animates stay.
+ShadowView LayoutAnimationsProxy::withFrameBase(
+    const ShadowView &frame,
+    const Props::Shared &previousBase,
+    const Props::Shared &base,
+    const PropsParserContext &propsParserContext) const {
+  return withStyleOf(
+      withGeometryOf(withProps(frame, base), frame, propsParserContext),
+      frame,
+      withProps(frame, previousBase),
+      propsParserContext);
 }
 
 void LayoutAnimationsProxy::retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)

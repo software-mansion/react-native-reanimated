@@ -631,6 +631,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   react::Point nativeOriginOnScreen(const std::shared_ptr<LightNode> &node) const;
   std::vector<SharedTransitionRun *> runsEndedBy(const std::shared_ptr<LightNode> &node) const;
+  void showCarrierReactProps(
+      SharedTransitionRun &run,
+      const Props::Shared &previousProps,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  ShadowView withFrameBase(
+      const ShadowView &frame,
+      const Props::Shared &previousBase,
+      const Props::Shared &base,
+      const PropsParserContext &propsParserContext) const;
   void retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void removeCarriersHostedIn(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainCarrierContent(const std::shared_ptr<LightNode> &node) const;
@@ -767,7 +777,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &target,
       const ShadowView &legStart,
       const PropsParserContext &propsParserContext) const;
-  ShadowView withStyleOf(ShadowView view, const ShadowView &source, const PropsParserContext &propsParserContext) const;
+  ShadowView withStyleOf(
+      ShadowView view,
+      const ShadowView &source,
+      const ShadowView &reference,
+      const PropsParserContext &propsParserContext) const;
   bool endsPathOnScreen(
       const std::shared_ptr<LightNode> &pathNode,
       const std::shared_ptr<LightNode> &node,

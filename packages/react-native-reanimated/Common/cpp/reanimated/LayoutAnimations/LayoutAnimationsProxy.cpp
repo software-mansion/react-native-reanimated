@@ -665,7 +665,7 @@ void LayoutAnimationsProxy::updateLightTree(
           shouldAnimate = hasLayoutChanged(mutation);
         }
         Props::Shared previousProps;
-        if (config && shouldAnimate) {
+        if ((config && shouldAnimate) || node->isCarrier()) {
           resolveLightNodeProps(node);
           previousProps = node->current.props;
         }
@@ -673,9 +673,11 @@ void LayoutAnimationsProxy::updateLightTree(
         if (mutation.oldChildShadowView.props != mutation.newChildShadowView.props) {
           staleSynchronousProps_.forget(tag);
         }
-        // The shared transition owns the mounted props and frame of its carrier.
-        // attachCarrier mounts React props and synchronous updates from the light node.
+        // The shared transition owns the mounted frame of its carrier.
         if (node->isCarrier()) {
+          if (node->current.props != previousProps) {
+            showCarrierReactProps(*runOfCarrier(node), previousProps, filteredMutations, propsParserContext);
+          }
           break;
         }
         if (!mayAnimate) {

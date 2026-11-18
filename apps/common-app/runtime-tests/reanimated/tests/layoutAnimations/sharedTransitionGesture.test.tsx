@@ -35,6 +35,7 @@ function Screens({
   targetOffset = 0,
   targetTranslateX = 0,
   targetColor = styles.target.backgroundColor,
+  sourceColor = styles.source.backgroundColor,
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
@@ -46,6 +47,7 @@ function Screens({
   targetOffset?: number;
   targetTranslateX?: number;
   targetColor?: string;
+  sourceColor?: string;
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
@@ -94,7 +96,7 @@ function Screens({
                 ref={source}
                 sharedTransitionTag={tagged ? sourceTag : undefined}
                 sharedTransitionStyle={transitionStyle}
-                style={styles.source}>
+                style={[styles.source, { backgroundColor: sourceColor }]}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
             )}
@@ -1207,6 +1209,60 @@ describe('Target style change during native Screen progress', () => {
         startColor,
         ComparisonMode.COLOR
       );
+    }
+  );
+});
+
+describe('Source style change during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'shows a style that the transition does not animate before the next progress',
+    async () => {
+      const newColor = '#22aa55';
+      const geometryOnly = SharedTransition.custom((values) => {
+        'worklet';
+        return {
+          width: values.targetWidth,
+          height: values.targetHeight,
+          originX: values.targetOriginX,
+          originY: values.targetOriginY,
+        };
+      }).progressAnimation((values, progress) => {
+        'worklet';
+        const at = (current: number, target: number) =>
+          current + progress * (target - current);
+        return {
+          width: at(values.currentWidth, values.targetWidth),
+          height: at(values.currentHeight, values.targetHeight),
+          originX: at(values.currentOriginX, values.targetOriginX),
+          originY: at(values.currentOriginY, values.targetOriginY),
+        };
+      });
+      const tags = await startGesture(geometryOnly);
+
+      await render(
+        <Screens transitionStyle={geometryOnly} sourceColor={newColor} />
+      );
+      await expectEventually(() => carrierColor(tags.source)).toBe(
+        newColor,
+        ComparisonMode.COLOR
+      );
+      await expectCarrier(tags.source, 82.5);
+
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 105);
+      expect(await carrierColor(tags.source)).toBe(
+        newColor,
+        ComparisonMode.COLOR
+      );
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
     }
   );
 });
