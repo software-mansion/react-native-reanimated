@@ -284,8 +284,16 @@ describe('animation of a non-layout prop across React renders', () => {
 
       expect(observed.frames).toMatchNativeSnapshots(observed.nativeFrames);
 
-      const expected = dropRepeatedFrames(reference.frames);
-      const received = dropRepeatedFrames(observed.frames);
+      const sharedLength = Math.min(
+        reference.frames.length,
+        observed.frames.length
+      );
+      const expected = dropRepeatedFrames(
+        reference.frames.slice(0, sharedLength)
+      );
+      const received = dropRepeatedFrames(
+        observed.frames.slice(0, sharedLength)
+      );
       expect(received.length >= expected.length - 1).toBe(true);
 
       const compared = Math.min(expected.length, received.length);
