@@ -100,7 +100,6 @@ enum class ScrollOffsets : std::uint8_t {
   IGNORED,
 };
 
-// The scroll position of a view on the path of a target. A scroll view moves its content and keeps its layout.
 struct ScrollPosition {
   Tag tag;
   react::Point position;
@@ -159,7 +158,6 @@ struct SharedTransitionRun {
     return targetOffWindow && !followsTarget;
   }
 
-  // A timed run that does not follow its target moves its whole path with a scroll of the target.
   bool movesPathWithScroll() const {
     return driver == SharedTransitionDriver::TIME && !followsTarget;
   }
@@ -258,7 +256,6 @@ struct NativePathPlacement {
   std::optional<AncestorOutsideReactParent> outsideReactParent;
 };
 
-// The ancestors of a target and their absolute positions, up to the view that the platform shows the target in.
 struct TargetAncestry {
   std::vector<Ancestor> ancestors;
   std::vector<react::Point> absolutePositions;

@@ -284,7 +284,7 @@ void LayoutAnimationsProxyCommon::writeSharedTransitionGeometry(const Tag tag, L
   writeFrame(tag, animation, std::move(geometry.props), geometry.frame);
 }
 
-// A frame that waits for a pull moves when the pull sends it. Without such a frame, the frame on screen moves.
+// A frame that waits for a pull gets pathOffset when the pull sends it.
 void LayoutAnimationsProxyCommon::moveLayoutAnimationPath(
     const Tag tag,
     LayoutAnimation &animation,

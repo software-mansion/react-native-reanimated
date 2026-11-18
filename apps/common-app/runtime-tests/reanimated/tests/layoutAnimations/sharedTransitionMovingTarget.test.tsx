@@ -614,7 +614,6 @@ async function expectCarrierBetween(
   }
 }
 
-// The moving view is in a content view, and the content view is in the view that clips it.
 async function carrierClipY() {
   const content = await RuntimeTestObserver!.observeParent(
     getTestComponent('source').getTag()

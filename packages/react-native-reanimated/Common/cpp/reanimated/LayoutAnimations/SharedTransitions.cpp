@@ -1068,7 +1068,7 @@ void LayoutAnimationsProxy::updateCarrierClip(
   mounted = std::move(moved);
 }
 
-// The animation sets these clip values without pathOffset. A spring can overshoot below zero.
+// A spring can overshoot below zero.
 AncestorClip LayoutAnimationsProxy::withAnimatedClip(AncestorClip clip, const LayoutAnimation &animation) {
   const auto &animated = animation.animatedClip;
   auto &[origin, size] = clip.frame;
@@ -3449,14 +3449,12 @@ std::vector<ScrollPosition> LayoutAnimationsProxy::scrollPositionsOf(const std::
   return positions;
 }
 
-// The distance is how far the scroll since the end of the run moves the target on screen, through the transforms of
-// its parents. A transform change of a parent does not move the path.
+// Only the scroll since targetScroll moves the path, not a transform change of a parent.
 react::Point LayoutAnimationsProxy::scrolledDistance(const SharedTransitionRun &run, const TargetAncestry &ancestry)
     const {
   return translationOnScreen(ancestry) - translationOnScreen(withScrollPositions(ancestry, run.targetScroll));
 }
 
-// A scroll position moves the content of its view, so it moves the absolute positions of the views in it.
 TargetAncestry LayoutAnimationsProxy::withScrollPositions(
     TargetAncestry ancestry,
     const std::vector<ScrollPosition> &positions) {

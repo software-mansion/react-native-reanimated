@@ -52,7 +52,6 @@ struct AncestorClipRange {
 // Writes currentClip* and targetClip* to the values of a shared transition.
 void setClipValues(jsi::Runtime &runtime, const jsi::Object &values, const AncestorClipRange &clip);
 
-// The clip values that the animation of a shared transition sets itself.
 struct AnimatedClip {
   std::optional<Float> originX, originY, width, height, borderRadius;
 };
@@ -76,10 +75,9 @@ struct LayoutAnimation {
 #ifdef ANDROID
   std::optional<SentFrame> sentFrame;
 #endif
-  // The progress of a clip from the start to the end of the clip range of the run. A built-in timed shared transition
-  // moves its clip with geometryProgress.
+  // A built-in timed shared transition moves its clip with geometryProgress.
   std::optional<double> clipProgress;
-  // The clip values that the animation sets, without pathOffset.
+  // The values do not include pathOffset.
   AnimatedClip animatedClip;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 

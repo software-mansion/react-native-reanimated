@@ -299,8 +299,7 @@ const CLIP_KEYS = [
   'clipHeight',
   'clipBorderRadius',
 ];
-// A timed animation moves the clip keys that it does not set with this progress. A scroll can change the clip of the
-// target during the transition, so the native side calculates these keys. A gesture sets the progress natively.
+// The native side moves the clip keys that an animation does not set with this progress.
 const CLIP_PROGRESS_KEY = 'sharedTransitionClipProgress';
 
 function defaultProgressAnimation(
