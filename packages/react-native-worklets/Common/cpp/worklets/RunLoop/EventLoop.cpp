@@ -98,15 +98,9 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
           }
           taskState->rootTaskRunning = true;
           taskState->rootTaskId++;
-          try {
-            job(*runtime);
-            taskState->microtaskCheckpointRequested = false;
-            runtime->drainMicrotasks();
-          } catch (...) {
-            taskState->microtaskCheckpointRequested = false;
-            taskState->rootTaskRunning = false;
-            throw;
-          }
+          job(*runtime);
+          runtime->drainMicrotasks();
+          taskState->microtaskCheckpointRequested = false;
           taskState->rootTaskRunning = false;
         }
       },
