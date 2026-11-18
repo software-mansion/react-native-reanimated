@@ -723,7 +723,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   TargetLayout targetLayoutOf(const std::shared_ptr<LightNode> &target) const;
   TargetAncestry ancestryOf(const SharedTransitionRun &run) const;
   void takeTargetScroll(SharedTransitionRun &run) const;
-  static std::vector<ScrollPosition> scrollPositionsOf(const std::shared_ptr<LightNode> &target);
+  std::vector<ScrollPosition> scrollPositionsOf(const std::shared_ptr<LightNode> &target) const;
   react::Point scrolledDistance(const SharedTransitionRun &run, const TargetAncestry &ancestry) const;
   static TargetAncestry withScrollPositions(TargetAncestry ancestry, const std::vector<ScrollPosition> &positions);
   react::Point translationOnScreen(const TargetAncestry &ancestry) const;

@@ -3439,9 +3439,9 @@ void LayoutAnimationsProxy::takeTargetScroll(SharedTransitionRun &run) const {
   run.targetScroll = run.movesPathWithScroll() ? scrollPositionsOf(run.target) : std::vector<ScrollPosition>{};
 }
 
-std::vector<ScrollPosition> LayoutAnimationsProxy::scrollPositionsOf(const std::shared_ptr<LightNode> &target) {
+std::vector<ScrollPosition> LayoutAnimationsProxy::scrollPositionsOf(const std::shared_ptr<LightNode> &target) const {
   std::vector<ScrollPosition> positions;
-  for (auto node = target->parent.lock(); node; node = node->parent.lock()) {
+  for (auto node = target->parent.lock(); node && !isLayoutRoot(node); node = node->parent.lock()) {
     if (!strcmp(node->current.componentName, "ScrollView")) {
       positions.push_back({.tag = node->current.tag, .position = scrollPosition(node, target, ScrollOffsets::APPLIED)});
     }
