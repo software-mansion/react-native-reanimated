@@ -270,7 +270,7 @@ This option dictates the passed file location for a worklet function's source ma
 
 Defaults to `false`.
 
-The plugin prints a warning when an
+In Bundle Mode, the plugin prints a warning when an
 [`importForwarding.relativePaths`](#importforwardingrelativepaths) entry has only
 common folder names, such as `src`, `lib`, `app` or `app/src`. Such a path also
 matches folders inside packages in `node_modules`. Set this option to `true` to
@@ -547,7 +547,7 @@ Use a sequence of segments that only your code has, for example
 the sequence does not also occur in the paths of your dependencies. For example,
 `my-library` also matches `node_modules/other-lib/my-library/index.js`.
 
-The plugin prints a warning when a path has only common folder names. You can
+In Bundle Mode, the plugin prints a warning when a path has only common folder names. You can
 hide it with [`silenceDangerousPathsWarning`](#silencedangerouspathswarning).
 :::
 

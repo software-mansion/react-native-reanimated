@@ -311,6 +311,12 @@ describe('babel plugin in bundleMode', () => {
       ).toHaveLength(0);
     });
 
+    test('does not warn about a path with an empty segment', () => {
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['utils/'] } })
+      ).toHaveLength(0);
+    });
+
     test('does not warn when silenced', () => {
       expect(
         warningsFor({

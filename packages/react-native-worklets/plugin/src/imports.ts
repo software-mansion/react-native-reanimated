@@ -137,6 +137,7 @@ export function warnAboutDangerousRelativePaths(
   }
   for (const relativePath of relativePaths) {
     if (
+      typeof relativePath !== 'string' ||
       warnedDangerousPaths.has(relativePath) ||
       !isDangerousRelativePath(relativePath)
     ) {
@@ -148,9 +149,9 @@ export function warnAboutDangerousRelativePaths(
 }
 
 export function isDangerousRelativePath(relativePath: string) {
-  const segments = relativePath.split(posix.sep).filter(Boolean);
+  const segments = relativePath.split(posix.sep);
   return (
-    segments.length > 0 &&
+    relativePath.length > 0 &&
     segments.every((segment) => COMMON_FOLDER_NAMES.has(segment))
   );
 }
@@ -158,7 +159,7 @@ export function isDangerousRelativePath(relativePath: string) {
 function getDangerousRelativePathWarning(relativePath: string) {
   return (
     `[Worklets] \`importForwarding.relativePaths\` contains '${relativePath}', which has only common folder names. ` +
-    `It also matches folders inside packages in node_modules, for example 'react-native-reanimated/src', ` +
+    `It can also match folders inside packages in node_modules, for example 'node_modules/<package>/${relativePath}', ` +
     `and the relative imports inside their worklets get forwarded too, which can crash the app. ` +
     `Use a path that only your code has. ` +
     `Set the \`silenceDangerousPathsWarning\` plugin option to \`true\` to hide this warning. ` +

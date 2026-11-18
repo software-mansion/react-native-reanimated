@@ -108,9 +108,9 @@ export interface PluginOptions {
    */
   relativeSourceLocation?: boolean;
   /**
-   * Turns off the warning that the plugin prints when an
+   * Turns off the warning that the plugin prints in Bundle Mode when an
    * `importForwarding.relativePaths` entry has only common folder names, such
-   * as `'src'` or `'app/src'`. Such a path also matches folders inside
+   * as `'src'` or `'app/src'`. Such a path can also match folders inside
    * packages in `node_modules`.
    *
    * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#silencedangerouspathswarning}

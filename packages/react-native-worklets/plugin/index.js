@@ -1113,7 +1113,7 @@ var require_imports = __commonJS({
         return;
       }
       for (const relativePath of relativePaths) {
-        if (warnedDangerousPaths.has(relativePath) || !isDangerousRelativePath(relativePath)) {
+        if (typeof relativePath !== "string" || warnedDangerousPaths.has(relativePath) || !isDangerousRelativePath(relativePath)) {
           continue;
         }
         warnedDangerousPaths.add(relativePath);
@@ -1121,11 +1121,11 @@ var require_imports = __commonJS({
       }
     }
     function isDangerousRelativePath(relativePath) {
-      const segments = relativePath.split(path_1.posix.sep).filter(Boolean);
-      return segments.length > 0 && segments.every((segment) => exports2.COMMON_FOLDER_NAMES.has(segment));
+      const segments = relativePath.split(path_1.posix.sep);
+      return relativePath.length > 0 && segments.every((segment) => exports2.COMMON_FOLDER_NAMES.has(segment));
     }
     function getDangerousRelativePathWarning(relativePath) {
-      return `[Worklets] \`importForwarding.relativePaths\` contains '${relativePath}', which has only common folder names. It also matches folders inside packages in node_modules, for example 'react-native-reanimated/src', and the relative imports inside their worklets get forwarded too, which can crash the app. Use a path that only your code has. Set the \`silenceDangerousPathsWarning\` plugin option to \`true\` to hide this warning. See https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths`;
+      return `[Worklets] \`importForwarding.relativePaths\` contains '${relativePath}', which has only common folder names. It can also match folders inside packages in node_modules, for example 'node_modules/<package>/${relativePath}', and the relative imports inside their worklets get forwarded too, which can crash the app. Use a path that only your code has. Set the \`silenceDangerousPathsWarning\` plugin option to \`true\` to hide this warning. See https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths`;
     }
   }
 });
