@@ -91,6 +91,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/queueMicrotask.test');
       require('./tests/runLoop/executionOrder.test');
       require('./tests/runLoop/finalizers.test');
+      require('./tests/runLoop/headlessTask.test');
     },
   },
   {
