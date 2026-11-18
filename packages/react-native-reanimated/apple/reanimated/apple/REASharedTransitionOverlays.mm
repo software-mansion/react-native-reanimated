@@ -142,8 +142,8 @@ static BOOL isViewControllerView(UIView *view)
   return [view.nextResponder isKindOfClass:[UIViewController class]];
 }
 
-// UIKit also gives the coordinator of a transition to the view controllers that it does not move, for example to the
-// presenting view controller of a modal. On iOS 27.2, a presentation moves only the presented view.
+// UIKit also gives the transition coordinator to view controllers that it does not move, for example the presenter of a
+// modal. On iOS 27.2, a presentation moves only the presented view.
 static BOOL isMovedByCoordinator(UIView *view, id<UIViewControllerTransitionCoordinator> coordinator)
 {
   if (coordinator.presentationStyle != UIModalPresentationNone) {
@@ -162,7 +162,7 @@ static BOOL isMovedByContainerTransition(UIView *view)
     }
     id<UIViewControllerTransitionCoordinator> coordinator =
         ((UIViewController *)current.nextResponder).transitionCoordinator;
-    // A transition that the user drives can stop anywhere, so a run lands in the view that the user moves.
+    // A transition that the user drives can stop anywhere, so the run lands in the moving view.
     if (coordinator && !coordinator.isInteractive && isMovedByCoordinator(view, coordinator)) {
       return YES;
     }

@@ -67,7 +67,6 @@ describe('Shared transition while a native stack moves its screens', () => {
       const tags = [homeTag, getTestComponent('player').getTag()];
       const samples = await recordPresentedFrames(tags, async () => {
         await navigateAndLand(() => navigation.goBack());
-        // The dismissal of the modal continues after the landing.
         await wait(500);
       });
       const landing = samples.findIndex(([homeBar]) => isVisible(homeBar));

@@ -503,7 +503,6 @@ describe('Nested shared transitions', () => {
     await expectAllShownAtTargets();
   });
 
-  // The inner run waits only for the hidden outer target, not for a carrier that holds it.
   test('reverses a waiting inner view from where it waits', async () => {
     await mockAnimationTimer({ autoAdvance: false });
     const screens = (active: boolean) => (

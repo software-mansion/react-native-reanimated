@@ -2552,8 +2552,7 @@ LandingBlocker LayoutAnimationsProxy::landingBlocker(
   if (run.targetOffWindow) {
     return LandingBlocker::TARGET_OFF_WINDOW;
   }
-  // The carrier aims at the settled frame of the target, so it lands after the platform settles the target. UIKit
-  // ends each container transition that the user does not drive.
+  // UIKit ends each container transition that the user does not drive.
   if (run.targetMovedByContainer) {
     return LandingBlocker::TARGET_MOVED_BY_CONTAINER_TRANSITION;
   }
@@ -3404,7 +3403,7 @@ bool LayoutAnimationsProxy::isInOtherWindow(const std::shared_ptr<LightNode> &ta
 }
 
 #ifdef __APPLE__
-// A run that reverses lands on its own carrier, which is in the overlay. The parent of the target is where it lands.
+// A reversed run lands on its carrier in the overlay. The parent of the target is where it lands.
 bool LayoutAnimationsProxy::isMovedByContainerTransition(const std::shared_ptr<LightNode> &target) const {
   const auto parent = target->parent.lock();
   return isMovedByContainerTransition_ && isLightNodeMapped(target) && !target->isExiting() && parent &&
@@ -3507,8 +3506,7 @@ bool LayoutAnimationsProxy::followsClipTarget(SharedTransitionRun &run, const An
 }
 
 #ifdef __APPLE__
-// An ended run waits while a container transition moves its target. The platform ends the transition without a
-// commit, so the wait asks for the next pull.
+// UIKit ends a container transition without a React commit.
 void LayoutAnimationsProxy::waitForContainerTransitions() const {
   for (auto &run : activeSharedTransitionRuns()) {
     const bool movedBefore = run.targetMovedByContainer;
@@ -3516,8 +3514,7 @@ void LayoutAnimationsProxy::waitForContainerTransitions() const {
     if (run.targetMovedByContainer) {
       schedulePullOnNextFrame();
     } else if (movedBefore && !run.targetOffWindow) {
-      // A navigation controller takes the target screen out of the window between two of its transitions, for example
-      // between a push and the pop that reverses it.
+      // A navigation controller takes the target screen out of the window between a push and the pop that reverses it.
       waitForTargetWindow(run, run.target);
     }
   }

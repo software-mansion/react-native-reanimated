@@ -137,7 +137,6 @@ struct SharedTransitionRun {
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
-  // A container transition moves the target. Each pull sets it again.
   bool targetMovedByContainer = false;
   // UIKit can move a target in a presented view without a React commit. Such a run, and a run that has no sample yet,
   // samples its target on each frame.
