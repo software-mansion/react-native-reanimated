@@ -258,6 +258,90 @@ describeFn('WebSocket (live)', () => {
   );
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'WebSocket close() without a code sends a Close frame without a status, runtime: **%s**',
+    async (runtimeKind) => {
+      const notification = `ws_wire_no_status_done_${runtimeKind}`;
+      const [flag, setFlag] = createTestValue('not_ok');
+      const key = `no-status-${runtimeKind}-${Date.now()}`;
+      const socketUrl = `${SOCKET_URL}?record=${key}`;
+      const recordUrl = `${BASE_URL}/echo/ws-close?key=${key}`;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const socket = new globalThis.WebSocket(socketUrl);
+        socket.onerror = () => setFlag('socket errored', notification);
+        socket.onopen = () => socket.close();
+        socket.onclose = (event: { code: number; wasClean: boolean }) => {
+          fetch(recordUrl)
+            .then((response) => response.json())
+            .then((record: { code: number; reason: string }) => {
+              if (record.code !== 1005) {
+                setFlag(`server saw code ${record.code}`, notification);
+              } else if (record.reason !== '') {
+                setFlag(`server saw reason ${record.reason}`, notification);
+              } else if (event.code !== 1005) {
+                setFlag(`client saw code ${event.code}`, notification);
+              } else if (event.wasClean !== true) {
+                setFlag(`not clean: ${String(event.wasClean)}`, notification);
+              } else {
+                setFlag('ok', notification);
+              }
+            })
+            .catch((error: Error) =>
+              setFlag(`record fetch failed: ${error.message}`, notification)
+            );
+        };
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'WebSocket close() with a code sends that code and reason, runtime: **%s**',
+    async (runtimeKind) => {
+      const notification = `ws_wire_code_done_${runtimeKind}`;
+      const [flag, setFlag] = createTestValue('not_ok');
+      const key = `with-code-${runtimeKind}-${Date.now()}`;
+      const socketUrl = `${SOCKET_URL}?record=${key}`;
+      const recordUrl = `${BASE_URL}/echo/ws-close?key=${key}`;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const socket = new globalThis.WebSocket(socketUrl);
+        socket.onerror = () => setFlag('socket errored', notification);
+        socket.onopen = () => socket.close(4321, 'bye');
+        socket.onclose = (event: { code: number; reason: string }) => {
+          fetch(recordUrl)
+            .then((response) => response.json())
+            .then((record: { code: number; reason: string }) => {
+              if (record.code !== 4321 || record.reason !== 'bye') {
+                setFlag(
+                  `server saw ${record.code} ${record.reason}`,
+                  notification
+                );
+              } else if (event.code !== 4321 || event.reason !== 'bye') {
+                setFlag(
+                  `client saw ${event.code} ${event.reason}`,
+                  notification
+                );
+              } else {
+                setFlag('ok', notification);
+              }
+            })
+            .catch((error: Error) =>
+              setFlag(`record fetch failed: ${error.message}`, notification)
+            );
+        };
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'WebSocket reports 1005 when closed without a code, runtime: **%s**',
     async (runtimeKind) => {
       const notification = `ws_no_status_done_${runtimeKind}`;

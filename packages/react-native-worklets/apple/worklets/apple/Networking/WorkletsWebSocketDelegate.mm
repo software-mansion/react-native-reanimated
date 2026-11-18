@@ -195,23 +195,18 @@ std::string toStdString(NSString *_Nullable string)
   if (task == nil) {
     return;
   }
-  NSData *reasonData = [NSData dataWithBytes:reason.data() length:reason.size()];
-  /**
-   * https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1 - 1005 may never go on
-   * the wire. The frame carries a normal closure and the socket is recorded so
-   * the close event still reports 1005, as the peer would have produced.
-   */
-  auto wireCode = static_cast<NSURLSessionWebSocketCloseCode>(code);
   if (code == static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived)) {
-    wireCode = NSURLSessionWebSocketCloseCodeNormalClosure;
     [_lock lock];
     const auto record = _state->find(socketId);
     if (record != _state->end()) {
       record->second.noStatus = true;
     }
     [_lock unlock];
+    [task cancel];
+    return;
   }
-  [task cancelWithCloseCode:wireCode reason:reasonData];
+  NSData *reasonData = [NSData dataWithBytes:reason.data() length:reason.size()];
+  [task cancelWithCloseCode:static_cast<NSURLSessionWebSocketCloseCode>(code) reason:reasonData];
 }
 
 - (void)invalidate
@@ -267,6 +262,10 @@ std::string toStdString(NSString *_Nullable string)
     [self reportClose:socketId code:static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived) reason:"" wasClean:YES];
     return;
   }
+  if (error.code == NSURLErrorCancelled && [self isNoStatusClose:socketId]) {
+    [self reportClose:socketId code:static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived) reason:"" wasClean:YES];
+    return;
+  }
   [self reportError:socketId message:toStdString(error.localizedDescription)];
   [self reportClose:socketId code:static_cast<uint16_t>(WebSocketCloseCode::AbnormalClosure) reason:"" wasClean:NO];
 }
@@ -312,6 +311,15 @@ std::string toStdString(NSString *_Nullable string)
   return task;
 }
 
+- (BOOL)isNoStatusClose:(uint64_t)socketId
+{
+  [_lock lock];
+  const auto record = _state->find(socketId);
+  const BOOL noStatus = record != _state->end() && record->second.noStatus;
+  [_lock unlock];
+  return noStatus;
+}
+
 - (std::shared_ptr<WebSocketListener>)listenerFor:(uint64_t)socketId
 {
   [_lock lock];
@@ -353,15 +361,11 @@ std::string toStdString(NSString *_Nullable string)
   }
   record->second.closeReported = true;
   auto listener = record->second.listener;
-  const bool noStatus = record->second.noStatus;
   _state->erase(record);
   [_lock unlock];
 
   if (listener) {
-    const auto reported = noStatus && code == static_cast<uint16_t>(NSURLSessionWebSocketCloseCodeNormalClosure)
-        ? static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived)
-        : code;
-    listener->onClose(reported, std::move(reason), wasClean == YES);
+    listener->onClose(code, std::move(reason), wasClean == YES);
   }
 }
 

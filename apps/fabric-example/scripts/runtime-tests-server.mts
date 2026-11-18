@@ -317,6 +317,19 @@ function routeEchoRequest(
       res.end(ECHO_TEXT);
       return;
     }
+    case '/echo/ws-close': {
+      const record = wsCloseRecords.get(url.searchParams.get('key') ?? '');
+      if (record === undefined) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('no close recorded for this key');
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify(record));
+      return;
+    }
     case '/echo/json': {
       res.writeHead(200, {
         'Content-Type': 'application/json; charset=utf-8',
@@ -534,6 +547,7 @@ const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
 
 const httpServer = http.createServer(handleEchoRequest);
 const wss = new WebSocketServer({ noServer: true });
+const wsCloseRecords = new Map<string, { code: number; reason: string }>();
 /**
  * `handleProtocols` cannot reject a client: `ws` only calls it when the client
  * offered something, and a falsy return just omits the response header.
@@ -598,7 +612,12 @@ echoWss.on('connection', (socket, request) => {
   socket.on('message', (data, isBinary) => {
     socket.send(data, { binary: isBinary });
   });
-  socket.on('close', () => {});
+  const recordKey = options.get('record');
+  socket.on('close', (code, reason) => {
+    if (recordKey !== null) {
+      wsCloseRecords.set(recordKey, { code, reason: reason.toString() });
+    }
+  });
 });
 
 echoWss.on('error', (error) => {
