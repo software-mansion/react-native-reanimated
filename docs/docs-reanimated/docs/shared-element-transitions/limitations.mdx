@@ -41,6 +41,30 @@ A shared view moves only between two views in the same window.
 - With the [`USE_ANIMATION_BACKEND`](../guides/feature-flags.md#use_animation_backend) feature flag, the moving view does not follow the transforms that the animation backend applies to the parents of the target. Disable the flag if these parents move during a transition.
 - A text input that the target screen focuses when it opens shows the keyboard during the transition. If the keyboard moves the target view, for example in a `KeyboardAvoidingView`, the moving view changes its course. Focus the input when the transition ends: use the [`.withCallback()`](./shared-transition.mdx) callback of the outermost shared view, when `finished` is `true`. The `transitionEnd` event of the screen can come while the view still moves.
 
+## Press feedback
+
+The moving view starts with the opacity of its parents on the old screen, as React last rendered them. A component that dims while it is pressed, for example `TouchableOpacity` or a `Pressable` with a `({ pressed })` style that changes `opacity`, is usually still dim in that render when its `onPress` navigates. The moving view then starts dim and fades in during the move, separately from the press animation of the component, so the press shows twice.
+
+`TouchableOpacity` fades back with the native driver of React Native `Animated`, which React does not render. If the transition starts late, for example in a development build, the view is already brighter on screen and visibly dims again before it fades in.
+
+To show press feedback on a view that holds a shared view:
+
+- With Gesture Handler 3, use [`Touchable`](https://docs.swmansion.com/react-native-gesture-handler/docs/components/touchable) with `activeOpacity`. It dims the native view and does not change the `opacity` style, so the view moves with full opacity.
+- Otherwise, use a `Pressable` whose pressed style does not change `opacity`, for example a background color or `android_ripple`.
+
+```tsx
+import { Touchable } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
+
+function PhotoCard({ onPress }: { onPress: () => void }) {
+  return (
+    <Touchable activeOpacity={0.6} onPress={onPress}>
+      <Animated.Image sharedTransitionTag="photo" source={photo} />
+    </Touchable>
+  );
+}
+```
+
 ## Known issues
 
 - On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that moves to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
