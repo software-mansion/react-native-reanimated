@@ -100,6 +100,13 @@ enum class ScrollOffsets : std::uint8_t {
   IGNORED,
 };
 
+struct ScrollPosition {
+  Tag tag;
+  react::Point position;
+
+  bool operator==(const ScrollPosition &other) const = default;
+};
+
 // The frame and the clip that the layout gives a target, without the offsets of the scroll views around it.
 struct TargetLayout {
   react::Rect frame;
@@ -141,12 +148,18 @@ struct SharedTransitionRun {
   std::chrono::steady_clock::time_point targetWindowDeadline;
   bool restoreCarrierOnFinish = false;
   std::optional<CarrierClip> clip;
+  // The scroll positions on the path of the target that the end of the run includes.
+  std::vector<ScrollPosition> targetScroll;
   bool sourceDrawsWithinFrame = false;
   // The opacity of the ancestors of the target that the end of the run has. A built-in run follows its changes.
   Float targetAncestorOpacity = 1;
 
   bool holdsStart() const {
     return targetOffWindow && !followsTarget;
+  }
+
+  bool movesPathWithScroll() const {
+    return driver == SharedTransitionDriver::TIME && !followsTarget;
   }
 };
 
@@ -241,6 +254,12 @@ struct AncestorOutsideReactParent {
 struct NativePathPlacement {
   bool placed = false;
   std::optional<AncestorOutsideReactParent> outsideReactParent;
+};
+
+struct TargetAncestry {
+  std::vector<Ancestor> ancestors;
+  std::vector<react::Point> absolutePositions;
+  NativePathPlacement placement;
 };
 
 struct CollectedTransition {
@@ -376,7 +395,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<Serializable> &config,
       const ShadowView &before) const;
   void startSharedTransition(
-      const std::shared_ptr<LightNode> &carrier,
+      SharedTransitionRun &run,
       const ShadowView &before,
       const ShadowView &after,
       const Props::Shared &frameProps,
@@ -431,6 +450,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool carriesRunningRun(const SharedTransitionRun &run) const;
   void followTargetsPlacedNatively() const override;
   LayoutAnimation *liveGeometryAnimation(const SharedTransitionRun &run) const;
+  LayoutAnimation *timedAnimation(const SharedTransitionRun &run) const;
+  void moveWithScrolledTargets() const;
+  void moveWithScrolledTarget(SharedTransitionRun &run, LayoutAnimation &animation) const;
   bool followsWithoutRestart(const SharedTransitionRun &run, const ShadowView &carrierTarget) const;
   bool hasLiveTarget(const SharedTransitionRun &run) const;
   void markViewsFollowedBySharedTransitions() const;
@@ -677,7 +699,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       bool &placedNatively,
       AncestorClip *clip = nullptr,
       Float *ancestorOpacity = nullptr) const;
-  AncestorClip fitTargetClip(const SharedTransitionRun &run, const ShadowView &target, const AncestorClip &clip) const;
+  AncestorClip fitTargetClip(const SharedTransitionRun &run, const react::Rect &frame, const AncestorClip &clip) const;
   bool followsClipTarget(SharedTransitionRun &run, const AncestorClip &clip) const;
   void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void followProgressTargets(const PropsParserContext &propsParserContext) const;
@@ -699,6 +721,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const PropsParserContext &propsParserContext) const;
   bool targetEndChanged(const SharedTransitionRun &run, const ShadowView &carrierTarget, bool layoutKept) const;
   TargetLayout targetLayoutOf(const std::shared_ptr<LightNode> &target) const;
+  TargetAncestry ancestryOf(const SharedTransitionRun &run) const;
+  void takeTargetScroll(SharedTransitionRun &run) const;
+  std::vector<ScrollPosition> scrollPositionsOf(const std::shared_ptr<LightNode> &target) const;
+  react::Point scrolledDistance(const SharedTransitionRun &run, const TargetAncestry &ancestry) const;
+  static TargetAncestry withScrollPositions(TargetAncestry ancestry, const std::vector<ScrollPosition> &positions);
+  react::Point translationOnScreen(const TargetAncestry &ancestry) const;
+  AncestorClip targetClipOf(const SharedTransitionRun &run, const TargetAncestry &ancestry) const;
   ShadowView ownCarrierView(
       const ShadowView &view,
       const std::shared_ptr<LightNode> &carrier,
@@ -831,6 +860,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const LayoutAnimation &animation,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  static AncestorClip withAnimatedClip(AncestorClip clip, const LayoutAnimation &animation);
   void parseAncestorOpacityAndClip(
       const std::vector<Ancestor> &ancestors,
       const std::vector<react::Point> &absolutePositions,
