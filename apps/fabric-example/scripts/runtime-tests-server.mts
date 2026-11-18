@@ -87,10 +87,12 @@ const BOOLEAN_FLAGS = new Set([
   'skip-build',
   'build-only',
   'full',
+  'headless-task',
   'help',
 ]);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
+const ANDROID_HEADLESS_TASK_SERVICE = '.RuntimeTestsHeadlessTaskService';
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
@@ -156,6 +158,8 @@ const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
 const FULL = args.full === true || args.full === '';
+const HEADLESS_TASK =
+  args['headless-task'] === true || args['headless-task'] === '';
 const SIMULATOR =
   typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
 const UDID = typeof args.udid === 'string' ? args.udid : null;
@@ -167,7 +171,7 @@ const GITHUB_ACTIONS = CI_REPORT && process.env.GITHUB_ACTIONS === 'true';
 const GITHUB_STEP_SUMMARY = CI_REPORT
   ? (process.env.GITHUB_STEP_SUMMARY ?? '')
   : '';
-const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})`;
+const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''}${HEADLESS_TASK ? ', headless task' : ''})`;
 const MAX_ANNOTATIONS = 10;
 const STEP_SUMMARY_LIMIT_BYTES = 1024 * 1024;
 
@@ -199,6 +203,13 @@ if (SANITIZER && PLATFORM !== 'ios') {
 
 if (BUILD_ONLY && PLATFORM !== 'ios') {
   console.error('[runtime-tests] --build-only is only supported on iOS');
+  process.exit(1);
+}
+
+if (HEADLESS_TASK && (PLATFORM !== 'android' || LIBRARY !== 'worklets')) {
+  console.error(
+    '[runtime-tests] --headless-task is only supported with --platform android --library worklets'
+  );
   process.exit(1);
 }
 
@@ -1691,6 +1702,13 @@ async function exitAfterSuiteCommands(code: number) {
       ['shell', 'am', 'force-stop', ANDROID_APP_ID],
       { timeout: 5000 }
     ).catch(() => {});
+    if (HEADLESS_TASK) {
+      await adb(
+        androidLaunchSerial,
+        ['shell', 'cmd', 'deviceidle', 'whitelist', `-${ANDROID_APP_ID}`],
+        { timeout: 5000 }
+      ).catch(() => {});
+    }
   }
   wss.close(() => {
     httpServer.close(() => {
@@ -2108,10 +2126,14 @@ async function installAndLaunchAndroid(serial: string) {
     );
   }
 
+  androidLaunchSerial = serial;
+  if (HEADLESS_TASK) {
+    await startAndroidHeadlessTask(serial);
+    return;
+  }
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
-  androidLaunchSerial = serial;
   await adb(serial, [
     'shell',
     'am',
@@ -2132,6 +2154,42 @@ async function installAndLaunchAndroid(serial: string) {
     'RUNTIME_TESTS_WS_URL',
     WS_URL,
   ]);
+}
+
+/**
+ * Starts the runtime tests in a headless JS task of a process that has no
+ * Activity. Android refuses a service start for an app in the background, so
+ * the app stays on the power-save allowlist until the run ends.
+ */
+async function startAndroidHeadlessTask(serial: string) {
+  console.log(
+    `[runtime-tests] starting ${ANDROID_HEADLESS_TASK_SERVICE} of ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
+  );
+  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]);
+  await adb(serial, [
+    'shell',
+    'cmd',
+    'deviceidle',
+    'whitelist',
+    `+${ANDROID_APP_ID}`,
+  ]);
+  const { stdout, stderr } = await adb(serial, [
+    'shell',
+    'am',
+    'startservice',
+    '-n',
+    `${ANDROID_APP_ID}/${ANDROID_HEADLESS_TASK_SERVICE}`,
+    '--es',
+    'RUNTIME_TESTS_LIBRARY',
+    LIBRARY,
+    '--es',
+    'RUNTIME_TESTS_WS_URL',
+    WS_URL,
+  ]);
+  const output = `${stdout}${stderr}`;
+  if (/^Error/m.test(output)) {
+    throw new Error(`The headless task service did not start: ${output}`);
+  }
 }
 
 if (SHOULD_LAUNCH) {
@@ -2258,6 +2316,9 @@ Build and run
   --full                    Run the long variants (more iterations, complete
                             matrices) and the suites a short run skips, as
                             the nightly does.
+  --headless-task           Android, worklets only. Run the headless suites
+                            (headlessSuites.ts) in a headless JS task of a
+                            process that has no Activity.
   --after-suite <command>   Shell command to run each time the app finishes a
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending

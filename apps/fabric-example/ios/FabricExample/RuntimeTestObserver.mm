@@ -222,6 +222,11 @@ RCT_EXPORT_MODULE()
   reject(@"E_PLATFORM", @"Host pause tests require Android", nil);
 }
 
+- (void)hasCurrentActivity:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Activity checks require Android", nil);
+}
+
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {

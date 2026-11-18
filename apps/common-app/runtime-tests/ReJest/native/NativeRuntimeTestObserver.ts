@@ -84,6 +84,8 @@ export interface Spec extends TurboModule {
   waitForHeadlessTaskFinish(taskId: CodegenTypes.Int32): Promise<void>;
 
   delay(milliseconds: CodegenTypes.Int32): Promise<void>;
+
+  hasCurrentActivity(): Promise<boolean>;
 }
 
 export default TurboModuleRegistry.get<Spec>('RuntimeTestObserver');

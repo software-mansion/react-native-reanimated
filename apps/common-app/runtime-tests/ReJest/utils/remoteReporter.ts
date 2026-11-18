@@ -30,6 +30,7 @@ export interface RemoteReporterOptions {
   library: string;
   declaredSuites: DeclaredSuite[];
   onStatus: (message: string) => void;
+  onFinished?: () => void;
   onStart: (params: {
     only?: string[];
     full?: boolean;
@@ -74,6 +75,7 @@ export function runWithRemoteReporter({
   library,
   declaredSuites,
   onStatus,
+  onFinished,
   onStart,
 }: RemoteReporterOptions): () => void {
   let socket: WebSocket | null = null;
@@ -294,6 +296,7 @@ export function runWithRemoteReporter({
       .finally(() => {
         restoreConsole();
         restoreGlobalErrorHandler();
+        onFinished?.();
       });
   };
 

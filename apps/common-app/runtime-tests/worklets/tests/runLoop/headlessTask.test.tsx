@@ -1,5 +1,4 @@
 import { AppRegistry, Platform } from 'react-native';
-import { scheduleOnRN, scheduleOnUI } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
@@ -8,21 +7,13 @@ import {
   expect,
   test,
 } from '../../../ReJest/RuntimeTestsApi';
-
-type UICallbackName = 'requestAnimationFrame' | 'setTimeout';
-type FiredUICallbacks = Record<UICallbackName, boolean>;
+import { watchUICallbacks } from './watchUICallbacks';
 
 interface HeadlessTask {
   finish: () => Promise<void>;
 }
 
-interface UICallbacksWatch {
-  snapshot: () => FiredUICallbacks;
-  waitForAll: () => Promise<FiredUICallbacks>;
-}
-
 const HEADLESS_TASK_KEY = 'RuntimeTestsHeadlessTask';
-const UI_CALLBACKS_TIMEOUT_MS = 2000;
 const PAUSED_QUEUE_OBSERVATION_MS = 300;
 
 const headlessTaskBodies: (() => Promise<void>)[] = [];
@@ -139,38 +130,4 @@ async function startHeadlessTask(): Promise<HeadlessTask> {
   };
   startedHeadlessTasks.push(task);
   return task;
-}
-
-function watchUICallbacks(): UICallbacksWatch {
-  const fired: FiredUICallbacks = {
-    requestAnimationFrame: false,
-    setTimeout: false,
-  };
-  let onAllFired = () => {};
-  const allFired = new Promise<void>((resolve) => {
-    onAllFired = resolve;
-  });
-  const onFired = (name: UICallbackName) => {
-    fired[name] = true;
-    if (fired.requestAnimationFrame && fired.setTimeout) {
-      onAllFired();
-    }
-  };
-
-  scheduleOnUI(() => {
-    'worklet';
-    requestAnimationFrame(() => scheduleOnRN(onFired, 'requestAnimationFrame'));
-    setTimeout(() => scheduleOnRN(onFired, 'setTimeout'), 50);
-  });
-
-  return {
-    snapshot: () => ({ ...fired }),
-    waitForAll: async () => {
-      await Promise.race([
-        allFired,
-        RuntimeTestObserver!.delay(UI_CALLBACKS_TIMEOUT_MS),
-      ]);
-      return { ...fired };
-    },
-  };
 }
