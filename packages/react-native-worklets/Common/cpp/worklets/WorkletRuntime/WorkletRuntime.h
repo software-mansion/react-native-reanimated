@@ -439,7 +439,16 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       }
       if (taskState.microtaskCheckpointRequested) {
         if (microtaskQueueEnabled_) {
-          getJSIRuntime().drainMicrotasks();
+          jsi::Runtime &rt = getJSIRuntime();
+#ifndef NDEBUG
+          try {
+            rt.drainMicrotasks();
+          } catch (jsi::JSError &e) {
+            JSLogger::handleJSError(jsScheduler_, rt, name_, e, std::nullopt);
+          }
+#else
+          rt.drainMicrotasks();
+#endif // NDEBUG
         }
         taskState.microtaskCheckpointRequested = false;
       }

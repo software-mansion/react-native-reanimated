@@ -1,4 +1,5 @@
 import {
+  runOnUISync,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
@@ -15,6 +16,7 @@ import {
 
 const UI_ERROR = 'microtask error on the UI Runtime';
 const WORKER_ERROR = 'microtask error on a Worker Runtime';
+const SYNC_CALL_ERROR = 'microtask error in a synchronous call';
 const ALIVE_NOTIFICATION = 'RUNTIME_ALIVE_AFTER_MICROTASK_ERROR';
 
 describe('errors thrown by microtasks', () => {
@@ -36,6 +38,28 @@ describe('errors thrown by microtasks', () => {
           });
         });
       }).toThrow(UI_ERROR);
+
+      scheduleOnUI(() => {
+        'worklet';
+        queueMicrotask(() => {
+          scheduleOnRN(onAlive);
+        });
+      });
+      await waitForNotification(ALIVE_NOTIFICATION);
+    }
+  );
+
+  debugTest(
+    'reports an error thrown at the checkpoint of a synchronous call into the UI Runtime',
+    async () => {
+      await expect(() => {
+        runOnUISync(() => {
+          'worklet';
+          queueMicrotask(() => {
+            throw new Error(SYNC_CALL_ERROR);
+          });
+        });
+      }).toThrow(SYNC_CALL_ERROR);
 
       scheduleOnUI(() => {
         'worklet';
