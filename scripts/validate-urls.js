@@ -82,11 +82,7 @@ async function getFileAndUrls(dir) {
 function groupFilesByUrl(data) {
   const filesByUrl = new Map();
   for (const { file, url } of data) {
-    const urlWithoutFragment = url.split('#')[0];
-    filesByUrl.set(
-      urlWithoutFragment,
-      (filesByUrl.get(urlWithoutFragment) ?? new Set()).add(file)
-    );
+    filesByUrl.set(url, (filesByUrl.get(url) ?? new Set()).add(file));
   }
   return filesByUrl;
 }
@@ -131,13 +127,12 @@ async function validUrls(filesByUrl) {
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
-  const linksToCheck = data.filter(({ url }) => {
-    const urlWithoutFragment = url.split('#')[0];
-    return (
-      !skippedExactUrls.includes(url) &&
-      !skippedUrls.some((skippedUrl) => urlWithoutFragment.includes(skippedUrl))
+  const linksToCheck = data
+    .filter(({ url }) => !skippedExactUrls.includes(url))
+    .map(({ file, url }) => ({ file, url: url.split('#')[0] }))
+    .filter(
+      ({ url }) => !skippedUrls.some((skippedUrl) => url.includes(skippedUrl))
     );
-  });
   await validUrls(groupFilesByUrl(linksToCheck));
 }
 
