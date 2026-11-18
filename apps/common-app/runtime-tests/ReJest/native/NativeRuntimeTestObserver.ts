@@ -28,6 +28,20 @@ export type TransformObservation = {
   matrix: ReadonlyArray<number>;
 };
 
+/**
+ * The frame of the view in the window and its opacity with the opacity of its
+ * ancestors, as the screen shows them.
+ */
+export type PresentedFrame = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  opacity: number;
+  /** True while UIKit runs a transition of a view controller of the view. */
+  inContainerTransition: boolean;
+};
+
 /** A Remove that the iOS mounting layer applied. */
 export type UnmountObservation = {
   parentTag: number;
@@ -69,6 +83,20 @@ export interface Spec extends TurboModule {
     y: number,
     presentedY: number
   ): Promise<void>;
+
+  /**
+   * IOS only. Records the presented frames of the views in each display frame
+   * until `takeFrameRecording`.
+   */
+  startFrameRecording(tags: ReadonlyArray<CodegenTypes.Int32>): Promise<void>;
+
+  /**
+   * Returns one sample for each display frame, with one entry for each tag. The
+   * entry is null when the view is not in a window. Android returns null.
+   */
+  takeFrameRecording(): Promise<ReadonlyArray<
+    ReadonlyArray<PresentedFrame | null>
+  > | null>;
 
   startUnmountRecording(): Promise<void>;
 
