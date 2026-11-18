@@ -95,12 +95,6 @@ function groupFilesByUrl(data) {
 async function validUrls(filesByUrl) {
   let isBrokenUrlDetected = false;
   for (const [url, files] of filesByUrl) {
-    if (
-      skippedExactUrls.includes(url) ||
-      skippedUrls.some((skippedUrl) => url.includes(skippedUrl))
-    ) {
-      continue;
-    }
     const fileList = [...files].join('\n  ');
     try {
       const response = await fetch(url, {
@@ -137,7 +131,12 @@ async function validUrls(filesByUrl) {
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
-  await validUrls(groupFilesByUrl(data));
+  const linksToCheck = data.filter(
+    ({ url }) =>
+      !skippedExactUrls.includes(url) &&
+      !skippedUrls.some((skippedUrl) => url.includes(skippedUrl))
+  );
+  await validUrls(groupFilesByUrl(linksToCheck));
 }
 
 const skippedUrls = [
