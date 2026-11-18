@@ -163,6 +163,12 @@ export interface PluginOptions {
      * relative imports (like `'./utils'`) from a specific package, without
      * affecting identically-named relative imports in other packages.
      *
+     * A path matches whole folder names anywhere in the module's path. For
+     * a module in `node_modules`, only the part after the last
+     * `node_modules` is compared. A common name such as `'src'` therefore
+     * also matches packages with a `src` folder, for example
+     * `react-native-reanimated/src`. Use a path that only your code has.
+     *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths}
      *
      * - Defaults to an empty array `[]`.

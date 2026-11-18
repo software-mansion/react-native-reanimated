@@ -86,6 +86,8 @@ List of paths that determine whether a module forwards its **relative** imports 
 
 The Oxc plugin always does this for modules of `react-native-worklets`. The paths in this list are added to it.
 
+A common folder name, such as `src`, also matches packages in `node_modules` that have a folder with that name. See the [warning on the Babel plugin page](./options.mdx#importforwardingrelativepaths).
+
 ### extraPlugins
 
 Accepted but ignored. The Oxc plugin cannot run other Babel plugins on worklet functions, so it prints a warning when this list is not empty. Add these plugins next to the Oxc plugin in your `babel.config.js` instead. See [`extraPlugins`](./options.mdx#extraplugins) of the Babel plugin.

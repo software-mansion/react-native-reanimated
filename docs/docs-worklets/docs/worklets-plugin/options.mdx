@@ -513,6 +513,24 @@ function foo() {
 You can also narrow the path to a subdirectory — e.g. `my-library/src` or
 `my-library/src/utils` — to forward imports from only part of the library.
 
+The plugin compares each path with the path of the module as a sequence of whole
+folder names, which can appear anywhere in the path. For a module inside
+`node_modules`, the plugin compares only the part after the last `node_modules`,
+which starts with the package name. So `my-library` matches
+`node_modules/my-library/index.js`, and `my-library/src` matches
+`node_modules/my-library/src/utils.js`.
+
+:::warning
+A common folder name, such as `src`, also matches every package that has a folder
+with that name. For example, `src` matches `node_modules/react-native-reanimated/src/...`.
+The plugin then forwards the relative imports inside that package, and the Worklet
+Runtime loads modules that cannot run there. The app can crash, for example with
+`Accessing __fbBatchedBridgeConfig is not allowed on Worklet Runtimes`.
+
+Use a path that only your code has: the name of your package, or a folder name
+that no package in `node_modules` uses.
+:::
+
 `moduleNames` won't work here: adding `'./utils'` to it would forward every
 `'./utils'` import across the bundle, potentially breaking other libraries
 with a file at the same relative path. `relativePaths` scopes forwarding to a
