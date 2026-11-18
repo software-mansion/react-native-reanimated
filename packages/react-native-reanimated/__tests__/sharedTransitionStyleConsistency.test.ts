@@ -13,6 +13,9 @@ const transitions = readFileSync(
 const copy = transitions
   .split('ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(')[1]
   .split('\nvoid LayoutAnimationsProxy::detachCarrier(')[0];
+const ownCarrierView = transitions
+  .split('ShadowView LayoutAnimationsProxy::ownCarrierView(')[1]
+  .split('\nShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(')[0];
 const methods = [
   ...factory.matchAll(
     /void SharedTransitionValuesFactory::(\w+)\([^]*?(?=\n(?:void|std::vector|inline|jsi::Object|bool) |\n} \/\/ namespace)/g
@@ -29,7 +32,7 @@ const methods = [
   .map(([body]) => body)
   .join('\n');
 
-test('the Android carrier copies exactly the style keys that SharedTransitionValuesFactory animates', () => {
+test('the Android carrier copies exactly the style keys that SharedTransitionValuesFactory animates, and takes the opacity of the frame view', () => {
   const keys = transitions
     .split('constexpr std::array kAnimatedStyleProps{')[1]
     .split('};')[0];
@@ -37,17 +40,27 @@ test('the Android carrier copies exactly the style keys that SharedTransitionVal
   const animated = [...methods.matchAll(/"current(\w)(\w*)"/g)].map(
     ([, first, rest]) => first.toLowerCase() + rest
   );
-  expect(sorted(copied)).toEqual(sorted(animated));
+  expect(sorted(copied)).toEqual(
+    sorted(animated.filter((name) => name !== 'opacity'))
+  );
+  expect(ownCarrierView).toContain(
+    'rawProps["opacity"] = getViewProps(view).opacity;'
+  );
 });
 
-test('the iOS carrier copies the typed fields and border edges that SharedTransitionValuesFactory animates', () => {
+test('the iOS carrier copies the typed fields and border edges that SharedTransitionValuesFactory animates, and takes the opacity of the frame view', () => {
   const fields = [...methods.matchAll(/sourceViewProps\.(\w+)/g)]
     .map(([, name]) => name)
     .filter((name) => !['getBorderWidths', 'elevation'].includes(name));
   const copied = [...copy.matchAll(/viewProps\.(\w+) = sourceProps\./g)].map(
     ([, name]) => name
   );
-  expect(sorted(copied)).toEqual(sorted([...fields, 'boxShadow']));
+  expect(sorted(copied)).toEqual(
+    sorted([...fields.filter((name) => name !== 'opacity'), 'boxShadow'])
+  );
+  expect(ownCarrierView).toContain(
+    'cloneViewWithOpacity(carrierView, getViewProps(view).opacity, propsParserContext)'
+  );
   const widths = [...methods.matchAll(/sourceBorderWidths\.(\w+)/g)].map(
     ([, name]) => name.toLowerCase()
   );

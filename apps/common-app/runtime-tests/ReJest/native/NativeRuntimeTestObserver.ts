@@ -60,6 +60,12 @@ export interface Spec extends TurboModule {
   ): Promise<TextInputObservation | null>;
 
   /**
+   * The corner radius of the mounted view. Android reads the top-left radius,
+   * iOS reads the layer radius, which holds only a uniform radius.
+   */
+  observeBorderRadius(tag: CodegenTypes.Int32): Promise<number | null>;
+
+  /**
    * IOS only. Moves the native view between the mounted view and its React
    * parent down by `y`. The screen shows `presentedY` until the next call, as
    * during a Core Animation animation.
