@@ -1,9 +1,14 @@
 import { render } from '@testing-library/react-native';
+import type { ComponentType } from 'react';
+import type { ViewProps } from 'react-native';
 import { View } from 'react-native';
 
 import Animated, { makeMutable } from '../src';
 
-const AnimatedView = Animated.createAnimatedComponent(View);
+// View stands in for an SVG component, whose `fill` is styled through props.
+const AnimatedView = Animated.createAnimatedComponent(
+  View as ComponentType<ViewProps & { fill?: string }>
+);
 
 describe('pseudo selector values in animatedProps', () => {
   it('forwards the default value instead of the raw pseudo object', () => {
@@ -42,7 +47,11 @@ describe('pseudo selector values in animatedProps', () => {
   it('does not mistake a shared value for a pseudo selector object', () => {
     const sharedValue = makeMutable('rgb(0,0,255)');
     const { getByTestId } = render(
-      <AnimatedView animatedProps={{ fill: sharedValue }} testID="subject" />
+      <AnimatedView
+        // @ts-expect-error `animatedProps` types its values as plain styles, not shared values.
+        animatedProps={{ fill: sharedValue }}
+        testID="subject"
+      />
     );
 
     expect(getByTestId('subject').props.fill).toBe(sharedValue);

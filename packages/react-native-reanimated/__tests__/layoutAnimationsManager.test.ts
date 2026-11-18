@@ -324,7 +324,8 @@ describe('LayoutAnimationsManager', () => {
           17,
           LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
           values,
-          transition.build()
+          // The manager passes on the partial values that native sends.
+          transition.build() as Parameters<typeof manager.start>[3]
         );
         const updates = jest.mocked(globalThis._notifyAboutProgress).mock
           .lastCall?.[1];
@@ -459,7 +460,7 @@ describe('LayoutAnimationsManager', () => {
                 onStart: jest.fn(),
                 onFrame: () => false,
               }) as unknown as number
-          ),
+          ) as [number, number, number],
         },
       }));
       manager.stop(tag);
