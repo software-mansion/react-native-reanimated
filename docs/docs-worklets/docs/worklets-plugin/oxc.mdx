@@ -68,7 +68,7 @@ Configures [import forwarding](../bundleMode/importForwarding.mdx). It works the
 
 Defaults to an empty array.
 
-List of module names that should be forwarded as imports inside worklet functions. A name also matches its subpaths: with `my-library` in the list, imports from `my-library/some-file` are forwarded too, but imports from `my-library-extra` aren't. See [`importForwarding.moduleNames`](./options.mdx#importforwardingmodulenames) of the Babel plugin.
+List of module names that should be forwarded as imports inside worklet functions. A name also matches its subpaths: with `my-library` in the list, imports from `my-library/some-file` are forwarded too, but imports from `my-library-extra` aren't. Only named and default imports are forwarded. A namespace import (`import * as lib from 'my-library'`) is captured from the closure. See [`importForwarding.moduleNames`](./options.mdx#importforwardingmodulenames) of the Babel plugin.
 
 The Oxc plugin always forwards `react-native-worklets` and `react-native/Libraries/Core/setUpXHR`. The names in this list are added to them.
 

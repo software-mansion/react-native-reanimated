@@ -194,6 +194,22 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(files[0].content.includes(source)).toBe(forwarded);
     });
+
+    test('does not forward a namespace import of a listed module', () => {
+      const { files } = runPlugin(
+        `
+        import * as value from 'some-library';
+        function foo() {
+          'worklet';
+          return value;
+        }
+      `,
+        {},
+        { importForwarding: { moduleNames: ['some-library'] } }
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content.includes('some-library')).toBe(false);
+    });
   });
 
   describe('worklet file emission', () => {

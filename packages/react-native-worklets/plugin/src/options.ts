@@ -156,6 +156,9 @@ export interface PluginOptions {
      * import from `'my-library/some-file'` is forwarded too, but an import from
      * `'my-library-extra'` isn't.
      *
+     * Only named and default imports are forwarded. A namespace import (`import
+     * * as lib from 'my-library'`) is captured from the closure.
+     *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
      *
      * - Defaults to an empty array `[]`.
