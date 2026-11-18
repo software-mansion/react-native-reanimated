@@ -1162,6 +1162,9 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
         transaction,
         propsParserContext);
   }
+#ifdef __APPLE__
+  transaction.startedSources.push_back(nodes[BEFORE]);
+#endif
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->targetLayout = targetLayoutOf(nodes[AFTER]);
@@ -1424,6 +1427,86 @@ void LayoutAnimationsProxy::attachCarrier(
   if (run.contentFade) {
     restoreFadedChildren(*run.contentFade, {}, hiddenViewTags(), mutations, propsParserContext);
   }
+}
+
+// The carriers at the root keep their draw order.
+std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std::shared_ptr<LightNode> &node) const {
+  std::vector<SharedTransitionRun *> runs;
+  for (const auto &carrier : carrierPlacements_.atRoot()) {
+    auto *run = sharedTransitionRun(carrier->current.tag, SharedTransitionLifecycle::ACTIVE);
+    const bool removedOrInSubtree = carrier->presence() == ReactPresence::REMOVED || isInSubtree(carrier, node);
+    if (run && removedOrInSubtree && isInSubtree(run->target, node)) {
+      runs.push_back(run);
+    }
+  }
+  for (auto &run : activeSharedTransitionRuns()) {
+    if (run.carrier->placement() == CarrierPlacement::NESTED &&
+        std::ranges::any_of(
+            runs, [this, &run](const SharedTransitionRun *root) { return isCarriedBy(run.carrier, root->carrier); })) {
+      runs.push_back(&run);
+    }
+  }
+  return runs;
+}
+
+void LayoutAnimationsProxy::stopSharedTransitions(
+    const std::vector<SharedTransitionRun *> &runs,
+    const std::shared_ptr<LightNode> &node,
+    TransactionMeta &transaction) const {
+  const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
+  for (auto *run : runs) {
+    const auto modalContent = modalContentOfRun(*run, node);
+    if (!modalContent) {
+      continue;
+    }
+    finishCallback(*run, false);
+    restoreEndsOf(*run, transaction);
+    moveCarrierIntoModal(*run, modalContent, transaction.filteredMutations, propsParserContext);
+    run->lifecycle = SharedTransitionLifecycle::STOPPED;
+  }
+}
+
+// A nested carrier moves with the carrier that holds it.
+void LayoutAnimationsProxy::moveCarrierIntoModal(
+    SharedTransitionRun &run,
+    const std::shared_ptr<LightNode> &modalContent,
+    ShadowViewMutationList &mutations,
+    const PropsParserContext &propsParserContext) const {
+  const auto &node = run.carrier;
+  if (node->placement() == CarrierPlacement::AT_ROOT) {
+    const auto mounted = carrierViewOnScreen(run);
+    const auto &movedView = run.clip ? run.clip->view : mounted;
+    mutations.push_back(ShadowViewMutation::RemoveMutation(carrierHostTag(node), movedView, carrierHostIndex(node)));
+    const auto modal = modalContent->parent.lock();
+    carrierPlacements_.rehost(node, modal);
+    ensureCarrierLayer(modal, mutations, propsParserContext);
+    const auto offset = nativeOriginOnScreen(modalContent) - modalContent->current.layoutMetrics.frame.origin;
+    const auto host = carrierHostTag(node);
+    auto view = mounted;
+    view.layoutMetrics.frame.origin -= offset;
+    if (run.clip) {
+      auto clip = carrierClipOnScreen(run);
+      clip.frame.origin -= offset;
+      auto moved = clipAt(*run.clip, clip, propsParserContext);
+      mutations.push_back(ShadowViewMutation::InsertMutation(host, moved.view, carrierHostIndex(node)));
+      mutations.push_back(createPropsUpdate(run.clip->view, moved.view, host, propsParserContext));
+      mutations.push_back(ShadowViewMutation::UpdateMutation(run.clip->content, moved.content, moved.view.tag));
+      run.clip = std::move(moved);
+    } else {
+      mutations.push_back(ShadowViewMutation::InsertMutation(host, view, carrierHostIndex(node)));
+    }
+    mutations.push_back(createPropsUpdate(mounted, view, carrierParentTag(node), propsParserContext));
+    run.carrierStartView = view;
+  }
+  cancelLayoutAnimation(node->current.tag);
+}
+
+// UIKit can show a view outside its React parent, for example in a presented modal.
+react::Point LayoutAnimationsProxy::nativeOriginOnScreen(const std::shared_ptr<LightNode> &node) const {
+  auto ancestors = collectAncestors(node, true);
+  auto positions = getAbsolutePositionsForRootPathView(node, true);
+  placeNatively(ancestors, positions, false);
+  return positions[0];
 }
 
 void LayoutAnimationsProxy::retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
@@ -1951,12 +2034,16 @@ void LayoutAnimationsProxy::ensureCarrierLayer(
       propsParserContext,
       nullptr,
       RawProps(folly::dynamic::object("pointerEvents", "none")("importantForAccessibility", "no-hide-descendants")));
+#ifdef __APPLE__
+  // iOS mounts a view only with a view event emitter.
+  layer.eventEmitter = host->current.eventEmitter;
+#endif
   layer.layoutMetrics.frame.size = host->current.layoutMetrics.frame.size;
   layer.layoutMetrics.layoutDirection = host->current.layoutMetrics.layoutDirection;
   layer.layoutMetrics.pointScaleFactor = host->current.layoutMetrics.pointScaleFactor;
   carrierLayers_.emplace(host, layer);
   mutations.push_back(ShadowViewMutation::CreateMutation(layer));
-  if (!keepsCarrierLayerInWindow()) {
+  if (!isWindowLayerHost(host)) {
     mutations.push_back(ShadowViewMutation::InsertMutation(
         host->current.tag, layer, host->hostIndex(static_cast<int>(host->children.size()))));
     return;
@@ -1996,7 +2083,7 @@ void LayoutAnimationsProxy::removeCarrierLayersIn(
       continue;
     }
     react_native_assert(!carrierPlacements_.hostsCarriers(host) && "A carrier layer goes after its carriers");
-    if (keepsCarrierLayerInWindow()) {
+    if (isWindowLayerHost(host)) {
 #ifdef __APPLE__
       setSharedTransitionOverlay_(surfaceId_, std::nullopt);
 #endif
@@ -2016,6 +2103,10 @@ void LayoutAnimationsProxy::removeCarrierLayersIn(
     }
     it = carrierLayers_.erase(it);
   }
+}
+
+bool LayoutAnimationsProxy::isWindowLayerHost(const std::shared_ptr<LightNode> &host) const {
+  return keepsCarrierLayerInWindow() && host->current.tag == surfaceId_;
 }
 
 bool LayoutAnimationsProxy::keepsCarrierLayerInWindow() const {
@@ -2576,9 +2667,7 @@ void LayoutAnimationsProxy::finishSharedTransition(
   finishCallback(run, landed);
   finishNestedSharedTransitions(run.carrier, transaction, propsParserContext, landed);
   const bool targetGone = !isLightNodeMapped(run.target) || run.target->isExiting();
-  // A gesture-driven run leaves its source to the screen pop.
-  transaction.restoreRequests.push_back(
-      {run.sharedTag, run.target, run.driver == SharedTransitionDriver::GESTURE ? nullptr : run.source});
+  restoreEndsOf(run, transaction);
   if (run.lifecycle != SharedTransitionLifecycle::FINISHED) {
     attachCarrier(run, transaction.filteredMutations, propsParserContext);
   } else if (run.contentFade) {
@@ -2594,6 +2683,12 @@ void LayoutAnimationsProxy::finishSharedTransition(
   if (!heldEnterings_.empty()) {
     schedulePullOnNextFrame();
   }
+}
+
+// A gesture-driven run leaves its source to the screen pop.
+void LayoutAnimationsProxy::restoreEndsOf(const SharedTransitionRun &run, TransactionMeta &transaction) const {
+  transaction.restoreRequests.push_back(
+      {run.sharedTag, run.target, run.driver == SharedTransitionDriver::GESTURE ? nullptr : run.source});
 }
 
 // The runs nested in a carrier move with it, so they end when it attaches.
@@ -2783,7 +2878,9 @@ void LayoutAnimationsProxy::applyContentOpacity(
 std::vector<SharedTransitionRun *> LayoutAnimationsProxy::contentFadeRuns() const {
   std::vector<SharedTransitionRun *> runs;
   for (auto &[_, run] : sharedTransitionRuns_) {
-    if (run.lifecycle != SharedTransitionLifecycle::FINISHED && run.contentFade) {
+    const bool fades =
+        run.lifecycle == SharedTransitionLifecycle::ACTIVE || run.lifecycle == SharedTransitionLifecycle::RETIRING;
+    if (fades && run.contentFade) {
       runs.push_back(&run);
     }
   }
@@ -3129,7 +3226,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
       deferRestore(request);
       continue;
     }
-    if (node->isCarrier() || !showHiddenView(request) || !isLightNodeMapped(node)) {
+    if (node->isCarrier() || isInHeldModal(node) || !showHiddenView(request) || !isLightNodeMapped(node)) {
       continue;
     }
     resolveLightNodeProps(node);

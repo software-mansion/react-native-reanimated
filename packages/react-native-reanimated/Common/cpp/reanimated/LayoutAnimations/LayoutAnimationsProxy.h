@@ -84,6 +84,8 @@ enum class SharedTransitionDriver : std::uint8_t {
 enum class SharedTransitionLifecycle : std::uint8_t {
   ACTIVE,
   RETIRING,
+  // The carrier stays where it is in a held modal until React Native removes the modal.
+  STOPPED,
   FINISHED,
 };
 
@@ -289,6 +291,9 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
+#ifdef __APPLE__
+  std::vector<std::shared_ptr<LightNode>> startedSources;
+#endif
   std::vector<RestoreRequest> restoreRequests;
   std::vector<InsertedSharedView> insertedSharedViews;
   // the place in filteredMutations of the first Remove of a screen that React Native Screens snapshots
@@ -612,6 +617,17 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       SharedTransitionRun &run,
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
+  void stopSharedTransitions(
+      const std::vector<SharedTransitionRun *> &runs,
+      const std::shared_ptr<LightNode> &node,
+      TransactionMeta &transaction) const;
+  void moveCarrierIntoModal(
+      SharedTransitionRun &run,
+      const std::shared_ptr<LightNode> &modalContent,
+      ShadowViewMutationList &mutations,
+      const PropsParserContext &propsParserContext) const;
+  react::Point nativeOriginOnScreen(const std::shared_ptr<LightNode> &node) const;
+  std::vector<SharedTransitionRun *> runsEndedBy(const std::shared_ptr<LightNode> &node) const;
   void retainRemovedCarriers(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void removeCarriersHostedIn(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   void retainCarrierContent(const std::shared_ptr<LightNode> &node) const;
@@ -653,6 +669,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext) const;
   void retireSharedTransition(SharedTransitionRun &run) const;
+  void restoreEndsOf(const SharedTransitionRun &run, TransactionMeta &transaction) const;
   void finishRetiringSharedTransitions(
       TransactionMeta &transaction,
       const PropsParserContext &propsParserContext,
@@ -889,8 +906,18 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
   bool hasRunningAnimations() const;
 #ifdef __APPLE__
-  bool holdsSourceInModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
+  bool holdsModal(
+      const std::shared_ptr<LightNode> &node,
+      const std::vector<SharedTransitionRun *> &endedRuns,
+      const TransactionMeta &transaction) const;
 #endif
+  std::shared_ptr<LightNode> modalContentOfRun(const SharedTransitionRun &run, const std::shared_ptr<LightNode> &root)
+      const;
+  std::shared_ptr<LightNode> modalContentOf(
+      const std::shared_ptr<LightNode> &view,
+      const std::shared_ptr<LightNode> &root) const;
+  bool isWindowLayerHost(const std::shared_ptr<LightNode> &host) const;
+  bool isInHeldModal(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;
 

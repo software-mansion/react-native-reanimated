@@ -1104,20 +1104,30 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
+  const bool defersTeardown = holdsSnapshottedScreen(node);
+  [[maybe_unused]] bool heldModal = false;
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     if (!transaction.surfaceDropped) {
       moveNestedCarriersOutOf(node, transaction);
     }
     removeCarriersHostedIn(node, transaction);
+#ifdef __APPLE__
+    if (!defersTeardown) {
+      const auto endedRuns = runsEndedBy(node);
+      heldModal = holdsModal(node, endedRuns, transaction);
+      if (heldModal && !transaction.surfaceDropped) {
+        stopSharedTransitions(endedRuns, node, transaction);
+      }
+    }
+#endif
     retainRemovedCarriers(node, transaction);
     if (node->presence() == ReactPresence::REMOVED) {
       return;
     }
   }
-  const bool defersTeardown = holdsSnapshottedScreen(node);
   const bool removesRootFirst = defersTeardown || (startsExitTransitionOnRemove(node) && hasRunningAnimations());
 #ifdef __APPLE__
-  if (!defersTeardown && holdsSourceInModal(node, transaction)) {
+  if (heldModal) {
     std::unordered_set<Tag> heldTags;
     collectSubtreeTags(node, heldTags);
     for (const auto tag : heldTags) {
@@ -1180,40 +1190,58 @@ bool LayoutAnimationsProxy::hasRunningAnimations() const {
 
 #ifdef __APPLE__
 // React Native animates a modal that it removes while presented from a snapshot of what the screen shows, which lags a
-// mount by up to two frames. A modal that holds the source of a transition stays mounted until 34 ms, two frames of a
-// 60 Hz display, after the mount that hides the source.
-bool LayoutAnimationsProxy::holdsSourceInModal(
+// mount by up to two frames. A modal stays mounted until 34 ms, two frames of a 60 Hz display, after a source leaves it
+// or a run in it stops.
+bool LayoutAnimationsProxy::holdsModal(
     const std::shared_ptr<LightNode> &node,
+    const std::vector<SharedTransitionRun *> &endedRuns,
     const TransactionMeta &transaction) const {
-  return std::ranges::any_of(transaction.transitionMap, [&](const auto &entry) {
-    bool insideModal = false;
-    for (const auto &ancestor : entry.second.ancestors[BEFORE]) {
-      const auto ancestorIt = lightNodes_.find(ancestor.tag);
-      if (ancestorIt == lightNodes_.end()) {
-        return false;
-      }
-      insideModal = insideModal || !strcmp(ancestorIt->second->current.componentName, "ModalHostView");
-      if (ancestorIt->second == node) {
-        return insideModal;
-      }
-    }
-    return false;
-  });
+  const auto isInModal = [&](const std::shared_ptr<LightNode> &view) {
+    return modalContentOf(view, node) != nullptr;
+  };
+  return std::ranges::any_of(transaction.startedSources, isInModal) ||
+      std::ranges::any_of(
+             endedRuns, [&](const SharedTransitionRun *run) { return modalContentOfRun(*run, node) != nullptr; });
 }
 #endif
+
+// A removed carrier, and a carrier nested in it, have no path to the modal, so find the modal from the target.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOfRun(
+    const SharedTransitionRun &run,
+    const std::shared_ptr<LightNode> &root) const {
+  const auto detachedCarrier = detachedCarrierOf(run.carrier);
+  const bool removed = detachedCarrier && detachedCarrier->presence() == ReactPresence::REMOVED;
+  return modalContentOf(removed ? run.target : run.carrier, root);
+}
+
+std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(
+    const std::shared_ptr<LightNode> &view,
+    const std::shared_ptr<LightNode> &root) const {
+  std::shared_ptr<LightNode> content;
+  for (auto child = view, ancestor = view->parent.lock(); ancestor;
+       child = ancestor, ancestor = ancestor->parent.lock()) {
+    if (!content && !strcmp(ancestor->current.componentName, "ModalHostView")) {
+      content = child;
+    }
+    if (ancestor == root) {
+      return content;
+    }
+  }
+  return nullptr;
+}
+
+bool LayoutAnimationsProxy::isInHeldModal([[maybe_unused]] const std::shared_ptr<LightNode> &node) const {
+#ifdef __APPLE__
+  return std::ranges::any_of(heldModals_, [&node](const HeldModal &held) { return isInSubtree(node, held.node); });
+#else
+  return false;
+#endif
+}
 
 // A UI-thread pull on Android must not update the views that the next flushing pull removes, because
 // Android can mount that JS-thread pull first.
 void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) const {
   std::vector<std::shared_ptr<LightNode>> finishedExits;
-  for (const auto &[tag, completedAnimation] : completedAnimations_) {
-    const auto nodeIt = lightNodes_.find(tag);
-    if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
-        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second)) {
-      continue;
-    }
-    finishedExits.push_back(nodeIt->second);
-  }
 #ifdef __APPLE__
   const auto now = std::chrono::steady_clock::now();
   for (auto &node : transaction.modalsToHold) {
@@ -1224,6 +1252,7 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
       return true;
     }
     if (transaction.surfaceDropped || now >= held.removableAt) {
+      removeCarriersHostedIn(held.node, transaction);
       finishedExits.push_back(held.node);
       return true;
     }
@@ -1231,6 +1260,14 @@ void LayoutAnimationsProxy::collectDueRemovals(TransactionMeta &transaction) con
     return false;
   });
 #endif
+  for (const auto &[tag, completedAnimation] : completedAnimations_) {
+    const auto nodeIt = lightNodes_.find(tag);
+    if (!completedAnimation.shouldRemove || hasPendingLayoutAnimation(tag) || nodeIt == lightNodes_.end() ||
+        nodeIt->second->state != COMPLETED || isRetainedContent(nodeIt->second)) {
+      continue;
+    }
+    finishedExits.push_back(nodeIt->second);
+  }
   transaction.dueRemovals = collectRemovals(finishedExits);
 }
 
