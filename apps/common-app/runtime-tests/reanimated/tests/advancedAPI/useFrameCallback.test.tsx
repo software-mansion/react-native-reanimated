@@ -184,6 +184,16 @@ async function expectConsistentFrames(probe: string, firstFrames: number) {
   expect(await readValue(probe, VIOLATIONS)).toBe(0, ComparisonMode.NUMBER);
 }
 
+// Call only while the probe is stopped, so both values are from the same frame.
+async function expectDeltasAddUp(probe: string) {
+  const timeSinceFirstFrame = await readValue(probe, TIME_SINCE_FIRST_FRAME);
+  expect(timeSinceFirstFrame).toBeWithinRange(1, Number.MAX_SAFE_INTEGER);
+  expect(await readValue(probe, DELTA_SUM)).toBe(
+    timeSinceFirstFrame,
+    ComparisonMode.FLOAT_DISTANCE
+  );
+}
+
 describe('useFrameCallback', () => {
   beforeEach(() => {
     frameCallbacks = {};
@@ -245,7 +255,7 @@ describe('useFrameCallback', () => {
 
   test('unmounting the component stops its callback', async () => {
     await render(<Scenario autostart withSecond />);
-    await waitForFrames(WARM_UP_FRAMES);
+    await expectRunsForEveryFrame(SECOND);
 
     await render(<Scenario autostart />);
     await expectStopped(SECOND);
@@ -279,26 +289,26 @@ describe('useFrameCallback', () => {
 
     getFrameCallback(FIRST).setActive(true);
     await waitForFrames(MEASURED_FRAMES);
+    // SECOND must still be stopped here, so that it joins a running loop.
+    expect(await readValue(FIRST, COUNT)).toBeWithinRange(
+      1,
+      Number.MAX_SAFE_INTEGER
+    );
+    expect(await readValue(SECOND, COUNT)).toBe(0, ComparisonMode.NUMBER);
     getFrameCallback(SECOND).setActive(true);
     await waitForFrames(MEASURED_FRAMES);
     getFrameCallback(FIRST).setActive(false);
     await waitForFrames(MEASURED_FRAMES);
+    // The restart resets FIRST's sums, so check the first run now.
+    await expectDeltasAddUp(FIRST);
     getFrameCallback(FIRST).setActive(true);
     await waitForFrames(MEASURED_FRAMES);
     getFrameCallback(FIRST).setActive(false);
     getFrameCallback(SECOND).setActive(false);
 
-    for (const probe of [FIRST, SECOND]) {
-      const timeSinceFirstFrame = await readValue(
-        probe,
-        TIME_SINCE_FIRST_FRAME
-      );
-      expect(timeSinceFirstFrame).toBeWithinRange(1, Number.MAX_SAFE_INTEGER);
-      expect(await readValue(probe, DELTA_SUM)).toBe(
-        timeSinceFirstFrame,
-        ComparisonMode.FLOAT_DISTANCE
-      );
-    }
+    await waitForFrames(MEASURED_FRAMES);
+    await expectDeltasAddUp(FIRST);
+    await expectDeltasAddUp(SECOND);
     await expectConsistentFrames(FIRST, 2);
     await expectConsistentFrames(SECOND, 1);
   });
