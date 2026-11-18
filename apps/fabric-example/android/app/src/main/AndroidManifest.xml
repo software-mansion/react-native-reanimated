@@ -32,6 +32,7 @@
         android:exported="false" />
       <service
         android:name=".RuntimeTestsHeadlessTaskService"
+        android:permission="android.permission.DUMP"
         android:exported="true" />
     </application>
 </manifest>

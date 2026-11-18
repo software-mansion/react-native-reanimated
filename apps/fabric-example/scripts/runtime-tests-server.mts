@@ -213,6 +213,13 @@ if (HEADLESS_TASK && (PLATFORM !== 'android' || LIBRARY !== 'worklets')) {
   process.exit(1);
 }
 
+if (HEADLESS_TASK && !SHOULD_LAUNCH) {
+  console.error(
+    '[runtime-tests] --headless-task needs --launch, because only the driver starts the headless task service'
+  );
+  process.exit(1);
+}
+
 if (BUILD_ONLY && SHOULD_LAUNCH) {
   console.error(
     '[runtime-tests] --build-only cannot be combined with --launch'
@@ -230,6 +237,8 @@ let idleTimer: ReturnType<typeof setTimeout> | null = null;
 let metroChild: ChildProcess | null = null;
 let androidSerial: string | null = null;
 let androidLaunchSerial: string | null = null;
+let androidHeadlessTaskStartup: Promise<void> | null = null;
+let addedAndroidPowerSaveExemption = false;
 let iosUdid: string | null = null;
 let crashDiagnosticsPromise: Promise<void> | null = null;
 let afterSuiteChain: Promise<void> = Promise.resolve();
@@ -1696,13 +1705,14 @@ async function exitAfterSuiteCommands(code: number) {
   await afterSuiteChain;
   // The task left by the test launch would otherwise start the tests again
   // when the app is reopened from the launcher.
+  await androidHeadlessTaskStartup?.catch(() => {});
   if (androidLaunchSerial) {
     await adb(
       androidLaunchSerial,
       ['shell', 'am', 'force-stop', ANDROID_APP_ID],
       { timeout: 5000 }
     ).catch(() => {});
-    if (HEADLESS_TASK) {
+    if (addedAndroidPowerSaveExemption) {
       await adb(
         androidLaunchSerial,
         ['shell', 'cmd', 'deviceidle', 'whitelist', `-${ANDROID_APP_ID}`],
@@ -2128,7 +2138,8 @@ async function installAndLaunchAndroid(serial: string) {
 
   androidLaunchSerial = serial;
   if (HEADLESS_TASK) {
-    await startAndroidHeadlessTask(serial);
+    androidHeadlessTaskStartup = startAndroidHeadlessTask(serial);
+    await androidHeadlessTaskStartup;
     return;
   }
   console.log(
@@ -2165,7 +2176,30 @@ async function startAndroidHeadlessTask(serial: string) {
   console.log(
     `[runtime-tests] starting ${ANDROID_HEADLESS_TASK_SERVICE} of ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
-  await adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]);
+  const steps = [
+    () => adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID]),
+    () => addAndroidPowerSaveExemption(serial),
+    () => startAndroidHeadlessTaskService(serial),
+  ];
+  for (const step of steps) {
+    if (shutdownStarted) {
+      return;
+    }
+    await step();
+  }
+}
+
+async function addAndroidPowerSaveExemption(serial: string) {
+  const { stdout } = await adb(serial, [
+    'shell',
+    'cmd',
+    'deviceidle',
+    'whitelist',
+  ]);
+  if (stdout.includes(`,${ANDROID_APP_ID},`)) {
+    return;
+  }
+  addedAndroidPowerSaveExemption = true;
   await adb(serial, [
     'shell',
     'cmd',
@@ -2173,6 +2207,9 @@ async function startAndroidHeadlessTask(serial: string) {
     'whitelist',
     `+${ANDROID_APP_ID}`,
   ]);
+}
+
+async function startAndroidHeadlessTaskService(serial: string) {
   const { stdout, stderr } = await adb(serial, [
     'shell',
     'am',

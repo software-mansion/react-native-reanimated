@@ -30,6 +30,7 @@ export interface RemoteReporterOptions {
   library: string;
   declaredSuites: DeclaredSuite[];
   onStatus: (message: string) => void;
+  /** Called once, when the connection to the server has ended. */
   onFinished?: () => void;
   onStart: (params: {
     only?: string[];
@@ -85,6 +86,7 @@ export function runWithRemoteReporter({
     socket = new WebSocket(wsUrl);
   } catch (error) {
     onStatus(`Failed to open WebSocket: ${(error as Error).message}`);
+    onFinished?.();
     return () => {};
   }
 
@@ -226,6 +228,7 @@ export function runWithRemoteReporter({
     }
     restoreConsole();
     restoreGlobalErrorHandler();
+    onFinished?.();
   };
 
   ws.onmessage = (event) => {
@@ -296,7 +299,6 @@ export function runWithRemoteReporter({
       .finally(() => {
         restoreConsole();
         restoreGlobalErrorHandler();
-        onFinished?.();
       });
   };
 
