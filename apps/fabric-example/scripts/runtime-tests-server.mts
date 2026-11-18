@@ -99,6 +99,7 @@ const ANDROID_HEADLESS_TASK_EXEMPTION_MS = 15 * 60 * 1000;
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
+const derivedDataDir = path.join(iosDir, 'build', 'DerivedData');
 const androidDir = path.join(projectRoot, 'android');
 const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
 const CRASH_REPORT_DIR = path.join(projectRoot, 'crash-reports');
@@ -1915,6 +1916,8 @@ function xcodebuildArgs(udid: string | null) {
     'Debug FabricExample',
     '-configuration',
     CONFIGURATION,
+    '-derivedDataPath',
+    derivedDataDir,
     ...(udid
       ? [
           '-destination',
@@ -1958,6 +1961,9 @@ async function appPath(udid: string | null) {
 
 async function installAndLaunch(udid: string) {
   const app = await appPath(udid);
+  if (!fs.existsSync(app)) {
+    throw new Error(`App not found at ${app} — run once without --skip-build`);
+  }
   if (SANITIZER) {
     assertSanitizerRuntimeEmbedded(app);
   }
@@ -2346,7 +2352,8 @@ Build and run
   --configuration <name>    Xcode configuration / Gradle build type.
                             Default: Debug. ReleaseRuntimeTests embeds the
                             bundles and runs without Metro.
-  --skip-build              Reuse the installed app. Only safe when nothing
+  --skip-build              Reuse the last build (on iOS the one in
+                            ios/build/DerivedData). Only safe when nothing
                             native changed - JS is served by Metro.
   --launch                  Launch the app after installing it.
   --only <a,b>              Comma separated suite names to run. Suite names come
