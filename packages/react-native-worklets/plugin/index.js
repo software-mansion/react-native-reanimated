@@ -1347,7 +1347,7 @@ var require_imports = __commonJS({
       return imported.path.parentPath.node.source.value.startsWith(".");
     }
     function canForwardModuleImport(moduleName, forwardableModuleNames) {
-      return forwardableModuleNames.some((forwardableModuleName) => moduleName === forwardableModuleName || moduleName.startsWith(forwardableModuleName + "/"));
+      return forwardableModuleNames.includes(moduleName);
     }
     function canForwardRelativeImport(modulePath, relativePaths) {
       return !!modulePath && relativePaths.some((relativePath) => matchesFilenameSegment(modulePath, relativePath));
