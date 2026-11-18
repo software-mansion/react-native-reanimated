@@ -24,7 +24,6 @@ const UPDATED_WIDTH = 200;
 const SECOND_UPDATED_WIDTH = 250;
 const FLUSH_INTERVAL_MS = 500;
 const SETTLE_THRESHOLD_MS = 1000;
-const IDLE_WAIT_MS = FLUSH_INTERVAL_MS * 3;
 const SYNC_AND_EVICT_WAIT_MS = SETTLE_THRESHOLD_MS + FLUSH_INTERVAL_MS * 4;
 
 let widthValue: SharedValue<number> | null = null;
@@ -38,9 +37,11 @@ function isSyncRunning() {
   return PropsRegistryGarbageCollector.intervalId !== null;
 }
 
-const intervalTest = getStaticFeatureFlag('USE_ANIMATION_BACKEND')
-  ? test.skip
-  : test;
+const isSettledPropsSyncEnabled =
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
+  !getStaticFeatureFlag('USE_ANIMATION_BACKEND');
+
+const intervalTest = isSettledPropsSyncEnabled ? test : test.skip;
 
 describe('settled props sync interval', () => {
   intervalTest(
@@ -48,7 +49,7 @@ describe('settled props sync interval', () => {
     async () => {
       await render(<StaticBox />);
 
-      await wait(IDLE_WAIT_MS);
+      await wait(SYNC_AND_EVICT_WAIT_MS);
 
       expect(isSyncRunning()).toBe(false);
     }
@@ -59,7 +60,7 @@ describe('settled props sync interval', () => {
     async () => {
       await render(<ResizableBox />);
       const box = getTestComponent(BOX_REF);
-      await wait(IDLE_WAIT_MS);
+      await wait(SYNC_AND_EVICT_WAIT_MS);
       expect(isSyncRunning()).toBe(false);
 
       widthValue!.value = UPDATED_WIDTH;
@@ -77,7 +78,7 @@ describe('settled props sync interval', () => {
   intervalTest('runs again for a later write to the same view', async () => {
     await render(<ResizableBox />);
     const box = getTestComponent(BOX_REF);
-    await wait(IDLE_WAIT_MS);
+    await wait(SYNC_AND_EVICT_WAIT_MS);
 
     for (const width of [UPDATED_WIDTH, SECOND_UPDATED_WIDTH]) {
       expect(isSyncRunning()).toBe(false);
