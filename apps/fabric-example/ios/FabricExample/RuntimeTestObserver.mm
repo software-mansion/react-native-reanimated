@@ -203,7 +203,7 @@ RCT_EXPORT_MODULE()
 {
   UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
   RCTScheduler *scheduler = self.surfacePresenter.scheduler;
-  if (view.window == nil || scheduler == nil) {
+  if (view == nil || scheduler == nil) {
     return {};
   }
   auto uiManager = scheduler.uiManager;

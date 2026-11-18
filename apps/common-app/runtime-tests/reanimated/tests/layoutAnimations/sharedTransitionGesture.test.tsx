@@ -504,6 +504,244 @@ async function pushOverPager() {
   return tags;
 }
 
+// The container detaches the covered screens, as a native stack does until its back transition starts.
+function DetachedStack({
+  count,
+  top,
+  revealed,
+}: {
+  count: number;
+  top: number;
+  revealed?: number;
+}) {
+  return (
+    <ScreenContainer style={styles.container}>
+      {[0, 1, 2]
+        .filter((index) => index <= top)
+        .map((index) => (
+          <DetachedStackScreen
+            key={index}
+            index={index}
+            attached={index === top || index === revealed}
+            active={index === top}
+            style={
+              index === top && index === count - 1
+                ? styles.source
+                : index === 0
+                  ? styles.target
+                  : styles.hiddenTabTarget
+            }
+          />
+        ))}
+    </ScreenContainer>
+  );
+}
+
+function DetachedStackScreen({
+  index,
+  attached,
+  active,
+  style,
+}: {
+  index: number;
+  attached: boolean;
+  active: boolean;
+  style: object;
+}) {
+  const screen = useTestRef(`detached-screen-${index}`);
+  const view = useTestRef(`detached-view-${index}`);
+  return (
+    <Screen
+      ref={screen}
+      onAppear={() => notify(`detached-screen-${index}-appeared`)}
+      enabled
+      activityState={attached ? 2 : 0}
+      style={styles.screen}>
+      <SharedTransitionBoundary isActive={active}>
+        <Animated.View
+          ref={view}
+          sharedTransitionTag="detached-stack"
+          sharedTransitionStyle={transition}
+          style={style}
+        />
+      </SharedTransitionBoundary>
+    </Screen>
+  );
+}
+
+async function pushDetachedStack(count: number) {
+  await mockAnimationTimer({ autoAdvance: false });
+  for (let top = 0; top < count; top++) {
+    await render(<DetachedStack count={count} top={top} />);
+    await waitForNotification(`detached-screen-${top}-appeared`);
+    await waitForFrames(3);
+    await advanceAnimationTimer(30000);
+    await waitForFrames(3);
+  }
+}
+
+// UIKit reports the progress of the closing screen first, then of the screen that it reveals.
+async function emitPopProgress(
+  closingScreen: number,
+  revealedScreen: number,
+  progress: number
+) {
+  await observer().emitScreenTransitionProgress(
+    closingScreen,
+    progress,
+    true,
+    false
+  );
+  await observer().emitScreenTransitionProgress(
+    revealedScreen,
+    progress,
+    false,
+    false
+  );
+}
+
+describe('Back transition to a screen out of the window', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([
+    ['starts at the first progress event', 2],
+    ['aims at the screen that the back menu reveals', 3],
+  ] as const)('${0}', async ([, count]) => {
+    await pushDetachedStack(count);
+    const closingScreen = getTestComponent(
+      `detached-screen-${count - 1}`
+    ).getTag();
+    const revealedScreen = getTestComponent('detached-screen-0').getTag();
+    const source = getTestComponent(`detached-view-${count - 1}`).getTag();
+    const originalParent = await observer().observeParent(source);
+    expect(originalParent !== null).toBe(true);
+    expect(
+      await observer().observeParent(
+        getTestComponent('detached-view-0').getTag()
+      )
+    ).toBe(null);
+
+    await emitPopProgress(closingScreen, revealedScreen, 0);
+    await expectEventually(async () => {
+      const parent = await observer().observeParent(source);
+      return parent !== null && parent !== originalParent;
+    }).toBe(true);
+    await render(<DetachedStack count={count} top={count - 1} revealed={0} />);
+    await waitForFrames(3);
+    await emitPopProgress(closingScreen, revealedScreen, 0.5);
+    await expectCarrier(source, 105);
+
+    await emitPopProgress(closingScreen, revealedScreen, 1);
+    await render(<DetachedStack count={count} top={0} />);
+    await expectEventually(() => opacityOf('detached-view-0')).toBe(1);
+  });
+
+  gestureTest('aims at the tab that the screen shows now', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<CoveredTabsStack stage="below" shownTab="a" />);
+    await waitForNotification('covered-tabs-source-appeared');
+    await render(<CoveredTabsStack stage="pushed" shownTab="a" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(30000);
+    await waitForFrames(3);
+    await render(<CoveredTabsStack stage="pushed" shownTab="b" />);
+    await waitForFrames(3);
+    const closingScreen = getTestComponent('coveredTabsSourceScreen').getTag();
+    const revealedScreen = getTestComponent('coveredTabsTargetScreen').getTag();
+    const source = getTestComponent('coveredTabsSource').getTag();
+    const originalParent = await observer().observeParent(source);
+    expect(originalParent !== null).toBe(true);
+    expect(
+      await observer().observeParent(
+        getTestComponent('coveredTabsShownTarget').getTag()
+      )
+    ).toBe(null);
+
+    await emitPopProgress(closingScreen, revealedScreen, 0);
+    await expectEventually(async () => {
+      const parent = await observer().observeParent(source);
+      return parent !== null && parent !== originalParent;
+    }).toBe(true);
+    await render(<CoveredTabsStack stage="revealed" shownTab="b" />);
+    await waitForFrames(3);
+    await emitPopProgress(closingScreen, revealedScreen, 0.5);
+    await expectCarrier(source, 150);
+
+    await emitPopProgress(closingScreen, revealedScreen, 1);
+    await render(<CoveredTabsStack stage="popped" shownTab="b" />);
+    await expectEventually(() => opacityOf('coveredTabsShownTarget')).toBe(1);
+  });
+});
+
+// The screen below holds two tabs. JS switches the tab while another screen covers it.
+function CoveredTabsStack({
+  stage,
+  shownTab,
+}: {
+  stage: 'below' | 'pushed' | 'revealed' | 'popped';
+  shownTab: 'a' | 'b';
+}) {
+  const targetScreen = useTestRef('coveredTabsTargetScreen');
+  const sourceScreen = useTestRef('coveredTabsSourceScreen');
+  const shownTarget = useTestRef('coveredTabsShownTarget');
+  const source = useTestRef('coveredTabsSource');
+  const covered = stage === 'pushed' || stage === 'revealed';
+  return (
+    <ScreenContainer style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        enabled
+        activityState={stage === 'pushed' ? 0 : 2}
+        style={styles.screen}>
+        <ScreenContainer style={styles.screen}>
+          <Screen
+            enabled
+            activityState={shownTab === 'a' ? 2 : 0}
+            style={styles.screen}>
+            <SharedTransitionBoundary isActive={!covered && shownTab === 'a'}>
+              <Animated.View
+                sharedTransitionTag="covered-tab"
+                sharedTransitionStyle={transition}
+                style={styles.target}
+              />
+            </SharedTransitionBoundary>
+          </Screen>
+          <Screen
+            enabled
+            activityState={shownTab === 'b' ? 2 : 0}
+            style={styles.screen}>
+            <SharedTransitionBoundary isActive={!covered && shownTab === 'b'}>
+              <Animated.View
+                ref={shownTarget}
+                sharedTransitionTag="covered-tab"
+                sharedTransitionStyle={transition}
+                style={styles.hiddenTabTarget}
+              />
+            </SharedTransitionBoundary>
+          </Screen>
+        </ScreenContainer>
+      </Screen>
+      {stage !== 'popped' && (
+        <Screen
+          ref={sourceScreen}
+          onAppear={() => notify('covered-tabs-source-appeared')}
+          enabled
+          activityState={2}
+          style={styles.screen}>
+          <SharedTransitionBoundary isActive={covered}>
+            <Animated.View
+              ref={source}
+              sharedTransitionTag="covered-tab"
+              sharedTransitionStyle={transition}
+              style={styles.source}
+            />
+          </SharedTransitionBoundary>
+        </Screen>
+      )}
+    </ScreenContainer>
+  );
+}
+
 async function opacityOf(name: string) {
   return (await getTestComponent(name).getMountedViewProps())?.opacity;
 }
