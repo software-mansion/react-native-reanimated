@@ -90,12 +90,6 @@ declare global {
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
-  /**
-   * @deprecated Kept for backwards compatibility. Remove it after support for
-   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
-   *   synchronously.
-   */
-  var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
   var _startProfiling: (meanHzFreq?: number) => void;
