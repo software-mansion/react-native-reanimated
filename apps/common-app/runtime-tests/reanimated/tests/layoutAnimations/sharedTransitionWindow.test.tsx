@@ -750,6 +750,7 @@ describe('Shared transitions inside an iOS Modal', () => {
       await renderInModal(transition, { active: true, keepSource });
       const targetTag = getTestComponent('window-target').getTag();
       const markerTag = getTestComponent('window-closed-marker').getTag();
+      expect(results).toBe([]);
       const frames = await recordPresentedFrames(
         [sourceTag, targetTag, markerTag],
         async () => {
