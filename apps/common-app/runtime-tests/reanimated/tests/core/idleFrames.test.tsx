@@ -31,6 +31,7 @@ const INITIAL_WIDTH = 100;
 const UPDATED_WIDTH = 200;
 const SCROLL_ATTEMPTS = 10;
 const SCROLL_ATTEMPT_MS = 100;
+const FINALIZER_ERROR = 'error thrown by a frame finalizer';
 
 let widthValue: SharedValue<number> | null = null;
 let scrollViewRef: AnimatedRef<Animated.ScrollView> | null = null;
@@ -76,6 +77,8 @@ async function scrollUntilAnEventArrives() {
 }
 
 describe('native frame requests with animated components', () => {
+  const debugTest = __DEV__ ? test : test.skip;
+
   test('requests no frames for a static animated style', async () => {
     await render(<StaticBox />);
     await sleepOnRN(SETTLE_MS);
@@ -104,6 +107,45 @@ describe('native frame requests with animated components', () => {
     const count = await countNativeFrameRequests(WINDOW_MS);
     expect(count).toBe(0);
   });
+
+  debugTest(
+    'keeps running mappers after another frame finalizer throws',
+    async () => {
+      await render(<ResizableBox />);
+      const box = getTestComponent(BOX_REF);
+      await expectEventually(() => box.getAnimatedStyle('width')).toBe(
+        INITIAL_WIDTH,
+        ComparisonMode.PIXEL
+      );
+      await sleepOnRN(SETTLE_MS);
+      const width = widthValue!;
+
+      await expect(() => {
+        runOnUISync(() => {
+          'worklet';
+          globalThis.requestAnimationFrameFinalizer(() => {
+            throw new Error(FINALIZER_ERROR);
+          });
+          width.value = UPDATED_WIDTH;
+        });
+      }).toThrow(FINALIZER_ERROR);
+
+      await expectEventually(() => box.getAnimatedStyle('width')).toBe(
+        UPDATED_WIDTH,
+        ComparisonMode.PIXEL
+      );
+
+      width.value = INITIAL_WIDTH;
+
+      await expectEventually(() => box.getAnimatedStyle('width')).toBe(
+        INITIAL_WIDTH,
+        ComparisonMode.PIXEL
+      );
+      await sleepOnRN(SETTLE_MS);
+      const count = await countNativeFrameRequests(WINDOW_MS);
+      expect(count).toBe(0);
+    }
+  );
 
   test('requests no frames after an event when no mapper was ever started', async () => {
     scrollEventCount = 0;
