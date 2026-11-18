@@ -14,6 +14,7 @@ interface PluginOptions {
     moduleNames?: string[];
     relativePaths?: string[];
   };
+  silenceDangerousPathsWarning?: boolean;
 }
 ```
 
@@ -74,6 +75,14 @@ Defaults to an empty array.
 List of paths that determine whether a module forwards its **relative** imports inside worklet functions. If the path of a module matches any of the paths, all relative imports inside the worklet functions of that module are forwarded. See [`importForwarding.relativePaths`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#importforwardingrelativepaths) of the Babel plugin.
 
 The Oxc plugin always does this for modules of `react-native-worklets`. The paths in this list are added to it.
+
+A common folder name, such as `src`, also matches packages in `node_modules` that have a folder with that name. See the [warning on the Babel plugin page](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#importforwardingrelativepaths).
+
+### silenceDangerousPathsWarning
+
+Defaults to `false`.
+
+Hides the warning that the plugin prints when an `importForwarding.relativePaths` entry has only common folder names, such as `src`. It works the same way as [`silenceDangerousPathsWarning`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#silencedangerouspathswarning) of the Babel plugin.
 
 ### extraPlugins
 
