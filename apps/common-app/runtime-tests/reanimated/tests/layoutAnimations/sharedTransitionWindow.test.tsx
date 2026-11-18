@@ -763,6 +763,11 @@ describe('Shared transitions inside an iOS Modal', () => {
       const transition = recordingTransition(results);
       await render(modalScreens(transition, { active: false, pageSheet }));
       await waitForNotification(MODAL_SHOWN);
+      const sourceOnScreen = await RuntimeTestObserver!.observeLocationOnScreen(
+        getTestComponent('window-source').getTag()
+      );
+      expect(sourceOnScreen === null).toBe(false);
+      expect(sourceOnScreen!.y > SOURCE_IN_MODAL.y).toBe(pageSheet);
       const { sourceTag } = await startFlight((active) =>
         modalScreens(transition, { active, pageSheet })
       );
