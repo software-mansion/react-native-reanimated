@@ -955,20 +955,20 @@ const ShadowView *LayoutAnimationsProxyCommon::queuedLayoutStartView(const Tag t
   return start ? &start->before : nullptr;
 }
 
-Props::Shared *LayoutAnimationsProxyCommon::queuedFrameProps(const Tag tag) const {
-  const auto pendingIt = pendingLayoutAnimations_.find(tag);
-  if (pendingIt == pendingLayoutAnimations_.end()) {
-    return nullptr;
+std::vector<Props::Shared *> LayoutAnimationsProxyCommon::queuedFrameProps(const Tag tag) const {
+  std::vector<Props::Shared *> frameProps;
+  for (auto &operation : layoutAnimationOperations_) {
+    std::visit(
+        [&](auto &start) {
+          if constexpr (!std::is_same_v<std::decay_t<decltype(start)>, LayoutAnimationCancellation>) {
+            if (start.tag == tag) {
+              frameProps.push_back(&start.frameProps);
+            }
+          }
+        },
+        operation);
   }
-  return std::visit(
-      [](auto &operation) -> Props::Shared * {
-        if constexpr (std::is_same_v<std::decay_t<decltype(operation)>, LayoutAnimationCancellation>) {
-          return nullptr;
-        } else {
-          return &operation.frameProps;
-        }
-      },
-      layoutAnimationOperations_[pendingIt->second.operationIndex]);
+  return frameProps;
 }
 
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
