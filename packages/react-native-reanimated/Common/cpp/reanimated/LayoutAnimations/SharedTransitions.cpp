@@ -1119,7 +1119,9 @@ SharedTransitionRun &LayoutAnimationsProxy::startSharedTransitionRun(
         transaction,
         propsParserContext);
   }
+#ifdef __APPLE__
   transaction.startedSources.push_back(nodes[BEFORE]);
+#endif
   run->source = nodes[BEFORE];
   run->target = nodes[AFTER];
   run->targetLayout = targetLayoutOf(nodes[AFTER]);
@@ -1399,7 +1401,7 @@ std::vector<SharedTransitionRun *> LayoutAnimationsProxy::runsEndedBy(const std:
     return std::ranges::find(atRoot, run->carrier) - atRoot.begin();
   });
   for (auto &run : activeSharedTransitionRuns()) {
-    if (run.carrier->placement() == CarrierPlacement::NESTED && isInSubtree(run.target, node) &&
+    if (run.carrier->placement() == CarrierPlacement::NESTED &&
         std::ranges::any_of(
             runs, [this, &run](const SharedTransitionRun *root) { return isCarriedBy(run.carrier, root->carrier); })) {
       runs.push_back(&run);
@@ -1994,6 +1996,7 @@ void LayoutAnimationsProxy::ensureCarrierLayer(
       propsParserContext,
       nullptr,
       RawProps(folly::dynamic::object("pointerEvents", "none")("importantForAccessibility", "no-hide-descendants")));
+  // iOS mounts a view only with a view event emitter.
   layer.eventEmitter = host->current.eventEmitter;
   layer.layoutMetrics.frame.size = host->current.layoutMetrics.frame.size;
   layer.layoutMetrics.layoutDirection = host->current.layoutMetrics.layoutDirection;

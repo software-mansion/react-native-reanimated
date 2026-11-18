@@ -259,8 +259,7 @@ using CollectedTransitions = std::vector<std::pair<SharedTag, CollectedTransitio
 #ifdef __APPLE__
 struct HeldModal {
   std::shared_ptr<LightNode> node;
-  // The deadline starts in the pull that holds the modal, after the pull handles its removals.
-  std::optional<std::chrono::steady_clock::time_point> removableAt;
+  std::chrono::steady_clock::time_point removableAt;
 };
 #endif
 
@@ -274,14 +273,17 @@ struct TransactionMeta {
   std::vector<PendingNodeAnimation> entering;
   std::vector<PendingNodeAnimation> exiting;
   std::vector<std::shared_ptr<LightNode>> removedSubtrees;
+#ifdef __APPLE__
   // the sources of the runs that start in this pull, which leave their places as hidden views or as carriers
   std::vector<std::shared_ptr<LightNode>> startedSources;
+#endif
   std::vector<RestoreRequest> restoreRequests;
   std::vector<InsertedSharedView> insertedSharedViews;
   // the place in filteredMutations of the first Remove of a screen that React Native Screens snapshots
   std::optional<size_t> screenSnapshotRemoval;
   std::unordered_map<Tag, Tag> staleSnapshots;
   std::unordered_set<Tag> dueRemovals;
+  std::vector<std::shared_ptr<LightNode>> modalsToHold;
   std::unordered_set<Tag> recreatedTags;
   // Whatever changes a node's children or their exiting states during updateLightTree must reset its cursors.
   std::unordered_map<Tag, IndexCursors> indexCursors;
@@ -885,7 +887,6 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::shared_ptr<LightNode> &view,
       const std::shared_ptr<LightNode> &root) const;
   bool isWindowLayerHost(const std::shared_ptr<LightNode> &host) const;
-  void holdModal(const std::shared_ptr<LightNode> &node) const;
   bool isInHeldModal(const std::shared_ptr<LightNode> &node) const;
   void collectDueRemovals(TransactionMeta &transaction) const;
   void tearDown(const std::unordered_set<Tag> &removals, ShadowViewMutationList &mutations) const;

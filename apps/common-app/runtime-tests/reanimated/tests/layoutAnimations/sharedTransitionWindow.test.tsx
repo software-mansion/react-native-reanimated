@@ -1009,11 +1009,11 @@ describe('Shared transitions inside an iOS Modal', () => {
 });
 
 describe('Shared transitions in a Modal that closes', () => {
-  test('closes the Modal with the moving view where it is on screen', async () => {
+  test('ends the run when the Modal closes, with the moving view where it is on screen on iOS', async () => {
     await expectModalLeavesWithMovingView({});
   });
 
-  test('keeps a run in place when a run of another tag starts from the Modal', async () => {
+  test('ends the runs when a run of another tag starts from the closing Modal, with the moving view in place on iOS', async () => {
     const results: boolean[] = [];
     const transition = recordingTransition(results);
     const screens = (open: boolean, expanded: boolean) => (
