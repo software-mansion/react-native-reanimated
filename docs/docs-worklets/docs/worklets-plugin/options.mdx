@@ -386,11 +386,11 @@ function foo() {
   </tr>
 </table>
 
-The module name has to be an exact match — with `my-library` in the list, an
-import from `my-library/some-file` won't be forwarded:
+A name also matches its subpaths. With `my-library` in the list, an import from
+`my-library/some-file` is forwarded too, but an import from `my-library-extra` isn't:
 
-export const importForwardingExactBefore = `import { someExport } from 'my-library';
-import { someOtherExport } from 'my-library/some-file';
+export const importForwardingSubpathBefore = `import { someExport } from 'my-library/some-file';
+import { someOtherExport } from 'my-library-extra';
 
 function foo() {
   'worklet';
@@ -399,13 +399,13 @@ function foo() {
   someOtherExport();
 }`;
 
-export const importForwardingExactAfter = `import { someExport } from 'my-library';
-import { someOtherExport } from 'my-library/some-file';
+export const importForwardingSubpathAfter = `import { someExport } from 'my-library/some-file';
+import { someOtherExport } from 'my-library-extra';
 
 function foo() {
   'worklet';
   // highlight-next-line
-  import { someExport } from 'my-library';
+  import { someExport } from 'my-library/some-file';
   someExport(); // Forwarded.
   // highlight-next-line
   someOtherExport(); // NOT forwarded (captured from closure).
@@ -420,13 +420,13 @@ function foo() {
   <tr>
     <td style={{verticalAlign: 'top'}}>
       <CodeBlock language="javascript">
-        {importForwardingExactBefore}
+        {importForwardingSubpathBefore}
       </CodeBlock>
     </td>
 
     <td style={{verticalAlign: 'top'}}>
       <CodeBlock language="javascript">
-        {importForwardingExactAfter}
+        {importForwardingSubpathAfter}
       </CodeBlock>
     </td>
   </tr>
