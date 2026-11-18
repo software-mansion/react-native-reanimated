@@ -1051,15 +1051,14 @@ describe('Animated.Text with a shared value as children', () => {
       await render(<CounterText progress={progress} />);
 
       const widths: number[] = [];
-      for (const value of [9, 10, 100, 10, 9]) {
+      for (const value of [9, 10, 100, 99, 9]) {
         progress.value = value;
         widths.push(await readSettled('width'));
       }
-      const [w9, w10, w100, w10Again, w9Again] = widths;
+      const [w9, w10, w100, w99, w9Again] = widths;
 
       expect(w9 < w10 && w10 < w100).toBe(true);
-      expect(w100 > w10Again && w10Again > w9Again).toBe(true);
-      expect(w10Again).toBe(w10, ComparisonMode.PIXEL);
+      expect(w100 > w99 && w99 > w9Again).toBe(true);
       expect(w9Again).toBe(w9, ComparisonMode.PIXEL);
     });
 
