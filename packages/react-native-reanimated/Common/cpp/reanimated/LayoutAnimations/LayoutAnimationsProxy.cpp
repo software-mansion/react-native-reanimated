@@ -1097,8 +1097,9 @@ std::optional<SurfaceId> LayoutAnimationsProxy::endLayoutAnimation(int tag, bool
 // A subtree that animates keeps its place in the host tree, so nothing is emitted for its root.
 // A subtree that does not animate is removed at its current host index after its descendants, like React
 // removes it. On iOS a subtree that holds a screen React Native Screens snapshots is removed before its
-// descendants instead, and their teardown mounts at the end of the transaction. On Android a stack screen is removed
-// first too, because its Remove can start an exit transition that keeps only its current children.
+// descendants instead, and their teardown mounts at the end of the transaction. On Android a stack screen is also
+// removed first while animations run. A UI-thread pull can then mount its Remove before React Native Screens starts
+// the exit transition. That transition keeps only the children that the screen still has.
 void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction)
     const {
   ReanimatedSystraceSection s("handleSubtreeRemoval");
@@ -1113,7 +1114,7 @@ void LayoutAnimationsProxy::handleSubtreeRemoval(const std::shared_ptr<LightNode
     }
   }
   const bool defersTeardown = holdsSnapshottedScreen(node);
-  const bool removesRootFirst = defersTeardown || startsExitTransitionOnRemove(node);
+  const bool removesRootFirst = defersTeardown || (startsExitTransitionOnRemove(node) && hasRunningAnimations());
 #ifdef __APPLE__
   if (!defersTeardown && holdsSourceInModal(node, transaction)) {
     std::unordered_set<Tag> heldTags;
@@ -1170,6 +1171,10 @@ bool LayoutAnimationsProxy::holdsSnapshottedScreen([[maybe_unused]] const std::s
   }
 #endif
   return false;
+}
+
+bool LayoutAnimationsProxy::hasRunningAnimations() const {
+  return hasLayoutAnimationRecords() || !std::ranges::empty(activeSharedTransitionRuns());
 }
 
 #ifdef __APPLE__
