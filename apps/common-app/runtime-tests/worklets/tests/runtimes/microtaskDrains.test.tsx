@@ -31,6 +31,7 @@ type OrderSetter = ReturnType<typeof createOrderConstraint>[1];
 const MICROTASK_NOT_RUN = 0;
 const MICROTASK_RAN_OUTSIDE_FRAME = 1;
 const MICROTASK_RAN_IN_FRAME = 2;
+const NESTED_CALL_RESULT = 42;
 
 describe('microtask draining', () => {
   const [workletRuntime] = getWorkletRuntimesFromPool(1);
@@ -164,8 +165,15 @@ describe('microtask draining', () => {
   const NESTED_MICROTASK_NOTIFICATION = 'NESTED_SYNC_CALL_MICROTASK';
   const nestedResults = new Map<number, boolean>();
 
-  const onNestedResult = (token: number, ranDuringTask: boolean) => {
+  const nestedCallsExecuted = new Map<number, boolean>();
+
+  const onNestedResult = (
+    token: number,
+    ranDuringTask: boolean,
+    nestedCallExecuted: boolean
+  ) => {
     nestedResults.set(token, ranDuringTask);
+    nestedCallsExecuted.set(token, nestedCallExecuted);
     notify(`${NESTED_NOTIFICATION}_${token}`);
   };
 
@@ -187,10 +195,16 @@ describe('microtask draining', () => {
         globalThis.__frameTimestamp !== undefined
       );
     });
-    runOnRuntimeSyncWithId(runtimeId, () => {
+    const nestedCallResult = runOnRuntimeSyncWithId(runtimeId, () => {
       'worklet';
+      return NESTED_CALL_RESULT;
     });
-    scheduleOnRN(onNestedResult, token, microtaskRan);
+    scheduleOnRN(
+      onNestedResult,
+      token,
+      microtaskRan,
+      nestedCallResult === NESTED_CALL_RESULT
+    );
   };
 
   const nestedSyncCallInTimeoutProbe = (runtimeId: number, token: number) => {
@@ -259,11 +273,13 @@ describe('microtask draining', () => {
         'runs queued microtasks only after the outer task ends',
         async () => {
           nestedResults.delete(token);
+          nestedCallsExecuted.delete(token);
           nestedMicrotaskRanInFrame.delete(token);
 
           invoke(token);
           await waitForNotification(`${NESTED_NOTIFICATION}_${token}`);
 
+          expect(nestedCallsExecuted.get(token)).toBe(true);
           expect(nestedResults.get(token)).toBe(false);
           await waitForNotification(
             `${NESTED_MICROTASK_NOTIFICATION}_${token}`
