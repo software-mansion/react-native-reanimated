@@ -34,6 +34,7 @@ function Screens({
   sourceScreenMounted = true,
   targetOffset = 0,
   targetTranslateX = 0,
+  targetColor = styles.target.backgroundColor,
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
@@ -43,6 +44,7 @@ function Screens({
   sourceScreenMounted?: boolean;
   targetOffset?: number;
   targetTranslateX?: number;
+  targetColor?: string;
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
@@ -71,6 +73,7 @@ function Screens({
               {
                 marginTop: targetOffset,
                 transform: [{ translateX: targetTranslateX }],
+                backgroundColor: targetColor,
               },
             ]}
           />
@@ -1176,6 +1179,36 @@ describe('Endpoint visibility after a cancelled Screen gesture', () => {
   );
 });
 
+describe('Target style change during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'keeps the start style when the target changes a style to its start value',
+    async () => {
+      const startColor = styles.source.backgroundColor;
+      const tags = await startGestureWithHiddenTarget();
+      expect(await carrierColor(tags.source)).not.toBe(
+        startColor,
+        ComparisonMode.COLOR
+      );
+
+      await render(<Screens targetColor={startColor} />);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 105);
+      expect(await carrierColor(tags.source)).toBe(
+        startColor,
+        ComparisonMode.COLOR
+      );
+    }
+  );
+});
+
 describe('Target that showed before its source took the shared tag', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
@@ -1408,6 +1441,13 @@ async function beginGesture() {
   await expectCarrier(tags.source, 82.5);
   await expectTargetOpacity(0);
   return { ...tags, originalParent };
+}
+
+function carrierColor(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false)?.backgroundColor;
+  });
 }
 
 function carrierY(tag: number) {

@@ -24,9 +24,8 @@ constexpr auto kTargetWindowWait = std::chrono::milliseconds(500);
 
 #ifdef ANDROID
 namespace {
-// The style props that SharedTransitionValuesFactory animates.
+// The style props that SharedTransitionValuesFactory animates, without the opacity that ownCarrierView sets.
 constexpr std::array kAnimatedStyleProps{
-    "opacity",
     "backgroundColor",
     "transformOrigin",
     "boxShadow",
@@ -457,7 +456,7 @@ void LayoutAnimationsProxy::handleProgressTransition(
             run.carrier,
             run.carrierStartView,
             asCarrierView(target, run.carrier, propsParserContext),
-            ownCarrierView(target, run.carrier, propsParserContext).props,
+            carrierFrameProps(run, target, carrierViewOnScreen(run), propsParserContext),
             config);
       }
       hideTransitioningViews(BEFORE, transaction, propsParserContext);
@@ -1198,13 +1197,27 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
     const ShadowView &source,
     const std::shared_ptr<LightNode> &carrier,
     const PropsParserContext &propsParserContext) const {
-  auto startView = ownCarrierView(source, carrier, propsParserContext);
-  if (source.componentHandle != startView.componentHandle) {
-    return startView;
+  return withStyleOf(ownCarrierView(source, carrier, propsParserContext), source, propsParserContext);
+}
+
+Props::Shared LayoutAnimationsProxy::carrierFrameProps(
+    const SharedTransitionRun &run,
+    const ShadowView &target,
+    const ShadowView &legStart,
+    const PropsParserContext &propsParserContext) const {
+  return withStyleOf(ownCarrierView(target, run.carrier, propsParserContext), legStart, propsParserContext).props;
+}
+
+ShadowView LayoutAnimationsProxy::withStyleOf(
+    ShadowView view,
+    const ShadowView &source,
+    const PropsParserContext &propsParserContext) const {
+  if (source.componentHandle != view.componentHandle) {
+    return view;
   }
 #ifdef ANDROID
   const auto &sourceRawProps = source.props->rawProps;
-  const auto &ownRawProps = startView.props->rawProps;
+  const auto &ownRawProps = view.props->rawProps;
   auto rawProps = ownRawProps;
   for (const auto *name : kAnimatedStyleProps) {
     if (sourceRawProps.count(name) > 0) {
@@ -1213,14 +1226,12 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
       rawProps[name] = nullptr;
     }
   }
-  startView.props = componentDescriptorRegistry_->at(startView.componentHandle)
-                        .cloneProps(propsParserContext, startView.props, RawProps(std::move(rawProps)));
+  view.props = componentDescriptorRegistry_->at(view.componentHandle)
+                   .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
 #else
-  auto props =
-      componentDescriptorRegistry_->at(startView.componentHandle).cloneProps(propsParserContext, startView.props, {});
+  auto props = componentDescriptorRegistry_->at(view.componentHandle).cloneProps(propsParserContext, view.props, {});
   auto &viewProps = *std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(props));
   const auto &sourceProps = getViewProps(source);
-  viewProps.opacity = sourceProps.opacity;
   viewProps.backgroundColor = sourceProps.backgroundColor;
   viewProps.transformOrigin = sourceProps.transformOrigin;
   viewProps.boxShadow = sourceProps.boxShadow;
@@ -1238,9 +1249,9 @@ ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(
         facebook::yoga::Edge::All}) {
     viewProps.yogaStyle.setBorder(edge, sourceProps.yogaStyle.border(edge));
   }
-  startView.props = props;
+  view.props = props;
 #endif
-  return startView;
+  return view;
 }
 
 void LayoutAnimationsProxy::detachCarrier(
@@ -1551,7 +1562,7 @@ void LayoutAnimationsProxy::moveNestedCarriersOutOf(
             run.carrier,
             carrierViewOnScreen(run),
             asCarrierView(target, run.carrier, propsParserContext),
-            ownCarrierView(target, run.carrier, propsParserContext).props,
+            carrierFrameProps(run, target, carrierViewOnScreen(run), propsParserContext),
             run.config,
             restartContentFade(run));
       }
@@ -2067,7 +2078,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
           run.carrier,
           run.carrierStartView,
           asCarrierView(target, run.carrier, propsParserContext),
-          ownCarrierView(target, run.carrier, propsParserContext).props,
+          carrierFrameProps(run, target, carrierViewOnScreen(run), propsParserContext),
           config->animation,
           restartContentFade(run),
           moveClipTo(run, transition.clip[AFTER]));
@@ -2161,7 +2172,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         updateLayoutAnimationTarget(
             carrierTag,
             carrierAfter,
-            ownCarrierView(target, run.carrier, propsParserContext).props,
+            carrierFrameProps(run, target, carrierViewOnScreen(run), propsParserContext),
             run.config,
             restartContentFade(run),
             moveClipTo(run, clipAfter));
@@ -2176,7 +2187,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
             run.carrier,
             carrierViewOnScreen(run),
             carrierAfter,
-            ownCarrierView(target, run.carrier, propsParserContext).props,
+            carrierFrameProps(run, target, carrierViewOnScreen(run), propsParserContext),
             animation,
             restartContentFade(run),
             moveClipTo(run, clipAfter));
@@ -3422,7 +3433,7 @@ void LayoutAnimationsProxy::followOffWindowTargets(
     AncestorClip clip;
     const auto target = targetInCarrierSpace(run, targetOnScreen(run, propsParserContext, &clip), propsParserContext);
     const auto carrierAfter = asCarrierView(target, run.carrier, propsParserContext);
-    const auto frameProps = ownCarrierView(target, run.carrier, propsParserContext).props;
+    const auto frameProps = carrierFrameProps(run, target, carrierViewOnScreen(run), propsParserContext);
     if (hasPendingLayoutAnimation(carrierTag)) {
       run.followsTarget = run.configFollowsTarget;
       updateLayoutAnimationTarget(
@@ -3476,8 +3487,10 @@ void LayoutAnimationsProxy::followProgressTargets(const PropsParserContext &prop
     const auto &finalView = animationIt->second.finalView;
     if (finalView.layoutMetrics != carrierAfter.layoutMetrics ||
         SharedTransitionValuesFactory::hasAnimatedChanges(getViewProps(finalView), getViewProps(carrierAfter))) {
+      auto frameBase = finalView;
+      frameBase.props = animationIt->second.framePropsBase();
       updateLayoutAnimationTarget(
-          carrierTag, carrierAfter, ownCarrierView(after, run.carrier, propsParserContext).props, run.config);
+          carrierTag, carrierAfter, carrierFrameProps(run, after, frameBase, propsParserContext), run.config);
     }
   }
 }
