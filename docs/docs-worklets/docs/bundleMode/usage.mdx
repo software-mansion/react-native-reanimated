@@ -44,9 +44,13 @@ scheduleOnRuntime(runtime, async () => {
 | `AbortController`, `AbortSignal` | ✅ |
 | `FormData` | String fields only, encoded as `multipart/form-data`. |
 | Response streaming | ❌ |
-| `WebSocket` | coming soon |
+| `WebSocket` | ✅ |
 
 Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
+
+<Badges version="0.14.0">
+  `WebSocket` follows the [WHATWG interface](https://websockets.spec.whatwg.org/) with `onopen`, `onmessage`, `onerror`, `onclose`, `addEventListener`, `send` for strings, `ArrayBuffer`, `ArrayBufferView` and `Blob`, `close`, `readyState`, `bufferedAmount`, `protocol` and `binaryType`.
+</Badges>
 
 ## Reference
 
