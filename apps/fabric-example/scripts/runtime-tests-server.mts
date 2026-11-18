@@ -25,6 +25,7 @@ import type {
   RunSummary,
   ServerMessage,
   SuiteFinishedMessage,
+  TestFailure,
 } from '../../common-app/runtime-tests/ReJest/utils/remoteProtocol.ts';
 import {
   findRunningAvd,
@@ -81,9 +82,20 @@ interface SimctlDevice {
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
-const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
+const BOOLEAN_FLAGS = new Set([
+  'launch',
+  'skip-build',
+  'build-only',
+  'full',
+  'headless-task',
+  'help',
+]);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
+const ANDROID_HEADLESS_TASK_SERVICE = '.RuntimeTestsHeadlessTaskService';
+const ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS = 30_000;
+// As long as the timeout of the task in RuntimeTestsHeadlessTaskService.
+const ANDROID_HEADLESS_TASK_EXEMPTION_MS = 15 * 60 * 1000;
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
@@ -129,9 +141,7 @@ const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const CONFIGURATION =
-  typeof args.configuration === 'string'
-    ? args.configuration
-    : 'DebugRuntimeTests';
+  typeof args.configuration === 'string' ? args.configuration : 'Debug';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
@@ -150,12 +160,23 @@ const AFTER_SUITE =
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
+const FULL = args.full === true || args.full === '';
+const HEADLESS_TASK =
+  args['headless-task'] === true || args['headless-task'] === '';
 const SIMULATOR =
   typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
 const UDID = typeof args.udid === 'string' ? args.udid : null;
 const SERIAL = typeof args.serial === 'string' ? args.serial : null;
 const AVD = typeof args.avd === 'string' ? args.avd : null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
+const CI_REPORT = process.env.RUNTIME_TESTS_CI_REPORT !== '0';
+const GITHUB_ACTIONS = CI_REPORT && process.env.GITHUB_ACTIONS === 'true';
+const GITHUB_STEP_SUMMARY = CI_REPORT
+  ? (process.env.GITHUB_STEP_SUMMARY ?? '')
+  : '';
+const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''}${HEADLESS_TASK ? ', headless task' : ''})`;
+const MAX_ANNOTATIONS = 10;
+const STEP_SUMMARY_LIMIT_BYTES = 1024 * 1024;
 
 if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
   console.error(
@@ -188,6 +209,20 @@ if (BUILD_ONLY && PLATFORM !== 'ios') {
   process.exit(1);
 }
 
+if (HEADLESS_TASK && (PLATFORM !== 'android' || LIBRARY !== 'worklets')) {
+  console.error(
+    '[runtime-tests] --headless-task is only supported with --platform android --library worklets'
+  );
+  process.exit(1);
+}
+
+if (HEADLESS_TASK && !SHOULD_LAUNCH) {
+  console.error(
+    '[runtime-tests] --headless-task needs --launch, because only the driver starts the headless task service'
+  );
+  process.exit(1);
+}
+
 if (BUILD_ONLY && SHOULD_LAUNCH) {
   console.error(
     '[runtime-tests] --build-only cannot be combined with --launch'
@@ -204,6 +239,8 @@ let connectTimer: ReturnType<typeof setTimeout> | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
 let metroChild: ChildProcess | null = null;
 let androidSerial: string | null = null;
+let androidLaunchSerial: string | null = null;
+let androidHeadlessTaskStartup: Promise<void> | null = null;
 let iosUdid: string | null = null;
 let crashDiagnosticsPromise: Promise<void> | null = null;
 let afterSuiteChain: Promise<void> = Promise.resolve();
@@ -218,6 +255,7 @@ const resultsBeforeReload: Omit<RunSummary, 'durationMs'> = {
   failed: 0,
   skipped: 0,
   failedTests: [],
+  failures: [],
 };
 
 function errorMessage(error: unknown): string {
@@ -592,11 +630,11 @@ process.on('unhandledRejection', (reason) => {
   process.exit(1);
 });
 
-httpServer.listen(PORT, HOST);
-
-console.log(
-  `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
-);
+httpServer.listen(PORT, HOST, () => {
+  console.log(
+    `[runtime-tests] listening on ws://${HOST}:${PORT} (library: ${LIBRARY})`
+  );
+});
 if (ONLY) {
   console.log(`[runtime-tests] suite filter: ${ONLY.join(', ')}`);
 }
@@ -608,6 +646,11 @@ function armConnectTimer() {
   connectTimer = setTimeout(() => {
     console.error(
       `[runtime-tests] no device connected within ${CONNECT_TIMEOUT_MS / 1000}s, exiting`
+    );
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `No device connected within ${CONNECT_TIMEOUT_MS / 1000}s. See the crash diagnostics in the log.`
     );
     void failWithDiagnostics(1);
   }, CONNECT_TIMEOUT_MS);
@@ -675,6 +718,11 @@ wss.on('connection', (socket) => {
         '[runtime-tests] or grep `[remoteReporter]` in Metro output for the WS close reason.'
       );
       console.error('========================================');
+      githubAnnotation(
+        'error',
+        RUN_LABEL,
+        'The app disconnected mid-run without sending `done`, most likely it crashed. See the crash diagnostics in the log.'
+      );
       void failWithDiagnostics(exitCode);
       return;
     }
@@ -743,7 +791,7 @@ function onHello(msg: Partial<HelloMessage>) {
     return;
   }
 
-  selectedSuites = selectSuites(suites, ONLY);
+  selectedSuites = selectSuites(suites, ONLY, FULL);
   let only = ONLY;
   if (resumeFromSuite !== null) {
     only = suitesToResume();
@@ -760,6 +808,7 @@ function onHello(msg: Partial<HelloMessage>) {
   send({
     type: 'start',
     ...(only ? { only } : {}),
+    ...(FULL ? { full: true } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
 }
@@ -785,6 +834,7 @@ function onReload(msg: Partial<ReloadMessage>) {
   resultsBeforeReload.failed += Number(msg.failed ?? 0);
   resultsBeforeReload.skipped += Number(msg.skipped ?? 0);
   resultsBeforeReload.failedTests.push(...(msg.failedTests ?? []));
+  resultsBeforeReload.failures.push(...collectFailures(msg));
   const requestedSuite = String(msg.resumeFromSuite ?? '');
   if (!requestedSuite) {
     console.error(
@@ -880,6 +930,7 @@ function onDone(msg: Partial<DoneMessage>) {
   msg.passed = Number(msg.passed ?? 0) + resultsBeforeReload.passed;
   msg.failed = Number(msg.failed ?? 0) + resultsBeforeReload.failed;
   msg.skipped = Number(msg.skipped ?? 0) + resultsBeforeReload.skipped;
+  const failures = [...resultsBeforeReload.failures, ...collectFailures(msg)];
   msg.failedTests = [
     ...resultsBeforeReload.failedTests,
     ...(msg.failedTests ?? []),
@@ -893,13 +944,17 @@ function onDone(msg: Partial<DoneMessage>) {
   );
   if (Number(msg.failed) > 0) {
     console.log('[runtime-tests] Failed tests:');
-    for (const name of msg.failedTests ?? []) {
-      console.log(`  • ${name}`);
+    for (const failure of failures) {
+      console.log(`  • ${failureTitle(failure)}`);
+      for (const error of failure.errors) {
+        console.log(`      ${firstLine(error)}`);
+      }
     }
   } else {
     console.log('[runtime-tests] All tests passed!');
   }
   console.log('========================================');
+  reportRunToGitHub(msg, failures);
   exitCode = Number(msg.failed) > 0 ? 1 : 0;
   runFinished = true;
   if (client) {
@@ -909,11 +964,155 @@ function onDone(msg: Partial<DoneMessage>) {
   }
 }
 
+function collectFailures(msg: Partial<RunSummary>): TestFailure[] {
+  if (Array.isArray(msg.failures)) {
+    return msg.failures.map((failure) => ({
+      suite: String(failure.suite ?? ''),
+      name: String(failure.name ?? ''),
+      errors: Array.isArray(failure.errors) ? failure.errors.map(String) : [],
+    }));
+  }
+  const names = Array.isArray(msg.failedTests) ? msg.failedTests : [];
+  return names.map((name) => ({ suite: '', name: String(name), errors: [] }));
+}
+
+function failureTitle(failure: TestFailure): string {
+  return failure.suite ? `${failure.suite} › ${failure.name}` : failure.name;
+}
+
+function firstLine(text: string): string {
+  return stripAnsi(text).split('\n')[0].trim();
+}
+
+function stripAnsi(text: string): string {
+  // eslint-disable-next-line no-control-regex
+  return text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+}
+
+function reportRunToGitHub(msg: Partial<RunSummary>, failures: TestFailure[]) {
+  const counts = `${msg.failed} failed, ${msg.passed} passed, ${msg.skipped} skipped`;
+  const annotated = failures.slice(
+    0,
+    failures.length > MAX_ANNOTATIONS ? MAX_ANNOTATIONS - 1 : MAX_ANNOTATIONS
+  );
+  for (const failure of annotated) {
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      [failureTitle(failure), ...failure.errors.map(firstLine)].join('\n')
+    );
+  }
+  if (annotated.length < failures.length) {
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `${failures.length - annotated.length} more failed test(s), see the job summary`
+    );
+  }
+
+  if (failures.length === 0) {
+    appendGitHubStepSummary(`### ✅ ${RUN_LABEL}: ${counts}`, []);
+    return;
+  }
+  appendGitHubStepSummary(
+    `### ❌ ${RUN_LABEL}: ${counts}`,
+    failures.map(failureSummarySection)
+  );
+}
+
+function failureSummarySection(failure: TestFailure): string {
+  const lines = [`- **${failureTitle(failure)}**`];
+  if (failure.errors.length > 0) {
+    const text = failure.errors
+      .map((error) => stripAnsi(error).trimEnd())
+      .join('\n');
+    const fence = '`'.repeat(Math.max(3, longestBacktickRun(text) + 1));
+    lines.push('', `  ${fence}`);
+    for (const line of text.split('\n')) {
+      lines.push(`  ${line}`);
+    }
+    lines.push(`  ${fence}`, '');
+  }
+  return lines.join('\n');
+}
+
+function longestBacktickRun(text: string): number {
+  let longest = 0;
+  for (const run of text.match(/`+/g) ?? []) {
+    longest = Math.max(longest, run.length);
+  }
+  return longest;
+}
+
+function githubAnnotation(
+  level: 'error' | 'warning',
+  title: string,
+  message: string
+) {
+  if (!GITHUB_ACTIONS) {
+    return;
+  }
+  const escapeData = (value: string) =>
+    value.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  const escapeProperty = (value: string) =>
+    escapeData(value).replace(/:/g, '%3A').replace(/,/g, '%2C');
+  console.log(
+    `::${level} title=${escapeProperty(title)}::${escapeData(message)}`
+  );
+}
+
+function appendGitHubStepSummary(heading: string, sections: string[]) {
+  if (!GITHUB_STEP_SUMMARY) {
+    return;
+  }
+  try {
+    const room = STEP_SUMMARY_LIMIT_BYTES - stepSummarySize();
+    const parts = sections.length > 0 ? [heading, ''] : [heading];
+    let bytes = Buffer.byteLength(`${parts.join('\n')}\n\n`);
+    for (const [index, section] of sections.entries()) {
+      const note = `_${sections.length - index} more failed test(s) not shown, see the log._`;
+      const sectionBytes = Buffer.byteLength(`\n${section}`);
+      const noteBytes = Buffer.byteLength(`\n${note}`);
+      if (bytes + sectionBytes + noteBytes > room) {
+        parts.push(note);
+        bytes += noteBytes;
+        break;
+      }
+      parts.push(section);
+      bytes += sectionBytes;
+    }
+    if (bytes > room) {
+      console.warn(
+        '[runtime-tests] the job summary is full, the result of this run is only in the log'
+      );
+      return;
+    }
+    fs.appendFileSync(GITHUB_STEP_SUMMARY, `${parts.join('\n')}\n\n`);
+  } catch (error) {
+    console.warn(
+      `[runtime-tests] could not write the job summary: ${errorMessage(error)}`
+    );
+  }
+}
+
+function stepSummarySize(): number {
+  try {
+    return fs.statSync(GITHUB_STEP_SUMMARY).size;
+  } catch {
+    return 0;
+  }
+}
+
 function onError(msg: Partial<ErrorMessage>) {
   console.error(`[runtime-tests] device reported error: ${msg.message}`);
   if (msg.stack) {
     console.error(msg.stack);
   }
+  githubAnnotation(
+    'error',
+    RUN_LABEL,
+    `The app reported an error instead of finishing the run: ${msg.message}`
+  );
   exitCode = 1;
   runFinished = true;
   if (client) {
@@ -934,6 +1133,11 @@ function resetIdleTimer() {
   idleTimer = setTimeout(() => {
     console.error(
       `[runtime-tests] no traffic for ${IDLE_TIMEOUT_MS / 1000}s, assuming the run is stuck`
+    );
+    githubAnnotation(
+      'error',
+      RUN_LABEL,
+      `No traffic from the app for ${IDLE_TIMEOUT_MS / 1000}s, the run is stuck. See the crash diagnostics in the log.`
     );
     void failWithDiagnostics(1);
   }, IDLE_TIMEOUT_MS);
@@ -1571,6 +1775,23 @@ function shutdown(code: number) {
 
 async function exitAfterSuiteCommands(code: number) {
   await afterSuiteChain;
+  // The task left by the test launch would otherwise start the tests again
+  // when the app is reopened from the launcher.
+  await androidHeadlessTaskStartup?.catch(() => {});
+  if (androidLaunchSerial) {
+    await adb(
+      androidLaunchSerial,
+      ['shell', 'am', 'force-stop', ANDROID_APP_ID],
+      { timeout: 5000 }
+    ).catch(() => {});
+    if (HEADLESS_TASK) {
+      await adb(
+        androidLaunchSerial,
+        ['shell', 'cmd', 'deviceidle', 'tempwhitelist', '-r', ANDROID_APP_ID],
+        { timeout: 5000 }
+      ).catch(() => {});
+    }
+  }
   wss.close(() => {
     httpServer.close(() => {
       process.exit(code);
@@ -1754,44 +1975,38 @@ function sanitizerBuildArgs() {
   return SANITIZER ? SANITIZERS[SANITIZER].buildArgs : [];
 }
 
-async function buildApp() {
+// A simulator build compiles only its architecture. Without one (a CI artifact
+// built for another machine) it compiles every simulator architecture.
+function xcodebuildArgs(udid: string | null) {
+  return [
+    '-workspace',
+    'FabricExample.xcworkspace',
+    '-scheme',
+    'Debug FabricExample',
+    '-configuration',
+    CONFIGURATION,
+    ...(udid
+      ? [
+          '-destination',
+          `platform=iOS Simulator,id=${udid}`,
+          'ONLY_ACTIVE_ARCH=YES',
+        ]
+      : ['-destination', 'generic/platform=iOS Simulator']),
+    ...sanitizerBuildArgs(),
+  ];
+}
+
+async function buildApp(udid: string | null) {
   console.log(
     `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
   );
-  await run(
-    'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      'build',
-    ],
-    { cwd: iosDir }
-  );
+  await run('xcodebuild', [...xcodebuildArgs(udid), 'build'], { cwd: iosDir });
 }
 
-async function appPath() {
+async function appPath(udid: string | null) {
   const { stdout } = await run(
     'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      '-showBuildSettings',
-      '-json',
-    ],
+    [...xcodebuildArgs(udid), '-showBuildSettings', '-json'],
     { cwd: iosDir }
   );
   const entries: { buildSettings?: Record<string, string> }[] = JSON.parse(
@@ -1812,7 +2027,7 @@ async function appPath() {
 }
 
 async function installAndLaunch(udid: string) {
-  const app = await appPath();
+  const app = await appPath(udid);
   if (SANITIZER) {
     assertSanitizerRuntimeEmbedded(app);
   }
@@ -1993,6 +2208,12 @@ async function installAndLaunchAndroid(serial: string) {
     );
   }
 
+  androidLaunchSerial = serial;
+  if (HEADLESS_TASK) {
+    androidHeadlessTaskStartup = startAndroidHeadlessTask(serial);
+    await androidHeadlessTaskStartup;
+    return;
+  }
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
@@ -2018,6 +2239,68 @@ async function installAndLaunchAndroid(serial: string) {
   ]);
 }
 
+/**
+ * Starts the runtime tests in a headless JS task of a process that has no
+ * Activity. Android refuses a service start for an app in the background, so
+ * the app gets a temporary power-save exemption, which expires on its own.
+ */
+async function startAndroidHeadlessTask(serial: string) {
+  console.log(
+    `[runtime-tests] starting ${ANDROID_HEADLESS_TASK_SERVICE} of ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
+  );
+  const steps = [
+    () =>
+      adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID], {
+        timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS,
+      }),
+    () =>
+      adb(
+        serial,
+        [
+          'shell',
+          'cmd',
+          'deviceidle',
+          'tempwhitelist',
+          '-d',
+          String(ANDROID_HEADLESS_TASK_EXEMPTION_MS),
+          ANDROID_APP_ID,
+        ],
+        { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
+      ),
+    () => startAndroidHeadlessTaskService(serial),
+  ];
+  for (const step of steps) {
+    if (shutdownStarted) {
+      return;
+    }
+    await step();
+  }
+}
+
+async function startAndroidHeadlessTaskService(serial: string) {
+  const { stdout, stderr } = await adb(
+    serial,
+    [
+      'shell',
+      'am',
+      'startservice',
+      '-n',
+      `${ANDROID_APP_ID}/${ANDROID_HEADLESS_TASK_SERVICE}`,
+      '--es',
+      'RUNTIME_TESTS_LIBRARY',
+      LIBRARY,
+      '--es',
+      'RUNTIME_TESTS_WS_URL',
+      WS_URL,
+    ],
+    { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
+  );
+  const output = `${stdout}${stderr}`;
+  if (/^Error/m.test(output)) {
+    throw new Error(`The headless task service did not start: ${output}`);
+  }
+}
+
 if (SHOULD_LAUNCH) {
   (async () => {
     if (!IS_RELEASE) {
@@ -2036,7 +2319,7 @@ if (SHOULD_LAUNCH) {
       iosUdid = device.udid;
       await ensureBooted(device);
       if (!SKIP_BUILD) {
-        await buildApp();
+        await buildApp(device.udid);
       }
       await installAndLaunch(device.udid);
     }
@@ -2082,9 +2365,9 @@ if (BUILD_ONLY) {
     if (SANITIZER) {
       fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
     }
-    await buildApp();
+    await buildApp(UDID);
     if (SANITIZER) {
-      assertSanitizerRuntimeEmbedded(await appPath());
+      assertSanitizerRuntimeEmbedded(await appPath(UDID));
     }
     shutdown(0);
   })().catch((error) => {
@@ -2101,7 +2384,19 @@ function printUsage() {
 
 Builds the runtime tests app, installs it, runs the requested library's test
 suites and reports the results. \`yarn runtime-tests\` implies --launch;
-\`yarn runtime-tests:server\` waits for you to start the app yourself.
+\`yarn runtime-tests:server\` waits for you to start the app yourself, and does
+not start Metro (run \`yarn start\` first). The Debug build starts the test app
+only when launched with RUNTIME_TESTS_LIBRARY set. The app reports to the
+Metro port + 1. With another --port, also set
+RUNTIME_TESTS_WS_URL=ws://<host>:<port> (127.0.0.1 on a simulator).
+On iOS, run the RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY
+to reanimated; change it under Edit Scheme > Run > Environment Variables).
+On Android, start the app cold, because the library is fixed for the life of
+the process (\`adb devices\` lists the serials):
+  adb -s <serial> shell am start -S -n ${ANDROID_APP_ID}/.MainActivity \\
+    --es RUNTIME_TESTS_LIBRARY <library> [--es RUNTIME_TESTS_WS_URL <url>]
+If the app reaches Metro through localhost, forward the reporting port too:
+  adb -s <serial> reverse tcp:<port> tcp:<port>
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
@@ -2119,14 +2414,20 @@ Target
 
 Build and run
   --configuration <name>    Xcode configuration / Gradle build type.
-                            Default: DebugRuntimeTests. Release builds embed
-                            the bundle and run without Metro.
+                            Default: Debug. ReleaseRuntimeTests embeds the
+                            bundles and runs without Metro.
   --skip-build              Reuse the installed app. Only safe when nothing
                             native changed - JS is served by Metro.
   --launch                  Launch the app after installing it.
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
                             "run loop" or "runtimes,memory".
+  --full                    Run the long variants (more iterations, complete
+                            matrices) and the suites a short run skips, as
+                            the nightly does.
+  --headless-task           Android, worklets only. Run the headless suites
+                            (headlessSuites.ts) in a headless JS task of a
+                            process that has no Activity.
   --after-suite <command>   Shell command to run each time the app finishes a
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending
@@ -2140,7 +2441,12 @@ Ports and timeouts
   --connect-timeout <secs>  Wait for the app to connect. Default: 600.
   --idle-timeout <secs>     Give up after this much silence. Default: 600.
 
-  --help                    Show this message.`);
+  --help                    Show this message.
+
+Environment
+  RUNTIME_TESTS_CI_REPORT=0 On GitHub Actions the results are also reported
+                            as annotations and in the job summary. Set this
+                            for a run that is expected to fail.`);
 }
 
 function parseArgs(argv: string[]): Record<string, string | true> {

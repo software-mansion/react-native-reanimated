@@ -1,5 +1,4 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
-#include <reanimated/Tools/FeatureFlags.h>
 
 #include <memory>
 #include <string>
@@ -68,13 +67,6 @@ jsi::Value ViewStylesRepository::getParentNodeProp(
 
 std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Backend mode has no commit hook (it returns before taking the updates-registry
-    // lock), so reading the live tree here cannot deadlock and needs no snapshot.
-    const auto newestNode = uiManager_->getNewestCloneOfShadowNode(*shadowNode);
-    return newestNode ? newestNode : shadowNode;
-  }
-
   // Resolve shadowNode against the last mounted root without the ShadowTree lock (the
   // deadlock) that getNewestCloneOfShadowNode takes, falling back to the passed node.
   // Mirrors RN's getShadowNodeInSubtree:
@@ -99,15 +91,6 @@ std::shared_ptr<const ShadowNode> ViewStylesRepository::getNewestNode(
 
 std::shared_ptr<const ShadowNode> ViewStylesRepository::getParentNode(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // Backend mode resolves against the live tree (see getNewestNode).
-    std::shared_ptr<const ShadowNode> parentNode = nullptr;
-    uiManager_->getShadowTreeRegistry().visit(shadowNode->getSurfaceId(), [&](const ShadowTree &shadowTree) {
-      parentNode = dom::getParentNode(shadowTree.getCurrentRevision().rootShadowNode, *shadowNode);
-    });
-    return parentNode;
-  }
-
   const auto root = mountedRootsRegistry_->get(shadowNode->getSurfaceId());
   if (!root) {
     return nullptr;

@@ -31,6 +31,8 @@
 #include <worklets/WorkletRuntime/BundleModeConfig.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
+#include <cmath>
+#include <limits>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -317,6 +319,17 @@ std::shared_ptr<void> makePromiseDropGuard(
       extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue));
 }
 
+RuntimeData::RuntimeId runtimeIdFromJS(const jsi::Value &value) {
+  const auto runtimeId = value.getNumber();
+  react_native_assert(std::isfinite(runtimeId) && "[Worklets] Runtime id must be a finite number.");
+  react_native_assert(std::trunc(runtimeId) == runtimeId && "[Worklets] Runtime id must be an integer.");
+  react_native_assert(runtimeId >= 0 && "[Worklets] Runtime id must not be negative.");
+  react_native_assert(
+      runtimeId < static_cast<double>(std::numeric_limits<RuntimeData::RuntimeId>::max()) &&
+      "[Worklets] Runtime id must be smaller than 2^64.");
+  return static_cast<RuntimeData::RuntimeId>(runtimeId);
+}
+
 } // namespace
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
@@ -489,6 +502,33 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return makeSerializableWorklet(rt, at<0>(args).getObject(rt), at<1>(args).getBool());
       });
 
+  jsi_utils::addMethod<1>(
+      rt, obj, "makeWeakSerializableRef", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto serializable =
+            extractSerializableOrThrow(rt, at<0>(args), "[Worklets] makeWeakSerializableRef expects a serializable.");
+        auto marker = jsi::Object(rt);
+        marker.setNativeState(rt, std::make_shared<WeakSerializableJSRef>(serializable));
+        // Deliberately no `__serializableRef`, so JS never takes a marker for a serializable. A marker that
+        // reaches C++ as a value is rejected, because its native state is not a SerializableJSRef.
+        return marker;
+      });
+
+  jsi_utils::addMethod<1>(
+      rt, obj, "derefWeakSerializableRef", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (!at<0>(args).isObject()) {
+          return jsi::Value::undefined();
+        }
+        auto marker = at<0>(args).getObject(rt);
+        if (!marker.hasNativeState<WeakSerializableJSRef>(rt)) {
+          return jsi::Value::undefined();
+        }
+        auto serializable = marker.getNativeState<WeakSerializableJSRef>(rt)->lock();
+        if (!serializable) {
+          return jsi::Value::undefined();
+        }
+        return jsi::Value(SerializableJSRef::newNativeStateObject(rt, serializable));
+      });
+
   jsi_utils::addMethod<2>(
       rt, obj, "createCustomSerializable", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
         return makeCustomSerializable(rt, at<0>(args), at<1>(args).asNumber());
@@ -627,7 +667,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "runOnRuntimeSyncWithId",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        const int runtimeId = at<0>(args).asNumber();
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -720,7 +760,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "scheduleOnRuntimeWithId",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
-        const int runtimeId = at<0>(args).asNumber();
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -756,7 +796,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "abortWorkletRuntime",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        const int runtimeId = at<0>(args).asNumber();
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           return jsi::Value(false);
@@ -811,9 +851,13 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             /* value */ at<1>(args).asBool());
       });
 
-  jsi_utils::addMethod<0>(
-      rt, obj, "getAliveRuntimeCount", [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &) {
-        return jsi::Value(static_cast<double>(runtimeManager->getAliveRuntimeCount()));
+  jsi_utils::addMethod<1>(
+      rt,
+      obj,
+      "isRuntimeAlive",
+      [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+        return jsi::Value(runtimeManager->isRuntimeAlive(runtimeId));
       });
 
   jsi_utils::addMethod<0>(rt, obj, "getCurrentThreadId", [](jsi::Runtime &rt, const jsi::Value &) {
@@ -881,7 +925,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "createShareable",
       [runtimeManager = runtimeManager_](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) -> jsi::Value {
-        const int hostRuntimeId = at<0>(args).asNumber();
+        const auto hostRuntimeId = runtimeIdFromJS(at<0>(args));
         const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
         if (!hostRuntime) {
           throw jsi::JSError(

@@ -13825,7 +13825,7 @@ __metadata:
     react: "npm:19.3.0"
     react-dom: "npm:19.3.0"
     react-native: "npm:0.88.0"
-    react-native-gesture-handler: "npm:3.3.0-nightly-20260821-439ded45d"
+    react-native-gesture-handler: "npm:3.5.0"
     react-native-mmkv: "npm:4.3.2"
     react-native-nitro-modules: "npm:0.36.5"
     react-native-reanimated: "workspace:*"
@@ -26953,16 +26953,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-gesture-handler@npm:3.3.0-nightly-20260821-439ded45d":
-  version: 3.3.0-nightly-20260821-439ded45d
-  resolution: "react-native-gesture-handler@npm:3.3.0-nightly-20260821-439ded45d"
+"react-native-gesture-handler@npm:3.5.0":
+  version: 3.5.0
+  resolution: "react-native-gesture-handler@npm:3.5.0"
   dependencies:
     "@types/react-test-renderer": "npm:^19.1.0"
     invariant: "npm:^2.2.4"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/5a53d9768be4a8e7598419040fef044b13eef3b1f9063fcd07f99fcecc63d6415e3b074d9de641e38da1d358ffc349cfda985f2fb913c73fefed795d147a6427
+  checksum: 10/bb9bffe7998e29f4da3c9e61c0f15cb247921f517602a61c5f9b21344568e4f60d4a30669f1de4d5db2958ad2a58587925f91a46dbccec8521609687dd547033
   languageName: node
   linkType: hard
 
@@ -27194,6 +27194,7 @@ __metadata:
     "@types/react-test-renderer": "npm:19.1.0"
     "@types/semver": "npm:7.7.1"
     clang-format-node: "npm:1.3.5"
+    esbuild: "npm:0.25.10"
     is-tree-shakable: "npm:0.5.0"
     jest-expo: "npm:57.0.3"
     knip: "npm:5.61.3"

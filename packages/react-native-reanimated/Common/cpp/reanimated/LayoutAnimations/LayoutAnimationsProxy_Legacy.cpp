@@ -40,6 +40,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy_Legacy::pullTransaction
   LOG(INFO) << "pullTransaction " << std::this_thread::get_id() << " " << surfaceId << std::endl;
 #endif
   react_native_assert(surfaceId == surfaceId_ && "pull routed to the wrong surface's proxy");
+  assertUpdatesRegistryUnlocked();
   auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
@@ -158,7 +159,7 @@ void LayoutAnimationsProxy_Legacy::maybeScheduleCleanupPull(const bool flushedDe
 }
 #endif
 
-std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) {
+std::optional<SurfaceId> LayoutAnimationsProxy_Legacy::endLayoutAnimation(int tag, bool shouldRemove) const {
 #ifdef LAYOUT_ANIMATIONS_LOGS
   LOG(INFO) << "end layout animation for " << tag << " - should remove " << shouldRemove << std::endl;
 #endif
@@ -463,15 +464,10 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 
     auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
                                                                          : completedAnimationIt->second.animation;
-    auto newView = layoutAnimation.finalView;
-    newView.props = updateValues.newProps;
-    updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
-
-    mutations.push_back(
-        ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
-    layoutAnimation.currentView = newView;
+    mutations.push_back(frameUpdate(layoutAnimation, updateValues, false));
     if (layoutAnimation.opacity &&
-        (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
+        (updateValues.animatesOpacity ||
+         getViewProps(layoutAnimation.currentView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
     }
   }

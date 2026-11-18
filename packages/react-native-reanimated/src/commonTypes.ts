@@ -134,7 +134,7 @@ export interface BaseLayoutAnimationConfig {
   dampingRatio?: number;
   mass?: number;
   stiffness?: number;
-  overshootClamping?: number;
+  overshootClamping?: boolean;
   energyThreshold?: number;
 }
 
@@ -178,10 +178,12 @@ export interface LayoutAnimationBatchItem {
   type: LayoutAnimationType;
   config: SerializableRef | undefined;
   sharedTransitionTag?: string;
+  sharedTransitionCallback?: SerializableRef;
   sharedTransitionContentFade?: {
     fadeIn: SerializableRef<EntryExitAnimationFunction>;
     fadeOutEnd: number;
   };
+  sharedTransitionFollowsTarget?: boolean;
 }
 
 export type RequiredKeys<T, K extends keyof T> = T & Required<Pick<T, K>>;

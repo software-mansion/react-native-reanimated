@@ -12,6 +12,8 @@ import type {
 } from 'react-native-reanimated';
 import type { ShadowNodeWrapper } from 'react-native-reanimated/lib/typescript/commonTypes';
 
+import type { TestFailure } from './utils/remoteProtocol';
+
 export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
@@ -163,11 +165,14 @@ export type TestConfiguration = {
   ) => void;
 };
 
+export type { TestFailure };
+
 export type TestRunSummary = {
   passed: number;
   failed: number;
   skipped: number;
   failedTests: string[];
+  failures: TestFailure[];
   durationMs: number;
 };
 

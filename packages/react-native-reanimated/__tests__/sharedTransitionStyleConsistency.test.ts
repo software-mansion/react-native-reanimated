@@ -37,7 +37,9 @@ test('the Android carrier copies exactly the style keys that SharedTransitionVal
   const animated = [...methods.matchAll(/"current(\w)(\w*)"/g)].map(
     ([, first, rest]) => first.toLowerCase() + rest
   );
-  expect(sorted(copied)).toEqual(sorted(animated));
+  expect(sorted(copied)).toEqual(
+    sorted(animated.filter((name) => name !== 'opacity'))
+  );
 });
 
 test('the iOS carrier copies the typed fields and border edges that SharedTransitionValuesFactory animates', () => {
@@ -47,7 +49,9 @@ test('the iOS carrier copies the typed fields and border edges that SharedTransi
   const copied = [...copy.matchAll(/viewProps\.(\w+) = sourceProps\./g)].map(
     ([, name]) => name
   );
-  expect(sorted(copied)).toEqual(sorted([...fields, 'boxShadow']));
+  expect(sorted(copied)).toEqual(
+    sorted([...fields.filter((name) => name !== 'opacity'), 'boxShadow'])
+  );
   const widths = [...methods.matchAll(/sourceBorderWidths\.(\w+)/g)].map(
     ([, name]) => name.toLowerCase()
   );

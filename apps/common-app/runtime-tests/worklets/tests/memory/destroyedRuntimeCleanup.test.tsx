@@ -1,9 +1,14 @@
 import type { WorkletRuntime } from 'react-native-worklets';
 import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  isFullRun,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 
-const ITERATIONS = 50;
+const ITERATIONS = isFullRun() ? 50 : 10;
 
 describe('Release of values cached for a destroyed Worker Runtime', () => {
   test('garbage collection is available', () => {

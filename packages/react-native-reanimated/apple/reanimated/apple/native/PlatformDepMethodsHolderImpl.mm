@@ -322,7 +322,10 @@ PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoS
   };
 }
 
-PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
+PlatformDepMethodsHolder makePlatformDepMethodsHolder(
+    RCTModuleRegistry *moduleRegistry,
+    REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver)
 {
   auto requestRender = makeRequestRender(nodesManager);
 
@@ -354,8 +357,6 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
 
   auto setGestureStateFunction = makeSetGestureStateFunction(moduleRegistry);
-
-  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
 
   auto subscribeForKeyboardEventsFunction = makeSubscribeForKeyboardEventsFunction(keyboardObserver);
 

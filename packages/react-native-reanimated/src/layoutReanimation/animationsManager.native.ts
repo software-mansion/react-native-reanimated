@@ -4,6 +4,8 @@ import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
+import { isValidLayoutAnimationProp } from '../animation/util';
+import { logger } from '../common';
 import type {
   LayoutAnimation,
   LayoutAnimationsManager,
@@ -58,6 +60,17 @@ function stopObservingProgress(
   scheduleFlush();
 }
 
+function warnAboutUnsupportedProps(animations: Record<string, unknown>) {
+  'worklet';
+  for (const propName in animations) {
+    if (!isValidLayoutAnimationProp(propName.trim())) {
+      logger.warn(
+        `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
+      );
+    }
+  }
+}
+
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
@@ -100,6 +113,21 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     });
   };
 
+  const stop = (tag: number) => {
+    const value = mutableValuesForTag.get(tag);
+    if (!value) {
+      return;
+    }
+    // native already made its cleanup, so we just do cleanup here on JS side
+    value.removeListener(tag + TAG_OFFSET);
+    try {
+      cancelAnimation(value);
+    } finally {
+      currentAnimationForTag.delete(tag);
+      mutableValuesForTag.delete(tag);
+    }
+  };
+
   return {
     start(
       tag: number,
@@ -111,59 +139,72 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
-      const style = config(yogaValues);
-      let currentAnimation = style.animations;
+      try {
+        const style = config(yogaValues);
+        if (__DEV__ && type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION) {
+          warnAboutUnsupportedProps(style.animations);
+        }
+        let currentAnimation = style.animations;
 
-      // When layout animation is requested, but a previous one is still running, we merge
-      // new layout animation targets into the ongoing animation
-      const previousAnimation = currentAnimationForTag.get(tag);
-      if (previousAnimation) {
-        currentAnimation = { ...previousAnimation, ...style.animations };
+        // When layout animation is requested, but a previous one is still running, we merge
+        // new layout animation targets into the ongoing animation
+        const previousAnimation = currentAnimationForTag.get(tag);
+        if (
+          previousAnimation &&
+          type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        ) {
+          currentAnimation = { ...previousAnimation, ...style.animations };
+        }
+        currentAnimationForTag.set(tag, currentAnimation);
+
+        let value = mutableValuesForTag.get(tag);
+        if (value === undefined) {
+          value = makeMutableUI(style.initialValues);
+          mutableValuesForTag.set(tag, value);
+        } else {
+          removeProgressListener(tag, value);
+          value._value = style.initialValues;
+        }
+
+        const animation = withStyleAnimation(
+          currentAnimation,
+          (finished) => {
+            if (finished) {
+              currentAnimationForTag.delete(tag);
+              mutableValuesForTag.delete(tag);
+              const shouldRemoveView = type === LayoutAnimationType.EXITING;
+              stopObservingProgress(
+                tag,
+                value,
+                scheduleFlush,
+                shouldRemoveView
+              );
+            }
+            if (style.callback) {
+              style.callback(finished);
+            }
+          },
+          type === LayoutAnimationType.EXITING
+        );
+
+        startObservingProgress(tag, value, scheduleFlush);
+        const previousFrameTimestamp = global.__frameTimestamp;
+        global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
+        try {
+          value.value = animation;
+        } finally {
+          global.__frameTimestamp = previousFrameTimestamp;
+        }
+      } catch (error) {
+        try {
+          stop(tag);
+        } catch {
+          throw error;
+        }
+        throw error;
       }
-      currentAnimationForTag.set(tag, currentAnimation);
-
-      let value = mutableValuesForTag.get(tag);
-      if (value === undefined) {
-        value = makeMutableUI(style.initialValues);
-        mutableValuesForTag.set(tag, value);
-      } else {
-        removeProgressListener(tag, value);
-        value._value = style.initialValues;
-      }
-
-      const animation = withStyleAnimation(
-        currentAnimation,
-        (finished) => {
-          if (finished) {
-            currentAnimationForTag.delete(tag);
-            mutableValuesForTag.delete(tag);
-            const shouldRemoveView = type === LayoutAnimationType.EXITING;
-            stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
-          }
-          if (style.callback) {
-            style.callback(finished);
-          }
-        },
-        type === LayoutAnimationType.EXITING
-      );
-
-      startObservingProgress(tag, value, scheduleFlush);
-      const previousFrameTimestamp = global.__frameTimestamp;
-      global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
-      value.value = animation;
-      global.__frameTimestamp = previousFrameTimestamp;
     },
-    stop(tag: number) {
-      const value = mutableValuesForTag.get(tag);
-      if (!value) {
-        return;
-      }
-      // native already made its cleanup, so we just do cleanup here on JS side
-      value.removeListener(tag + TAG_OFFSET);
-      cancelAnimation(value);
-      currentAnimationForTag.delete(tag);
-      mutableValuesForTag.delete(tag);
-    },
+    stop,
   };
 }
 

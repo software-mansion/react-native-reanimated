@@ -6,11 +6,15 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 
 #include <jsi/jsi.h>
+#include <atomic>
+#include <functional>
+#include <limits>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace reanimated {
@@ -20,19 +24,63 @@ using namespace facebook::react;
 using namespace worklets;
 using SharedTag = std::string;
 
+// The intersection of the frames of the ancestors that clip their content, in root coordinates.
+struct AncestorClip {
+  react::Rect frame;
+  Float borderRadius = 0;
+
+  bool operator==(const AncestorClip &other) const = default;
+};
+
 // [0] is before and [1] is after (best to use BeforeOrAfter enum)
 struct Transition {
   ShadowView snapshot[2];
   Tag parentTag[2] = {0, 0};
   std::optional<Transform> transform[2];
+  Float ancestorOpacity[2] = {1, 1};
+  AncestorClip clip[2];
 };
 
 struct SharedTransitionManager {
   std::mutex mutex_;
   std::unordered_map<Tag, std::string> tagToName_;
+  std::unordered_map<std::string, std::unordered_set<Tag>> nameToTags_;
   std::unordered_map<Tag, std::string> nativeIDToName_;
-  // Above the tags of React's views.
-  Tag nextOverlayTag_{10000002};
+  // Odd tags that end in 7. React gives even tags to views and tags that end in 1 to surfaces.
+  Tag nextOverlayTag_{std::numeric_limits<Tag>::max()};
+  // Odd tags that end in 3, with the content of each clip at the tag that ends in 5.
+  Tag nextClipTag_{std::numeric_limits<Tag>::max() - 4};
+  // True while a shared transition config exists: set a name before its config, erase it after.
+  std::atomic<bool> hasNames_{false};
+
+  bool hasNames() const {
+    return hasNames_.load(std::memory_order_acquire);
+  }
+
+  void setName(const Tag tag, const std::string &name) {
+    removeName(tag);
+    tagToName_[tag] = name;
+    nameToTags_[name].insert(tag);
+    hasNames_.store(true, std::memory_order_release);
+  }
+
+  void eraseName(const Tag tag) {
+    removeName(tag);
+    hasNames_.store(!tagToName_.empty(), std::memory_order_release);
+  }
+
+  void removeName(const Tag tag) {
+    const auto it = tagToName_.find(tag);
+    if (it == tagToName_.end()) {
+      return;
+    }
+    const auto tagsIt = nameToTags_.find(it->second);
+    tagsIt->second.erase(tag);
+    if (tagsIt->second.empty()) {
+      nameToTags_.erase(tagsIt);
+    }
+    tagToName_.erase(it);
+  }
 };
 
 // The fadeContent() options of a shared transition. The children fade out until fadeOutEnd of the move.
@@ -44,6 +92,9 @@ struct SharedTransitionContentFade {
 struct SharedTransitionConfig {
   std::shared_ptr<Serializable> animation;
   std::optional<SharedTransitionContentFade> contentFade;
+  std::shared_ptr<Serializable> callback;
+  // The animation aims at the current geometry of its target in each frame.
+  bool followsTarget = false;
 };
 
 struct LayoutAnimationConfig {
@@ -52,6 +103,8 @@ struct LayoutAnimationConfig {
   std::shared_ptr<Serializable> config;
   std::string sharedTransitionTag;
   std::optional<SharedTransitionContentFade> sharedTransitionContentFade;
+  std::shared_ptr<Serializable> sharedTransitionCallback;
+  bool sharedTransitionFollowsTarget = false;
 };
 
 // TODO: Refactor LayoutAnimationsManager around surface-owned configuration.
@@ -68,7 +121,7 @@ class LayoutAnimationsManager {
   bool hasLayoutAnimationConfigs(const LayoutAnimationType type);
   std::optional<SharedTransitionConfig> getSharedTransitionConfig(const int tag);
   std::shared_ptr<Serializable> takeExitingAnimationConfigAndClearTag(int tag);
-  void startLayoutAnimation(
+  bool startLayoutAnimation(
       jsi::Runtime &rt,
       const int tag,
       const LayoutAnimationType type,
@@ -80,8 +133,14 @@ class LayoutAnimationsManager {
   void cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const;
   void transferConfigFromNativeID(const int nativeId, const int tag);
   std::shared_ptr<SharedTransitionManager> getSharedTransitionManager();
+  static bool
+  runGuardedOnUIRuntime(jsi::Runtime &rt, const char *name, const std::function<void(jsi::Runtime &)> &call);
 
  private:
+  static bool callLayoutAnimationsManager(
+      jsi::Runtime &rt,
+      const char *methodName,
+      const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;

@@ -54,8 +54,8 @@ add_library(
   ${REANIMATED_COMMON_CPP_SOURCES} ${REANIMATED_ANDROID_CPP_SOURCES}
   ${REANIMATED_NATIVEVIEW_CPP_SOURCES})
 
-target_precompile_headers(reanimated PRIVATE
-                          "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
+include("${CMAKE_SOURCE_DIR}/cmake/pch-ccache.cmake")
+pch_ccache_precompile_headers(reanimated "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
 
 # Stop Clang from embedding a build timestamp in the .pch. Without this the PCH
 # is non-reproducible across builds, so ccache can't reuse it and translation
@@ -79,7 +79,6 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
-          "${REACT_NATIVE_DIR}/ReactCommon/react/utils/platform/android"
 )
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)

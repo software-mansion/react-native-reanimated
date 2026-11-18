@@ -283,13 +283,13 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
   position: relative;
   width: 100%;
   margin: 0;
-  padding: 4px 12px;
+  padding: 6px 12px;
   border-radius: 4px;
   background: none;
   color: var(--ifm-color-content-secondary);
   font-size: 0.875rem;
   font-weight: 400;
-  line-height: 22px;
+  line-height: 18px;
   text-decoration: none;
   overflow-wrap: anywhere;
 }
