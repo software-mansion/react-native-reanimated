@@ -764,6 +764,8 @@ describe('Shared transitions inside an iOS Modal', () => {
       expectOnScreenUntilModalLeaves(frames);
       await expectEventually(() => results.length).toBe(1);
       expect(results).toBe([false]);
+      await advanceAnimationTimer(1600);
+      expect(results).toBe([false]);
     }
   );
 });
@@ -790,6 +792,7 @@ function expectOnScreenUntilModalLeaves(
   frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>
 ) {
   const before = frames[0]?.[0];
+  expect((before?.opacity ?? 0) > 0).toBe(true);
   const modalShown = frames.filter(([, target]) => target !== null);
   for (const [moving, target] of modalShown) {
     expect(target?.opacity).toBe(0, ComparisonMode.FLOAT_DISTANCE);
