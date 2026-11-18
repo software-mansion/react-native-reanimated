@@ -330,10 +330,8 @@ Mode. See the dedicated page for the full overview.
 
 Defaults to an empty array.
 
-Modules in this list, along with their subpaths, are forwarded as imports inside
-worklet functions. For example, adding `my-library` also forwards imports from
-`my-library/some-file`, but not from `my-library-extra`. Only named and default
-imports are forwarded; namespace imports such as
+Modules in this list are forwarded as imports inside worklet functions. Only
+named and default imports are forwarded; namespace imports such as
 `import * as lib from 'my-library'` are captured from the closure instead.
 
 For example, to use all exports from `my-library` directly on the Worklet
