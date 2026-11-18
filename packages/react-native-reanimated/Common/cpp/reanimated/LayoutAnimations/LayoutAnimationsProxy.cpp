@@ -1200,9 +1200,18 @@ bool LayoutAnimationsProxy::holdsModal(
     return modalContentOf(view, node) != nullptr;
   };
   return std::ranges::any_of(transaction.startedSources, isInModal) ||
-      std::ranges::any_of(endedRuns, [&](const SharedTransitionRun *run) { return isInModal(run->target); });
+      std::ranges::any_of(
+             endedRuns, [&](const SharedTransitionRun *run) { return modalContentOfRun(*run, node) != nullptr; });
 }
 #endif
+
+// A carrier that React removed has no parent, so the target of its run shows the modal.
+std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOfRun(
+    const SharedTransitionRun &run,
+    const std::shared_ptr<LightNode> &root) const {
+  const bool removed = run.carrier->presence() == ReactPresence::REMOVED;
+  return modalContentOf(removed ? run.target : run.carrier, root);
+}
 
 // The child of the innermost modal that shows the view, when the modal is in the subtree of the root.
 std::shared_ptr<LightNode> LayoutAnimationsProxy::modalContentOf(

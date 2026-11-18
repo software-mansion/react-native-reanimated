@@ -1415,7 +1415,7 @@ void LayoutAnimationsProxy::stopSharedTransitions(
     TransactionMeta &transaction) const {
   const PropsParserContext propsParserContext{surfaceId_, *contextContainer_};
   for (auto *run : runs) {
-    const auto modalContent = modalContentOf(run->target, node);
+    const auto modalContent = modalContentOfRun(*run, node);
     if (!modalContent) {
       continue;
     }

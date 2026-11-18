@@ -883,6 +883,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::vector<SharedTransitionRun *> &endedRuns,
       const TransactionMeta &transaction) const;
 #endif
+  std::shared_ptr<LightNode> modalContentOfRun(const SharedTransitionRun &run, const std::shared_ptr<LightNode> &root)
+      const;
   std::shared_ptr<LightNode> modalContentOf(
       const std::shared_ptr<LightNode> &view,
       const std::shared_ptr<LightNode> &root) const;
