@@ -11,6 +11,8 @@ import type {
   WorkletRuntime as WorkletRuntimeFromWorklets,
 } from 'react-native-worklets';
 
+import { logger } from './common';
+
 /**
  * @deprecated Please use [`createSerializable` from
  *   `react-native-worklets`](https://docs.swmansion.com/react-native-worklets/docs/memory/createSerializable/)
@@ -76,12 +78,12 @@ export const runOnJS: typeof runOnJSFromWorklets =
  */
 export const runOnUI: typeof runOnUIFromWorklets =
   (worklet) =>
-  (...args) =>
-    queueMicrotask(() =>
-      requestAnimationFrame(() =>
-        (worklet as (...args: unknown[]) => unknown)(...args)
-      )
-    );
+  (...args) => {
+    uiJobs.push(() => (worklet as (...args: unknown[]) => unknown)(...args));
+    if (uiJobs.length === 1) {
+      queueMicrotask(flushUIJobs);
+    }
+  };
 
 /**
  * @deprecated Please use [`scheduleOnRuntime` from
@@ -113,3 +115,25 @@ export const isWorkletFunction: typeof isWorkletFunctionFromWorklets = ((
   typeof value === 'function' &&
   !!(value as unknown as Record<string, unknown>)
     .__workletHash) as typeof isWorkletFunctionFromWorklets;
+
+let uiJobs: (() => void)[] = [];
+
+function flushUIJobs() {
+  const jobs = uiJobs;
+  uiJobs = [];
+  requestAnimationFrame(() => {
+    for (const job of jobs) {
+      runUIJob(job);
+    }
+  });
+}
+
+function runUIJob(job: () => void) {
+  try {
+    job();
+  } catch (error) {
+    logger.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error)
+    );
+  }
+}
