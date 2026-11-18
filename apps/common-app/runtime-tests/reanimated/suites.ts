@@ -212,6 +212,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
       require('./tests/layoutAnimations/sharedTransitionStart.test');
+      require('./tests/layoutAnimations/sharedTransitionScreenSlide.test');
       require('./tests/layoutAnimations/sharedTransitionCallback.test');
     },
   },

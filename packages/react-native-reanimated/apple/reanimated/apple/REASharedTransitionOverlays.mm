@@ -142,6 +142,34 @@ static BOOL isViewControllerView(UIView *view)
   return [view.nextResponder isKindOfClass:[UIViewController class]];
 }
 
+// UIKit also gives the coordinator of a transition to the view controllers that it does not move, for example to the
+// presenting view controller of a modal. On iOS 27.2, a presentation moves only the presented view.
+static BOOL isMovedByCoordinator(UIView *view, id<UIViewControllerTransitionCoordinator> coordinator)
+{
+  if (coordinator.presentationStyle != UIModalPresentationNone) {
+    return runningPresentationControllerShowing(view) != nil;
+  }
+  UIView *fromView = [coordinator viewForKey:UITransitionContextFromViewKey];
+  UIView *toView = [coordinator viewForKey:UITransitionContextToViewKey];
+  return (fromView && [view isDescendantOfView:fromView]) || (toView && [view isDescendantOfView:toView]);
+}
+
+static BOOL isMovedByContainerTransition(UIView *view)
+{
+  for (UIView *current = view; current; current = current.superview) {
+    if (!isViewControllerView(current)) {
+      continue;
+    }
+    id<UIViewControllerTransitionCoordinator> coordinator =
+        ((UIViewController *)current.nextResponder).transitionCoordinator;
+    // A transition that the user drives can stop anywhere, so a run lands in the view that the user moves.
+    if (coordinator && !coordinator.isInteractive && isMovedByCoordinator(view, coordinator)) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
 static BOOL movesSublayers(CALayer *layer)
 {
   return !CGPointEqualToPoint(untransformedOrigin(layer), CGPointZero) || !CATransform3DIsIdentity(layer.transform);
@@ -306,6 +334,12 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
       .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y},
       .transform = presentationController ? ancestorTransformInPresentedView(view, presentationController.presentedView)
                                           : ancestorTransformInWindow(view, !settled)};
+}
+
+- (BOOL)isViewWithTagMovedByContainerTransition:(NSInteger)tag
+{
+  RCTAssertMainQueue();
+  return isMovedByContainerTransition([self viewWithTag:tag]);
 }
 
 @end

@@ -78,6 +78,9 @@ struct NativeViewPlacement {
 };
 using NativeViewPlacementFunction =
     std::function<NativeViewPlacement(SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled)>;
+// A container view controller, e.g. a navigation controller, moves the views of its children in its own transitions.
+// True while such a transition moves the view with the given tag, and the user does not drive it.
+using IsMovedByContainerTransitionFunction = std::function<bool(Tag tag)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
 // transforms. The background color is ARGB.
@@ -106,6 +109,7 @@ struct PlatformDepMethodsHolder {
   ReadMountedViewPropsFunction readMountedViewPropsFunction;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
   NativeViewPlacementFunction nativeViewPlacementFunction;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransitionFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;

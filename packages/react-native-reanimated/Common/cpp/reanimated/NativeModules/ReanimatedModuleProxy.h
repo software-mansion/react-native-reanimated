@@ -252,6 +252,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   ReadMountedViewPropsFunction readMountedViewProps_;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransition_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;

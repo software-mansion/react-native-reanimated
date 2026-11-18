@@ -117,6 +117,7 @@ LayoutAnimationsProxy::LayoutAnimationsProxy(
   forceScreenSnapshot_ = dependencies.forceScreenSnapshot;
   setSharedTransitionOverlay_ = dependencies.setSharedTransitionOverlay;
   nativeViewPlacement_ = dependencies.nativeViewPlacement;
+  isMovedByContainerTransition_ = dependencies.isMovedByContainerTransition;
 #endif
 #ifdef ANDROID
   releaseViewTransitions_ = dependencies.releaseViewTransitions;
@@ -315,6 +316,9 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+#ifdef __APPLE__
+    waitForContainerTransitions();
+#endif
     followOffWindowTargets(transaction, propsParserContext);
     flushSubtreeRemovals(transaction);
     scheduleTransitionLifecycleCleanup();

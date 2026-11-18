@@ -137,6 +137,8 @@ struct SharedTransitionRun {
   SharedTransitionLifecycle lifecycle = SharedTransitionLifecycle::ACTIVE;
   std::optional<ContentFade> contentFade;
   bool targetOffWindow = false;
+  // A container transition moves the target. Each pull sets it again.
+  bool targetMovedByContainer = false;
   // UIKit can move a target in a presented view without a React commit. Such a run, and a run that has no sample yet,
   // samples its target on each frame.
   std::optional<bool> targetPlacedNatively;
@@ -161,6 +163,7 @@ enum class LandingBlocker : std::uint8_t {
   LANDS_WITH_OTHER_RUNS,
   TARGET_IN_HIDDEN_VIEW,
   TARGET_OFF_WINDOW,
+  TARGET_MOVED_BY_CONTAINER_TRANSITION,
 };
 
 // Asks to show a view that the shared tag hid. The request is stale when the
@@ -362,6 +365,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   ForceScreenSnapshotFunction forceScreenSnapshot_;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransition_;
 #endif
   mutable StaleSynchronousPropsTracker staleSynchronousProps_;
   // It starts above the initial LightNode::followedInSynchronousBatch, so a view that no batch marked never matches.
@@ -679,6 +683,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   NativeViewPlacement::Kind targetBoundaryPlacementKind(const std::shared_ptr<LightNode> &node) const;
   bool isOffWindow(const std::shared_ptr<LightNode> &node) const;
   bool isInOtherWindow(const std::shared_ptr<LightNode> &target) const;
+#ifdef __APPLE__
+  bool isMovedByContainerTransition(const std::shared_ptr<LightNode> &target) const;
+#endif
   void waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target) const;
   void endSharedTransitionOf(
       const SharedTag &sharedTag,
@@ -696,6 +703,9 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       Float *ancestorOpacity = nullptr) const;
   AncestorClip fitTargetClip(const SharedTransitionRun &run, const ShadowView &target, const AncestorClip &clip) const;
   bool followsClipTarget(SharedTransitionRun &run, const AncestorClip &clip) const;
+#ifdef __APPLE__
+  void waitForContainerTransitions() const;
+#endif
   void followOffWindowTargets(TransactionMeta &transaction, const PropsParserContext &propsParserContext) const;
   void followProgressTargets(const PropsParserContext &propsParserContext) const;
   const LayoutAnimation &carrierAnimation(const SharedTransitionRun &run) const;

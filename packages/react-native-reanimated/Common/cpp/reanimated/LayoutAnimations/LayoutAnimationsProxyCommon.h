@@ -146,6 +146,7 @@ struct LayoutAnimationsProxyDependencies {
   ReadMountedViewPropsFunction readMountedViewProps;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay;
   NativeViewPlacementFunction nativeViewPlacement;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransition;
 #endif
 };
 
