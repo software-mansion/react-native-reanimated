@@ -83,9 +83,6 @@ export interface Spec extends TurboModule {
   /** IOS only. The display link that takes the samples can skip frames. */
   startFrameRecording(tags: ReadonlyArray<CodegenTypes.Int32>): Promise<void>;
 
-  /** IOS only. Records the views with these tags from the next display frame. */
-  updateFrameRecordingTags(tags: ReadonlyArray<CodegenTypes.Int32>): void;
-
   /** An entry is null when its view is not in a window. Android returns null. */
   takeFrameRecording(): Promise<ReadonlyArray<
     ReadonlyArray<PresentedFrame | null>

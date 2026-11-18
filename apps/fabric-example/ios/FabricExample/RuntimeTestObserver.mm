@@ -39,7 +39,7 @@ static BOOL isInContainerTransition(UIView *view)
   return NO;
 }
 
-static id presentedFrame(UIView *view, CFTimeInterval time)
+static id presentedFrame(UIView *view)
 {
   if (view.window == nil) {
     return (id)kCFNull;
@@ -65,10 +65,10 @@ static id presentedFrame(UIView *view, CFTimeInterval time)
 @interface FrameRecorder : NSObject
 - (instancetype)initWithTags:(NSArray<NSNumber *> *)tags registry:(RCTComponentViewRegistry *)registry;
 - (NSArray<NSArray *> *)stop;
-@property (nonatomic, copy) NSArray<NSNumber *> *tags;
 @end
 
 @implementation FrameRecorder {
+  NSArray<NSNumber *> *_tags;
   __weak RCTComponentViewRegistry *_registry;
   NSMutableArray<NSArray *> *_samples;
   CADisplayLink *_displayLink;
@@ -92,7 +92,7 @@ static id presentedFrame(UIView *view, CFTimeInterval time)
   [CATransaction flush];
   NSMutableArray *frames = [NSMutableArray arrayWithCapacity:_tags.count];
   for (NSNumber *tag in _tags) {
-    [frames addObject:presentedFrame([_registry findComponentViewWithTag:tag.intValue], _displayLink.timestamp)];
+    [frames addObject:presentedFrame([_registry findComponentViewWithTag:tag.intValue])];
   }
   [_samples addObject:frames];
 }
@@ -258,11 +258,6 @@ RCT_EXPORT_MODULE()
                                                registry:self.surfacePresenter.mountingManager.componentViewRegistry];
     resolve(nil);
   });
-}
-
-- (void)updateFrameRecordingTags:(NSArray *)tags
-{
-  dispatch_async(dispatch_get_main_queue(), ^{ frameRecorder.tags = tags; });
 }
 
 - (void)takeFrameRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject

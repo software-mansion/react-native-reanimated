@@ -170,6 +170,14 @@ function Screens({
   const inner = useTestRef('sourceInner');
   const outer = useTestRef('sourceOuter');
   const innerWrapper = useTestRef('innerWrapper');
+  const innerSource = (
+    <Animated.View
+      ref={inner}
+      sharedTransitionTag="inner"
+      sharedTransitionStyle={transitions.inner}
+      style={styles.sourceInner}
+    />
+  );
   return (
     <View style={styles.container}>
       {!(active && removeSource) && (
@@ -189,24 +197,10 @@ function Screens({
                   transform: [{ translateX: wrapperTranslateX }],
                 },
               ]}>
-              {!innerBesideOuter && (
-                <Animated.View
-                  ref={inner}
-                  sharedTransitionTag="inner"
-                  sharedTransitionStyle={transitions.inner}
-                  style={styles.sourceInner}
-                />
-              )}
+              {!innerBesideOuter && innerSource}
             </View>
           </Animated.View>
-          {innerBesideOuter && (
-            <Animated.View
-              ref={inner}
-              sharedTransitionTag="inner"
-              sharedTransitionStyle={transitions.inner}
-              style={styles.sourceInner}
-            />
-          )}
+          {innerBesideOuter && innerSource}
         </SharedTransitionBoundary>
       )}
       {(active || keepTarget) && (
