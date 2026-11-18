@@ -7,6 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import type { ViewStyle } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -377,6 +378,45 @@ describe('Shared transition live target geometry', () => {
     }
   );
 
+  test.each(Object.keys(PARENT_TRANSFORMS) as ParentTransforms[])(
+    'lands a built-in animation on a target under %s',
+    async (parents) => {
+      const state = counters();
+      const transition = countedTransition(1200, state);
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(
+        <ParentTransformScreens
+          active={false}
+          parents={parents}
+          transition={transition}
+        />
+      );
+      await waitForFrames();
+      await render(
+        <ParentTransformScreens
+          active
+          parents={parents}
+          transition={transition}
+        />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(1199);
+      const carrier = await cornersOf('source');
+      await advanceAnimationTimer(1);
+      await expectEventually(() => state.value.success).toBe(1);
+      const target = await cornersOf('target');
+      const { tolerance } = PARENT_TRANSFORMS[parents];
+      carrier.forEach((point, i) => {
+        for (const axis of ['x', 'y'] as const) {
+          expect(point[axis]).toBeWithinRange(
+            target[i][axis] - tolerance,
+            target[i][axis] + tolerance
+          );
+        }
+      });
+    }
+  );
+
   test.each(['decomposable', 'zeroScale'] as const)(
     'interpolates the frame and the matrix like interpolateMatrix, matrices: %s',
     async (matrices) => {
@@ -611,6 +651,63 @@ function ScrolledTarget({
   );
 }
 
+function ParentTransformScreens({
+  active,
+  parents,
+  transition,
+}: {
+  active: boolean;
+  parents: ParentTransforms;
+  transition: SharedTransition;
+}) {
+  const { outer, inner, target }: ParentTransformCase =
+    PARENT_TRANSFORMS[parents];
+  return (
+    <View style={styles.root}>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.View
+          sharedTransitionTag="parent-transforms"
+          sharedTransitionStyle={transition}
+          style={styles.target}>
+          <Corners name="source" />
+        </Animated.View>
+      </SharedTransitionBoundary>
+      <View style={styles.parents}>
+        <View style={[styles.transformedParent, { transform: outer }]}>
+          <View style={[styles.transformedParent, { transform: inner }]}>
+            <SharedTransitionBoundary isActive={active}>
+              <Animated.View
+                sharedTransitionTag="parent-transforms"
+                sharedTransitionStyle={transition}
+                style={[styles.target, { transform: target }]}>
+                <Corners name="target" />
+              </Animated.View>
+            </SharedTransitionBoundary>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// A carrier keeps the layout of its children, so the source has the size of the target.
+function Corners({ name }: { name: 'source' | 'target' }) {
+  return (
+    <>
+      <View
+        ref={useTestRef(`${name}TL`)}
+        collapsable={false}
+        style={styles.cornerTL}
+      />
+      <View
+        ref={useTestRef(`${name}BR`)}
+        collapsable={false}
+        style={styles.cornerBR}
+      />
+    </>
+  );
+}
+
 function Screens({
   active,
   transition,
@@ -709,6 +806,45 @@ function countedTransition(
     .withCallback(completionCounter(state));
 }
 
+// Android draws the inverse rotations a few points away from the same transform on the carrier (measured).
+const PARENT_TRANSFORMS = {
+  'parents with inverse rotations': {
+    outer: [{ rotateX: '-60deg' }],
+    inner: [{ rotateX: '60deg' }],
+    tolerance: Platform.OS === 'ios' ? 1 : 10,
+  },
+  'a parent turned by 360deg, with a perspective on the target': {
+    outer: [{ rotateX: '360deg' }],
+    target: [{ perspective: 200 }, { rotateY: '50deg' }],
+    tolerance: 1,
+  },
+  'a translated parent, with a perspective on the target': {
+    outer: [{ translateX: 1 }],
+    target: [{ perspective: 200 }, { rotateY: '50deg' }],
+    tolerance: 1,
+  },
+} satisfies Record<string, ParentTransformCase>;
+
+type ParentTransformCase = {
+  outer: ViewStyle['transform'];
+  inner?: ViewStyle['transform'];
+  target?: ViewStyle['transform'];
+  tolerance: number;
+};
+
+type ParentTransforms = keyof typeof PARENT_TRANSFORMS;
+
+function cornersOf(name: 'source' | 'target') {
+  return Promise.all(
+    ['TL', 'BR'].map(
+      async (corner) =>
+        (await RuntimeTestObserver!.observeLocationOnScreen(
+          getTestComponent(`${name}${corner}`).getTag()
+        ))!
+    )
+  );
+}
+
 function linearCustomTransition(
   duration: number,
   state: ReturnType<typeof counters>
@@ -803,6 +939,10 @@ async function expectEndpoint(targetWidth = 90) {
 
 const styles = StyleSheet.create({
   root: { width: 380, height: 600 },
+  parents: { position: 'absolute', top: 100, width: 380, height: 400 },
+  transformedParent: { flex: 1, paddingTop: 50, paddingLeft: 60 },
+  cornerTL: { position: 'absolute', left: 0, top: 0, width: 2, height: 2 },
+  cornerBR: { position: 'absolute', right: 0, bottom: 0, width: 2, height: 2 },
   outer: { position: 'absolute', width: 200, height: 200 },
   source: { width: 30, height: 30, backgroundColor: '#ff0000', opacity: 0.8 },
   target: { width: 90, height: 90, backgroundColor: '#0000ff', opacity: 0.6 },

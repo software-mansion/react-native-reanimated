@@ -841,6 +841,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const std::vector<Ancestor> &ancestors,
       const std::vector<react::Point> &absolutePositions,
       const std::optional<AncestorOutsideReactParent> &nativePlacement = std::nullopt) const;
+  std::optional<Transform> parentTransformsOf(
+      const std::vector<Ancestor> &ancestors,
+      const std::vector<react::Point> &absolutePositions,
+      const std::optional<AncestorOutsideReactParent> &nativePlacement) const;
+  static bool readsZ(const Transform &transform);
+  static Transform withFlatZAxis(Transform transform);
   react::Transform resolveTransform(
       const react::Size &originFrameSize,
       const react::Size &ownSize,
