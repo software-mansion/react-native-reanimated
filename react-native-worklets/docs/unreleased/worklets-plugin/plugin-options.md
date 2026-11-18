@@ -311,7 +311,9 @@ Mode. See the dedicated page for the full overview.
 
 Defaults to an empty array.
 
-List of exact module names that should be forwarded as imports inside worklet functions.
+Modules in this list are forwarded as imports inside worklet functions. Only
+named and default imports are forwarded; namespace imports such as
+`import * as lib from 'my-library'` are captured from the closure instead.
 
 For example, to use all exports from `my-library` directly on the Worklet
 Runtime, add it to the list:
@@ -330,8 +332,9 @@ that import into the worklet body:
 Before
 After (conceptually)
 
-The module name has to be an exact match — with `my-library` in the list, an
-import from `my-library/some-file` won't be forwarded:
+The module name has to be an exact match. With `my-library` in the list, an
+import from `my-library/some-file` isn't forwarded. Add `my-library/some-file`
+to the list to forward it too:
 
 Before
 After (conceptually)

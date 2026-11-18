@@ -57,7 +57,13 @@ Configures [import forwarding](https://docs.swmansion.com/react-native-worklets/
 
 Defaults to an empty array.
 
-List of exact module names that should be forwarded as imports inside worklet functions. See [`importForwarding.moduleNames`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#importforwardingmodulenames) of the Babel plugin.
+Modules in this list are forwarded as imports inside worklet functions. The
+module name has to be an exact match: with `my-library` in the list, imports from
+`my-library/some-file` aren't forwarded. Only named and default
+imports are forwarded; namespace imports such as
+`import * as lib from 'my-library'` are captured from the closure instead. See
+[`importForwarding.moduleNames`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#importforwardingmodulenames) of
+the Babel plugin.
 
 The Oxc plugin always forwards `react-native-worklets` and `react-native/Libraries/Core/setUpXHR`. The names in this list are added to them.
 
