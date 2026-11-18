@@ -24,6 +24,7 @@ import {
   render,
   test,
   useTestRef,
+  wait,
   waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -56,18 +57,20 @@ describe('Shared transition while a native stack moves its screens', () => {
     async ([presentation]) => {
       await render(<Screens presentation={presentation} />);
       await waitForNotification(STACK_READY);
+      const homeTag = getTestComponent('home').getTag();
+      const homeSamples = await recordPresentedFrames([homeTag], () =>
+        waitForFrames(2)
+      );
+      const home = homeSamples[homeSamples.length - 1]?.[0];
       await navigateAndLand(() => navigation.navigate('Player'));
       await waitForNotification(PLAYER_SHOWN);
-      const tags = [
-        getTestComponent('home').getTag(),
-        getTestComponent('player').getTag(),
-      ];
+      const tags = [homeTag, getTestComponent('player').getTag()];
       const samples = await recordPresentedFrames(tags, async () => {
         await navigateAndLand(() => navigation.goBack());
-        await waitForFrames(5);
+        // The dismissal of the modal continues after the landing.
+        await wait(500);
       });
-      const landing = samples.findIndex(([home]) => isVisible(home));
-      const settled = samples[samples.length - 1]?.[0];
+      const landing = samples.findIndex(([homeBar]) => isVisible(homeBar));
       expect(landing > 0).toBe(true);
       samples.forEach((frames, index) => {
         const visible = frames.filter(isVisible);
@@ -75,7 +78,7 @@ describe('Shared transition while a native stack moves its screens', () => {
         expect(visible[0] === frames[0]).toBe(index >= landing);
         const keys = index < landing ? (['x'] as const) : FRAME_KEYS;
         for (const key of keys) {
-          expect(visible[0]?.[key]).toBe(settled?.[key], ComparisonMode.PIXEL);
+          expect(visible[0]?.[key]).toBe(home?.[key], ComparisonMode.PIXEL);
         }
       });
       expect(samples[landing]?.[0]?.inContainerTransition).toBe(
