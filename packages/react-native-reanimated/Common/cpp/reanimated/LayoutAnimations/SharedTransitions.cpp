@@ -1258,7 +1258,7 @@ Props::Shared LayoutAnimationsProxy::carrierFrameProps(
 }
 
 ShadowView LayoutAnimationsProxy::withStyleOf(
-    ShadowView view,
+    const ShadowView &view,
     const ShadowView &source,
     const PropsParserContext &propsParserContext) const {
   return withChangedStyleOf(view, source, view, propsParserContext);

@@ -777,7 +777,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       const ShadowView &target,
       const ShadowView &legStart,
       const PropsParserContext &propsParserContext) const;
-  ShadowView withStyleOf(ShadowView view, const ShadowView &source, const PropsParserContext &propsParserContext) const;
+  ShadowView withStyleOf(const ShadowView &view, const ShadowView &source, const PropsParserContext &propsParserContext)
+      const;
   ShadowView withChangedStyleOf(
       ShadowView view,
       const ShadowView &source,
