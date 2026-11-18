@@ -112,7 +112,6 @@ class AnimationFrameQueue(
 
         synchronized(mDispatchLock) {
             val frameCallbacks = pullCallbacks()
-            mCallbackPosted.set(false)
             if (mInvalidated.get()) {
                 return
             }
@@ -131,6 +130,7 @@ class AnimationFrameQueue(
         synchronized(mFrameCallbacks) {
             val frameCallbacks = mFrameCallbacks.toList()
             mFrameCallbacks.clear()
+            mCallbackPosted.set(false)
             return frameCallbacks
         }
     }
