@@ -90,12 +90,14 @@ function createMapperRegistry() {
     if (processingMappers) {
       return;
     }
+    let ranMappers = false;
     try {
       processingMappers = true;
       if (mappers.size !== sortedMappers.length) {
         updateMappersOrder();
       }
       if (isAnyMapperDirty) {
+        ranMappers = true;
         isAnyMapperDirty = false;
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
@@ -103,10 +105,12 @@ function createMapperRegistry() {
             mapper.worklet();
           }
         }
-        isAnyMapperDirty = sortedMappers.some((mapper) => mapper.dirty);
       }
     } finally {
       processingMappers = false;
+      if (ranMappers) {
+        isAnyMapperDirty = sortedMappers.some((mapper) => mapper.dirty);
+      }
       if (isAnyMapperDirty) {
         requestMapperRun();
       }
