@@ -239,6 +239,13 @@ NativeViewPlacementFunction makeNativeViewPlacementFunction(REASharedTransitionO
     return [overlays placementOfViewWithTag:tag parentTag:parentTag surfaceId:surfaceId settled:settled];
   };
 }
+
+IsMovedByContainerTransitionFunction makeIsMovedByContainerTransitionFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](Tag tag) {
+    return [overlays isViewWithTagMovedByContainerTransition:tag];
+  };
+}
 #endif
 
 ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *nodesManager)
@@ -335,12 +342,14 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(
 
   SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
   NativeViewPlacementFunction nativeViewPlacementFunction;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransitionFunction;
 #if TARGET_OS_IOS
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
     REASharedTransitionOverlays *sharedTransitionOverlays =
         [[REASharedTransitionOverlays alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
     setSharedTransitionOverlayFunction = makeSetSharedTransitionOverlayFunction(sharedTransitionOverlays);
     nativeViewPlacementFunction = makeNativeViewPlacementFunction(sharedTransitionOverlays);
+    isMovedByContainerTransitionFunction = makeIsMovedByContainerTransitionFunction(sharedTransitionOverlays);
   }
 #endif
 
@@ -379,6 +388,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(
       readMountedViewPropsFunction,
       setSharedTransitionOverlayFunction,
       nativeViewPlacementFunction,
+      isMovedByContainerTransitionFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       isSensorAvailableFunction,

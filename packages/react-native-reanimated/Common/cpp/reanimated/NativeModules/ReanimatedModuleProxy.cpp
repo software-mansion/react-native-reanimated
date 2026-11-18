@@ -203,6 +203,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
       setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
       nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
+      isMovedByContainerTransition_(platformDepMethodsHolder.isMovedByContainerTransitionFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
@@ -1423,6 +1424,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
       setSharedTransitionOverlay_,
       nativeViewPlacement_,
+      isMovedByContainerTransition_,
 #endif
   };
 

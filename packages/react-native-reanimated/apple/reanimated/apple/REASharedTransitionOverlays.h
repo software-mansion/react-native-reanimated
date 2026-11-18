@@ -25,6 +25,8 @@ NS_ASSUME_NONNULL_BEGIN
                                                 surfaceId:(NSInteger)surfaceId
                                                   settled:(BOOL)settled;
 
+- (BOOL)isViewWithTagMovedByContainerTransition:(NSInteger)tag;
+
 @end
 
 NS_ASSUME_NONNULL_END

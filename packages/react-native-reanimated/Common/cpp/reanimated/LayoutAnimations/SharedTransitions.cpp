@@ -1098,7 +1098,8 @@ SharedTransitionRun *LayoutAnimationsProxy::continueSharedTransitionRun(
     const bool carrierChangedTag =
         run->carrier->presence() != ReactPresence::REMOVED && findSharedTag(run->carrier->current) != sharedTag;
     const bool waitsToLand = phase == LayoutAnimationPhase::ENDED &&
-        (run->carrier->presence() == ReactPresence::REMOVED || landsWithOtherRuns(*run));
+        (run->carrier->presence() == ReactPresence::REMOVED || landsWithOtherRuns(*run) ||
+         run->targetMovedByContainer || isDescendantOfAny(run->target, viewsHiddenByContinuingRuns()));
     // A carrier stays in its layout root, so the run of another layout root needs a new carrier.
     const bool carrierInOtherLayoutRoot = layoutRootOf(run->carrier) != layoutRootOf(nodes[AFTER]);
     if ((!isQueuedOrRunning(phase) && !waitsToLand && !hasUnqueuedCarrierFrame(tag)) || carrierChangedTag ||
@@ -2599,6 +2600,10 @@ LandingBlocker LayoutAnimationsProxy::landingBlocker(
   if (run.targetOffWindow) {
     return LandingBlocker::TARGET_OFF_WINDOW;
   }
+  // UIKit ends each container transition that the user does not drive.
+  if (run.targetMovedByContainer) {
+    return LandingBlocker::TARGET_MOVED_BY_CONTAINER_TRANSITION;
+  }
   return LandingBlocker::NONE;
 }
 
@@ -3445,6 +3450,15 @@ bool LayoutAnimationsProxy::isInOtherWindow(const std::shared_ptr<LightNode> &ta
   return targetBoundaryPlacementKind(target) == NativeViewPlacement::Kind::DifferentWindow;
 }
 
+#ifdef __APPLE__
+// A reversed run lands on its carrier in the overlay. The parent of the target is where it lands.
+bool LayoutAnimationsProxy::isMovedByContainerTransition(const std::shared_ptr<LightNode> &target) const {
+  const auto parent = target->parent.lock();
+  return isMovedByContainerTransition_ && isLightNodeMapped(target) && !target->isExiting() && parent &&
+      isMovedByContainerTransition_(parent->current.tag);
+}
+#endif
+
 void LayoutAnimationsProxy::waitForTargetWindow(SharedTransitionRun &run, const std::shared_ptr<LightNode> &target)
     const {
   run.targetOffWindow = isOutOfWindow(targetBoundaryPlacementKind(target));
@@ -3595,6 +3609,22 @@ bool LayoutAnimationsProxy::followsClipTarget(SharedTransitionRun &run, const An
   writeSharedTransitionGeometry(run.carrier->current.tag, *animation);
   return true;
 }
+
+#ifdef __APPLE__
+// UIKit ends a container transition without a React commit.
+void LayoutAnimationsProxy::waitForContainerTransitions() const {
+  for (auto &run : activeSharedTransitionRuns()) {
+    const bool movedBefore = run.targetMovedByContainer;
+    run.targetMovedByContainer = isMovedByContainerTransition(run.target);
+    if (run.targetMovedByContainer) {
+      schedulePullOnNextFrame();
+    } else if (movedBefore && !run.targetOffWindow) {
+      // A navigation controller takes the target screen out of the window between a push and the pop that reverses it.
+      waitForTargetWindow(run, run.target);
+    }
+  }
+}
+#endif
 
 // A held start does not start, and a run does not land, until the target boundary joins the window. A run that
 // follows its target flies to its end before it stops to wait.
