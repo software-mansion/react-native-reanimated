@@ -146,6 +146,7 @@ const skippedUrls = [
   '127.0.0.1',
   '//x.com',
   'youtube.com',
+  'youtu.be',
   'cppreference.com',
 ];
 
