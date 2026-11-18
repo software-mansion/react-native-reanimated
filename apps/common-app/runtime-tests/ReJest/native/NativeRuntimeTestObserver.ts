@@ -85,14 +85,15 @@ export interface Spec extends TurboModule {
   ): Promise<void>;
 
   /**
-   * IOS only. Records the presented frames of the views in each display frame
-   * until `takeFrameRecording`.
+   * IOS only. Records the presented frames of the views in each callback of a
+   * display link until `takeFrameRecording`. The display link can skip frames.
    */
   startFrameRecording(tags: ReadonlyArray<CodegenTypes.Int32>): Promise<void>;
 
   /**
-   * Returns one sample for each display frame, with one entry for each tag. The
-   * entry is null when the view is not in a window. Android returns null.
+   * Returns one sample for each callback of the display link, with one entry
+   * for each tag. The entry is null when the view is not in a window. Android
+   * returns null.
    */
   takeFrameRecording(): Promise<ReadonlyArray<
     ReadonlyArray<PresentedFrame | null>

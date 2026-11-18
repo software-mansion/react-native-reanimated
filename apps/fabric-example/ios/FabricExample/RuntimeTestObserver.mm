@@ -44,8 +44,9 @@ static id presentedFrame(UIView *view)
   if (view.window == nil) {
     return (id)kCFNull;
   }
-  CALayer *layer = view.layer.presentationLayer ?: view.layer;
-  CALayer *windowLayer = view.window.layer.presentationLayer ?: view.window.layer;
+  CALayer *presentationLayer = view.layer.presentationLayer;
+  CALayer *layer = presentationLayer ?: view.layer;
+  CALayer *windowLayer = presentationLayer ? view.window.layer.presentationLayer : view.window.layer;
   const CGRect frame = [layer convertRect:layer.bounds toLayer:windowLayer];
   float opacity = 1;
   for (CALayer *current = layer; current; current = current.superlayer) {
