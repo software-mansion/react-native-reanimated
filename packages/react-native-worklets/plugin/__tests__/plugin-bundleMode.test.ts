@@ -170,6 +170,32 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
+  describe('import forwarding by module name', () => {
+    test.each([
+      ['forwards an import of the module itself', 'some-library', true],
+      ['forwards an import of a subpath', 'some-library/sub/file', true],
+      [
+        'does not forward a module that only shares the prefix',
+        'some-library-extra',
+        false,
+      ],
+    ])('%s', (_label, source, forwarded) => {
+      const { files } = runPlugin(
+        `
+        import { value } from '${source}';
+        function foo() {
+          'worklet';
+          return value;
+        }
+      `,
+        {},
+        { importForwarding: { moduleNames: ['some-library'] } }
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content.includes(source)).toBe(forwarded);
+    });
+  });
+
   describe('worklet file emission', () => {
     test('writes one worklet file per worklet', () => {
       const input = html`<script>

@@ -137,11 +137,12 @@ export interface PluginOptions {
    */
   importForwarding?: {
     /**
-     * List of exact module names whose imports should be forwarded inside
+     * List of module names whose imports should be forwarded inside
      * worklets.
      *
-     * The module name has to be an exact match — with `'my-library'` in the
-     * list, an import from `'my-library/some-file'` won't be forwarded.
+     * A name also matches its subpaths — with `'my-library'` in the list,
+     * an import from `'my-library/some-file'` is forwarded too, but an
+     * import from `'my-library-extra'` isn't.
      *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
      *
