@@ -24,16 +24,19 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
-    if (flushedCallbacks.length > 0) {
-      for (const callback of flushedCallbacks) {
-        callback(timestamp);
+    try {
+      if (flushedCallbacks.length > 0) {
+        for (const callback of flushedCallbacks) {
+          callback(timestamp);
+          globalThis.__drainMicrotasks();
+        }
+      } else {
         globalThis.__drainMicrotasks();
       }
-    } else {
-      globalThis.__drainMicrotasks();
+    } finally {
+      flushedCallbacksBegin = flushedCallbacksEnd;
+      flushedCallbacks = [];
     }
-
-    flushedCallbacksBegin = flushedCallbacksEnd;
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
