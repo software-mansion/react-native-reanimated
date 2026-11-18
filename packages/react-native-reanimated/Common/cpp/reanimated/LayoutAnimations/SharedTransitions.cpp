@@ -3563,9 +3563,7 @@ std::optional<Transform> LayoutAnimationsProxy::parseParentTransforms(
           Transform::Translate(origin[0], origin[1], origin[2]));
 }
 
-// The transforms of the parents of the target and its own transform, about the center of the target. A view draws the
-// content of its children flat, so a parent transform that reads z gets the content without z. The content keeps its z
-// under other parent transforms and in the last result, so that the result keeps the depth of its 3D transforms.
+// A view draws its children flat, so only a parent transform that reads z gets them without z.
 std::optional<Transform> LayoutAnimationsProxy::parentTransformsOf(
     const std::vector<Ancestor> &ancestors,
     const std::vector<react::Point> &absolutePositions,
@@ -3611,15 +3609,13 @@ std::optional<Transform> LayoutAnimationsProxy::parentTransformsOf(
   return parentHasTransform ? result : std::nullopt;
 }
 
-// A transform reads z when z changes its x, y or w. A turn by 360deg leaves a small float error in x and y, but only a
-// perspective changes w.
+// A transform reads z when z changes x, y or w. A 360deg turn leaves float errors in x and y, not in w.
 bool LayoutAnimationsProxy::readsZ(const Transform &transform) {
   constexpr Float tolerance = 1e-5;
   return transform.at(2, 3) != 0 || std::abs(transform.at(2, 0)) > tolerance ||
       std::abs(transform.at(2, 1)) > tolerance;
 }
 
-// A flat view has no z, so its transform keeps only its x and y axes.
 Transform LayoutAnimationsProxy::withFlatZAxis(Transform transform) {
   for (const auto i : {2, 6, 8, 9, 11, 14}) {
     transform.matrix[i] = 0;
