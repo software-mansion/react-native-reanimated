@@ -107,10 +107,10 @@ inline jsi::Value runOnUISync(
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
 #ifndef NDEBUG
-    auto serializedResult =
-        uiWorkletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(serializableWorklet, scheduleStack);
+    auto serializedResult = uiWorkletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
+        serializableWorklet, scheduleStack);
 #else
-    auto serializedResult = uiWorkletRuntime->runSyncSerialized(serializableWorklet);
+    auto serializedResult = uiWorkletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
 #endif // NDEBUG
     return serializedResult->toJSValue(rt);
   }
@@ -133,9 +133,10 @@ jsi::Value runOnRuntimeSync(
     throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
   }
 #ifndef NDEBUG
-  auto serializedResult = workletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(worklet, scheduleStack);
+  auto serializedResult =
+      workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet, scheduleStack);
 #else
-  auto serializedResult = workletRuntime->runSyncSerialized(worklet);
+  auto serializedResult = workletRuntime->runSyncAndDrainMicrotasksSerialized(worklet);
 #endif // NDEBUG
   return serializedResult->toJSValue(rt);
 }
@@ -683,10 +684,10 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        auto serializedResult =
-            workletRuntime->runSyncWithStack<std::shared_ptr<Serializable>>(serializableWorklet, scheduleStack);
+        auto serializedResult = workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
+            serializableWorklet, scheduleStack);
 #else
-        auto serializedResult = workletRuntime->runSyncSerialized(serializableWorklet);
+        auto serializedResult = workletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
 #endif // NDEBUG
         return serializedResult->toJSValue(rt);
       });

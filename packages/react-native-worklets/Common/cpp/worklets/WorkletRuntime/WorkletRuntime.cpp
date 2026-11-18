@@ -103,7 +103,7 @@ WorkletRuntime::WorkletRuntime(
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
     eventLoop_->run();
   }
 }

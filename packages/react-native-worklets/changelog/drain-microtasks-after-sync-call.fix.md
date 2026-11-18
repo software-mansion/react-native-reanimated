@@ -1,0 +1,1 @@
+Run the microtasks queued by a synchronous call into a Worklet Runtime (`runOnUISync`, `runOnRuntimeSync`, and the calls Reanimated makes for events) when the outermost call into that runtime returns, instead of leaving them for a later task.
