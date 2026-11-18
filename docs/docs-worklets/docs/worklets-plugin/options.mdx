@@ -330,7 +330,11 @@ Mode. See the dedicated page for the full overview.
 
 Defaults to an empty array.
 
-List of module names that should be forwarded as imports inside worklet functions. A name also matches its subpaths: with `my-library` in the list, imports from `my-library/some-file` are forwarded too, but imports from `my-library-extra` aren't. Only named and default imports are forwarded. A namespace import (`import * as lib from 'my-library'`) is captured from the closure.
+Modules in this list, along with their subpaths, are forwarded as imports inside
+worklet functions. For example, adding `my-library` also forwards imports from
+`my-library/some-file`, but not from `my-library-extra`. Only named and default
+imports are forwarded; namespace imports such as
+`import * as lib from 'my-library'` are captured from the closure instead.
 
 For example, to use all exports from `my-library` directly on the Worklet
 Runtime, add it to the list:
@@ -386,8 +390,9 @@ function foo() {
   </tr>
 </table>
 
-A name also matches its subpaths. With `my-library` in the list, an import from
-`my-library/some-file` is forwarded too, but an import from `my-library-extra` isn't:
+Entries match both the module itself and its subpaths. For example, adding
+`my-library` also forwards an import from `my-library/some-file`. It doesn't
+match similar names such as `my-library-extra`:
 
 export const importForwardingSubpathBefore = `import { someExport } from 'my-library/some-file';
 import { someOtherExport } from 'my-library-extra';

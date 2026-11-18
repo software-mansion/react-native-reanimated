@@ -150,14 +150,15 @@ export interface PluginOptions {
    */
   importForwarding?: {
     /**
-     * List of module names whose imports should be forwarded inside worklets.
+     * Modules in this list, along with their subpaths, are forwarded as imports
+     * inside worklets.
      *
-     * A name also matches its subpaths — with `'my-library'` in the list, an
-     * import from `'my-library/some-file'` is forwarded too, but an import from
-     * `'my-library-extra'` isn't.
+     * For example, adding `'my-library'` also forwards imports from
+     * `'my-library/some-file'`, but not from `'my-library-extra'`.
      *
-     * Only named and default imports are forwarded. A namespace import (`import
-     * * as lib from 'my-library'`) is captured from the closure.
+     * Only named and default imports are forwarded. Namespace imports such as
+     * `import * as lib from 'my-library'` are captured from the closure
+     * instead.
      *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
      *
