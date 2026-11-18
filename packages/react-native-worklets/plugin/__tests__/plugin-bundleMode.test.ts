@@ -173,7 +173,7 @@ describe('babel plugin in bundleMode', () => {
   describe('import forwarding by module name', () => {
     test.each([
       ['forwards an import of the module itself', 'some-library', true],
-      ['forwards an import of a subpath', 'some-library/sub/file', true],
+      ['does not forward an import of a subpath', 'some-library/sub/file', false],
       [
         'does not forward a module that only shares the prefix',
         'some-library-extra',

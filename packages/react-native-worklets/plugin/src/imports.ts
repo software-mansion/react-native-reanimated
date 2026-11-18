@@ -53,11 +53,7 @@ export function canForwardModuleImport(
   moduleName: string,
   forwardableModuleNames: string[]
 ): boolean {
-  return forwardableModuleNames.some(
-    (forwardableModuleName) =>
-      moduleName === forwardableModuleName ||
-      moduleName.startsWith(forwardableModuleName + '/')
-  );
+  return forwardableModuleNames.includes(moduleName);
 }
 
 export function canForwardRelativeImport(

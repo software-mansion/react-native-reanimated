@@ -137,11 +137,11 @@ export interface PluginOptions {
    */
   importForwarding?: {
     /**
-     * Modules in this list, along with their subpaths, are forwarded as
-     * imports inside worklets.
+     * Modules in this list are forwarded as imports inside worklets.
      *
-     * For example, adding `'my-library'` also forwards imports from
-     * `'my-library/some-file'`, but not from `'my-library-extra'`.
+     * The module name has to be an exact match. With `'my-library'` in the
+     * list, imports from `'my-library/some-file'` aren't forwarded. Add
+     * `'my-library/some-file'` to the list to forward them too.
      *
      * Only named and default imports are forwarded. Namespace imports such
      * as `import * as lib from 'my-library'` are captured from the closure
