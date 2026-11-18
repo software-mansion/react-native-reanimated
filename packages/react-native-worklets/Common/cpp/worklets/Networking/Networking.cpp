@@ -420,8 +420,8 @@ uint64_t Networking::connectWebSocket(jsi::Runtime &rt, const jsi::Object &confi
   const auto *hostIdentity = findRuntimeIdentity(rt);
   react_native_assert(hostIdentity != nullptr && "[Worklets] A Worklet Runtime must have a runtime identity.");
 
-  const auto serializableCallback = std::make_shared<SerializableRemoteFunction>(
-      rt, "workletsWebSocketCallback", std::move(callback), *hostIdentity);
+  const auto serializableCallback =
+      std::make_shared<SerializableRemoteFunction>(rt, "workletsWebSocketCallback", std::move(callback), *hostIdentity);
 
   std::vector<std::string> protocols;
   auto protocolsArray = config.getProperty(rt, "protocols").asObject(rt).asArray(rt);
