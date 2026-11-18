@@ -456,6 +456,15 @@ static inline bool isRNSScreen(const std::shared_ptr<LightNode> &node) {
   return !std::strcmp(componentName, "RNSScreen") || !std::strcmp(componentName, "RNSModalScreen");
 }
 
+static inline bool startsExitTransitionOnRemove([[maybe_unused]] const std::shared_ptr<LightNode> &node) {
+#ifdef ANDROID
+  const auto parent = node->parent.lock();
+  return isRNSScreen(node) && parent && !std::strcmp(parent->current.componentName, "RNSScreenStack");
+#else
+  return false;
+#endif
+}
+
 static inline std::shared_ptr<LightNode> findParentRNSScreen(const std::shared_ptr<LightNode> &node) {
   auto current = node->parent.lock();
   while (current && !isRNSScreen(current)) {

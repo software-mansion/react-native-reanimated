@@ -845,6 +845,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void handleSubtreeRemoval(const std::shared_ptr<LightNode> &node, TransactionMeta &transaction) const;
   bool holdsSnapshottedScreen(const std::shared_ptr<LightNode> &node) const;
+  bool hasRunningAnimations() const;
 #ifdef __APPLE__
   bool holdsSourceInModal(const std::shared_ptr<LightNode> &node, const TransactionMeta &transaction) const;
 #endif
