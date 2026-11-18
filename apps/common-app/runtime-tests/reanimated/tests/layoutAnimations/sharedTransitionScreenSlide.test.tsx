@@ -54,7 +54,7 @@ describe('Shared transition while a native stack moves its screens', () => {
   iosTest.each([['card'], ['modal']] as const)(
     'keeps the bar at its X when the run ends before the ${0} pop',
     async ([presentation]) => {
-      await render(<Player presentation={presentation} />);
+      await render(<Screens presentation={presentation} />);
       await waitForNotification(STACK_READY);
       await navigateAndLand(() => navigation.navigate('Player'));
       await waitForNotification(PLAYER_SHOWN);
@@ -111,7 +111,7 @@ function isVisible(frame: PresentedFrame | null) {
   return frame !== null && frame.opacity > 0.01;
 }
 
-function Player({ presentation }: { presentation: 'card' | 'modal' }) {
+function Screens({ presentation }: { presentation: 'card' | 'modal' }) {
   return (
     <View style={styles.root}>
       <NavigationContainer ref={navigation} onReady={() => notify(STACK_READY)}>
