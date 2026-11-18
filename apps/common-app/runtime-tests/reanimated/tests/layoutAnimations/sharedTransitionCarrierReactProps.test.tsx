@@ -1,6 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  interpolateColor,
   SharedTransition,
   SharedTransitionBoundary,
   withTiming,
@@ -149,7 +150,17 @@ describe('Shared transition shows React props of the moving view', () => {
       ComparisonMode.COLOR
     );
 
-    await advanceAnimationTimer(DURATION / 2);
+    await advanceAnimationTimer(DURATION / 4);
+    expect((await carrierProps(carrierTag))?.backgroundColor).toBe(
+      interpolateColor(
+        0.75,
+        [0, 1],
+        [START_COLOR, styles.target.backgroundColor]
+      ),
+      ComparisonMode.COLOR
+    );
+
+    await advanceAnimationTimer(DURATION / 4);
     await waitForNotification('react-props-finished');
   });
 });
