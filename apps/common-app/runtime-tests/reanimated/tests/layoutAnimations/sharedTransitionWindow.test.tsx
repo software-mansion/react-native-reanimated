@@ -785,9 +785,7 @@ async function recordPresentedFrames(
   return frames;
 }
 
-// The frames list the moving view, the target and the marker. While the Modal is in the window, the moving view keeps
-// its look from before the close and the target stays hidden. The Modal stays in the window after the close shows the
-// marker.
+// The Modal stays in the window after the close shows the marker.
 function expectOnScreenUntilModalLeaves(
   frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>
 ) {
