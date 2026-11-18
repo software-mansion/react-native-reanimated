@@ -20,6 +20,7 @@ import { ComparisonMode } from '../../../ReJest/types';
 const BOX_REF = 'SETTLED_PROPS_SYNC_INTERVAL_BOX';
 const INITIAL_WIDTH = 100;
 const UPDATED_WIDTH = 200;
+const SECOND_UPDATED_WIDTH = 250;
 const FLUSH_INTERVAL_MS = 500;
 const SETTLE_THRESHOLD_MS = 1000;
 const IDLE_WAIT_MS = FLUSH_INTERVAL_MS * 3;
@@ -59,6 +60,26 @@ describe('settled props sync interval', () => {
 
     await expectEventually(() => isSyncRunning()).toBe(true);
     await wait(SYNC_AND_EVICT_WAIT_MS);
+    expect(isSyncRunning()).toBe(false);
+  });
+
+  test('runs again for a later write to the same view', async () => {
+    await render(<ResizableBox />);
+    const box = getTestComponent(BOX_REF);
+    await wait(IDLE_WAIT_MS);
+
+    for (const width of [UPDATED_WIDTH, SECOND_UPDATED_WIDTH]) {
+      expect(isSyncRunning()).toBe(false);
+
+      widthValue!.value = width;
+      await expectEventually(() => box.getAnimatedStyle('width')).toBe(
+        width,
+        ComparisonMode.PIXEL
+      );
+
+      await expectEventually(() => isSyncRunning()).toBe(true);
+      await wait(SYNC_AND_EVICT_WAIT_MS);
+    }
     expect(isSyncRunning()).toBe(false);
   });
 });
