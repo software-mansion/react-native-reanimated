@@ -77,7 +77,6 @@ export const PropsRegistryGarbageCollector = {
 
   startSync() {
     if (this.viewsMap.size === 0) {
-      syncRequested?.setBlocking(false);
       return;
     }
     if (this.intervalId === null) {
