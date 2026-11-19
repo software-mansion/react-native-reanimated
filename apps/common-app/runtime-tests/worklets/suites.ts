@@ -95,6 +95,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/finalizers.test');
       require('./tests/runLoop/headlessTask.test');
       require('./tests/runLoop/idleRuntime.test');
+      require('./tests/runLoop/idleFrames.test');
     },
   },
   {

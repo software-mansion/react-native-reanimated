@@ -13,6 +13,9 @@ export function setupRequestAnimationFrame() {
 
   let queuedFinalizers: (() => void)[] = [];
 
+  let frameRequested = false;
+  let isFlushing = false;
+
   function executeQueue(timestamp: number) {
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
@@ -21,22 +24,26 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
-    if (flushedCallbacks.length > 0) {
-      for (const callback of flushedCallbacks) {
-        callback(timestamp);
+    try {
+      if (flushedCallbacks.length > 0) {
+        for (const callback of flushedCallbacks) {
+          callback(timestamp);
+          globalThis.__drainMicrotasks();
+        }
+      } else {
         globalThis.__drainMicrotasks();
       }
-    } else {
-      globalThis.__drainMicrotasks();
+    } finally {
+      flushedCallbacksBegin = flushedCallbacksEnd;
+      flushedCallbacks = [];
     }
-
-    flushedCallbacksBegin = flushedCallbacksEnd;
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
     for (const finalizer of finalizers) {
       finalizer();
     }
+    globalThis.__drainMicrotasks();
   }
 
   function requestAnimationFrame(
@@ -44,6 +51,7 @@ export function setupRequestAnimationFrame() {
   ): number {
     const handle = queuedCallbacksEnd++;
     queuedCallbacks.push(callback);
+    requestFrame();
     return handle;
   }
 
@@ -59,26 +67,36 @@ export function setupRequestAnimationFrame() {
     }
   }
 
-  function nativeFlushQueue(timestamp: number) {
-    flushQueue(timestamp);
+  function requestAnimationFrameFinalizer(callback: () => void) {
+    queuedFinalizers.push(callback);
+    requestFrame();
+  }
 
-    /* Schedule next frame */
+  function requestFrame() {
+    if (frameRequested || isFlushing) {
+      return;
+    }
+    frameRequested = true;
     globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
   }
 
-  function flushQueue(timestamp: number) {
+  function nativeFlushQueue(timestamp: number) {
+    frameRequested = false;
+    isFlushing = true;
     globalThis.__frameTimestamp = timestamp;
-    executeQueue(timestamp);
-    globalThis.__frameTimestamp = undefined;
+    try {
+      executeQueue(timestamp);
+    } finally {
+      globalThis.__frameTimestamp = undefined;
+      isFlushing = false;
+      if (queuedCallbacks.length > 0 || queuedFinalizers.length > 0) {
+        requestFrame();
+      }
+    }
   }
 
   globalThis.requestAnimationFrame = requestAnimationFrame;
   globalThis.cancelAnimationFrame =
     cancelAnimationFrame as typeof globalThis.cancelAnimationFrame;
-  globalThis.requestAnimationFrameFinalizer = (callback: () => void) => {
-    queuedFinalizers.push(callback);
-  };
-
-  /* Start the loop */
-  globalThis.__nativeRequestAnimationFrame(nativeFlushQueue);
+  globalThis.requestAnimationFrameFinalizer = requestAnimationFrameFinalizer;
 }
