@@ -20,6 +20,7 @@ import type {
 } from '../createAnimatedComponent/commonTypes';
 import jsPropsUpdater from '../createAnimatedComponent/JSPropsUpdater';
 import { getStaticFeatureFlag } from '../featureFlags';
+import { requestSettledPropsSync } from '../PropsRegistryGarbageCollector';
 
 const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
@@ -162,6 +163,7 @@ function createUpdatePropsManager() {
       if (nativeOperations.length) {
         global._updateProps!(nativeOperations);
         nativeOperations.length = 0;
+        requestSettledPropsSync();
       }
       if (jsOperations.length) {
         // Fresh array each flush: scheduleOnRN caches serialized args by identity.

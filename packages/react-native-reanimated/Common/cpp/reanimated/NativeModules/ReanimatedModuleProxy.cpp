@@ -749,6 +749,14 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi:
       });
 }
 
+bool ReanimatedModuleProxy::hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
+
+  auto lock = updatesRegistryManager_->lock();
+  return animatedPropsRegistry_->hasPendingSettledUpdates(
+      [&](const Tag viewTag) { return isViewRegisteredFunction.call(rt, viewTag).asBool(); });
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -1786,6 +1794,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         }
         return strongThis->getSettledUpdates(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "hasPendingSettledUpdates",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return jsi::Value(strongThis->hasPendingSettledUpdates(rt, at<0>(args)));
       });
 
   addMethod<2>(
