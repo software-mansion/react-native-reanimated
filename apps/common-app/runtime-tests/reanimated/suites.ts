@@ -71,6 +71,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
       require('./tests/core/useSharedValue/animationsCompilerApi.test');
+      require('./tests/core/updatesWithoutAnimation.test');
       // TODO: onLayout event isn't working on Android
       // require('./tests/core/onLayout.test');
     },
@@ -80,6 +81,8 @@ const SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
       require('./tests/events/hostReplacement.test');
+      require('./tests/events/microtasksInEventHandler.test');
+      require('./tests/events/scrollDrivenStyle.test');
     },
   },
   {
