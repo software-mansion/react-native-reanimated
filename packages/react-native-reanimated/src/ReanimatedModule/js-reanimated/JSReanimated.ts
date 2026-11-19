@@ -343,6 +343,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  hasPendingSettledUpdates(): boolean {
+    throw new Error(
+      '[Reanimated] `hasPendingSettledUpdates` is not available in JSReanimated.'
+    );
+  }
+
   registerPseudoStyles(): void {
     throw new Error(
       '[Reanimated] `registerPseudoStyles` is not available in JSReanimated.'

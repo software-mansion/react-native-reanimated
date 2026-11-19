@@ -1,8 +1,6 @@
 #pragma once
 
-#include <ReactCommon/CallInvoker.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
-#include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
@@ -13,6 +11,8 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
+#include <reanimated/Compat/ReactNativeCallInvoker.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>
@@ -156,6 +156,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered);
+  bool hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered);
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -252,6 +253,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   ReadMountedViewPropsFunction readMountedViewProps_;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay_;
   NativeViewPlacementFunction nativeViewPlacement_;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransition_;
 #endif
   const std::shared_ptr<StaticPropsRegistry> staticPropsRegistry_;
   const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;

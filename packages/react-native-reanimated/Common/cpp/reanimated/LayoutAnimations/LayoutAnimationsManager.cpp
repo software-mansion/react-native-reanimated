@@ -1,6 +1,6 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <functional>
 #include <memory>

@@ -2,7 +2,9 @@
 #include <jsi/jsi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/Networking/NetworkingInstaller.h>
+#include <worklets/Tools/FeatureFlags.h>
 #include <worklets/Tools/JSLogger.h>
+#include <worklets/Tools/WorkletsJSIUtils.h>
 #include <worklets/WorkletRuntime/RuntimeHolder.h>
 #include <worklets/WorkletRuntime/ScriptLoader.h>
 #include <worklets/WorkletRuntime/WorkletHermesRuntime.h>
@@ -103,7 +105,7 @@ WorkletRuntime::WorkletRuntime(
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_);
+    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
     eventLoop_->run();
   }
 }
@@ -163,6 +165,12 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
       nativeLoggingHook);
+
+  if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
+    jsi_utils::installJsiFunction(rt, "__getRootTaskId", [taskState = taskState_](jsi::Runtime &) {
+      return jsi::Value(static_cast<double>(taskState->rootTaskId));
+    });
+  }
 
   if (bundleModeEnabled) {
     bundleModeInit(jsScheduler, script, sourceUrl, jsiWorkletsModuleProxy->getNetworking());

@@ -24,6 +24,7 @@ The Oxc plugin is a port of the [Worklets Babel plugin](./about.mdx) to Rust, bu
       moduleNames?: string[];
       relativePaths?: string[];
     };
+    silenceDangerousPathsWarning?: boolean;
   }
   ```
 </details>
@@ -68,7 +69,13 @@ Configures [import forwarding](../bundleMode/importForwarding.mdx). It works the
 
 Defaults to an empty array.
 
-List of exact module names that should be forwarded as imports inside worklet functions. See [`importForwarding.moduleNames`](./options.mdx#importforwardingmodulenames) of the Babel plugin.
+Modules in this list are forwarded as imports inside worklet functions. The
+module name has to be an exact match: with `my-library` in the list, imports from
+`my-library/some-file` aren't forwarded. Only named and default
+imports are forwarded; namespace imports such as
+`import * as lib from 'my-library'` are captured from the closure instead. See
+[`importForwarding.moduleNames`](./options.mdx#importforwardingmodulenames) of
+the Babel plugin.
 
 The Oxc plugin always forwards `react-native-worklets` and `react-native/Libraries/Core/setUpXHR`. The names in this list are added to them.
 
@@ -79,6 +86,16 @@ Defaults to an empty array.
 List of paths that determine whether a module forwards its **relative** imports inside worklet functions. If the path of a module matches any of the paths, all relative imports inside the worklet functions of that module are forwarded. See [`importForwarding.relativePaths`](./options.mdx#importforwardingrelativepaths) of the Babel plugin.
 
 The Oxc plugin always does this for modules of `react-native-worklets`. The paths in this list are added to it.
+
+A common folder name, such as `src`, also matches packages in `node_modules` that have a folder with that name. See the [warning on the Babel plugin page](./options.mdx#importforwardingrelativepaths).
+
+<Badges version="0.14.0">
+  ### silenceDangerousPathsWarning
+</Badges>
+
+Defaults to `false`.
+
+Hides the warning that the plugin prints when an `importForwarding.relativePaths` entry has only common folder names, such as `src`. It works the same way as [`silenceDangerousPathsWarning`](./options.mdx#silencedangerouspathswarning) of the Babel plugin.
 
 ### extraPlugins
 

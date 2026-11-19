@@ -4,7 +4,7 @@
 #include <reanimated/CSS/core/CSSAnimation.h>
 
 #include <folly/dynamic.h>
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <vector>

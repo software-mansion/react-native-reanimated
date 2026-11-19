@@ -1,7 +1,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <utility>

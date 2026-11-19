@@ -622,6 +622,7 @@ describe('Shared transition with fadeContent', () => {
     await render(<Screens showTarget hiddenTargetChild />);
     await waitForFrames(3);
     await advanceAnimationTimer(3000);
+    await expectOpacity('target', 1);
     await advanceAnimationTimer(TARGET_FADE_IN_MS / 2);
     await expectEventually(async () => {
       const [target, child] = await sample(['target', 'targetChild']);
@@ -686,6 +687,7 @@ describe('Shared transition with fadeContent', () => {
     }).toBe(true);
 
     await advanceAnimationTimer(1500);
+    await expectOpacity('target', 1);
     await advanceAnimationTimer(TARGET_FADE_IN_MS);
     await expectOpacity('targetChild', CHILD_OPACITY);
   });
@@ -717,6 +719,7 @@ describe('Shared transition with fadeContent', () => {
           );
           expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
           await advanceInSteps(1500, 300);
+          await expectOpacity('target', 1);
           await advanceAnimationTimer(300);
           await expectOpacity('enteringChild', 1);
         }
@@ -780,7 +783,7 @@ describe('Shared transition with fadeContent', () => {
     expect(await getTrackerCallCount(ENTERING_FINISHED)).toBeCalledUI(0);
 
     await advanceAnimationTimer(2000);
-    await waitForFrames(3);
+    await expectOpacity('target', 1);
     await advanceAnimationTimer(300);
     await expectEnteringCallbacks(1);
     await expectOpacity('enteringChild', 0.5);

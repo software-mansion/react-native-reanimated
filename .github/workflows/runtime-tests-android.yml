@@ -11,7 +11,7 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
       full:
         required: false
         type: boolean
@@ -25,7 +25,7 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
       full:
         required: false
         type: boolean
@@ -47,9 +47,9 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
-      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -145,6 +145,7 @@ jobs:
             echo "::group::ReJest self-tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests; status=$?; echo "::endgroup::"; exit $status
             echo "::group::Verify CI catches failing tests"; if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library self-tests --only "intentional failures"; then echo "A failing suite did not fail the runner"; status=1; else echo "Failing tests correctly failed the runner"; status=0; fi; echo "::endgroup::"; exit $status
             echo "::group::Worklets runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets; status=$?; echo "::endgroup::"; exit $status
+            echo "::group::Worklets runtime tests in a headless JS task"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library worklets --headless-task; status=$?; echo "::endgroup::"; exit $status
             echo "::group::Reanimated runtime tests"; node --experimental-strip-types scripts/runtime-tests-server.mts $RUNTIME_TESTS_ARGS --library reanimated; status=$?; echo "::endgroup::"; exit $status
 
       - name: Show disk usage
@@ -155,7 +156,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: android-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: android-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14

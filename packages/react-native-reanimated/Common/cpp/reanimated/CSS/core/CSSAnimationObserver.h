@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/events/CSSEvent.h>
 
-#include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <string>
 

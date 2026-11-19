@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <string>

@@ -34,18 +34,24 @@ function Screens({
   sourceScreenMounted = true,
   targetOffset = 0,
   targetTranslateX = 0,
+  targetColor = styles.target.backgroundColor,
+  sourceColor = styles.source.backgroundColor,
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
+  targetScreenClips = false,
 }: {
   transitionStyle?: SharedTransition;
   sourceMounted?: boolean;
   sourceScreenMounted?: boolean;
   targetOffset?: number;
   targetTranslateX?: number;
+  targetColor?: string;
+  sourceColor?: string;
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
+  targetScreenClips?: boolean;
 }) {
   const sourceScreen = useTestRef('gestureSourceScreen');
   const targetScreen = useTestRef('gestureTargetScreen');
@@ -59,7 +65,7 @@ function Screens({
         onAppear={() => notify('gesture-target-appeared')}
         enabled
         activityState={2}
-        style={styles.screen}>
+        style={[styles.screen, targetScreenClips && styles.clips]}>
         <SharedTransitionBoundary
           isActive={!sourceScreenMounted || !sourceActive}>
           <Animated.View
@@ -71,6 +77,7 @@ function Screens({
               {
                 marginTop: targetOffset,
                 transform: [{ translateX: targetTranslateX }],
+                backgroundColor: targetColor,
               },
             ]}
           />
@@ -89,7 +96,7 @@ function Screens({
                 ref={source}
                 sharedTransitionTag={tagged ? sourceTag : undefined}
                 sharedTransitionStyle={transitionStyle}
-                style={styles.source}>
+                style={[styles.source, { backgroundColor: sourceColor }]}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
             )}
@@ -502,6 +509,244 @@ async function pushOverPager() {
     false
   );
   return tags;
+}
+
+// The container detaches the covered screens, as a native stack does until its back transition starts.
+function DetachedStack({
+  count,
+  top,
+  revealed,
+}: {
+  count: number;
+  top: number;
+  revealed?: number;
+}) {
+  return (
+    <ScreenContainer style={styles.container}>
+      {[0, 1, 2]
+        .filter((index) => index <= top)
+        .map((index) => (
+          <DetachedStackScreen
+            key={index}
+            index={index}
+            attached={index === top || index === revealed}
+            active={index === top}
+            style={
+              index === top && index === count - 1
+                ? styles.source
+                : index === 0
+                  ? styles.target
+                  : styles.hiddenTabTarget
+            }
+          />
+        ))}
+    </ScreenContainer>
+  );
+}
+
+function DetachedStackScreen({
+  index,
+  attached,
+  active,
+  style,
+}: {
+  index: number;
+  attached: boolean;
+  active: boolean;
+  style: object;
+}) {
+  const screen = useTestRef(`detached-screen-${index}`);
+  const view = useTestRef(`detached-view-${index}`);
+  return (
+    <Screen
+      ref={screen}
+      onAppear={() => notify(`detached-screen-${index}-appeared`)}
+      enabled
+      activityState={attached ? 2 : 0}
+      style={styles.screen}>
+      <SharedTransitionBoundary isActive={active}>
+        <Animated.View
+          ref={view}
+          sharedTransitionTag="detached-stack"
+          sharedTransitionStyle={transition}
+          style={style}
+        />
+      </SharedTransitionBoundary>
+    </Screen>
+  );
+}
+
+async function pushDetachedStack(count: number) {
+  await mockAnimationTimer({ autoAdvance: false });
+  for (let top = 0; top < count; top++) {
+    await render(<DetachedStack count={count} top={top} />);
+    await waitForNotification(`detached-screen-${top}-appeared`);
+    await waitForFrames(3);
+    await advanceAnimationTimer(30000);
+    await waitForFrames(3);
+  }
+}
+
+// UIKit reports the progress of the closing screen first, then of the screen that it reveals.
+async function emitPopProgress(
+  closingScreen: number,
+  revealedScreen: number,
+  progress: number
+) {
+  await observer().emitScreenTransitionProgress(
+    closingScreen,
+    progress,
+    true,
+    false
+  );
+  await observer().emitScreenTransitionProgress(
+    revealedScreen,
+    progress,
+    false,
+    false
+  );
+}
+
+describe('Back transition to a screen out of the window', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest.each([
+    ['starts at the first progress event', 2],
+    ['aims at the screen that the back menu reveals', 3],
+  ] as const)('${0}', async ([, count]) => {
+    await pushDetachedStack(count);
+    const closingScreen = getTestComponent(
+      `detached-screen-${count - 1}`
+    ).getTag();
+    const revealedScreen = getTestComponent('detached-screen-0').getTag();
+    const source = getTestComponent(`detached-view-${count - 1}`).getTag();
+    const originalParent = await observer().observeParent(source);
+    expect(originalParent !== null).toBe(true);
+    expect(
+      await observer().observeParent(
+        getTestComponent('detached-view-0').getTag()
+      )
+    ).toBe(null);
+
+    await emitPopProgress(closingScreen, revealedScreen, 0);
+    await expectEventually(async () => {
+      const parent = await observer().observeParent(source);
+      return parent !== null && parent !== originalParent;
+    }).toBe(true);
+    await render(<DetachedStack count={count} top={count - 1} revealed={0} />);
+    await waitForFrames(3);
+    await emitPopProgress(closingScreen, revealedScreen, 0.5);
+    await expectCarrier(source, 105);
+
+    await emitPopProgress(closingScreen, revealedScreen, 1);
+    await render(<DetachedStack count={count} top={0} />);
+    await expectEventually(() => opacityOf('detached-view-0')).toBe(1);
+  });
+
+  gestureTest('aims at the tab that the screen shows now', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<CoveredTabsStack stage="below" shownTab="a" />);
+    await waitForNotification('covered-tabs-source-appeared');
+    await render(<CoveredTabsStack stage="pushed" shownTab="a" />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(30000);
+    await waitForFrames(3);
+    await render(<CoveredTabsStack stage="pushed" shownTab="b" />);
+    await waitForFrames(3);
+    const closingScreen = getTestComponent('coveredTabsSourceScreen').getTag();
+    const revealedScreen = getTestComponent('coveredTabsTargetScreen').getTag();
+    const source = getTestComponent('coveredTabsSource').getTag();
+    const originalParent = await observer().observeParent(source);
+    expect(originalParent !== null).toBe(true);
+    expect(
+      await observer().observeParent(
+        getTestComponent('coveredTabsShownTarget').getTag()
+      )
+    ).toBe(null);
+
+    await emitPopProgress(closingScreen, revealedScreen, 0);
+    await expectEventually(async () => {
+      const parent = await observer().observeParent(source);
+      return parent !== null && parent !== originalParent;
+    }).toBe(true);
+    await render(<CoveredTabsStack stage="revealed" shownTab="b" />);
+    await waitForFrames(3);
+    await emitPopProgress(closingScreen, revealedScreen, 0.5);
+    await expectCarrier(source, 150);
+
+    await emitPopProgress(closingScreen, revealedScreen, 1);
+    await render(<CoveredTabsStack stage="popped" shownTab="b" />);
+    await expectEventually(() => opacityOf('coveredTabsShownTarget')).toBe(1);
+  });
+});
+
+// The screen below holds two tabs. JS switches the tab while another screen covers it.
+function CoveredTabsStack({
+  stage,
+  shownTab,
+}: {
+  stage: 'below' | 'pushed' | 'revealed' | 'popped';
+  shownTab: 'a' | 'b';
+}) {
+  const targetScreen = useTestRef('coveredTabsTargetScreen');
+  const sourceScreen = useTestRef('coveredTabsSourceScreen');
+  const shownTarget = useTestRef('coveredTabsShownTarget');
+  const source = useTestRef('coveredTabsSource');
+  const covered = stage === 'pushed' || stage === 'revealed';
+  return (
+    <ScreenContainer style={styles.container}>
+      <Screen
+        ref={targetScreen}
+        enabled
+        activityState={stage === 'pushed' ? 0 : 2}
+        style={styles.screen}>
+        <ScreenContainer style={styles.screen}>
+          <Screen
+            enabled
+            activityState={shownTab === 'a' ? 2 : 0}
+            style={styles.screen}>
+            <SharedTransitionBoundary isActive={!covered && shownTab === 'a'}>
+              <Animated.View
+                sharedTransitionTag="covered-tab"
+                sharedTransitionStyle={transition}
+                style={styles.target}
+              />
+            </SharedTransitionBoundary>
+          </Screen>
+          <Screen
+            enabled
+            activityState={shownTab === 'b' ? 2 : 0}
+            style={styles.screen}>
+            <SharedTransitionBoundary isActive={!covered && shownTab === 'b'}>
+              <Animated.View
+                ref={shownTarget}
+                sharedTransitionTag="covered-tab"
+                sharedTransitionStyle={transition}
+                style={styles.hiddenTabTarget}
+              />
+            </SharedTransitionBoundary>
+          </Screen>
+        </ScreenContainer>
+      </Screen>
+      {stage !== 'popped' && (
+        <Screen
+          ref={sourceScreen}
+          onAppear={() => notify('covered-tabs-source-appeared')}
+          enabled
+          activityState={2}
+          style={styles.screen}>
+          <SharedTransitionBoundary isActive={covered}>
+            <Animated.View
+              ref={source}
+              sharedTransitionTag="covered-tab"
+              sharedTransitionStyle={transition}
+              style={styles.source}
+            />
+          </SharedTransitionBoundary>
+        </Screen>
+      )}
+    </ScreenContainer>
+  );
 }
 
 async function opacityOf(name: string) {
@@ -938,6 +1183,90 @@ describe('Endpoint visibility after a cancelled Screen gesture', () => {
   );
 });
 
+describe('Target style change during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'keeps the start style when the target changes a style to its start value',
+    async () => {
+      const startColor = styles.source.backgroundColor;
+      const tags = await startGestureWithHiddenTarget();
+      expect(await carrierColor(tags.source)).not.toBe(
+        startColor,
+        ComparisonMode.COLOR
+      );
+
+      await render(<Screens targetColor={startColor} />);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 105);
+      expect(await carrierColor(tags.source)).toBe(
+        startColor,
+        ComparisonMode.COLOR
+      );
+    }
+  );
+});
+
+describe('Source style change during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'shows a style that the transition does not animate before the next progress',
+    async () => {
+      const newColor = '#22aa55';
+      const geometryOnly = SharedTransition.custom((values) => {
+        'worklet';
+        return {
+          width: values.targetWidth,
+          height: values.targetHeight,
+          originX: values.targetOriginX,
+          originY: values.targetOriginY,
+        };
+      }).progressAnimation((values, progress) => {
+        'worklet';
+        const at = (current: number, target: number) =>
+          current + progress * (target - current);
+        return {
+          width: at(values.currentWidth, values.targetWidth),
+          height: at(values.currentHeight, values.targetHeight),
+          originX: at(values.currentOriginX, values.targetOriginX),
+          originY: at(values.currentOriginY, values.targetOriginY),
+        };
+      });
+      const tags = await startGesture(geometryOnly);
+
+      await render(
+        <Screens transitionStyle={geometryOnly} sourceColor={newColor} />
+      );
+      await expectEventually(() => carrierColor(tags.source)).toBe(
+        newColor,
+        ComparisonMode.COLOR
+      );
+      await expectCarrier(tags.source, 82.5);
+
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 105);
+      expect(await carrierColor(tags.source)).toBe(
+        newColor,
+        ComparisonMode.COLOR
+      );
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+    }
+  );
+});
+
 describe('Target that showed before its source took the shared tag', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
@@ -1119,8 +1448,44 @@ describe('Target moved during native Screen progress', () => {
   });
 });
 
-async function startGesture(transitionStyle = transition) {
-  await render(<Screens transitionStyle={transitionStyle} />);
+describe('Clip of a native Screen gesture', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('moves the clip with the progress of the gesture', async () => {
+    const tags = await startGesture(transition, true);
+    const screenY = (await observer().observeLocationOnScreen(
+      tags.targetScreen
+    ))!.y;
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.75,
+      false,
+      false
+    );
+    // The source has no clipping parent, so its clip is the window.
+    await expectEventually(() => carrierClipY(tags.source)).toBe(
+      0.75 * screenY,
+      ComparisonMode.PIXEL
+    );
+  });
+});
+
+async function carrierClipY(carrier: number) {
+  const content = await observer().observeParent(carrier);
+  const clip = await observer().observeParent(content ?? -1);
+  return (await observer().observeLocationOnScreen(clip ?? -1))?.y;
+}
+
+async function startGesture(
+  transitionStyle = transition,
+  targetScreenClips = false
+) {
+  await render(
+    <Screens
+      transitionStyle={transitionStyle}
+      targetScreenClips={targetScreenClips}
+    />
+  );
   await waitForNotification('gesture-source-appeared');
   await waitForNotification('gesture-target-appeared');
   await expectEventually(
@@ -1172,6 +1537,13 @@ async function beginGesture() {
   return { ...tags, originalParent };
 }
 
+function carrierColor(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false)?.backgroundColor;
+  });
+}
+
 function carrierY(tag: number) {
   return runOnUIBlocking(() => {
     'worklet';
@@ -1217,6 +1589,7 @@ async function expectGone(...tags: number[]) {
 const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
   screen: { position: 'absolute', left: 0, top: 0, width: 300, height: 400 },
+  clips: { overflow: 'hidden' },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: { width: 150, height: 150, backgroundColor: '#2277dd' },
   hiddenTabTarget: { width: 240, height: 240, backgroundColor: '#22aa55' },

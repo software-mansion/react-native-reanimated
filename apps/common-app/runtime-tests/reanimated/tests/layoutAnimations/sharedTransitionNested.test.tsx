@@ -152,6 +152,7 @@ function Screens({
   removeSource = false,
   innerWrapped = false,
   wrapperTranslateX = 0,
+  innerBesideOuter = false,
 }: {
   active: boolean;
   keepTarget?: boolean;
@@ -164,10 +165,19 @@ function Screens({
   removeSource?: boolean;
   innerWrapped?: boolean;
   wrapperTranslateX?: number;
+  innerBesideOuter?: boolean;
 }) {
   const inner = useTestRef('sourceInner');
   const outer = useTestRef('sourceOuter');
   const innerWrapper = useTestRef('innerWrapper');
+  const innerSource = (
+    <Animated.View
+      ref={inner}
+      sharedTransitionTag="inner"
+      sharedTransitionStyle={transitions.inner}
+      style={styles.sourceInner}
+    />
+  );
   return (
     <View style={styles.container}>
       {!(active && removeSource) && (
@@ -187,14 +197,10 @@ function Screens({
                   transform: [{ translateX: wrapperTranslateX }],
                 },
               ]}>
-              <Animated.View
-                ref={inner}
-                sharedTransitionTag="inner"
-                sharedTransitionStyle={transitions.inner}
-                style={styles.sourceInner}
-              />
+              {!innerBesideOuter && innerSource}
             </View>
           </Animated.View>
+          {innerBesideOuter && innerSource}
         </SharedTransitionBoundary>
       )}
       {(active || keepTarget) && (
@@ -495,6 +501,35 @@ describe('Nested shared transitions', () => {
     await advanceAnimationTimer(retargetOuterDuration);
     await waitForNotification('outer-finished');
     await expectAllShownAtTargets();
+  });
+
+  test('reverses a waiting inner view from where it waits', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const screens = (active: boolean) => (
+      <Screens
+        active={active}
+        keepTarget
+        innerBesideOuter
+        transitions={retargetTransitions}
+      />
+    );
+    await render(screens(false));
+    await waitForFrames();
+    await render(screens(true));
+    await waitForFrames(3);
+    await advanceAnimationTimer(retargetInnerDuration);
+    const waiting = (await expectInnerViewPhase('completed'))!.inner!;
+    await render(screens(false));
+    await waitForFrames(3);
+    const reversed = (await readInnerViewState()).inner;
+    expect(reversed?.opacity).toBe(1);
+    expect(reversed?.x).toBe(waiting.x, ComparisonMode.PIXEL);
+    expect(reversed?.y).toBe(waiting.y, ComparisonMode.PIXEL);
+    expect(reversed?.width).toBe(waiting.width, ComparisonMode.PIXEL);
+    await advanceAnimationTimer(retargetOuterDuration);
+    await expectEventually(
+      async () => (await readInnerViewState()).inner?.width
+    ).toBe(30, ComparisonMode.PIXEL);
   });
 
   test('keeps a completed retained carrier at its current target while it waits to land', async () => {

@@ -321,12 +321,12 @@ describe('Shared transition to a new native stack screen', () => {
         secondY - 1,
         secondY + 1
       );
-      // On iOS, a later start of the push corrects the target of its first start.
-      const forwardTargets = starts.value
-        .slice(Platform.OS === 'ios' ? forwardStarts - 1 : 0, forwardStarts)
-        .map(({ targetY }) => targetY);
-      for (const targetY of forwardTargets) {
-        expect(targetY).toBeWithinRange(secondY - 1, secondY + 1);
+      // On iOS, the push corrects the target of its first start with a later start (React Native Screens 4.27)
+      // or with a target update (4.30), so only the landing above checks it.
+      if (Platform.OS === 'android') {
+        for (const { targetY } of starts.value.slice(0, forwardStarts)) {
+          expect(targetY).toBeWithinRange(secondY - 1, secondY + 1);
+        }
       }
     } finally {
       await stop();
@@ -918,7 +918,7 @@ function NestedPendingScreen({
       <Animated.View
         sharedTransitionTag="nestedInner"
         sharedTransitionStyle={innerTransition}
-        style={styles.nestedInner}
+        style={isSource ? styles.nestedInner : styles.nestedInnerTarget}
       />
     </Animated.View>
   );
@@ -1602,6 +1602,12 @@ const styles = StyleSheet.create({
   nestedInner: {
     width: 40,
     height: 40,
+    margin: 20,
+    backgroundColor: '#22aa55',
+  },
+  nestedInnerTarget: {
+    width: 60,
+    height: 60,
     margin: 20,
     backgroundColor: '#22aa55',
   },

@@ -1,3 +1,5 @@
+#import <reanimated/apple/REASurfacePresenterCompat.h>
+
 #import <reanimated/apple/REASharedTransitionOverlays.h>
 
 #if TARGET_OS_IOS
@@ -142,6 +144,34 @@ static BOOL isViewControllerView(UIView *view)
   return [view.nextResponder isKindOfClass:[UIViewController class]];
 }
 
+// UIKit also gives the transition coordinator to view controllers that it does not move, for example the presenter of a
+// modal. On iOS 27.2, a presentation moves only the presented view.
+static BOOL isMovedByCoordinator(UIView *view, id<UIViewControllerTransitionCoordinator> coordinator)
+{
+  if (coordinator.presentationStyle != UIModalPresentationNone) {
+    return runningPresentationControllerShowing(view) != nil;
+  }
+  UIView *fromView = [coordinator viewForKey:UITransitionContextFromViewKey];
+  UIView *toView = [coordinator viewForKey:UITransitionContextToViewKey];
+  return (fromView && [view isDescendantOfView:fromView]) || (toView && [view isDescendantOfView:toView]);
+}
+
+static BOOL isMovedByContainerTransition(UIView *view)
+{
+  for (UIView *current = view; current; current = current.superview) {
+    if (!isViewControllerView(current)) {
+      continue;
+    }
+    id<UIViewControllerTransitionCoordinator> coordinator =
+        ((UIViewController *)current.nextResponder).transitionCoordinator;
+    // A transition that the user drives can stop anywhere, so the run lands in the moving view.
+    if (coordinator && !coordinator.isInteractive && isMovedByCoordinator(view, coordinator)) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
 static BOOL movesSublayers(CALayer *layer)
 {
   return !CGPointEqualToPoint(untransformedOrigin(layer), CGPointZero) || !CATransform3DIsIdentity(layer.transform);
@@ -186,9 +216,7 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
     _surfacePresenter = surfacePresenter;
     _overlayTags = [NSMutableDictionary new];
     _containers = [NSMutableDictionary new];
-    // `addObserver:` is deprecated, but its replacement has no hook for an external observer.
-    // See `REAPseudoSelectorAttachQueue`.
-    [surfacePresenter addObserver:self];
+    REAAddSurfacePresenterObserver(surfacePresenter, self);
   }
   return self;
 }
@@ -279,7 +307,10 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
   UIView *view = [self viewWithTag:tag];
   UIView *parent = [self viewWithTag:parentTag];
   if (!view.window || !parent) {
-    return {.kind = reanimated::NativeViewPlacement::Kind::OffWindow};
+    const bool outsideParent = view && parent && ![view isDescendantOfView:parent];
+    return {
+        .kind = outsideParent ? reanimated::NativeViewPlacement::Kind::OffWindowOutsideReactParent
+                              : reanimated::NativeViewPlacement::Kind::OffWindow};
   }
   UIView *rootView = [self viewWithTag:surfaceId];
   if (view.window != surfaceWindow(rootView)) {
@@ -303,6 +334,12 @@ static reanimated::NativeViewPlacement placementInReactParent(UIView *view, UIVi
       .origin = {viewOrigin.x - rootOrigin.x, viewOrigin.y - rootOrigin.y},
       .transform = presentationController ? ancestorTransformInPresentedView(view, presentationController.presentedView)
                                           : ancestorTransformInWindow(view, !settled)};
+}
+
+- (BOOL)isViewWithTagMovedByContainerTransition:(NSInteger)tag
+{
+  RCTAssertMainQueue();
+  return isMovedByContainerTransition([self viewWithTag:tag]);
 }
 
 @end

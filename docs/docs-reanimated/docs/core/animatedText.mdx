@@ -4,7 +4,7 @@ sidebar_position: 8
 
 # Animated.Text
 
-`Animated.Text` is a built-in [Animated component](../fundamentals/glossary.mdx#animated-component) based on the React Native `Text`. Besides animating its styles and props, it accepts [shared values](../fundamentals/glossary.mdx#shared-value) as children. The text is updated on the UI thread, without re-rendering the component.
+`Animated.Text` is a built-in [Animated component](../fundamentals/glossary.mdx#animated-component) based on the React Native `Text`. Besides animating its styles and props, since Reanimated 4.8.0 it accepts [shared values](../fundamentals/glossary.mdx#shared-value) as children. The text is updated on the UI thread, without re-rendering the component.
 
 ## Reference
 
@@ -36,7 +36,9 @@ function App() {
 
 `Animated.Text` accepts all props of the React Native `Text` component, and every style and prop can be animated the same way as in other Animated components.
 
-#### `children`
+<Badges version="4.8.0">
+  #### `children`
+</Badges>
 
 A shared value, a derived value, or any children supported by `Text`. Shared values can be mixed with static children in a single `Animated.Text`:
 
