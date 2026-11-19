@@ -78,7 +78,7 @@ export class Machine {
   private readonly snippet: LoadedSnippet;
   private readonly bundleMode: boolean;
   private readonly maxDepth: number;
-  private readonly timerDelays: Record<string, number>;
+  private readonly timeScale: number;
   private cores: CoreState[];
   private tickCount = 0;
   private now = 0;
@@ -115,7 +115,7 @@ export class Machine {
     this.bundleMode = options.bundleMode ?? false;
     this.inputs = [...(options.inputs ?? [])];
     this.maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
-    this.timerDelays = { ...(options.timerDelays ?? {}) };
+    this.timeScale = options.timeScale ?? 1;
     this.screen = { ...(options.screen ?? {}) };
     this.readShareable = function* readShareable(id: unknown) {
       return yield readShareableValue(id as number);
@@ -453,6 +453,9 @@ export class Machine {
     if (api === 'setTimeout') {
       return this.addTimer(core, args[0], args[1], false);
     }
+    if (api === 'requestAnimationFrame') {
+      return this.addTimer(core, args[0], FRAME_MS, false, false, false);
+    }
     if (api === 'setInterval') {
       return this.addTimer(core, args[0], args[1], true);
     }
@@ -696,7 +699,8 @@ export class Machine {
     callback: unknown,
     ms: unknown,
     repeat: boolean,
-    immediate = false
+    immediate = false,
+    scaled = true
   ): number {
     if (typeof callback !== 'function') {
       throw new SnippetError('setTimeout expects a function');
@@ -714,8 +718,8 @@ export class Machine {
         'a setTimeout callback must call an exported snippet function'
       );
     }
-    const name = this.snippet.fnInfo.get(fn)!.name;
-    const delay = this.timerDelays[name] ?? (typeof ms === 'number' ? ms : 0);
+    const written = typeof ms === 'number' ? ms : 0;
+    const delay = scaled ? written / this.timeScale : written;
     const timerId = this.nextJobId++;
     const runtime = this.currentRuntime(core);
     const frameQueue = runtime === 'ui' || (runtime === 'rn' && !immediate);
@@ -724,7 +728,7 @@ export class Machine {
       id: timerId,
       due: this.now + wait,
       callback: repeat ? (callback as () => unknown) : () => gen,
-      label: name,
+      label: this.snippet.fnInfo.get(fn)!.name,
       interval: repeat
         ? frameQueue
           ? wait

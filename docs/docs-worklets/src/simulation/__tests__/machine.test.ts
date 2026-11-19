@@ -13,6 +13,7 @@ import {
   scheduleOnRuntime,
   runOnRuntimeSync,
   scheduleOnUI,
+  requestAnimationFrame,
   sendToUIThread,
   setTimeout,
   updateScreen,
@@ -800,15 +801,27 @@ describe('Machine semantics', () => {
     assert.equal(formatLogs(snapshots)[0], '[rn] 3');
   });
 
-  it('timerDelays sets the delay of timers that call the named function', () => {
-    function tickOfLog(delay: number, options?: SimulateOptions): number {
+  it('timeScale divides timer delays but not animation frames', () => {
+    function tickOfLog(
+      call: 'setTimeout' | 'requestAnimationFrame',
+      delay: number,
+      options?: SimulateOptions
+    ): number {
       function* later() {
         yield console.log('later');
       }
       function* main() {
-        yield setTimeout(() => later(), delay);
+        if (call === 'setTimeout') {
+          yield setTimeout(() => later(), delay);
+        } else {
+          yield requestAnimationFrame(() => later());
+        }
       }
-      const source = `export function* later() {\n  yield console.log('later');\n}\n\nexport default function* main() {\n  yield setTimeout(() => later(), ${delay});\n}\n`;
+      const scheduled =
+        call === 'setTimeout'
+          ? `setTimeout(() => later(), ${delay})`
+          : 'requestAnimationFrame(() => later())';
+      const source = `export function* later() {\n  yield console.log('later');\n}\n\nexport default function* main() {\n  yield ${scheduled};\n}\n`;
       const snapshots = simulate(
         asModule({ later, default: main }),
         source,
@@ -821,14 +834,17 @@ describe('Machine semantics', () => {
       );
     }
 
-    const written = tickOfLog(48);
-    const mapped = tickOfLog(30_000, { timerDelays: { later: 48 } });
-    const otherName = tickOfLog(96, { timerDelays: { other: 48 } });
+    const written = tickOfLog('setTimeout', 48);
+    const scaled = tickOfLog('setTimeout', 2_400, { timeScale: 50 });
+    const frame = tickOfLog('requestAnimationFrame', 0);
+    const scaledFrame = tickOfLog('requestAnimationFrame', 0, {
+      timeScale: 50,
+    });
 
     assert.ok(written > 0);
-    assert.equal(mapped, written);
-    assert.equal(otherName, tickOfLog(96));
-    assert.ok(otherName > written);
+    assert.equal(scaled, written);
+    assert.ok(frame > 0);
+    assert.equal(scaledFrame, frame);
   });
 
   it('tick() is a no-op after the simulation finished', () => {

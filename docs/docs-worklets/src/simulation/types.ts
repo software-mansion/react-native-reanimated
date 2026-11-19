@@ -66,6 +66,7 @@ export type InterceptedApi =
   | 'runtimeFromId'
   | 'assertRNRuntime'
   | 'setTimeout'
+  | 'requestAnimationFrame'
   | 'setInterval'
   | 'setImmediate'
   | 'clearInterval'
@@ -337,5 +338,5 @@ export interface SimulateOptions {
   inputs?: ExternalInput[];
   maxTicks?: number;
   maxDepth?: number;
-  timerDelays?: Record<string, number>;
+  timeScale?: number;
 }

@@ -56,7 +56,7 @@ interface ThreadingSimulationProps {
   cpuFooter?: React.ReactNode;
   bootTicks?: number;
   skipIdleTicks?: boolean;
-  timerDelays?: Record<string, number>;
+  timeScale?: number;
   showPastDue?: boolean;
 }
 
@@ -111,7 +111,7 @@ export default function ThreadingSimulation({
   cpuFooter,
   bootTicks = 0,
   skipIdleTicks = false,
-  timerDelays,
+  timeScale,
   showPastDue = true,
 }: ThreadingSimulationProps) {
   const [open, setOpen] = useState(defaultOpen || alwaysOn);
@@ -161,7 +161,7 @@ export default function ThreadingSimulation({
     transitioning,
     autoplay,
     skipIdleTicks,
-    timerDelays
+    timeScale
   );
 
   useLayoutEffect(() => {
