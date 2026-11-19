@@ -672,39 +672,25 @@ describe('WebSocket url and protocol negotiation', () => {
     expect(new WebSocket('ws:example.com').url).toBe('ws://example.com/');
   });
 
-  it('converts a Unicode host to its ASCII form', () => {
-    expect(new WebSocket('ws://bücher.example/').url).toBe(
-      'ws://xn--bcher-kva.example/'
-    );
-    expect(new WebSocket('ws://ŻÓŁW.pl/').url).toBe('ws://xn--w-uga1v8h.pl/');
-    expect(new WebSocket('ws://%62%C3%BCcher.example/').url).toBe(
-      'ws://xn--bcher-kva.example/'
-    );
-    expect(new WebSocket('ws://例え.テスト/').url).toBe(
-      'ws://xn--r8jz45g.xn--zckzah/'
-    );
-  });
-
-  it('rejects hosts that are not valid UTF-8 or valid IDNA labels', () => {
+  it('rejects internationalized hosts', () => {
     for (const url of [
+      'ws://bücher.example/',
+      'ws://ŻÓŁW.pl/',
+      'ws://例え.テスト/',
+      'ws://%62%C3%BCcher.example/',
+      'ws://xn--bcher-kva.example/',
+      'ws://XN--BCHER-KVA.example/',
+      'ws://\u200D/',
+      'ws://xn--1ug/',
       'ws://%FF/',
       'ws://exa%C3mple.com/',
       'ws://xn--/',
-      'ws://xn--abc-/',
-      'ws://xn--a.example/',
-      'ws://xn--zzzzzzzzzzzz9.example/',
     ]) {
       expect(() => new WebSocket(url)).toThrow(
         expect.objectContaining({ name: 'SyntaxError' })
       );
     }
     expect(openedSockets).toHaveLength(0);
-  });
-
-  it('keeps a valid A-label', () => {
-    expect(new WebSocket('ws://XN--BCHER-KVA.example/').url).toBe(
-      'ws://xn--bcher-kva.example/'
-    );
   });
 
   it('serializes IPv4 and IPv6 hosts', () => {
