@@ -51,7 +51,6 @@ using KeyboardEventUnsubscribeFunction = std::function<void(int)>;
 using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
-using ReleaseViewTransitionsFunction = std::function<void(std::vector<int> &tags, bool isBatchQueued)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
 // Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
 using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
@@ -99,7 +98,6 @@ struct PlatformDepMethodsHolder {
   RequestRenderFunction requestRender;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
-  ReleaseViewTransitionsFunction releaseViewTransitionsFunction;
 #endif // ANDROID
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;

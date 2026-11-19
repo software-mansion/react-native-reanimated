@@ -1336,13 +1336,6 @@ void LayoutAnimationsProxy::detachCarrier(
   if (nested) {
     carrierPlacements_.nest(node);
   } else {
-#ifdef ANDROID
-    // React Native Screens holds what is left in a removed screen when it mounts the Remove, which is after the
-    // release.
-    react_native_assert(
-        !isInRemovedScreen(node, transaction.filteredMutations) &&
-        "A carrier must move to the root before its screen is removed");
-#endif
     mutations.push_back(
         ShadowViewMutation::RemoveMutation(parent->current.tag, mounted, parent->hostIndex(parent->positionOf(node))));
     carrierPlacements_.detach(node, layoutRootOf(node));
