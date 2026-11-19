@@ -1,0 +1,62 @@
+---
+title: runOnRuntimeSync
+sidebar_position: 42 # Use alphabetical order
+---
+
+import * as ApiRunOnRuntimeSyncSnippet from './_examples/apiRunOnRuntimeSync';
+import ApiRunOnRuntimeSyncSource from '!!raw-loader!./_examples/apiRunOnRuntimeSync';
+
+<Badges version="0.8.0">
+  # runOnRuntimeSync
+</Badges>
+
+`runOnRuntimeSync` lets you run a [workletized](../worklets-plugin/about.mdx#autoworkletization) function synchronously on a [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime). It's blocking - meaning that it can preempt the runtime from a thread that's currently executing it.
+
+## Reference
+
+<ThreadingSimulation module={ApiRunOnRuntimeSyncSnippet} source={ApiRunOnRuntimeSyncSource}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): ReturnValue;
+  ```
+</details>
+
+## Arguments
+
+### workletRuntime
+
+The worklet runtime to run the worklet function on.
+
+### worklet
+
+A reference to a function you want to execute on the [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+## Call table
+
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
+}}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={false}/>
