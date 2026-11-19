@@ -50,6 +50,7 @@ const geometryTransition = SharedTransition.custom((values) => {
 
 const colorTransition = SharedTransition.custom((values) => {
   'worklet';
+  notify('react-props-started');
   const config = { duration: DURATION, easing: Easing.linear };
   return {
     width: withTiming(values.targetWidth, config),
@@ -243,7 +244,7 @@ describe('Shared transition shows React props of the moving view', () => {
       await render(
         <OffWindowTargetScreens active targetOnWindow sourceColor={NEW_COLOR} />
       );
-      await waitForFrames(3);
+      await waitForNotification('react-props-started');
       await advanceAnimationTimer(DURATION / 2);
       expect((await carrierProps(carrierTag))?.backgroundColor).toBe(
         interpolateColor(
