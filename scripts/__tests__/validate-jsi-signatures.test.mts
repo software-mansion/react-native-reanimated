@@ -35,8 +35,10 @@ describe('validate-jsi-signatures', () => {
     assert.deepEqual(
       compareRegistrationsWithTsTypes([proxy('mismatched.cpp')], FIXTURES_DIR),
       [
+        '__proxy.moduleArguments: takes 2 arguments in mismatched.cpp but 1 in globals.d.ts. Make both take the same arguments.',
         '__proxy.noArguments: globals.d.ts declares it, but mismatched.cpp does not register it. Register it in mismatched.cpp or remove the declaration.',
         '__proxy.twoArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
+        '__proxy.typedArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
         '__proxy.undeclared: mismatched.cpp registers it, but globals.d.ts does not declare it. Declare it in globals.d.ts or remove the registration.',
       ]
     );
@@ -51,7 +53,7 @@ describe('validate-jsi-signatures', () => {
         ),
       {
         message:
-          'scripts/__tests__/__fixtures__/validateJsiSignatures/unreadable.cpp:10: addMethod cannot be read. Pass the number of arguments as the template argument, the method name as a string literal and the implementation as a lambda written in the call.',
+          'scripts/__tests__/__fixtures__/validateJsiSignatures/unreadable.cpp:10: addMethod cannot be read. Pass the method name as a string literal and the implementation as a lambda written in the call.',
       }
     );
   });

@@ -1,4 +1,9 @@
-const CLOSING: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
+const CLOSING: Record<string, string> = {
+  '(': ')',
+  '[': ']',
+  '{': '}',
+  '<': '>',
+};
 
 export function findCalls(source: string, name: string): number[] {
   const calls: number[] = [];
@@ -49,7 +54,7 @@ export function splitTopLevel(
   return last ? [...parts, last] : parts;
 }
 
-function findClosingBracket(
+export function findClosingBracket(
   text: string,
   start: number,
   opening = '([{'

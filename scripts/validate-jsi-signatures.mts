@@ -3,7 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import ts from 'typescript';
 
-import { findCalls, splitTopLevel } from './cpp-scanner.mts';
+import {
+  findCalls,
+  findClosingBracket,
+  splitTopLevel,
+} from './cpp-scanner.mts';
 
 export type JsiObject = {
   cpp: string;
@@ -152,18 +156,44 @@ function readRegisteredMethods(
       ? splitTopLevel(source, index + 'addMethod'.length + call[0].length - 1)
       : [];
     const name = /^"(\w+)"$/.exec(args[2] ?? '')?.[1];
-    if (!call?.[1] || args.length !== 4 || !name) {
+    const length = call ? readLength(args, call[1]) : undefined;
+    if (!name || length === undefined) {
       fail(
         index,
-        'addMethod cannot be read. Pass the number of arguments as the template argument, the method name as a string literal and the implementation as a lambda written in the call.'
+        'addMethod cannot be read. Pass the method name as a string literal and the implementation as a lambda written in the call.'
       );
     }
     registrations.set(name!, [
       ...(registrations.get(name!) ?? []),
-      { length: Number(call![1]) },
+      { length: length! },
     ]);
   }
   return registrations;
+}
+
+function readLength(
+  args: string[],
+  declared: string | undefined
+): number | undefined {
+  if (declared !== undefined) {
+    return args.length === 4 ? Number(declared) : undefined;
+  }
+  if (args.length !== 4 && args.length !== 5) {
+    return undefined;
+  }
+  const parameters = lambdaParameters(args.at(-1)!);
+  const native = args.length === 5 ? 2 : 1;
+  return parameters && parameters.length >= native
+    ? parameters.length - native
+    : undefined;
+}
+
+function lambdaParameters(lambda: string): string[] | undefined {
+  if (!lambda.startsWith('[')) {
+    return undefined;
+  }
+  const open = lambda.indexOf('(', findClosingBracket(lambda, 0));
+  return open === -1 ? undefined : splitTopLevel(lambda, open, '([{<');
 }
 
 function readTsMethods(
