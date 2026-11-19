@@ -1,9 +1,9 @@
 #pragma once
 
+#include <React/Debug.h>
 #include <hermes/hermes.h>
 #include <jsi/decorator.h>
 #include <jsi/jsi.h>
-#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>
 
 #include <atomic>

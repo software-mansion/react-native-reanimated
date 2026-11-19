@@ -1,5 +1,5 @@
+#include <React/Debug.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <utility>

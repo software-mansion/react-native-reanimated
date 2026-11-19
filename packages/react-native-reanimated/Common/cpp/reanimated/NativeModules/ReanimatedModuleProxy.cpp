@@ -1,13 +1,13 @@
+#include <React/Debug.h>
+#include <React/RendererCore.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
+#include <react/featureflags/ReactNativePublicFeatureFlags.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -1308,7 +1308,7 @@ void ReanimatedModuleProxy::initializeFabric(const std::shared_ptr<UIManager> &u
   uiManager_ = uiManager;
 
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    if (!ReactNativeFeatureFlags::useSharedAnimatedBackend()) {
+    if (!facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::useSharedAnimatedBackend()) {
       react_native_assert(
           false &&
           "[Reanimated] USE_ANIMATION_BACKEND flag is enabled, "
@@ -1433,7 +1433,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
 
 #ifdef ANDROID
 SynchronousPropsReader ReanimatedModuleProxy::makeSynchronousPropsReader() {
-  if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+  if (!facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return nullptr;
   }
   return [weakThis = weak_from_this()](const Tag tag) {

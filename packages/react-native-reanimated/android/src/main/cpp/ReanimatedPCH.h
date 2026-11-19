@@ -34,11 +34,11 @@
 #include <jsi/jsi.h>
 
 // react-native renderer (Fabric)
+#include <React/RendererCore.h>
+#include <React/View.h>
 #include <react/renderer/components/root/RootProps.h>
 #include <react/renderer/components/root/RootShadowNode.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/uimanager/UIManager.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
-#include <reanimated/Compat/ReactNativeView.h>
 
 // IWYU pragma: end_keep

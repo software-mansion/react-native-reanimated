@@ -1,12 +1,12 @@
 #ifdef ANDROID
+#include <React/CallInvoker.h>
+#include <react/featureflags/ReactNativePublicFeatureFlags.h>
 #include <react/renderer/core/DynamicPropsUtilities.h>
-#include <reanimated/Compat/ReactNativeCallInvoker.h>
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 #endif
+#include <React/Debug.h>
 #include <folly/dynamic.h>
 #include <jsi/JSIDynamic.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
@@ -1093,7 +1093,8 @@ ShadowViewMutation LayoutAnimationsProxyCommon::frameUpdate(
   auto newView = animation.finalView;
   updateLayoutMetrics(newView.layoutMetrics, frame.frame, animation.frameOffset + animation.pathOffset);
 #ifdef ANDROID
-  if (sendsOnlyChangedProps && !ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+  if (sendsOnlyChangedProps &&
+      !facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return changedPropsUpdate(animation, frame, std::move(newView));
   }
   newView.props = frameProps(animation, frame.base, frame.style);
@@ -1127,7 +1128,7 @@ ShadowViewMutation LayoutAnimationsProxyCommon::createPropsUpdate(
     [[maybe_unused]] const PropsParserContext &propsParserContext) const {
 #ifdef ANDROID
   auto updateView = newView;
-  if (!ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+  if (!facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableAccumulatedUpdatesInRawPropsAndroid()) {
     auto changedProps = diffDynamicProps(oldView.props->rawProps, newView.props->rawProps);
     updateView.props = changedProps.empty()
         ? oldView.props
