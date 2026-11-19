@@ -10,4 +10,6 @@
 
 ### 🐛 Bug fixes
 
+- Stop the Android dev bundle download in Bundle Mode from blocking forever when the development server stops sending data ([#11167](https://github.com/software-mansion/react-native-reanimated/pull/11167) by [@tjzel](https://github.com/tjzel))
+
 ### 💡 Others
