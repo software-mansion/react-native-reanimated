@@ -273,6 +273,8 @@ export interface WorkletsModuleProxy {
 
   getUISchedulerHolder(): object;
 
+  propagateModuleUpdate?(code: string, sourceUrl: string): void;
+
   /** @deprecated Don't use unless you have to. */
   createSerializableLEGACY<TValue>(
     value: TValue,
@@ -283,6 +285,7 @@ export interface WorkletsModuleProxy {
 type InternalMethods =
   | 'loadUnpackersWithCode'
   | 'loadUnpackersWithBytecode'
+  | 'propagateModuleUpdate'
   | 'createSerializableLEGACY';
 
 type TurboModulePublic = {
