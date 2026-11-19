@@ -80,6 +80,7 @@ const SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
       require('./tests/events/hostReplacement.test');
+      require('./tests/events/eventLayoutProps.test');
     },
   },
   {

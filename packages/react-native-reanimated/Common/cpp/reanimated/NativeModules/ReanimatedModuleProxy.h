@@ -53,12 +53,12 @@ enum class GrandCallbackSource : std::uint8_t {
   // Used when a new vsync signal is triggered
   AnimationLoop,
 
-  // Used when handling an event (excluding the draw pass)
+  // Used when handling an event that can update the layout at once
   Event,
 
-  // Used when handling an event originating from the Android draw pass,
-  // the info is used to avoid performing Tree Hierarchy updates when this could break the app
-  EventInAndroidDraw,
+  // Used when handling an event inside an Android UI-thread dispatch. Layout updates wait for the
+  // next frame, because a mount inside the dispatch can break the view hierarchy
+  EventInAndroidDispatch,
 };
 
 class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModuleProxy> {

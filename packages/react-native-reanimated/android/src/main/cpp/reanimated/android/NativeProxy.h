@@ -84,7 +84,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
       jni::alias_ref<JString> eventName,
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event,
-      jboolean isInDrawPass);
+      jboolean isInsideEventDispatch);
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
   bool cssAnimateTransition(

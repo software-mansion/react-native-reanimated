@@ -11,15 +11,12 @@ class EventHandler : RCTModernEventEmitter {
     @field:DoNotStrip
     private val mHybridData: HybridData
 
-    internal var isInDrawPassProvider: (() -> Boolean)? = null
     internal var nativeCallGuard: (() -> Unit) -> Unit = { it() }
 
     @DoNotStrip
     private constructor(hybridData: HybridData) {
         mHybridData = hybridData
     }
-
-    private fun isInDrawPass(): Boolean = isInDrawPassProvider?.invoke() == true
 
     @Suppress("OVERRIDE_DEPRECATION")
     override fun receiveEvent(
@@ -31,22 +28,23 @@ class EventHandler : RCTModernEventEmitter {
         params: WritableMap?,
         category: Int,
     ) {
-        handle(eventName, targetTag, params)
+        handle(eventName, targetTag, params, isInsideEventDispatch = true)
     }
 
     internal fun handle(
         eventName: String,
         targetTag: Int,
         params: WritableMap?,
+        isInsideEventDispatch: Boolean,
     ) {
         val resolvedEventName = resolveCustomEventName(eventName)
-        nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInDrawPass()) }
+        nativeCallGuard { receiveEvent(resolvedEventName, targetTag, params, isInsideEventDispatch) }
     }
 
     external fun receiveEvent(
         eventName: String,
         emitterReactTag: Int,
         event: WritableMap?,
-        isInDrawPass: Boolean,
+        isInsideEventDispatch: Boolean,
     )
 }
