@@ -35,9 +35,11 @@ function Screens({
   targetOffset = 0,
   targetTranslateX = 0,
   targetColor = styles.target.backgroundColor,
+  sourceColor = styles.source.backgroundColor,
   sourceActive = true,
   tagged = true,
   sourceTag = 'gesture-retained-source',
+  targetScreenClips = false,
 }: {
   transitionStyle?: SharedTransition;
   sourceMounted?: boolean;
@@ -45,9 +47,11 @@ function Screens({
   targetOffset?: number;
   targetTranslateX?: number;
   targetColor?: string;
+  sourceColor?: string;
   sourceActive?: boolean;
   tagged?: boolean;
   sourceTag?: string;
+  targetScreenClips?: boolean;
 }) {
   const sourceScreen = useTestRef('gestureSourceScreen');
   const targetScreen = useTestRef('gestureTargetScreen');
@@ -61,7 +65,7 @@ function Screens({
         onAppear={() => notify('gesture-target-appeared')}
         enabled
         activityState={2}
-        style={styles.screen}>
+        style={[styles.screen, targetScreenClips && styles.clips]}>
         <SharedTransitionBoundary
           isActive={!sourceScreenMounted || !sourceActive}>
           <Animated.View
@@ -92,7 +96,7 @@ function Screens({
                 ref={source}
                 sharedTransitionTag={tagged ? sourceTag : undefined}
                 sharedTransitionStyle={transitionStyle}
-                style={styles.source}>
+                style={[styles.source, { backgroundColor: sourceColor }]}>
                 <View ref={child} collapsable={false} style={styles.child} />
               </Animated.View>
             )}
@@ -1209,6 +1213,60 @@ describe('Target style change during native Screen progress', () => {
   );
 });
 
+describe('Source style change during native Screen progress', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest(
+    'shows a style that the transition does not animate before the next progress',
+    async () => {
+      const newColor = '#22aa55';
+      const geometryOnly = SharedTransition.custom((values) => {
+        'worklet';
+        return {
+          width: values.targetWidth,
+          height: values.targetHeight,
+          originX: values.targetOriginX,
+          originY: values.targetOriginY,
+        };
+      }).progressAnimation((values, progress) => {
+        'worklet';
+        const at = (current: number, target: number) =>
+          current + progress * (target - current);
+        return {
+          width: at(values.currentWidth, values.targetWidth),
+          height: at(values.currentHeight, values.targetHeight),
+          originX: at(values.currentOriginX, values.targetOriginX),
+          originY: at(values.currentOriginY, values.targetOriginY),
+        };
+      });
+      const tags = await startGesture(geometryOnly);
+
+      await render(
+        <Screens transitionStyle={geometryOnly} sourceColor={newColor} />
+      );
+      await expectEventually(() => carrierColor(tags.source)).toBe(
+        newColor,
+        ComparisonMode.COLOR
+      );
+      await expectCarrier(tags.source, 82.5);
+
+      await observer().emitScreenTransitionProgress(
+        tags.targetScreen,
+        0.5,
+        false,
+        false
+      );
+      await expectCarrier(tags.source, 105);
+      expect(await carrierColor(tags.source)).toBe(
+        newColor,
+        ComparisonMode.COLOR
+      );
+      await observer().emitScreenGestureCancel(tags.sourceScreen);
+      await expectCarrier(tags.source, 60);
+    }
+  );
+});
+
 describe('Target that showed before its source took the shared tag', () => {
   const gestureTest = Platform.OS === 'ios' ? test : test.skip;
 
@@ -1390,8 +1448,44 @@ describe('Target moved during native Screen progress', () => {
   });
 });
 
-async function startGesture(transitionStyle = transition) {
-  await render(<Screens transitionStyle={transitionStyle} />);
+describe('Clip of a native Screen gesture', () => {
+  const gestureTest = Platform.OS === 'ios' ? test : test.skip;
+
+  gestureTest('moves the clip with the progress of the gesture', async () => {
+    const tags = await startGesture(transition, true);
+    const screenY = (await observer().observeLocationOnScreen(
+      tags.targetScreen
+    ))!.y;
+    await observer().emitScreenTransitionProgress(
+      tags.targetScreen,
+      0.75,
+      false,
+      false
+    );
+    // The source has no clipping parent, so its clip is the window.
+    await expectEventually(() => carrierClipY(tags.source)).toBe(
+      0.75 * screenY,
+      ComparisonMode.PIXEL
+    );
+  });
+});
+
+async function carrierClipY(carrier: number) {
+  const content = await observer().observeParent(carrier);
+  const clip = await observer().observeParent(content ?? -1);
+  return (await observer().observeLocationOnScreen(clip ?? -1))?.y;
+}
+
+async function startGesture(
+  transitionStyle = transition,
+  targetScreenClips = false
+) {
+  await render(
+    <Screens
+      transitionStyle={transitionStyle}
+      targetScreenClips={targetScreenClips}
+    />
+  );
   await waitForNotification('gesture-source-appeared');
   await waitForNotification('gesture-target-appeared');
   await expectEventually(
@@ -1495,6 +1589,7 @@ async function expectGone(...tags: number[]) {
 const styles = StyleSheet.create({
   container: { width: 300, height: 400 },
   screen: { position: 'absolute', left: 0, top: 0, width: 300, height: 400 },
+  clips: { overflow: 'hidden' },
   source: { width: 60, height: 60, backgroundColor: '#dd5522' },
   target: { width: 150, height: 150, backgroundColor: '#2277dd' },
   hiddenTabTarget: { width: 240, height: 240, backgroundColor: '#22aa55' },

@@ -102,6 +102,10 @@ export interface ReanimatedModuleProxy {
     isViewRegistered: (viewTag: number) => boolean
   ): SettledUpdate[];
 
+  hasPendingSettledUpdates(
+    isViewRegistered: (viewTag: number) => boolean
+  ): boolean;
+
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,
     config: CSSPseudoStyleConfig

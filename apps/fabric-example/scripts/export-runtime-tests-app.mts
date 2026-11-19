@@ -109,6 +109,8 @@ async function resolveAppPath() {
       'Debug FabricExample',
       '-configuration',
       CONFIGURATION,
+      '-derivedDataPath',
+      path.join('build', 'DerivedData'),
       '-destination',
       'generic/platform=iOS Simulator',
       '-showBuildSettings',

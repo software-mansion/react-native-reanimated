@@ -54,6 +54,8 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/runOnRuntimeSyncWithId.test');
       require('./tests/runtimes/scheduleOnRuntimeWithId.test');
       require('./tests/runtimes/microtaskDrains.test');
+      require('./tests/runtimes/reentrantModuleLoad.test');
+      require('./tests/runtimes/microtaskErrors.test');
       require('./tests/runtimes/weakRef.test');
       require('./tests/runtimes/performanceNow.test');
     },
@@ -92,6 +94,8 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/executionOrder.test');
       require('./tests/runLoop/finalizers.test');
       require('./tests/runLoop/headlessTask.test');
+      require('./tests/runLoop/idleRuntime.test');
+      require('./tests/runLoop/idleFrames.test');
     },
   },
   {

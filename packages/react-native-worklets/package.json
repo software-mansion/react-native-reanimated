@@ -24,8 +24,8 @@
     "format:js": "yarn run --top-level oxfmt src",
     "format:plugin": "yarn workspace babel-plugin-worklets format",
     "lint": "yarn lint:js && yarn lint:plugin && yarn lint:android && yarn lint:apple && yarn lint:clang-tidy",
-    "lint:android": "../../scripts/validate-android.sh && ../../scripts/validate-common.sh && ./android/gradlew -p android spotlessCheck -q && yarn format:common --dry-run -Werror && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
-    "lint:apple": "../../scripts/validate-apple.sh && ../../scripts/validate-common.sh && yarn format:common --dry-run -Werror && yarn format:apple --dry-run -Werror",
+    "lint:android": "../../scripts/validate-android.sh && ../../scripts/validate-common.sh && ../../scripts/validate-compat-includes.sh && ./android/gradlew -p android spotlessCheck -q && yarn format:common --dry-run -Werror && yarn format:android:cpp --dry-run -Werror && yarn lint:cmake",
+    "lint:apple": "../../scripts/validate-apple.sh && ../../scripts/validate-common.sh && ../../scripts/validate-compat-includes.sh && yarn format:common --dry-run -Werror && yarn format:apple --dry-run -Werror",
     "lint:cmake": "find ./android -type d \\( -name build -o -name .cxx \\) -prune -o -type f \\( -name 'CMakeLists.txt' -o -name '*.cmake' \\) -print | xargs ../../scripts/lint-cmake.sh",
     "lint:clang-tidy": "yarn lint:clang-tidy:ios && yarn lint:clang-tidy:android",
     "lint:clang-tidy:ios": "../../scripts/llvm-tools/clang-tidy-lint.sh --platform=ios",
@@ -64,7 +64,7 @@
     "@babel/core": "*",
     "@react-native/metro-config": "*",
     "react": "*",
-    "react-native": "0.86 - 0.88"
+    "react-native": "0.87 - 0.89"
   },
   "dependencies": {
     "@babel/generator": "^7.27.1",
@@ -88,7 +88,7 @@
     "@babel/cli": "7.28.3",
     "@babel/core": "7.29.6",
     "@react-native-community/cli": "20.2.0",
-    "@react-native/jest-preset": "0.88.0",
+    "@react-native/jest-preset": "0.89.0-rc.2",
     "@types/node": "24.7.0",
     "@types/react": "19.2.18",
     "clang-format-node": "1.3.5",
@@ -96,7 +96,7 @@
     "knip": "5.61.3",
     "madge": "8.0.0",
     "react": "19.3.0",
-    "react-native": "0.88.0",
+    "react-native": "0.89.0-rc.2",
     "typescript": "5.9.3"
   },
   "main": "./lib/module/index",

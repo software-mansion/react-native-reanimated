@@ -3,7 +3,7 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/TextMetrics.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <algorithm>
 #include <memory>
@@ -219,6 +219,19 @@ bool AnimatedPropsRegistry::isUnmounted(const ShadowNodeFamily &shadowNodeFamily
 void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
   std::erase_if(unmountedFamilies_, [](const auto &entry) { return entry.second.expired(); });
   unmountedFamiliesPruneThreshold_ = std::max(MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD, 2 * unmountedFamilies_.size());
+}
+
+bool AnimatedPropsRegistry::hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto pendingTags = getPendingTags();
+  if (std::any_of(pendingTags.begin(), pendingTags.end(), isViewRegistered)) {
+    return true;
+  }
+  return std::any_of(updatesRegistry_.begin(), updatesRegistry_.end(), [&](const auto &entry) {
+    const auto viewTag = entry.first;
+    const bool hasWork = syncedTags_.contains(viewTag) || writeHistories_.contains(viewTag);
+    return hasWork && isViewRegistered(viewTag);
+  });
 }
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {

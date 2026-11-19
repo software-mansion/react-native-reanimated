@@ -1,14 +1,13 @@
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#include <react/debug/react_native_assert.h>
-#include <react/featureflags/ReactNativeFeatureFlags.h>
-#include <react/renderer/core/RawProps.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/Compat/ReactNativeVersionCompat.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -203,6 +202,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
       setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
       nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
+      isMovedByContainerTransition_(platformDepMethodsHolder.isMovedByContainerTransitionFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
@@ -749,6 +749,14 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi:
       });
 }
 
+bool ReanimatedModuleProxy::hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
+
+  auto lock = updatesRegistryManager_->lock();
+  return animatedPropsRegistry_->hasPendingSettledUpdates(
+      [&](const Tag viewTag) { return isViewRegisteredFunction.call(rt, viewTag).asBool(); });
+}
+
 bool ReanimatedModuleProxy::handleEvent(
     const std::string &eventName,
     const int emitterReactTag,
@@ -776,18 +784,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-#if REACT_NATIVE_VERSION_MINOR >= 87
   const auto tag = eventTarget->getTag();
-#else
-  // A stale event dispatched during unmount may carry an EventTarget with a null
-  // InstanceHandle which getTag() would dereference (see #9925).
-  // Fixed in React Native 0.87 by https://github.com/facebook/react-native/pull/56763.
-  const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
-  if (shadowNodeFamily == nullptr) {
-    return false;
-  }
-  const auto tag = shadowNodeFamily->getTag();
-#endif
 
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
@@ -1423,6 +1420,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
       setSharedTransitionOverlay_,
       nativeViewPlacement_,
+      isMovedByContainerTransition_,
 #endif
   };
 
@@ -1796,6 +1794,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         }
         return strongThis->getSettledUpdates(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "hasPendingSettledUpdates",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return jsi::Value(strongThis->hasPendingSettledUpdates(rt, at<0>(args)));
       });
 
   addMethod<2>(

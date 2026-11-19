@@ -3,7 +3,7 @@
 #include <worklets/SharedItems/Serializable/SerializableRemoteFunction.h>
 #include <worklets/WorkletRuntime/WorkletRuntime.h>
 
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 
 #include <functional>
 #include <string>

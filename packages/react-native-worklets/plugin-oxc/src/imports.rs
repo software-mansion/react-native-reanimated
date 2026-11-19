@@ -90,11 +90,7 @@ pub fn create_import_path(
 }
 
 pub fn can_forward_module_import(module_name: &str, forwardable: &[String]) -> bool {
-    forwardable.iter().any(|forwardable_name| {
-        module_name
-            .strip_prefix(forwardable_name.as_str())
-            .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
-    })
+    forwardable.iter().any(|forwardable_name| forwardable_name == module_name)
 }
 
 pub fn can_forward_relative_import(module_path: &str, relative_paths: &[String]) -> bool {
