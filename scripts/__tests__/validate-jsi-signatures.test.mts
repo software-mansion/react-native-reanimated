@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { describe, it } from 'node:test';
 
+import type { JsiObject } from '../validate-jsi-signatures.mts';
 import {
-  type JsiObject,
-  unlistedFiles,
-  validate,
+  compareRegistrationsWithTsTypes,
+  reportFilesMissingFromJsiObjects,
 } from '../validate-jsi-signatures.mts';
 
 const FIXTURES_DIR = path.join(
@@ -25,30 +25,35 @@ function proxy(cpp: string): JsiObject {
 
 describe('validate-jsi-signatures', () => {
   it('passes when the registrations match the TS type', () => {
-    assert.deepEqual(validate([proxy('matching.cpp')], FIXTURES_DIR), []);
+    assert.deepEqual(
+      compareRegistrationsWithTsTypes([proxy('matching.cpp')], FIXTURES_DIR),
+      []
+    );
   });
 
   it('reports every mismatch', () => {
-    assert.deepEqual(validate([proxy('mismatched.cpp')], FIXTURES_DIR), [
-      '__proxy.debugOnly: registered in every build, so it must not be optional in TS.',
-      '__proxy.noArguments: declared in TS but not registered in C++.',
-      '__proxy.twoArguments: takes 1 arguments in C++ but 2 in TS.',
-      '__proxy.undeclared: registered in C++ but not declared in TS.',
-    ]);
+    assert.deepEqual(
+      compareRegistrationsWithTsTypes([proxy('mismatched.cpp')], FIXTURES_DIR),
+      [
+        '__proxy.noArguments: globals.d.ts declares it, but mismatched.cpp does not register it. Register it in mismatched.cpp or remove the declaration.',
+        '__proxy.twoArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
+        '__proxy.undeclared: mismatched.cpp registers it, but globals.d.ts does not declare it. Declare it in globals.d.ts or remove the registration.',
+      ]
+    );
   });
 
-  it('refuses a registration without a literal name', () => {
-    assert.throws(() => validate([proxy('unreadable.cpp')], FIXTURES_DIR), {
-      message:
-        'scripts/__tests__/__fixtures__/validateJsiSignatures/unreadable.cpp:10: addMethod needs a number of arguments, a string literal name and a lambda.',
-    });
-  });
-
-  it('refuses a registration under a condition other than NDEBUG', () => {
-    assert.throws(() => validate([proxy('conditional.cpp')], FIXTURES_DIR), {
-      message:
-        'scripts/__tests__/__fixtures__/validateJsiSignatures/conditional.cpp:10: cannot tell in which builds noArguments is registered.',
-    });
+  it('rejects a registration without a literal name', () => {
+    assert.throws(
+      () =>
+        compareRegistrationsWithTsTypes(
+          [proxy('unreadable.cpp')],
+          FIXTURES_DIR
+        ),
+      {
+        message:
+          'scripts/__tests__/__fixtures__/validateJsiSignatures/unreadable.cpp:10: addMethod cannot be read. Pass the number of arguments as the template argument, the method name as a string literal and the implementation as a lambda written in the call.',
+      }
+    );
   });
 
   it('reports a file that registers methods but is not listed', () => {
@@ -63,13 +68,13 @@ describe('validate-jsi-signatures', () => {
         '// addMethod<0>(rt, obj, "commented", [](jsi::Runtime &, const jsi::Value &) {});',
     };
     assert.deepEqual(
-      unlistedFiles(
+      reportFilesMissingFromJsiObjects(
         Object.keys(sources),
         [proxy('listed.cpp')],
         (file) => sources[file]
       ),
       [
-        'unlisted.cpp registers methods with addMethod but is not listed in JSI_OBJECTS.',
+        'unlisted.cpp: registers methods with addMethod, but JSI_OBJECTS does not list it. Add it to JSI_OBJECTS in scripts/validate-jsi-signatures.mts.',
       ]
     );
   });

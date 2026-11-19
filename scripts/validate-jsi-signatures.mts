@@ -1,8 +1,9 @@
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+
+import { findCalls, splitTopLevel } from './cpp-scanner.mts';
 
 export type JsiObject = {
   cpp: string;
@@ -11,9 +12,9 @@ export type JsiObject = {
   tsConfig: string;
 };
 
-const REPO = path.resolve(import.meta.dirname, '..');
+const REPOSITORY_ROOT = path.resolve(import.meta.dirname, '..');
 
-export const JSI_OBJECTS: JsiObject[] = [
+const JSI_OBJECTS: JsiObject[] = [
   {
     cpp: 'packages/react-native-worklets/Common/cpp/worklets/NativeModules/JSIWorkletsModuleProxy.cpp',
     global: '__workletsModuleProxy',
@@ -34,18 +35,15 @@ export const JSI_OBJECTS: JsiObject[] = [
   },
 ];
 
-const PAIRS: Record<string, string> = { '(': ')', '[': ']', '{': '}' };
+const SCRIPT = path.relative(REPOSITORY_ROOT, import.meta.filename);
 const REGISTRATION =
-  /\baddMethod\b\s*(?:<[^<>]*>)?\s*\(\s*[^,()]+,\s*[^,()]+,\s*"/;
+  /addMethod\s*(?:<[^<>]*>)?\s*\(\s*[^,()]+,\s*[^,()]+,\s*"/y;
 
-type Build = 'debug' | 'release';
-
-type Registration = { builds: Build[]; length: number };
+type Registration = { length: number };
 
 type TsMethod = {
   parameters: number;
-  optional: boolean;
-  unsupported?: string;
+  declarationProblem?: string;
 };
 
 function main(): void {
@@ -63,15 +61,15 @@ function main(): void {
         '*.hpp',
         ':!scripts/__tests__/__fixtures__',
       ],
-      { cwd: REPO, encoding: 'utf8' }
+      { cwd: REPOSITORY_ROOT, encoding: 'utf8' }
     )
       .split('\n')
       .filter(Boolean);
     const problems = [
-      ...unlistedFiles(files, JSI_OBJECTS, (file) =>
-        fs.readFileSync(path.join(REPO, file), 'utf8')
+      ...reportFilesMissingFromJsiObjects(files, JSI_OBJECTS, (file) =>
+        fs.readFileSync(path.join(REPOSITORY_ROOT, file), 'utf8')
       ),
-      ...validate(JSI_OBJECTS, REPO),
+      ...compareRegistrationsWithTsTypes(JSI_OBJECTS, REPOSITORY_ROOT),
     ];
     if (problems.length === 0) {
       console.log(
@@ -88,158 +86,84 @@ function main(): void {
     process.exitCode = 1;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
-    process.exitCode = 2;
+    process.exitCode = 1;
   }
 }
 
-export function unlistedFiles(
+export function reportFilesMissingFromJsiObjects(
   files: string[],
   jsiObjects: JsiObject[],
   read: (file: string) => string
 ): string[] {
   const listed = new Set(jsiObjects.map(({ cpp }) => cpp));
   return files
-    .filter(
-      (file) =>
-        !listed.has(file) && REGISTRATION.test(withoutComments(read(file)))
-    )
+    .filter((file) => {
+      if (listed.has(file)) {
+        return false;
+      }
+      const source = read(file);
+      return findCalls(source, 'addMethod').some((index) => {
+        REGISTRATION.lastIndex = index;
+        return REGISTRATION.test(source);
+      });
+    })
     .map(
       (file) =>
-        `${file} registers methods with addMethod but is not listed in JSI_OBJECTS.`
+        `${file}: registers methods with addMethod, but JSI_OBJECTS does not list it. Add it to JSI_OBJECTS in ${SCRIPT}.`
     );
 }
 
-export function validate(jsiObjects: JsiObject[], root: string): string[] {
-  return jsiObjects.flatMap(({ cpp, global, globals, tsConfig }) =>
+export function compareRegistrationsWithTsTypes(
+  jsiObjects: JsiObject[],
+  rootDir: string
+): string[] {
+  return jsiObjects.flatMap((jsiObject) =>
     findProblems(
-      global,
-      readRegistrations(path.join(root, cpp)),
-      readTsMethods(global, path.join(root, globals), path.join(root, tsConfig))
+      jsiObject,
+      readRegisteredMethods(path.join(rootDir, jsiObject.cpp)),
+      readTsMethods(
+        jsiObject.global,
+        path.join(rootDir, jsiObject.globals),
+        path.join(rootDir, jsiObject.tsConfig)
+      )
     )
   );
 }
 
-function readRegistrations(cpp: string): Map<string, Registration[]> {
-  const source = withoutComments(fs.readFileSync(cpp, 'utf8'));
+function readRegisteredMethods(
+  cppFilePath: string
+): Map<string, Registration[]> {
+  const source = fs.readFileSync(cppFilePath, 'utf8');
   const fail = (offset: number, message: string): never => {
     const line = source.slice(0, offset).split('\n').length;
-    throw new Error(`${path.relative(REPO, cpp)}:${line}: ${message}`);
+    throw new Error(
+      `${path.relative(REPOSITORY_ROOT, cppFilePath)}:${line}: ${message}`
+    );
   };
   const registrations = new Map<string, Registration[]>();
-  for (const { index } of source.matchAll(/\baddMethod\b/g)) {
+  for (const index of findCalls(source, 'addMethod')) {
     const call = /^\s*(?:<\s*(\d+)\s*>\s*)?([(;])/.exec(
       source.slice(index + 'addMethod'.length)
     );
     if (call?.[2] === ';') {
       continue;
     }
-    const open = index + 'addMethod'.length + (call?.[0].length ?? 0) - 1;
     const args = call
-      ? splitTopLevel(source.slice(open + 1, closing(source, open)))
+      ? splitTopLevel(source, index + 'addMethod'.length + call[0].length - 1)
       : [];
     const name = /^"(\w+)"$/.exec(args[2] ?? '')?.[1];
     if (!call?.[1] || args.length !== 4 || !name) {
       fail(
         index,
-        'addMethod needs a number of arguments, a string literal name and a lambda.'
+        'addMethod cannot be read. Pass the number of arguments as the template argument, the method name as a string literal and the implementation as a lambda written in the call.'
       );
-    }
-    const builds = buildsAt(source, index);
-    if (!builds) {
-      fail(index, `cannot tell in which builds ${name} is registered.`);
     }
     registrations.set(name!, [
       ...(registrations.get(name!) ?? []),
-      { builds: builds!, length: Number(call![1]) },
+      { length: Number(call![1]) },
     ]);
   }
   return registrations;
-}
-
-function buildsAt(source: string, offset: number): Build[] | undefined {
-  let builds: Build[] = ['debug', 'release'];
-  const stack: (Build[] | undefined)[] = [];
-  for (const [, directive, condition] of source
-    .slice(0, offset)
-    .matchAll(/^\s*#\s*(ifndef|ifdef|if|elif|else|endif)\b(.*)$/gm)) {
-    if (directive === 'endif') {
-      stack.pop();
-    } else if (directive === 'else') {
-      const last = stack.pop();
-      stack.push(
-        last?.length === 1
-          ? [last[0] === 'debug' ? 'release' : 'debug']
-          : undefined
-      );
-    } else if (directive === 'elif') {
-      stack.pop();
-      stack.push(undefined);
-    } else if (condition.trim() === 'NDEBUG' && directive !== 'if') {
-      stack.push([directive === 'ifndef' ? 'debug' : 'release']);
-    } else {
-      stack.push(undefined);
-    }
-  }
-  for (const condition of stack) {
-    if (!condition) {
-      return undefined;
-    }
-    builds = builds.filter((build) => condition.includes(build));
-  }
-  return builds;
-}
-
-function withoutComments(source: string): string {
-  return source.replace(
-    /"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|\/\/[^\n]*|\/\*[\s\S]*?\*\//g,
-    (match) => (match[0] === '/' ? match.replace(/[^\n]/g, ' ') : match)
-  );
-}
-
-function closing(text: string, open: number): number {
-  const expected: string[] = [];
-  for (let index = open; index < text.length; index++) {
-    const char = text[index];
-    if (char === '"' || char === "'") {
-      index = endOfLiteral(text, index);
-    } else if (PAIRS[char]) {
-      expected.push(PAIRS[char]);
-    } else if (char === expected.at(-1)) {
-      expected.pop();
-      if (expected.length === 0) {
-        return index;
-      }
-    }
-  }
-  throw new Error(`Unbalanced brackets at \`${text.slice(open, open + 40)}\`.`);
-}
-
-function splitTopLevel(list: string, brackets = '()[]{}'): string[] {
-  const parts: string[] = [];
-  let depth = 0;
-  let start = 0;
-  for (let index = 0; index < list.length; index++) {
-    const char = list[index];
-    const bracket = brackets.indexOf(char);
-    if (char === '"' || char === "'") {
-      index = endOfLiteral(list, index);
-    } else if (bracket !== -1) {
-      depth += bracket % 2 === 0 ? 1 : -1;
-    } else if (char === ',' && depth === 0) {
-      parts.push(list.slice(start, index).trim());
-      start = index + 1;
-    }
-  }
-  const last = list.slice(start).trim();
-  return last ? [...parts, last] : parts;
-}
-
-function endOfLiteral(text: string, open: number): number {
-  let index = open + 1;
-  while (index < text.length && text[index] !== text[open]) {
-    index += text[index] === '\\' ? 2 : 1;
-  }
-  return index;
 }
 
 function readTsMethods(
@@ -272,7 +196,7 @@ function readTsMethods(
   const declaration = findVariable(program.getSourceFile(globals), global);
   if (!declaration) {
     throw new Error(
-      `Could not find the declaration of ${global} in ${path.relative(REPO, globals)}.`
+      `${path.relative(REPOSITORY_ROOT, globals)} does not declare ${global}. Declare it there or fix its entry in JSI_OBJECTS in ${SCRIPT}.`
     );
   }
 
@@ -292,12 +216,11 @@ function readTsMethods(
     );
     methods.set(member.name, {
       parameters: parameters.length,
-      optional: (member.flags & ts.SymbolFlags.Optional) !== 0,
-      unsupported:
+      declarationProblem:
         signatures.length !== 1
-          ? 'must have exactly one call signature'
+          ? `has ${signatures.length} call signatures. Declare exactly one.`
           : hasRestParameter
-            ? 'must not have a rest parameter'
+            ? 'has a rest parameter. Declare each parameter separately.'
             : undefined,
     });
   }
@@ -322,7 +245,7 @@ function findVariable(
 }
 
 function findProblems(
-  global: string,
+  { cpp, global, globals }: JsiObject,
   registrations: Map<string, Registration[]>,
   tsMethods: Map<string, TsMethod>
 ): string[] {
@@ -332,31 +255,26 @@ function findProblems(
     const report = (message: string) =>
       problems.push(`${global}.${name}: ${message}`);
     const registered = registrations.get(name) ?? [];
-    const builds = registered.flatMap(({ builds }) => builds);
-    const inEveryBuild = builds.includes('debug') && builds.includes('release');
     const tsMethod = tsMethods.get(name);
 
-    if (builds.length !== new Set(builds).size) {
-      report('registered more than once in C++.');
+    if (registered.length > 1) {
+      report(`${cpp} registers it more than once. Register it once.`);
     }
     if (!tsMethod) {
-      report('registered in C++ but not declared in TS.');
-    } else if (tsMethod.unsupported) {
-      report(`the TS declaration ${tsMethod.unsupported}.`);
+      report(
+        `${cpp} registers it, but ${globals} does not declare it. Declare it in ${globals} or remove the registration.`
+      );
+    } else if (tsMethod.declarationProblem) {
+      report(`the declaration in ${globals} ${tsMethod.declarationProblem}`);
     } else if (registered.length === 0) {
-      report('declared in TS but not registered in C++.');
+      report(
+        `${globals} declares it, but ${cpp} does not register it. Register it in ${cpp} or remove the declaration.`
+      );
     } else {
-      const lengths = new Set(registered.map(({ length }) => length));
-      if ([...lengths].some((length) => length !== tsMethod.parameters)) {
+      const lengths = [...new Set(registered.map(({ length }) => length))];
+      if (lengths.some((length) => length !== tsMethod.parameters)) {
         report(
-          `takes ${[...lengths].join(' or ')} arguments in C++ but ${tsMethod.parameters} in TS.`
-        );
-      }
-      if (inEveryBuild && tsMethod.optional) {
-        report('registered in every build, so it must not be optional in TS.');
-      } else if (!inEveryBuild && !tsMethod.optional) {
-        report(
-          `registered only in ${builds.includes('debug') ? 'debug' : 'release'} builds, so it must be optional in TS.`
+          `takes ${lengths.join(' or ')} ${lengths.at(-1) === 1 ? 'argument' : 'arguments'} in ${cpp} but ${tsMethod.parameters} in ${globals}. Make both take the same arguments.`
         );
       }
     }
@@ -364,6 +282,6 @@ function findProblems(
   return problems;
 }
 
-if (path.resolve(process.argv[1] ?? '') === fileURLToPath(import.meta.url)) {
+if (import.meta.filename === process.argv[1]) {
   main();
 }
