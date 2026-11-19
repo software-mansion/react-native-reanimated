@@ -6,29 +6,71 @@ List of supported types for Serialization can be found [here](https://docs.swman
 
 ## Reference
 
-```typescript
-const obj = { a: 42 };
-Object.setPrototypeOf(obj, console); // because why not
+This example transfers a `Point` with a custom prototype to a Worker Runtime. Its `x` and `y`
+coordinates are ordinary data, but its `length()` method belongs to the prototype.
 
-type ConsoleLike = typeof console;
+Register the serializer on the RN Runtime before passing the point to another runtime.
+`scheduleOnRuntime` then handles the transfer automatically:
+
+1. `determine` recognizes the point on RN.
+2. `pack` runs on RN and returns just `{ x, y }`.
+3. `unpack` runs on the worker and creates a new point with its own prototype and `length()` method.
+
+```js
+import {
+  createWorkletRuntime,
+  registerCustomSerializable,
+  scheduleOnRuntime,
+} from 'react-native-worklets';
+
+function createPoint(x, y) {
+  'worklet';
+  const prototype = {
+    kind: 'Point',
+    length() {
+      return Math.hypot(this.x, this.y);
+    },
+  };
+  return Object.assign(Object.create(prototype), { x, y });
+}
+
+function showPoint(point) {
+  'worklet';
+  console.log('Distance:', point.length()); // 5
+}
 
 registerCustomSerializable({
-  name: 'ConsoleLike',
-  determine(value: object): value is ConsoleLike {
+  name: 'Point',
+  determine(value) {
     'worklet';
-    return Object.getPrototypeOf(value) === console;
+    const matches = Object.getPrototypeOf(value)?.kind === 'Point';
+    console.log('determine:', matches);
+    return matches;
   },
-  pack(value: ConsoleLike) {
+  pack(point) {
     'worklet';
-    return { a: value.a }; // transfer data
+    console.log('pack:', point.x, point.y);
+    return { x: point.x, y: point.y };
   },
-  unpack(value: object) {
+  unpack(data) {
     'worklet';
-    // recreate object with prototype
-    return Object.create(console, value);
+    console.log('unpack:', data.x, data.y);
+    return createPoint(data.x, data.y);
   },
 });
+
+const worker = createWorkletRuntime({ name: 'background' });
+const point = createPoint(3, 4);
+scheduleOnRuntime(worker, showPoint, point);
 ```
+
+> TIP
+>
+> What crosses the runtime boundary?
+>
+> The packed coordinates cross the boundary. The original object and its prototype stay on RN.
+> `unpack` uses `createPoint` to reconstruct the object on the worker, where `point.length()` returns `5`.
+> The console identifies the runtime running each callback. You don't call `pack` or `unpack` yourself.
 
 Type definitions
 
@@ -54,12 +96,12 @@ An object containing the registration data for the Custom Serializable.
 
 Available properties:
 
-| Name      | Type                                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| --------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name      | `string`                             | A unique name for the Custom Serializable. It's used to prevent duplicate registrations of the same Custom Serializable. You will get warned if you attempt to register a Custom Serializable with a name that has already been used.                                                                                                                                                                                                                             |
-| determine | `(value: object) => value is TValue` | A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                                                                                                                        |
-| pack      | `(value: TValue) => TPacked`         | A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable). The function must return a [supported type for Serialization](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable#supported-types). |
-| unpack    | `(value: TPacked) => TValue`         | A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that unpacks the packed value, after it's been deserialized from it's packed form, back into the JavaScript value of type `TValue`.                                                                                                                                                                                                                     |
+| Name      | Type                                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| --------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name      | `string`                             | A unique name for the Custom Serializable. It's used to prevent duplicate registrations of the same Custom Serializable. You will get warned if you attempt to register a Custom Serializable with a name that has already been used.                                                                                                                                                                                                                                             |
+| determine | `(value: object) => value is TValue` | A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) that checks whether a given JavaScript value is of the type handled by this Custom Serializable.                                                                                                                                                                                                                                                        |
+| pack      | `(value: TValue) => TPacked`         | A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) that packs the JavaScript value of type `TValue` into a value that can be serialized by default as [Serializable](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable). The function must return a [supported type for Serialization](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable#supported-types). |
+| unpack    | `(value: TPacked) => TValue`         | A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) that unpacks the packed value, after it's been deserialized from its packed form, back into the JavaScript value of type `TValue`.                                                                                                                                                                                                                      |
 
 ## Motivation
 
@@ -142,5 +184,5 @@ flowchart TD
 ## Remarks
 
 * To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
-* Custom Serializables are global and shared between all [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
-* You can use `registerCustomSerializable` only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+* Custom Serializables are global and shared between all [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
+* You can use `registerCustomSerializable` only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#rn-runtime).

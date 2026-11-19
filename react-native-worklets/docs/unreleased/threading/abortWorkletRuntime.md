@@ -1,6 +1,6 @@
 # abortWorkletRuntime
 
-`abortWorkletRuntime` stops a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime) that was created with `abortable: true`.
+`abortWorkletRuntime` stops a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worker-runtime) that was created with `abortable: true`.
 
 * Currently running task (i.e. a worklet function scheduled with `scheduleOnRuntime`) finishes before the runtime stops.
 * Work that's still waiting in the runtime's queue is dropped, and the promises of dropped [runOnRuntimeAsync](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRuntimeAsync) jobs are rejected. The runtime's timers and in-flight network requests are cancelled.
@@ -34,7 +34,7 @@ function abortWorkletRuntime(runtimeId: number): boolean;
 
 ### runtimeId
 
-The id of the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime) to abort. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worker-runtime) to abort. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ## Returns
 

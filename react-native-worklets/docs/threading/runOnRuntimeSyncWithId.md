@@ -4,16 +4,23 @@
 
 ## Reference
 
-```javascript
-import { runOnRuntimeSyncWithId, createWorkletRuntime } from 'react-native-worklets';
+```js
+import {
+  createWorkletRuntime,
+  runOnRuntimeSyncWithId,
+} from 'react-native-worklets';
 
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-const result = runOnRuntimeSyncWithId(workletRuntime.runtimeId, () => {
+function compute() {
   'worklet';
   return 2 + 2;
-}); // This will block the RN Runtime until the worklet is finished
+}
 
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+// Blocks the calling thread until the worklet finishes.
+const result = runOnRuntimeSyncWithId(
+  workletRuntime.runtimeId,
+  compute
+);
 console.log(result); // 4
 ```
 
@@ -31,15 +38,15 @@ function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime).
 
 ## Remarks
 

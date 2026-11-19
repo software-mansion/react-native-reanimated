@@ -45,27 +45,29 @@ type FixedSynchronizable<TValue extends number | boolean = number | boolean> =
 
 ## Reference
 
-```tsx
+```js
 import { createSynchronizable, scheduleOnUI } from 'react-native-worklets';
-
-// RN Runtime, JS thread
 
 const synchronizable = createSynchronizable({ a: 42 });
 
-scheduleOnUI(() => {
-  // UI Runtime, UI thread
+function readOnUI() {
+  'worklet';
   const value = synchronizable.getBlocking();
-  console.log(value); // {a: 24}
-});
+  console.log(value); // { a: 24 }
+}
 
-// Could execute either before or after the UI Runtime reads the value.
 synchronizable.setBlocking({ a: 24 });
+scheduleOnUI(readOnUI);
 ```
+
+The RN Runtime updates the value before scheduling the UI read, so UI reads `{ a: 24 }`. Watch the value change in **Shared native memory**: both runtimes access the same Synchronizable.
+
+When reads and writes compete on different threads, the value read depends on which thread acquires the Synchronizable first. The diagram below illustrates a read that happens before a competing write.
 
 ![Synchronizable flow](https://docs.swmansion.com/react-native-worklets/img/synchronizable-flow.svg)
 
-Possible flow of operations for the above example, assuming that `getBlocking`
-function executes first. Time axis is not to scale.
+Competing operations with `getBlocking` executing first. Time axis is not to
+scale.
 
 ## Methods
 
@@ -81,13 +83,30 @@ Non-exclusively obtains the Synchronizable and returns its value. It never block
 
 ### setBlocking
 
-Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if either `getBlocking` or `setBlocking` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
+Exclusively obtains the Synchronizable and sets it to the provided value, potentially blocking if `getBlocking`, `setBlocking` or `setDirty` are being executed on another thread or if the Synchronizable is explicitly locked by another thread. You can also pass a setter function that receives the previous value and returns the new value. Synchronizable is **locked for the duration of the setter function execution**.
 
-```tsx
-// Set the value to 42
-synchronizable.setBlocking(42);
-// Increment the value by 1
-synchronizable.setBlocking((prev) => prev + 1);
+```js
+import {
+  createSynchronizable,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
+
+const counter = createSynchronizable(0, { fixedType: true });
+
+function report() {
+  const value = counter.getBlocking();
+  console.log(value); // 2: both increments have finished.
+}
+
+function increment() {
+  'worklet';
+  counter.setBlocking((previous) => previous + 1);
+  scheduleOnRN(report);
+}
+
+counter.setBlocking((previous) => previous + 1);
+scheduleOnUI(increment);
 ```
 
 For non-fixed-type Synchronizables, the value provided to `setBlocking` is serialized automatically. Fixed-type Synchronizables take the plain value without serialization.

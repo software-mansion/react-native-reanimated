@@ -1,6 +1,6 @@
 # createWorkletRuntime
 
-`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) possibly on different threads than [JS](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread) or [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). Use this function if you need to integrate with Worklet Runtimes in C++.
+`createWorkletRuntime` lets you create a new JS runtime which can be used to run [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) possibly on different threads than [JS](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model) or [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model). Use this function if you need to integrate with Worklet Runtimes in C++.
 
 The return value represents the runtime. You can pass it to the C++ side using JSI (JavaScript Interface) for further operations.
 
@@ -8,31 +8,54 @@ The return value represents the runtime. You can pass it to the C++ side using J
 
 ### Usage in JavaScript
 
-```jsx
-import { createWorkletRuntime } from 'react-native-worklets';
+The initializer runs in the new runtime **on the creating thread**, before `createWorkletRuntime` returns. It sets a global variable that the scheduled task later reads on the worker's own thread. Compare the thread IDs in the console: the initializer and creator match, while the scheduled task has a different ID.
 
-function App() {
-  const runtime = createWorkletRuntime({
-    name: 'background',
-    initializer: () => {
-      'worklet';
-      console.log('Runtime initialized!');
-    },
-  });
+```js
+import {
+  createWorkletRuntime,
+  getCurrentThreadId,
+  scheduleOnRuntime,
+} from 'react-native-worklets';
+
+function initialize() {
+  'worklet';
+  (globalThis.message = 'Ready');
+  console.log('Initializer thread:', getCurrentThreadId());
 }
+
+function runTask() {
+  'worklet';
+  console.log(globalThis.message); // Ready
+  console.log('Worker thread:', getCurrentThreadId());
+}
+
+const worker = createWorkletRuntime({
+  name: 'background',
+  initializer: initialize,
+});
+console.log('Creator thread:', getCurrentThreadId());
+scheduleOnRuntime(worker, runTask);
 ```
 
 ### Usage in C++
 
 ```cpp
-auto runtime = reanimated::extractWorkletRuntime(rt, runtimeValue);
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
-jsi::Runtime &rt = runtime->getJSIRuntime();
+void scheduleNativeWork(
+    facebook::jsi::Runtime &rnRuntime,
+    const facebook::jsi::Value &runtimeValue) {
+  auto worker = worklets::extractWorkletRuntime(rnRuntime, runtimeValue);
 
-auto worklet = reanimated::extractShareableOrThrow<reanimated::ShareableWorklet>(rt, workletValue);
-
-runtime->runGuarded(worklet, ...args);
+  worker->schedule([](facebook::jsi::Runtime &workerRuntime) {
+    workerRuntime.global().setProperty(workerRuntime, "nativeWorkFinished", true);
+  });
+}
 ```
+
+`rnRuntime` owns the incoming `runtimeValue`. The scheduled callback receives the worker's JSI runtime and runs on its queue with the runtime lock held. Keep the default queue and locking enabled for this example, and retain the Worker Runtime while its work is pending.
+
+Use `worker->runSync(...)` for a short synchronous operation on the calling thread.
 
 Type definitions
 
@@ -48,6 +71,7 @@ type WorkletRuntimeConfig = {
   initializer?: () => void;
   animationQueuePollingRate?: number;
   enableNetworking?: boolean;
+  abortable?: boolean;
   queue?: 'default' | object | null;
 } & (
   | { enableEventLoop?: boolean; enableLocking?: true }
@@ -84,7 +108,11 @@ When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, 
 
 ##### `enableNetworking`
 
-Determines whether the [networking API](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
+Determines whether the [networking API](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest`, `WebSocket` and their supporting globals - is installed on the Runtime. Defaults to `true`.
+
+##### `abortable`
+
+Determines whether the Runtime can be stopped with [abortWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/abortWorkletRuntime). With a custom queue, the Runtime's pending jobs are dropped only if the queue implements `AsyncQueue::stop`. Defaults to `false`.
 
 ##### `enableLocking`
 
@@ -105,7 +133,7 @@ Controls the queue used for scheduling worklet functions on this runtime. Defaul
 
 ### Returns
 
-`createWorkletRuntime` returns `WorkletRuntime` which is a `jsi::HostObject<reanimated::WorkletRuntime>`.
+`createWorkletRuntime` returns a JavaScript object backed by a C++ `worklets::WorkletRuntime`, which derives from `jsi::HostObject`.
 
 ## Remarks
 

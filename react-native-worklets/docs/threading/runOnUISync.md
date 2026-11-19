@@ -1,21 +1,20 @@
 # runOnUISync
 
-`runOnUISync` lets you run a [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) function synchronously on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+`runOnUISync` lets you run a [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) function synchronously on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#ui-runtime).
 
 To compare it with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) and [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUIAsync), see [Running worklet functions on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime).
 
 ## Reference
 
-```javascript
+```js
 import { runOnUISync } from 'react-native-worklets';
 
-const myFunction = (num: number): number => {
+function myFunction(num) {
   'worklet';
   return num + 1;
-};
+}
 
-const result: number = runOnUISync(myFunction, 0);
-
+const result = runOnUISync(myFunction, 0);
 console.log(result); // 1
 ```
 
@@ -32,7 +31,7 @@ function runOnUISync<Args extends unknown[], ReturnValue>(
 
 #### worklet
 
-A function you want to execute on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+A function you want to execute on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#ui-runtime).
 
 #### args
 
@@ -44,7 +43,7 @@ Arguments to pass to the function.
 
 ## Remarks
 
-* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#ui-runtime).
 
 ## Call table
 

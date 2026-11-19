@@ -4,26 +4,27 @@
 
 ## Reference
 
-```javascript
+```js
 import {
-  runOnRuntimeAsyncWithId,
   createWorkletRuntime,
+  runOnRuntimeAsyncWithId,
 } from 'react-native-worklets';
 
-const backgroundRuntime = createWorkletRuntime({ name: 'background' });
-
-async function performHeavyComputation(data: number[]) {
-  const result = await runOnRuntimeAsyncWithId(
-    backgroundRuntime.runtimeId,
-    (numbers: number[]) => {
-      'worklet';
-      return numbers.reduce((sum, n) => sum + n, 0);
-    },
-    data
-  );
-
-  console.log('Computation result:', result);
+function sum(numbers) {
+  'worklet';
+  return numbers.reduce((total, n) => total + n, 0);
 }
+
+const workletRuntime = createWorkletRuntime({ name: 'background' });
+const data = [1, 2, 3, 4];
+const pending = runOnRuntimeAsyncWithId(
+  workletRuntime.runtimeId,
+  sum,
+  data
+);
+console.log('The RN Runtime continues while the worker computes');
+const result = await pending;
+console.log('Computation result:', result); // 10
 ```
 
 Type definitions
@@ -40,15 +41,15 @@ function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime) to run the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime).
 
 ## Remarks
 

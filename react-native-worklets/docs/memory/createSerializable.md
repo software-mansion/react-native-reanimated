@@ -6,19 +6,37 @@ The returned reference cannot be manipulated as it doesn't represent any standar
 
 **Functions like `scheduleOnUI`, `runOnUISync`, `scheduleOnRuntime` etc. automatically convert values to Serializable references.**
 
+See the [passing a copy simulation](https://docs.swmansion.com/react-native-worklets/docs/memory/serializable#passing-a-copy) to follow an object from RN to UI and see why changing the received copy leaves the original unchanged.
+
 ## Reference
 
-```typescript
-import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+```js
+import {
+  createSerializable,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
 
-const object = {
-  a: 1,
-  b: 2,
-  c: 3,
-};
+(globalThis.settings = { volume: 10 });
+const settingsRef = createSerializable(globalThis.settings);
 
-const serializableRef = createSerializable(object);
+function logOriginal() {
+  console.log('RN original:', globalThis.settings.volume); // 10
+}
+
+function changeCopy(settings) {
+  'worklet';
+  (globalThis.settings = settings);
+  (globalThis.settings.volume = 20);
+  console.log('UI copy:', globalThis.settings.volume); // 20
+  scheduleOnRN(logOriginal);
+}
+
+// The Serializable is deserialized into a JavaScript object on UI.
+scheduleOnUI(changeCopy, settingsRef);
 ```
+
+The `createSerializable` call creates the immutable value shown in **Shared native memory**. The reference is then passed to UI, where it is deserialized into a separate JavaScript object. Changing UI's copy leaves both the Serializable and RN's original unchanged.
 
 Type definitions
 
@@ -66,4 +84,4 @@ The JavaScript value to be converted into a Serializable reference. It must be o
 * This function is rarely used as in almost all cases the Worklets library handles the creation of Serializables for you.
 * This function includes cycle detection to prevent infinite recursion.
 * `jsi::NativeState` of a passed value is preserved during serialization.
-* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](https://docs.swmansion.com/react-native-worklets/docs/memory/makeShareableCloneOnUIRecursive) instead.
+* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), `createSerializable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#rn-runtime). In Bundle Mode, it can be called from any Runtime. If you need to create a Serializable on a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime) in Legacy Eval Mode, use deprecated [makeShareableCloneOnUIRecursive](https://docs.swmansion.com/react-native-worklets/docs/memory/makeShareableCloneOnUIRecursive) instead.

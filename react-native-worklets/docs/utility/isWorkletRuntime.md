@@ -1,29 +1,31 @@
 # isWorkletRuntime
 
-Checks if the current runtime is a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime), either the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime) or a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+Checks if the current runtime is a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime), either the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#ui-runtime) or a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worker-runtime).
 
 ## Reference
 
-```typescript
+```js
 import {
   isWorkletRuntime,
+  createWorkletRuntime,
   scheduleOnUI,
   scheduleOnRuntime,
-  createWorkletRuntime,
 } from 'react-native-worklets';
 
-console.log(isWorkletRuntime()); // false
+function checkUI() {
+  'worklet';
+  console.log(isWorkletRuntime()); // true (UI Runtime)
+}
 
-scheduleOnUI(() => {
-  // highlight-next-line
-  console.log(isWorkletRuntime()); // true
-});
+function checkWorker() {
+  'worklet';
+  console.log(isWorkletRuntime()); // true (Worker Runtime)
+}
 
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
-  // highlight-next-line
-  console.log(isWorkletRuntime()); // true
-});
+console.log(isWorkletRuntime()); // false (RN Runtime)
+scheduleOnUI(checkUI);
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+scheduleOnRuntime(workerRuntime, checkWorker);
 ```
 
 Type definitions
@@ -34,7 +36,7 @@ function isWorkletRuntime(): boolean;
 
 ### Returns
 
-`true` if the current runtime is a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime), `false` otherwise.
+`true` if the current runtime is a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime), `false` otherwise.
 
 ## Remarks
 

@@ -77,12 +77,12 @@ type Shareable<
 
 ## Reference
 
-```tsx
+```js
 import { createShareable, UIRuntimeId } from 'react-native-worklets';
 
 const shareable = createShareable(UIRuntimeId, 42);
-
-console.log(shareable.getSync()); // 42
+const value = shareable.getSync();
+console.log(value); // 42
 ```
 
 ## Shareable Host
@@ -92,6 +92,26 @@ console.log(shareable.getSync()); // 42
 ### value
 
 A property holding the current value of the Shareable.
+
+```js
+import {
+  createShareable,
+  runOnUISync,
+  UIRuntimeId,
+} from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+
+function updateOnHost() {
+  'worklet';
+  (shareable.value = shareable.value + 1);
+  console.log('Host:', shareable.value); // 43
+}
+
+runOnUISync(updateOnHost);
+const value = shareable.getSync();
+console.log('Guest:', value); // 43
+```
 
 ### isHost
 
@@ -108,6 +128,16 @@ A boolean property indicating whether the Shareable is being accessed from the H
 ### getAsync
 
 An asynchronous method that returns a Promise that resolves to the current value of the Shareable Host. The value is obtained by scheduling a callback on the Host Runtime, which reads the `value` of the Shareable Host and serializes it as the result of the callback.
+
+```js
+import { createShareable, UIRuntimeId } from 'react-native-worklets';
+
+const shareable = createShareable(UIRuntimeId, 42);
+const pending = shareable.getAsync();
+console.log('The RN Runtime continues while the host reads the value');
+const value = await pending;
+console.log(value); // 42
+```
 
 ### getSync
 

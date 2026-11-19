@@ -1,28 +1,31 @@
 # isUIRuntime
 
-Checks if the current runtime is the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
+Checks if the current runtime is the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#ui-runtime).
 
 ## Reference
 
-```typescript
+```js
 import {
   isUIRuntime,
+  createWorkletRuntime,
   scheduleOnUI,
   scheduleOnRuntime,
-  createWorkletRuntime,
 } from 'react-native-worklets';
 
-console.log(isUIRuntime()); // false
+function checkUI() {
+  'worklet';
+  console.log(isUIRuntime()); // true (UI Runtime)
+}
 
-scheduleOnUI(() => {
-  // highlight-next-line
-  console.log(isUIRuntime()); // true
-});
+function checkWorker() {
+  'worklet';
+  console.log(isUIRuntime()); // false (Worker Runtime)
+}
 
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
-  console.log(isUIRuntime()); // false
-});
+console.log(isUIRuntime()); // false (RN Runtime)
+scheduleOnUI(checkUI);
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+scheduleOnRuntime(workerRuntime, checkWorker);
 ```
 
 Type definitions
@@ -33,7 +36,7 @@ function isUIRuntime(): boolean;
 
 ### Returns
 
-`true` if the current runtime is the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime), `false` otherwise.
+`true` if the current runtime is the [UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#ui-runtime), `false` otherwise.
 
 ## Remarks
 

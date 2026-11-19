@@ -1,17 +1,20 @@
 # scheduleOnRuntime
 
-`scheduleOnRuntime` lets you schedule a [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) to be executed on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+`scheduleOnRuntime` lets you schedule a [worklet function](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) to be executed on a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worker-runtime).
 
 ## Reference
 
-```javascript
-import { scheduleOnRuntime, createWorkletRuntime } from 'react-native-worklets';
+```js
+import { createWorkletRuntime, scheduleOnRuntime } from 'react-native-worklets';
+
+function greet(greeting) {
+  'worklet';
+  console.log(`${greeting} from the background Worklet Runtime`);
+}
 
 const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-scheduleOnRuntime(workletRuntime, (greeting: string) => {
-  console.log(`${greeting} from the background Worklet Runtime`);
-}, 'Hello');
+scheduleOnRuntime(workletRuntime, greet, 'Hello');
+console.log('The RN Runtime continues');
 ```
 
 Type definitions
@@ -32,11 +35,11 @@ The worklet runtime to schedule the worklet function on.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+A reference to a function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worker-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+Arguments to the function you want to execute on the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worker-runtime).
 
 ## Remarks
 

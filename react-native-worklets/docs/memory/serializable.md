@@ -17,6 +17,42 @@ type SerializableRef<TValue = unknown> = {
 };
 ```
 
+## Passing a copy
+
+First, `createSerializable(settings)` creates an immutable serialized representation of the object in native memory and returns an opaque reference. Passing that reference to `scheduleOnUI` reconstructs the value as a JavaScript object on UI.
+
+```js
+import {
+  createSerializable,
+  scheduleOnRN,
+  scheduleOnUI,
+} from 'react-native-worklets';
+
+(globalThis.settings = { volume: 10 });
+const settingsRef = createSerializable(globalThis.settings);
+
+function logOriginal() {
+  console.log('RN original:', globalThis.settings.volume); // 10
+}
+
+function changeCopy(settings) {
+  'worklet';
+  (globalThis.settings = settings);
+  (globalThis.settings.volume = 20);
+  console.log('UI copy:', globalThis.settings.volume); // 20
+  scheduleOnRN(logOriginal);
+}
+
+// The Serializable is deserialized into a JavaScript object on UI.
+scheduleOnUI(changeCopy, settingsRef);
+```
+
+Watch the **Serializable (immutable)** appear in **Shared native memory** with `{ volume: 10 }`. UI receives a JavaScript copy and changes it to `{ volume: 20 }`, visible under its **Globals**. Both the Serializable and RN's original stay at `{ volume: 10 }`.
+
+The Serializable holds an immutable representation of the value; the JavaScript object reconstructed on UI is a separate, mutable copy. Changing that copy does not update the original object or the Serializable. This example stores each object on `globalThis` to make the two copies visible; globals themselves are not shared between runtimes.
+
+Usually, you can pass the original value directly: `scheduleOnUI(changeCopy, globalThis.settings)`. Scheduling functions automatically serialize their arguments. This example calls `createSerializable` explicitly to show the intermediate representation.
+
 ## Supported types
 
 If you want to transfer objects with custom prototypes across Runtimes, you can use [registerCustomSerializable](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable) to define your own serialization and deserialization logic.

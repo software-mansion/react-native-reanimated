@@ -2,7 +2,7 @@ Deprecated API.
 
 # runOnJS
 
-`runOnJS` lets you asynchronously run non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions that couldn't otherwise run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
+`runOnJS` lets you asynchronously run non-[workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) functions that couldn't otherwise run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model). This applies to most external libraries as they don't have their functions marked with `"worklet";` directive.
 
 `runOnJS` is usually used to update React state either on animation finish or conditionally within a gesture.
 
@@ -29,7 +29,7 @@ function runOnJS<A extends any[], R>(
 
 #### fn
 
-A reference to a function you want to execute on the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread) from the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread). Arguments to your function have to be passed to the function returned from `runOnJS` i.e. `runOnJS(setValue)(10);`.
+A reference to a function you want to execute on the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model) from the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model). Arguments to your function have to be passed to the function returned from `runOnJS` i.e. `runOnJS(setValue)(10);`.
 
 ### Returns
 
@@ -43,7 +43,7 @@ A reference to a function you want to execute on the [JavaScript thread](https:/
 
 ## Remarks
 
-* Functions passed to `runOnJS` must be defined in the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread):
+* Functions passed to `runOnJS` must be defined in the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model) scope, i.e. in the component body or the global scope. The code below won't work because `myFunction` is defined in the `withTiming` callback, which is only executed in the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model):
 
 ```jsx
 withTiming(0, {}, () => {
@@ -57,4 +57,4 @@ withTiming(0, {}, () => {
 
 * It's a common mistake to execute function inside of runOnJS like this: ~~`runOnJS(setValue(10))()`~~. Here, the correct usage would be `runOnJS(setValue)(10)`.
 
-* It's safe to run functions via `runOnJS` on the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread), as this has no effect.
+* It's safe to run functions via `runOnJS` on the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model). In this case the function is scheduled with `queueMicrotask` and runs asynchronously.

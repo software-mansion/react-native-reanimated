@@ -2,7 +2,7 @@ Deprecated API.
 
 # runOnRuntime
 
-`runOnRuntime` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on a separate worklet runtime on a separate thread.
+`runOnRuntime` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) functions on a separate worklet runtime on a separate thread.
 
 ## Reference
 
@@ -54,7 +54,7 @@ A reference to a function you want to execute on the worklet runtime passed as `
 
 * It's a common mistake to execute function inside of `runOnRuntime` like this: ~~`runOnRuntime(myWorklet(10))()`~~. Here, the correct usage would be `runOnRuntime(myWorklet)(10)`.
 
-* The callback passed as the argument will not be [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
+* The callback passed as the argument will not be [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) automatically. You need to add `'worklet';` directive manually to allow the function to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model).
 
 * You may call `runOnRuntime` on any runtime, including the RN runtime, UI runtime and other worklet runtimes.
 

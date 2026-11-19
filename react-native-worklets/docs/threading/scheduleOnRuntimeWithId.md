@@ -4,14 +4,20 @@
 
 ## Reference
 
-```javascript
-import { scheduleOnRuntimeWithId, createWorkletRuntime } from 'react-native-worklets';
+```js
+import {
+  createWorkletRuntime,
+  scheduleOnRuntimeWithId,
+} from 'react-native-worklets';
+
+function greet(greeting) {
+  'worklet';
+  console.log(`${greeting} from the background Worklet Runtime`);
+}
 
 const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-scheduleOnRuntimeWithId(workletRuntime.runtimeId, (greeting: string) => {
-  console.log(`${greeting} from the background Worklet Runtime`);
-}, 'Hello');
+scheduleOnRuntimeWithId(workletRuntime.runtimeId, greet, 'Hello');
+console.log('The RN Runtime continues');
 ```
 
 Type definitions
@@ -28,15 +34,15 @@ function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
 
 ### runtimeId
 
-The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) to schedule the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
+The id of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime) to schedule the worklet function on. You can get the id from the runtime object by accessing its `runtimeId` property.
 
 ### worklet
 
-A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
+A reference to a function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime).
 
 ### args
 
-Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime).
+Arguments to the function you want to execute on the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime).
 
 ## Remarks
 

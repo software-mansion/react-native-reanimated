@@ -6,23 +6,30 @@
 
 Creates a new [Shareable](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable) holding the provided initial value. Returns the created Shareable.
 
-You have to explicitly declare which [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
+You have to explicitly declare which [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime) will host the Shareable by passing its **runtimeId**.
 
 ## Reference
 
-```tsx
+```js
 import {
   createShareable,
   createWorkletRuntime,
   UIRuntimeId,
 } from 'react-native-worklets';
 
-// Shareable hosted on the UI Runtime
+// Shareable hosted on the UI Runtime.
 const uiShareable = createShareable(UIRuntimeId, 'hello');
 
-// Shareable hosted on a Worker Runtime
+// Shareable hosted on a Worker Runtime.
 const workerRuntime = createWorkletRuntime({ name: 'background' });
-const workerShareable = createShareable(workerRuntime.runtimeId, 'hello');
+const workerShareable = createShareable(
+  workerRuntime.runtimeId,
+  'hello'
+);
+
+const uiValue = uiShareable.getSync();
+const workerValue = workerShareable.getSync();
+console.log(uiValue, workerValue);
 ```
 
 Type definitions
@@ -58,7 +65,7 @@ type ShareableGuestDecorator<TValue = unknown, TDecorated = unknown> = (
 
 ### hostRuntimeId
 
-The **runtimeId** of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime) that will host the Shareable. To host on the UI Runtime, use the exported constant [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId). To host on a Worker Runtime created with [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime), pass its `runtimeId` property.
+The **runtimeId** of the [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime) that will host the Shareable. To host on the UI Runtime, use the exported constant [UIRuntimeId](https://docs.swmansion.com/react-native-worklets/docs/threading/uiRuntimeId). To host on a Worker Runtime created with [createWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime), pass its `runtimeId` property.
 
 Hosting on runtimes other than the UI Runtime is available since version 0.9.0.
 
@@ -72,11 +79,11 @@ Optional advanced configuration for the Shareable.
 
 #### hostDecorator
 
-A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that takes the created [Shareable Host](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) that takes the created [Shareable Host](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-host) and decorates it with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### guestDecorator
 
-A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) that decorates each [Shareable Guest](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
+A [worklet function](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) that decorates each [Shareable Guest](https://docs.swmansion.com/react-native-worklets/docs/memory/shareable#shareable-guest) created for the Shareable with additional properties or methods. You can use it to add custom logic to the Shareable, like adding more APIs, overriding existing ones, or adding side effects to them. It must return the same reference it received.
 
 #### initSynchronously
 

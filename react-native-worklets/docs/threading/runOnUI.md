@@ -2,7 +2,7 @@ Deprecated API.
 
 # runOnUI
 
-`runOnUI` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
+`runOnUI` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) functions on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model).
 
 Most commonly used either with an `useEffect` to start an animation on component mount/unmount or with [`measure`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/measure) and [`scrollTo`](https://docs.swmansion.com/react-native-reanimated/docs/scroll/scrollTo) functions which have implementations only on the UI thread.
 
@@ -35,7 +35,7 @@ function runOnUI<A extends any[], R>(
 
 #### fn
 
-A reference to a function you want to execute on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread) from the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#javascript-thread). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
+A reference to a function you want to execute on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model) from the [JavaScript thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model). Arguments to your function have to be passed to the function returned from `runOnUI` i.e. `runOnUI(myWorklet)(10);`.
 
 ### Returns
 
@@ -53,7 +53,7 @@ A reference to a function you want to execute on the [UI thread](https://docs.sw
 
 * It's a common mistake to execute function inside of runOnUI like this: ~~`runOnUI(myWorklet(10))()`~~. Here, the correct usage would be `runOnUI(myWorklet)(10)`.
 
-* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
+* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model).
 
 * Make sure not to execute `runOnUI` on the UI thread as this will result in an error.
 

@@ -8,7 +8,7 @@ You can pass a config option to create [Synchronizable Fixed](https://docs.swman
 
 ## Reference
 
-```tsx
+```js
 import { createSynchronizable } from 'react-native-worklets';
 
 const synchronizable = createSynchronizable({ a: 42 });
@@ -49,4 +49,4 @@ Optional configuration for the Synchronizable. An object with the following prop
 
 ## Remarks
 
-* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.
+* In [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode), `createSynchronizable` can be called only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#rn-runtime). In Bundle Mode, it can be called on any Runtime.

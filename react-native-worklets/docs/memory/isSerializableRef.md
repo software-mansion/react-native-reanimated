@@ -4,11 +4,16 @@ Asserts whether a value is a [Serializable](https://docs.swmansion.com/react-nat
 
 ## Reference
 
-```typescript
-import { isSerializableRef } from 'react-native-worklets';
-const maybeSerializableRef = ...; // type: unknown
+The reference returns `true`; the original JavaScript object returns `false`.
 
-console.log(isSerializableRef(maybeSerializableRef)); // logs `true` if `maybeSerializableRef` is a SerializableRef.
+```js
+import { createSerializable, isSerializableRef } from 'react-native-worklets';
+
+const value = { count: 0 };
+const reference = createSerializable(value);
+
+console.log(isSerializableRef(reference)); // true
+console.log(isSerializableRef(value)); // false
 ```
 
 Type definitions
@@ -26,3 +31,4 @@ The value to be checked.
 ## Remarks
 
 * `isSerializableRef` can be called from any JavaScript Runtime.
+* On Web, `isSerializableRef` always returns `true`.

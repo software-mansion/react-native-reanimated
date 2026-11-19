@@ -1,28 +1,31 @@
 # isRNRuntime
 
-Checks if the current runtime is the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#rn-runtime).
+Checks if the current runtime is the [React Native Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#rn-runtime).
 
 ## Reference
 
-```typescript
+```js
 import {
   isRNRuntime,
+  createWorkletRuntime,
   scheduleOnUI,
   scheduleOnRuntime,
-  createWorkletRuntime,
 } from 'react-native-worklets';
 
-// highlight-next-line
-console.log(isRNRuntime()); // true
+function checkUI() {
+  'worklet';
+  console.log(isRNRuntime()); // false (UI Runtime)
+}
 
-scheduleOnUI(() => {
-  console.log(isRNRuntime()); // false
-});
+function checkWorker() {
+  'worklet';
+  console.log(isRNRuntime()); // false (Worker Runtime)
+}
 
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
-  console.log(isRNRuntime()); // false
-});
+console.log(isRNRuntime()); // true (RN Runtime)
+scheduleOnUI(checkUI);
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+scheduleOnRuntime(workerRuntime, checkWorker);
 ```
 
 Type definitions

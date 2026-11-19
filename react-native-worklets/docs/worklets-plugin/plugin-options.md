@@ -17,6 +17,7 @@ interface PluginOptions {
   hermesBytecode?: boolean;
   omitNativeOnlyData?: boolean;
   relativeSourceLocation?: boolean;
+  silenceDangerousPathsWarning?: boolean;
   strictGlobal?: boolean;
   substituteWebPlatformChecks?: boolean;
   importForwarding?: {
@@ -108,7 +109,7 @@ This option turns off the source map generation for worklet functions. Mostly us
 Defaults to `false`.
 
 Disables [Worklet Classes
-support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#experimental-worklet-classes).
+support](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#deprecated-worklet-classes).
 You might need to disable this feature when using [Custom
 Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/registerCustomSerializable).
 
@@ -246,6 +247,17 @@ Defaults to `false`.
 
 This option dictates the passed file location for a worklet function's source map. If you enable this option, the file paths will be relative to `process.cwd` (the current directory where Babel executes). This can be handy for Jest test snapshots to ensure consistent results across machines.
 
+### silenceDangerousPathsWarning
+
+Defaults to `false`.
+
+In Bundle Mode, the plugin prints a warning when an
+[`importForwarding.relativePaths`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#importforwardingrelativepaths) entry has only
+common folder names, such as `src`, `lib`, `app` or `app/src`. Such a path also
+matches folders inside packages in `node_modules`. Set this option to `true` to
+hide the warning, for example when you have checked that the path matches only
+your code.
+
 ### strictGlobal
 
 > NOTE
@@ -254,7 +266,7 @@ This option dictates the passed file location for a worklet function's source ma
 
 Defaults to `false`.
 
-This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/closures#global-scoping).
+This option changes how global variables are handled inside worklet functions. You can read more about closures and global scoping [here](https://docs.swmansion.com/react-native-worklets/docs/concepts/closures#global-scoping).
 
 With this option disabled, accessing global variables inside worklet functions will lead to capturing them from the scheduler scope:
 
@@ -311,7 +323,9 @@ Mode. See the dedicated page for the full overview.
 
 Defaults to an empty array.
 
-List of exact module names that should be forwarded as imports inside worklet functions.
+Modules in this list are forwarded as imports inside worklet functions. Only
+named and default imports are forwarded; namespace imports such as
+`import * as lib from 'my-library'` are captured from the closure instead.
 
 For example, to use all exports from `my-library` directly on the Worklet
 Runtime, add it to the list:
@@ -330,8 +344,9 @@ that import into the worklet body:
 Before
 After (conceptually)
 
-The module name has to be an exact match — with `my-library` in the list, an
-import from `my-library/some-file` won't be forwarded:
+The module name has to be an exact match. With `my-library` in the list, an
+import from `my-library/some-file` isn't forwarded. Add `my-library/some-file`
+to the list to forward it too:
 
 Before
 After (conceptually)
@@ -376,6 +391,30 @@ After (conceptually)
 
 You can also narrow the path to a subdirectory — e.g. `my-library/src` or
 `my-library/src/utils` — to forward imports from only part of the library.
+
+The plugin compares each path with the path of the module as a sequence of whole
+path segments (folder names and the file name), which can appear anywhere in the path. For a module inside
+`node_modules`, the plugin compares only the part after the last `node_modules`,
+which starts with the package name. So `my-library` matches
+`node_modules/my-library/index.js`, and `my-library/src` matches
+`node_modules/my-library/src/utils.js`.
+
+> WARNING
+>
+> A common folder name, such as `src`, also matches every package that has a folder
+> with that name. For example, `src` matches `node_modules/react-native-reanimated/src/...`.
+> The plugin then forwards the relative imports inside that package. If a forwarded
+> import loads code that cannot run on the Worklet Runtime, the app can crash. In
+> development builds, the error can be
+> `Accessing __fbBatchedBridgeConfig is not allowed on Worklet Runtimes`.
+>
+> Use a sequence of segments that only your code has, for example
+> `@my-scope/my-library/src` or a folder name that is unique to your app. Check that
+> the sequence does not also occur in the paths of your dependencies. For example,
+> `my-library` also matches `node_modules/other-lib/my-library/index.js`.
+>
+> In Bundle Mode, the plugin prints a warning when a path has only common folder names. You can
+> hide it with [`silenceDangerousPathsWarning`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#silencedangerouspathswarning).
 
 `moduleNames` won't work here: adding `'./utils'` to it would forward every
 `'./utils'` import across the bundle, potentially breaking other libraries

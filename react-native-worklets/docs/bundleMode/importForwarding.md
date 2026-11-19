@@ -12,6 +12,7 @@ Say you have the following code:
 
 ```javascript
 import { foo } from 'my-library';
+import { scheduleOnUI } from 'react-native-worklets';
 
 function worklet() {
   'worklet';
@@ -42,6 +43,7 @@ And then you use it like this:
 
 ```javascript
 import { incrementValue, getValue } from 'my-library';
+import { scheduleOnUI } from 'react-native-worklets';
 
 incrementValue();
 
@@ -71,6 +73,7 @@ You can write the same code explicitly, without ambiguity.
 
 ```javascript
 import { incrementValue, getValue } from 'my-library';
+import { scheduleOnUI } from 'react-native-worklets';
 
 incrementValue();
 const value = getValue();
@@ -91,6 +94,7 @@ the state of the RN Runtime.
 
 ```javascript
 import { incrementValue } from 'my-library';
+import { scheduleOnUI } from 'react-native-worklets';
 
 incrementValue();
 
@@ -160,6 +164,7 @@ Then rewrite the code like this:
 
 ```javascript
 import { incrementValue, getValue } from 'my-library';
+import { scheduleOnUI } from 'react-native-worklets';
 
 incrementValue();
 
@@ -183,6 +188,7 @@ Runtime? The same closure pattern still works:
 
 ```javascript
 import { incrementValue, getValue } from 'my-library';
+import { scheduleOnUI } from 'react-native-worklets';
 
 incrementValue();
 
@@ -203,5 +209,5 @@ scheduleOnUI(printRN); // logs 1
 scheduleOnUI(printWorklet); // logs 0
 ```
 
-To learn more about closures, see [this section](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/closures)
+To learn more about closures, see [this section](https://docs.swmansion.com/react-native-worklets/docs/concepts/closures)
 of the Worklets documentation.

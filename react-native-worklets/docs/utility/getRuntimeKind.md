@@ -1,6 +1,6 @@
 # getRuntimeKind
 
-`getRuntimeKind` allows you to get the [kind of the current runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds). It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
+`getRuntimeKind` allows you to get the [kind of the current runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds). It's useful in advanced scenarios, where you need to check the runtime kind before executing certain code paths or where you need to have separate implementations per runtime.
 
 `getRuntimeKind` is a direct replacement for the deprecated `_WORKLET` global variable.
 
@@ -8,24 +8,28 @@ We recommend using handy shorthands like [isRNRuntime](https://docs.swmansion.co
 
 ## Reference
 
-```typescript
+```js
 import {
   getRuntimeKind,
   createWorkletRuntime,
-  scheduleOnRuntime,
   scheduleOnUI,
+  scheduleOnRuntime,
 } from 'react-native-worklets';
 
-console.log(getRuntimeKind()); // 1 (RN Runtime)
-
-scheduleOnUI(() => {
+function checkUI() {
+  'worklet';
   console.log(getRuntimeKind()); // 2 (UI Runtime)
-});
+}
 
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
+function checkWorker() {
+  'worklet';
   console.log(getRuntimeKind()); // 3 (Worker Runtime)
-});
+}
+
+console.log(getRuntimeKind()); // 1 (RN Runtime)
+scheduleOnUI(checkUI);
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+scheduleOnRuntime(workerRuntime, checkWorker);
 ```
 
 Type definitions

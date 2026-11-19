@@ -28,6 +28,8 @@ module.exports = {
 
 Oxc plugin
 
+The Oxc plugin doesn't need any options. [`bundleMode`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#bundlemode) and [`strictGlobal`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#strictglobal) are always on.
+
 ```javascript {7}
 module.exports = {
   presets: [
@@ -42,13 +44,13 @@ module.exports = {
 
 ## Configure Metro
 
-2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
+2. **Modify your Metro configuration**. Metro needs to be configured to pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:
 
 Expo
 
 ```javascript {3,10}
 // Learn more https://docs.expo.io/guides/customizing-metro
-const { getDefaultConfig, mergeConfig } = require("expo/metro-config");
+const { getDefaultConfig } = require("expo/metro-config");
 const { getBundleModeMetroConfig } = require("react-native-worklets/bundleMode");
 
 /** @type {import('expo/metro-config').MetroConfig} */
@@ -107,7 +109,7 @@ module.exports = getBundleModeMetroConfig(
 
 If you run the app after just executing the above steps, you will see an error "Failed to get the SHA-1 for ...":
 
-This is due to fact that Bundle Mode isolates each worklet function in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
+This is due to the fact that Bundle Mode isolates each worklet function in a separate module (file) on the fly and the Metro bundler doesn't index these isolated modules in time.
 
 To fix this issue you can do one of the following:
 
@@ -122,12 +124,12 @@ This patch is a temporary workaround until necessary changes are merged into Met
 
 React Native's Fast Refresh (hot reload) feature doesn't apply to Worklet Runtimes out of the box. Therefore, when you change a worklet function's code you will see an error "\[Worklets] Unable to resolve worklet with hash ...".
 
-This is due to fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that a new worklet function with the given hash exists.
+This is due to the fact that the Fast Refresh update wasn't sent to the Worklet Runtime and it doesn't know that a new worklet function with the given hash exists.
 
-To fix this issue you can do one of two thing:
+To fix this issue you can do one of the following:
 
 1. Reload the app on each worklet code change. This virtually defeats the purpose of Fast Refresh. Not recommended.
-2. Patch `metro-runtime` package for it to send Fast Refresh updates to Worklet Runtimes. This is the recommended approach. **This patch does not require building React Native from source** You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+2. Patch `metro-runtime` package for it to send Fast Refresh updates to Worklet Runtimes. This is the recommended approach. **This patch does not require building React Native from source**. You can find patching instructions in the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
 
 This patch is a temporary workaround until necessary changes are merged into Metro.
 

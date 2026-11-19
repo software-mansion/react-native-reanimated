@@ -1,23 +1,24 @@
 # getCurrentThreadId
 
-`getCurrentThreadId` returns the id of the thread which currently executes JavaScript on the calling [Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds). The returned id is a stringified result of [`std::this_thread::get_id()`](https://en.cppreference.com/cpp/thread/get_id).
+`getCurrentThreadId` returns the id of the thread which currently executes JavaScript on the calling [Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds). The returned id is a stringified result of [`std::this_thread::get_id()`](https://en.cppreference.com/cpp/thread/get_id).
 
 ## Reference
 
-```javascript
-import { getCurrentThreadId, runOnUISync, scheduleOnUI } from 'react-native-worklets';
+```js
+import {
+  getCurrentThreadId,
+  runOnUISync,
+  scheduleOnUI,
+} from 'react-native-worklets';
 
-console.log(getCurrentThreadId()); // The JS thread id.
-
-scheduleOnUI(() => {
+function logThread() {
   'worklet';
-  console.log(getCurrentThreadId()); // The UI thread id.
-});
+  console.log(getCurrentThreadId());
+}
 
-runOnUISync(() => {
-    'worklet';
-    console.log(getCurrentThreadId()); // The JS thread id.
-})
+logThread(); // The JS thread id.
+scheduleOnUI(logThread); // The UI thread id.
+runOnUISync(logThread); // The JS thread id.
 ```
 
 Type definitions

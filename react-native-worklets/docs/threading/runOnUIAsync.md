@@ -1,22 +1,24 @@
 # runOnUIAsync
 
-`runOnUIAsync` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) functions on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
+`runOnUIAsync` lets you asynchronously run [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) functions on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model).
 It returns a Promise of the worklet function's return value. The Promise is resolved asynchronously, not immediately after the callback execution.
 
 To compare it with [`scheduleOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/scheduleOnUI) and [`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUISync), see [Running worklet functions on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/running-on-the-ui-runtime).
 
 ## Reference
 
-```javascript
+```js
 import { runOnUIAsync } from 'react-native-worklets';
 
-// RN Runtime, JS thread
-
-const result: Promise<number> = runOnUIAsync((): number => {
+function compute() {
+  'worklet';
   return 1;
-});
+}
 
-await result; // 1
+const pending = runOnUIAsync(compute);
+console.log('The RN Runtime continues while the result is pending');
+const result = await pending;
+console.log(result); // 1
 ```
 
 Type definitions
@@ -38,7 +40,7 @@ A reference to a function you want to execute on the UI thread. Arguments to you
 
 * It's a common mistake to execute function inside of `runOnUIAsync` like this: ~~`runOnUIAsync(myWorklet(10))`~~. Here, the correct usage would be `runOnUIAsync(myWorklet, 10)`.
 
-* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize) and ready to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#ui-thread).
+* The callback passed as the argument is automatically [workletized](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) and ready to be run on the [UI thread](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#the-react-native-model).
 
 ## Call table
 

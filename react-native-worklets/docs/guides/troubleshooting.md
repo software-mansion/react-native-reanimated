@@ -4,7 +4,7 @@
 
 **Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
 
-**Solution:** See [installation docs](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/getting-started#installation) for more information.
+**Solution:** See [installation docs](https://docs.swmansion.com/react-native-worklets/docs/getting-started/installation) for more information.
 
 ### Native part of Worklets doesn't seem to be initialized
 
@@ -58,15 +58,15 @@ See [Mismatch between JavaScript part and native part of Worklets](https://docs.
 
 ### TypeError: right operand of 'in' is not an object
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
+**Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ### Cannot read property 'createSerializableString' of undefined
 
-**Problem:** This happens because Expo apps disable [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) by default. This breaks the initialization pipeline for the Worklets library.
+**Problem:** Worklets 0.13 and older require [inlineRequires](https://metrobundler.dev/docs/configuration/#gettransformoptions) in Bundle Mode. Expo apps disable `inlineRequires` by default. This breaks the initialization pipeline for the Worklets library.
 
-**Solution:** See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445) for the current workaround (enable `inlineRequires` in `metro.config.js`).
+**Solution:** Upgrade to Worklets 0.14 or newer, which works without `inlineRequires`. On older versions, enable `inlineRequires` in `metro.config.js`. See [issue #9445](https://github.com/software-mansion/react-native-reanimated/issues/9445).
 
 ## Warnings
 
@@ -190,7 +190,7 @@ In this example, `callee` cannot be called from a worklet function ran on UI Run
  }
 ```
 
-Check [this page](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet) to learn more about worklet functions.
+Check [this page](https://docs.swmansion.com/react-native-worklets/docs/tutorials/concurrency-model#worklet-functions) to learn more about worklet functions.
 
 ### Tried to synchronously call a non-worklet function on the UI thread
 

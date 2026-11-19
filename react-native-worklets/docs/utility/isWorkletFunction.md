@@ -4,25 +4,25 @@
 
 ## Reference
 
-```javascript
+Both checks run on the RN Runtime. Checking a function doesn't execute it or schedule it on another thread.
+
+```js
 import { isWorkletFunction } from 'react-native-worklets';
 
-const workletFunction = () => {
+function workletFunction() {
   'worklet';
   return 1;
-};
+}
+
+function nonWorkletFunction() {
+  return 1;
+}
 
 const isWorklet = isWorkletFunction(workletFunction);
-
 console.log(isWorklet); // true
 
-const nonWorkletFunction = () => {
-  return 1;
-};
-
-const isNonWorkletFunction = isWorkletFunction(nonWorkletFunction);
-
-console.log(isNonWorkletFunction); // false
+const isNonWorklet = isWorkletFunction(nonWorkletFunction);
+console.log(isNonWorklet); // false
 ```
 
 Type definitions

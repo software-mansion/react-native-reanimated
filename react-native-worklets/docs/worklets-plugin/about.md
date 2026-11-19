@@ -2,7 +2,7 @@
 
 ## What is the Worklets plugin?
 
-The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#to-workletize).
+The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization).
 
 The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) only. Everything on this page applies to both.
 
@@ -19,7 +19,7 @@ function foo() {
 
 ```ts
 useAnimatedStyle(() => {
-  // This function will be ran on the UI thread,
+  // This function will run on the UI thread,
   // hence it's in a workletizable context and will be
   // autoworkletized. You don't need to add the 'worklet' directive here.
   return {
@@ -72,31 +72,39 @@ const obj = {
 };
 ```
 
-### Reanimated terms
+### \[Deprecated] Worklet Classes
 
-#### \[Experimental] Worklet Classes
+Worklet Classes are deprecated. Don't use them in new code.
 
-[Hermes](https://github.com/facebook/hermes), the JavaScript engine used by React Native, doesn't support classes. Class syntax requires [polyfilling](https://en.wikipedia.org/wiki/Polyfill_%28programming%29) before it can be used, which is problematic for the UI thread. To work around this, we coined the term of **Worklet Classes**. Worklet classes can be instantiated on the UI thread.
+A Worklet Class is a class that you can instantiate on a [Worklet Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime). To mark a class as a Worklet Class, add the `__workletClass` property to it. The value of the property is not important, but we recommend `true`. The plugin removes this property from the class.
 
-`__workletClass` is a special property that marks a class as a Worklet Class. It's value doesn't matter, but it's a good practice to use `true` as a value. `'worklet'` directive in methods will be ignored if the class has this property.
+The plugin transforms a Worklet Class with the Babel class polyfills and workletizes the result. You don't need to add the `'worklet'` directive to the methods of a Worklet Class.
 
 ```ts
-class Clazz {
+class Counter {
   __workletClass = true;
-  message = 'Hello from WorkletClass';
-  foo() {
-    console.log(this.message);
+  value = 0;
+  increment() {
+    return ++this.value;
   }
 }
 
-scheduleOnUI(() => new Clazz().foo()); // Logs 'Hello from WorkletClass'
+scheduleOnUI(() => {
+  const counter = new Counter();
+  console.log(counter.increment()); // Logs 1
+});
 ```
+
+In a [workletizable file](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#experimental-workletizing-whole-files), every top-level named class is a Worklet Class. You don't need to add the `__workletClass` property there.
 
 **Pitfalls:**
 
+* Worklet Classes work only in [Legacy Eval Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode#legacy-eval-mode). In Bundle Mode the plugin doesn't transform them.
+* The class must be a named class declaration. The plugin doesn't transform class expressions and anonymous classes.
 * Worklet Classes don't support inheritance.
 * Worklet Classes don't support static methods and properties.
-* Class instances cannot be shared between JS and UI threads.
+* You can't pass class instances between Runtimes. Create the instance on the Runtime that uses it.
+* You can turn off Worklet Classes with the [`disableWorkletClasses`](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options#disableworkletclasses) option.
 
 ## Autoworkletization
 
@@ -105,14 +113,14 @@ To reduce boilerplate code and provide a safer API, the Worklets plugin detects 
 ```ts
 import { scheduleOnUI } from 'react-native-worklets';
 
-const style = scheduleOnUI((greetings: string) => {
+scheduleOnUI((greetings: string) => {
   // You don't need to add the 'worklet' directive here,
   // since plugin detects this callback as autoworkletizable.
   console.log(`${greetings} from UI Runtime`);
 }, 'Hello');
 ```
 
-This isn't limited to `useAnimatedStyle` hook - the Worklets plugin autoworkletizes all callbacks for all its API. It also does some for some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts) The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `scheduleOnUI` - the Worklets plugin autoworkletizes the callbacks that its APIs require to be worklet functions. This also covers callbacks in config objects, for example the `initializer` of [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime). The plugin only checks specific argument positions and config keys, and a config object must be written inline in the call. The plugin also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet function.
 
@@ -154,7 +162,7 @@ const handler = useAnimatedScrollHandler(handlerObject);
 
 You can mark a file as a workletizable file by adding the `'worklet'` directive to the top of the file.
 
-This will workletize all *top-level* [JavaScript terms](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#javascript-terms) and [Reanimated terms](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#reanimated-terms) automatically. It can come in handy for files that contain multiple worklets.
+This will workletize all *top-level* [JavaScript terms](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#javascript-terms) automatically. It can come in handy for files that contain multiple worklet functions.
 
 ```ts
 // file.ts
@@ -200,7 +208,7 @@ export function bar() {
 
 ### Custom hooks
 
-Currently Reanimated hasn't exposed APIs that would allow you to register your custom hooks for callback workletization. This however, might change in the future.
+Currently Worklets doesn't expose APIs that would allow you to register your custom hooks for callback workletization. This however, might change in the future.
 
 ### Expressions
 

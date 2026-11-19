@@ -1,28 +1,31 @@
 # isWorkerRuntime
 
-Checks if the current runtime is a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
+Checks if the current runtime is a [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worker-runtime).
 
 ## Reference
 
-```typescript
+```js
 import {
   isWorkerRuntime,
+  createWorkletRuntime,
   scheduleOnUI,
   scheduleOnRuntime,
-  createWorkletRuntime,
 } from 'react-native-worklets';
 
-console.log(isWorkerRuntime()); // false
+function checkUI() {
+  'worklet';
+  console.log(isWorkerRuntime()); // false (UI Runtime)
+}
 
-scheduleOnUI(() => {
-  console.log(isWorkerRuntime()); // false
-});
+function checkWorker() {
+  'worklet';
+  console.log(isWorkerRuntime()); // true (Worker Runtime)
+}
 
-const workerRuntime = createWorkletRuntime();
-scheduleOnRuntime(workerRuntime, () => {
-  // highlight-next-line
-  console.log(isWorkerRuntime()); // true
-});
+console.log(isWorkerRuntime()); // false (RN Runtime)
+scheduleOnUI(checkUI);
+const workerRuntime = createWorkletRuntime({ name: 'background' });
+scheduleOnRuntime(workerRuntime, checkWorker);
 ```
 
 Type definitions
@@ -33,7 +36,7 @@ function isWorkerRuntime(): boolean;
 
 ### Returns
 
-`true` if the current runtime is the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime), `false` otherwise.
+`true` if the current runtime is the [Worker Runtime](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worker-runtime), `false` otherwise.
 
 ## Remarks
 
