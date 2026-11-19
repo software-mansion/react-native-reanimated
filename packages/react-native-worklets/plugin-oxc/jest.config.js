@@ -15,6 +15,7 @@ module.exports = {
     path.join(__dirname, 'jest', 'captureEmittedFiles.js'),
   ],
   moduleNameMapper: {
+    ...require('../plugin/jest.config.js').moduleNameMapper,
     '^\\.\\./index$': path.join(__dirname, 'jest', 'mockPluginVersion.js'),
   },
 };

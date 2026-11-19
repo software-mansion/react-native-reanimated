@@ -21,8 +21,8 @@ describe('wrapWithReanimatedMetroConfig', () => {
     [
       'Worklets',
       path.resolve(
-        __dirname,
-        '../../react-native-worklets/src/WorkletsModule/NativeWorklets.ts'
+        path.dirname(require.resolve('react-native-worklets/package.json')),
+        'src/WorkletsModule/NativeWorklets.ts'
       ),
     ],
   ])(
