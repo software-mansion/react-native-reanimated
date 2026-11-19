@@ -65,5 +65,10 @@ export function getShadowNodeWrapperFromRef(
     throw new Error(`[Reanimated] Failed to find shadow node for a ref.`);
   }
 
-  return shadowNodeWrapper;
+  // React Native writes this wrapper on the JS thread; keep it off the UI thread.
+  return (
+    global.__reanimatedModuleProxy?.detachShadowNodeWrapper(
+      shadowNodeWrapper
+    ) ?? shadowNodeWrapper
+  );
 }

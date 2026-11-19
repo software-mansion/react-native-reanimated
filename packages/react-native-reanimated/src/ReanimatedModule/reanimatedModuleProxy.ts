@@ -71,6 +71,11 @@ export interface ReanimatedModuleProxy {
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;
 
+  /** Returns a wrapper of the same node that React Native never updates. */
+  detachShadowNodeWrapper(
+    shadowNodeWrapper: ShadowNodeWrapper
+  ): ShadowNodeWrapper;
+
   registerCSSKeyframes(
     animationName: string,
     compoundComponentName: string,
@@ -116,7 +121,7 @@ export interface ReanimatedModuleProxy {
 
 export interface IReanimatedModule extends Omit<
   ReanimatedModuleProxy,
-  'getViewProp'
+  'getViewProp' | 'detachShadowNodeWrapper'
 > {
   getViewProp<TValue>(
     viewTag: number,

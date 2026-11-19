@@ -46,6 +46,12 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
+// React Native writes the wrapper it gives to React on the JS thread, so the UI
+// thread gets a copy instead.
+static jsi::Value detachShadowNodeWrapper(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
+  return Bridging<std::shared_ptr<const ShadowNode>>::toJs(rt, shadowNodeFromValue(rt, shadowNodeWrapper));
+}
+
 namespace {
 
 void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
@@ -1686,6 +1692,11 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->markNodeAsRemovable(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt, obj, "detachShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        return detachShadowNodeWrapper(rt, at<0>(args));
       });
 
   addMethod<1>(
