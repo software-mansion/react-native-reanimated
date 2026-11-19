@@ -166,17 +166,20 @@ Euler angles are:
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
-<div style={{display: "flex", justifyContent: "center", textAlign: "center", gap: 4}}>
-  <div style={{ flex: 1 }}>
-    <img src={useBaseUrl('/img/rotation/roll.gif')} alt="Roll rotation along the longitudinal axis"/>
+<div className="rotation-gifs">
+  <div>
+    <img src={useBaseUrl('/img/rotation/roll.gif')} width={392} height={312} style={{ width: "100%", height: "auto" }} alt="Roll rotation along the longitudinal axis"/>
+    <p>Roll</p>
   </div>
 
-  <div style={{ flex: 1 }}>
-    <img src={useBaseUrl('/img/rotation/pitch.gif')} alt="Pitch rotation along the lateral axis"/>
+  <div>
+    <img src={useBaseUrl('/img/rotation/pitch.gif')} width={392} height={312} style={{ width: "100%", height: "auto" }} alt="Pitch rotation along the lateral axis"/>
+    <p>Pitch</p>
   </div>
 
-  <div style={{ flex: 1 }}>
-    <img src={useBaseUrl('/img/rotation/yaw.gif')} alt="Yaw rotation along the vertical axis"/>
+  <div>
+    <img src={useBaseUrl('/img/rotation/yaw.gif')} width={392} height={312} style={{ width: "100%", height: "auto" }} alt="Yaw rotation along the vertical axis"/>
+    <p>Yaw</p>
   </div>
 </div>
 

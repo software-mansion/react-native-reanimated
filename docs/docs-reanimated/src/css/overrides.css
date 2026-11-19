@@ -225,3 +225,15 @@ details .tabs__item--active {
   opacity: 1;
   border-bottom-color: var(--swm-details-color) !important;
 }
+
+/* useAnimatedSensor: roll / pitch / yaw GIFs side by side, stacked on phones */
+.rotation-gifs {
+  display: flex;
+  gap: 4px;
+  text-align: center;
+}
+
+.rotation-gifs > div {
+  flex: 1;
+  min-width: 0;
+}
