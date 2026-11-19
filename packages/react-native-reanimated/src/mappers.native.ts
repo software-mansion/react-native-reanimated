@@ -85,6 +85,7 @@ function createMapperRegistry() {
 
   let isAnyMapperDirty = false;
   let mapperRunRequested = false;
+  let handlingEvent = false;
 
   function mapperRun() {
     if (processingMappers) {
@@ -128,14 +129,29 @@ function createMapperRegistry() {
   }
 
   function requestMapperRun() {
-    if (mapperRunRequested) {
+    if (mapperRunRequested || handlingEvent) {
       return;
     }
     mapperRunRequested = true;
     globalThis.requestAnimationFrameFinalizer(scheduledMapperRun);
   }
 
+  function runEventHandler(handler: () => void) {
+    if (handlingEvent) {
+      handler();
+      return;
+    }
+    handlingEvent = true;
+    try {
+      handler();
+    } finally {
+      handlingEvent = false;
+      mapperRun();
+    }
+  }
+
   global.__mapperRun = mapperRun;
+  global.__runEventHandler = runEventHandler;
 
   function extractInputs(
     inputs: unknown,

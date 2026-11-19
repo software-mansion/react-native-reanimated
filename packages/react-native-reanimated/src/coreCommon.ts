@@ -80,6 +80,11 @@ export function createEventHandlerWorklet<TEvent>(
 ) {
   return function handleEvent(_eventTimestamp: number, event: TEvent) {
     'worklet';
+    const runEventHandler = globalThis.__runEventHandler;
+    if (runEventHandler) {
+      runEventHandler(() => eventHandler(event));
+      return;
+    }
     eventHandler(event);
     // We call mappers here to make sure view updates can be applied in the same frame after an event.
     globalThis.__mapperRun?.();
@@ -97,6 +102,11 @@ export function createKeyboardEventHandlerWorklet(
   // via registerEventHandler. For now we are copying the code from there.
   return function handleEvent(state: number, height: number) {
     'worklet';
+    const runEventHandler = globalThis.__runEventHandler;
+    if (runEventHandler) {
+      runEventHandler(() => eventHandler(state, height));
+      return;
+    }
     eventHandler(state, height);
     // We call mappers here to make sure view updates can be applied in the same frame after an event.
     globalThis.__mapperRun?.();

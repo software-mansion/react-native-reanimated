@@ -80,6 +80,7 @@ declare global {
    */
   var __frameTimestamp: number | undefined;
   var __mapperRun: (() => void) | undefined;
+  var __runEventHandler: ((handler: () => void) => void) | undefined;
   var __requestMapperRunFinalizer: (finalizer: () => void) => void;
   var _maybeFlushUIUpdatesQueue: () => void;
   var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;

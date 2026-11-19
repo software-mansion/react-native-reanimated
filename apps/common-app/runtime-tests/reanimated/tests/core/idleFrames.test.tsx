@@ -25,6 +25,7 @@ import {
 } from '../../../ReJest/utils/nativeFrameRequests';
 
 const BOX_REF = 'IDLE_FRAMES_BOX';
+const SCROLL_DRIVEN_BOX_REF = 'IDLE_FRAMES_SCROLL_DRIVEN_BOX';
 const SETTLE_MS = 300;
 const WINDOW_MS = 300;
 const INITIAL_WIDTH = 100;
@@ -32,6 +33,7 @@ const UPDATED_WIDTH = 200;
 const SCROLL_ATTEMPTS = 10;
 const SCROLL_ATTEMPT_MS = 100;
 const FINALIZER_ERROR = 'error thrown by a frame finalizer';
+const SCROLL_OFFSET = 120;
 
 let widthValue: SharedValue<number> | null = null;
 let scrollViewRef: AnimatedRef<Animated.ScrollView> | null = null;
@@ -40,6 +42,8 @@ let scrollEventCount = 0;
 type MapperRunGlobal = typeof globalThis & {
   __mapperRun?: () => void;
   __savedMapperRun?: () => void;
+  __runEventHandler?: (handler: () => void) => void;
+  __savedRunEventHandler?: (handler: () => void) => void;
 };
 
 function onScrollEvent() {
@@ -52,6 +56,8 @@ function hideMapperRun() {
     const global = globalThis as MapperRunGlobal;
     global.__savedMapperRun = global.__mapperRun;
     global.__mapperRun = undefined;
+    global.__savedRunEventHandler = global.__runEventHandler;
+    global.__runEventHandler = undefined;
   });
 }
 
@@ -61,6 +67,8 @@ function restoreMapperRun() {
     const global = globalThis as MapperRunGlobal;
     global.__mapperRun = global.__savedMapperRun;
     global.__savedMapperRun = undefined;
+    global.__runEventHandler = global.__savedRunEventHandler;
+    global.__savedRunEventHandler = undefined;
   });
 }
 
@@ -147,6 +155,24 @@ describe('native frame requests with animated components', () => {
     }
   );
 
+  test('requests no frames for a scroll event that only moves an animated style', async () => {
+    scrollEventCount = 0;
+    await render(<ScrollDrivenBox />);
+    const box = getTestComponent(SCROLL_DRIVEN_BOX_REF);
+    await sleepOnRN(SETTLE_MS);
+
+    const count = await countNativeFrameRequests(WINDOW_MS, () => {
+      scrollViewRef?.current?.scrollTo({ y: SCROLL_OFFSET, animated: false });
+    });
+
+    expect(scrollEventCount > 0).toBe(true);
+    expect(count).toBe(0);
+    await expectEventually(() => box.getAnimatedStyle('top')).toBe(
+      SCROLL_OFFSET,
+      ComparisonMode.PIXEL
+    );
+  });
+
   test('requests no frames after an event when no mapper was ever started', async () => {
     scrollEventCount = 0;
     await render(<ScrollList />);
@@ -187,6 +213,32 @@ function ResizableBox() {
   );
 }
 
+function ScrollDrivenBox() {
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  scrollViewRef = scrollRef;
+  const scrollY = useSharedValue(0);
+  const ref = useTestRef(SCROLL_DRIVEN_BOX_REF);
+  const onScroll = useAnimatedScrollHandler((event) => {
+    scrollY.value = event.contentOffset.y;
+    scheduleOnRN(onScrollEvent);
+  });
+  const animatedStyle = useAnimatedStyle(() => ({ top: scrollY.value }));
+  return (
+    <View style={styles.container}>
+      <Animated.ScrollView
+        ref={scrollRef}
+        onScroll={onScroll}
+        scrollEventThrottle={16}>
+        <View style={styles.tallContent} />
+        <Animated.View
+          ref={ref}
+          style={[styles.scrollDrivenBox, animatedStyle]}
+        />
+      </Animated.ScrollView>
+    </View>
+  );
+}
+
 function ScrollList() {
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   scrollViewRef = scrollRef;
@@ -211,6 +263,13 @@ const styles = StyleSheet.create({
   },
   tallContent: {
     height: 3000,
+  },
+  scrollDrivenBox: {
+    position: 'absolute',
+    left: 0,
+    width: INITIAL_WIDTH,
+    height: 50,
+    backgroundColor: 'teal',
   },
   box: {
     width: INITIAL_WIDTH,
