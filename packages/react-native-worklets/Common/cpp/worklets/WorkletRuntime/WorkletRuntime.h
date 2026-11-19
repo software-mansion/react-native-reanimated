@@ -362,8 +362,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   auto runSyncImpl(TCallable &&callable, TArgs &&...args) const -> decltype(auto) {
     jsi::Runtime &rt = getJSIRuntime();
     if constexpr (std::is_same_v<std::remove_cvref_t<TCallable>, std::shared_ptr<SerializableWorklet>>) {
-      auto function = callable->toJSValue(rt).getObject(rt).getFunction(rt);
-      return runSyncImpl<TCheckpoint, TResult, TScheduleStack>(function, std::forward<TArgs>(args)...);
+      return invokeWithMicrotaskCheckpointPolicyImpl<MicrotaskCheckpoint::Skip>([&]() -> decltype(auto) {
+        auto function = callable->toJSValue(rt).getObject(rt).getFunction(rt);
+        return runSyncImpl<TCheckpoint, TResult, TScheduleStack>(function, std::forward<TArgs>(args)...);
+      });
     } else {
       auto stackPolicyInvocation = [&]<typename TScheduleStackContext, typename... TCallArgs>(
                                        TScheduleStackContext &&scheduleStackContext,
