@@ -35,6 +35,26 @@ config = mergeConfig(defaultConfig, config);
 const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
 config = mergeConfig(config, bundleModeMetroConfig);
 
+config = mergeConfig(config, {
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: false,
+        inlineRequires: true,
+        nonInlinedRequires: [
+          'React',
+          'react',
+          'react/jsx-dev-runtime',
+          'react/jsx-runtime',
+          'react-compiler-runtime',
+          'react-native',
+          '../../../apps/common-app/runtime-tests/worklets/tests/runtimes/reentrantModule',
+        ],
+      },
+    }),
+  },
+});
+
 /** @type {import('@react-native/metro-config').MetroConfig} */
 module.exports = wrapWithReanimatedMetroConfig(
   mergeConfig(defaultConfig, config)
