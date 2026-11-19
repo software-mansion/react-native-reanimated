@@ -434,6 +434,11 @@ class CarrierPlacements {
   }
 };
 
+static inline ShadowView withProps(ShadowView view, const Props::Shared &props) {
+  view.props = props;
+  return view;
+}
+
 static inline void
 updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame, const react::Point &offset = {}) {
   // we use optional's here to avoid overwriting non-animated values

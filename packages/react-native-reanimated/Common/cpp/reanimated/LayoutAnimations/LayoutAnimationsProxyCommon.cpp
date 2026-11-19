@@ -88,11 +88,6 @@ SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation)
       animation.startView, animation.finalView, *animation.geometryProgress, baseOpacity);
 }
 
-ShadowView withProps(ShadowView view, const Props::Shared &props) {
-  view.props = props;
-  return view;
-}
-
 jsi::Object withoutCarrierKeys(jsi::Runtime &runtime, const jsi::Object &object) {
   jsi::Object copy(runtime);
   const auto names = object.getPropertyNames(runtime);
@@ -958,6 +953,22 @@ const ShadowView *LayoutAnimationsProxyCommon::queuedLayoutStartView(const Tag t
   const auto *start =
       std::get_if<ManagedLayoutAnimationStart>(&layoutAnimationOperations_[pendingIt->second.operationIndex]);
   return start ? &start->before : nullptr;
+}
+
+std::vector<QueuedCarrierStart> LayoutAnimationsProxyCommon::queuedCarrierStarts(const Tag tag) const {
+  std::vector<QueuedCarrierStart> starts;
+  for (auto &operation : layoutAnimationOperations_) {
+    std::visit(
+        [&](auto &start) {
+          if constexpr (!std::is_same_v<std::decay_t<decltype(start)>, LayoutAnimationCancellation>) {
+            if (start.tag == tag && start.frameProps) {
+              starts.push_back({&start.before, &start.frameProps});
+            }
+          }
+        },
+        operation);
+  }
+  return starts;
 }
 
 std::optional<ShadowView> LayoutAnimationsProxyCommon::reparentLayoutAnimation(const Tag tag, const Tag parentTag)
