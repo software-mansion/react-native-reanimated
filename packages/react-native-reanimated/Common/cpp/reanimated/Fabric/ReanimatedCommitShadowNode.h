@@ -1,6 +1,6 @@
 #pragma once
 
-#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <React/RendererCore.h>
 
 using namespace facebook::react;
 

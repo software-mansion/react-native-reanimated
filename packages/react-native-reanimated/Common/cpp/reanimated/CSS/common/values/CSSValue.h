@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 
-#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <React/RendererCore.h>
 
 #include <memory>
 #include <string>

@@ -2,7 +2,7 @@
 
 #ifdef ANDROID
 
-#include <reanimated/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <cstdint>
 #include <stdexcept>

@@ -1,6 +1,6 @@
 #include <reanimated/CSS/core/transition/CSSPlatformTransitionProxy.h>
 
-#include <reanimated/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <utility>
 

@@ -1,7 +1,7 @@
 #pragma once
 
+#include <React/Graphics.h>
 #include <react/renderer/mounting/ShadowView.h>
-#include <reanimated/Compat/ReactNativeGraphics.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 

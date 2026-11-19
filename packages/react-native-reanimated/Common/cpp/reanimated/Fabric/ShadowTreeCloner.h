@@ -1,8 +1,8 @@
 #pragma once
 
+#include <React/RendererCore.h>
 #include <folly/dynamic.h>
 #include <react/renderer/uimanager/UIManager.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <unordered_map>
 #include <unordered_set>

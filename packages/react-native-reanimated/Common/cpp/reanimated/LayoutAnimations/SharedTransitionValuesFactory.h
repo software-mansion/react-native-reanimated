@@ -1,7 +1,7 @@
 #pragma once
+#include <React/RendererCore.h>
+#include <React/View.h>
 #include <react/renderer/mounting/ShadowView.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
-#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 #include <jsi/jsi.h>

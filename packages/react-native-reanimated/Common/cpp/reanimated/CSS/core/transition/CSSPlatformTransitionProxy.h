@@ -6,9 +6,9 @@
 #include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
 
+#include <React/RendererCore.h>
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <optional>

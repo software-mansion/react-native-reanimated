@@ -1,12 +1,12 @@
 #ifdef ANDROID
+#include <React/CallInvoker.h>
 #include <react/renderer/core/DynamicPropsUtilities.h>
-#include <reanimated/Compat/ReactNativeCallInvoker.h>
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
+#include <reanimated/Tools/ReactNativeFeatureFlags.h>
 #endif
+#include <React/Debug.h>
 #include <folly/dynamic.h>
 #include <jsi/JSIDynamic.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>

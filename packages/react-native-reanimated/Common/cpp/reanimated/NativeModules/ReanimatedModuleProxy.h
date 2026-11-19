@@ -1,5 +1,7 @@
 #pragma once
 
+#include <React/CallInvoker.h>
+#include <React/RendererCore.h>
 #include <react/renderer/componentregistry/componentNameByReactViewName.h>
 #include <react/renderer/uimanager/UIManager.h>
 #include <reanimated/AnimatedSensor/AnimatedSensorModule.h>
@@ -11,8 +13,6 @@
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
-#include <reanimated/Compat/ReactNativeCallInvoker.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandlerRegistry.h>
 #include <reanimated/Fabric/ReanimatedCommitHook.h>

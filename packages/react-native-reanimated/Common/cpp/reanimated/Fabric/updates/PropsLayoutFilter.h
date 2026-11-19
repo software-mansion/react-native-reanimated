@@ -2,8 +2,8 @@
 
 #include <jsi/jsi.h>
 
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Fabric/updates/propNameFromString.h>
+#include <reanimated/Tools/ReactNativeFeatureFlags.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
 

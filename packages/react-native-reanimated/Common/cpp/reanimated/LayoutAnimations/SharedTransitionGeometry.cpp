@@ -1,5 +1,5 @@
+#include <React/View.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
-#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
 
 #include <algorithm>

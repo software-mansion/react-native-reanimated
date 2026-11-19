@@ -11,12 +11,8 @@
 
 #pragma once
 
-#include <react/renderer/components/rnreanimated/ShadowNodes.h>
-#if __has_include(<React/RendererCore.h>)
 #include <React/RendererCore.h>
-#else
-#include <react/renderer/core/ConcreteComponentDescriptor.h>
-#endif
+#include <react/renderer/components/rnreanimated/ShadowNodes.h>
 
 #include "REASharedTransitionBoundaryComponentDescriptor.h"
 
