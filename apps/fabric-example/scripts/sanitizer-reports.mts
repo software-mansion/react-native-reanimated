@@ -24,6 +24,7 @@ export type ClassifiedReports = {
 const REPORT_HEADER =
   /^(?:SUMMARY|WARNING|(?:==\d+==)?ERROR): (\w+)Sanitizer: (.*)$/m;
 const SUMMARY_LINE = /^SUMMARY: \w+Sanitizer: /;
+const REPORT_START_LINE = /^(?:WARNING|(?:==\d+==)?ERROR): \w+Sanitizer: /;
 
 if (process.argv[1] === import.meta.filename) {
   process.exitCode = main(process.argv.slice(2));
@@ -94,6 +95,14 @@ export function parseSanitizerReports(
   for (const line of text.split('\n')) {
     if (/^=+\s*$/.test(line)) {
       continue;
+    }
+    if (REPORT_START_LINE.test(line)) {
+      if (current.some((previous) => REPORT_START_LINE.test(previous))) {
+        segments.push(current.join('\n').trim());
+      } else if (segments.length > 0 && current.join('').trim().length > 0) {
+        segments[segments.length - 1] += `\n${current.join('\n').trim()}`;
+      }
+      current = [];
     }
     current.push(line);
     if (SUMMARY_LINE.test(line)) {

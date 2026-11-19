@@ -59,7 +59,25 @@ const KNOWN = [
   },
 ];
 
+const UNKNOWN_TSAN_REPORT_WITHOUT_SUMMARY = UNKNOWN_TSAN_REPORT.replace(
+  /^SUMMARY: .*\n/m,
+  ''
+);
+
 describe('parseSanitizerReports', () => {
+  it('keeps a report without a summary separate from the next report', () => {
+    const reports = parseSanitizerReports(
+      'tsan.1',
+      UNKNOWN_TSAN_REPORT_WITHOUT_SUMMARY + TSAN_REPORT
+    );
+    assert.equal(reports.length, 2);
+    assert.equal(reports[0].summary, 'data race (pid=90103)');
+    assert.equal(
+      reports[1].summary,
+      'data race YGNode.cpp:282 in YGNodeGetOwner'
+    );
+  });
+
   it('reads the sanitizer and the summary of a TSAN report', () => {
     const [report] = parseSanitizerReports('tsan.1', TSAN_REPORT);
     assert.equal(report.sanitizer, 'thread');
@@ -194,6 +212,18 @@ describe('sanitizer-reports command', () => {
       result.stdout,
       /^::group::tsan\.1#2: data race Foo\.cpp:1 in reanimated::foo$/m
     );
+    assert.match(
+      result.stdout,
+      /2 sanitizer report\(s\): 1 known, 1 unknown\./
+    );
+  });
+
+  it('fails when a report without a summary precedes a known report', () => {
+    workDir = createWorkDir({
+      'tsan.1': UNKNOWN_TSAN_REPORT_WITHOUT_SUMMARY + TSAN_REPORT,
+    });
+    const result = run(workDir);
+    assert.equal(result.status, 1, result.stdout);
     assert.match(
       result.stdout,
       /2 sanitizer report\(s\): 1 known, 1 unknown\./
