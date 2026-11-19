@@ -1,1 +1,0 @@
-Stop the Babel plugin reading every worklet's sources off disk to fill `sourcesContent`, a field it deletes again before returning the map, so a source that is not on disk no longer aborts the whole transform.
