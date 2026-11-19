@@ -337,4 +337,5 @@ export interface SimulateOptions {
   inputs?: ExternalInput[];
   maxTicks?: number;
   maxDepth?: number;
+  timerDelays?: Record<string, number>;
 }

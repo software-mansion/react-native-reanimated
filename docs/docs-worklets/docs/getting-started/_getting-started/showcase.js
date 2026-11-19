@@ -25,7 +25,7 @@ export function* refreshFeed(page) {
   const posts = yield fetchFromBackend(`/feed?page=${page}`);
   yield setNativeProps('feed', { posts: posts.items });
   yield console.log(`feed page ${page} ready`);
-  yield setTimeout(() => refreshFeed(page + 1), 8);
+  yield setTimeout(() => refreshFeed(page + 1), 30_000);
 }
 
 export function* animateSpinner(angle) {
@@ -40,7 +40,7 @@ export function* streamAudio(chunk) {
   const mixed = yield mixChannels(equalized);
   yield setNativeProps('speaker', { pulse: playAudio(mixed) });
   yield console.log(`chunk ${chunk} played`);
-  yield setTimeout(() => streamAudio(chunk + 1), 24);
+  yield setTimeout(() => streamAudio(chunk + 1), 20);
 }
 
 export function* renderMarkdown(doc, revision) {
@@ -50,7 +50,7 @@ export function* renderMarkdown(doc, revision) {
   const styled = yield applyTheme(blocks);
   yield setNativeProps('article', renderHtml(styled));
   yield console.log(`rendered ${doc} r${revision}`);
-  yield setTimeout(() => renderMarkdown(doc, revision + 1), 16);
+  yield setTimeout(() => renderMarkdown(doc, revision + 1), 1_000);
 }
 
 export function* onPress(count) {

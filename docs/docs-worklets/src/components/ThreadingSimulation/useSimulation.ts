@@ -23,6 +23,7 @@ interface SessionOptions {
   bootTicks: number;
   durationTicks: number | undefined;
   skipIdleTicks: boolean;
+  timerDelays?: Record<string, number>;
 }
 
 const MAX_SKIPPED_TICKS = 10_000;
@@ -55,6 +56,7 @@ export class Session {
         uiRuntime: this.options.uiRuntime,
         screen: this.options.screen,
         bootTicks: this.options.bootTicks,
+        timerDelays: this.options.timerDelays,
       });
       machine.skip(this.options.skipTicks);
       this.machine = machine;
@@ -75,6 +77,7 @@ export class Session {
       uiRuntime: this.options.uiRuntime,
       screen: this.options.screen,
       bootTicks: this.options.bootTicks,
+      timerDelays: this.options.timerDelays,
     });
     probe.skip(this.options.skipTicks);
     let clock = 0;
@@ -220,7 +223,8 @@ export function useSimulation(
   boilerplate: boolean,
   suspended = false,
   autoplay = true,
-  skipIdleTicks = false
+  skipIdleTicks = false,
+  timerDelays?: Record<string, number>
 ): SimulationState {
   const display = useMemo(() => {
     try {
@@ -234,6 +238,7 @@ export function useSimulation(
     }
   }, [source, boilerplate]);
   const screenKey = JSON.stringify(screen ?? null);
+  const timerDelaysKey = JSON.stringify(timerDelays ?? null);
   const session = useMemo(
     () =>
       new Session(module, source, {
@@ -244,6 +249,9 @@ export function useSimulation(
         bootTicks,
         durationTicks,
         skipIdleTicks,
+        timerDelays:
+          (JSON.parse(timerDelaysKey) as Record<string, number> | null) ??
+          undefined,
       }),
     [
       module,
@@ -255,6 +263,7 @@ export function useSimulation(
       bootTicks,
       durationTicks,
       skipIdleTicks,
+      timerDelaysKey,
     ]
   );
 

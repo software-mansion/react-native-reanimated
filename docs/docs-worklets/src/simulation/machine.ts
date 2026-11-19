@@ -78,6 +78,7 @@ export class Machine {
   private readonly snippet: LoadedSnippet;
   private readonly bundleMode: boolean;
   private readonly maxDepth: number;
+  private readonly timerDelays: Record<string, number>;
   private cores: CoreState[];
   private tickCount = 0;
   private now = 0;
@@ -114,6 +115,7 @@ export class Machine {
     this.bundleMode = options.bundleMode ?? false;
     this.inputs = [...(options.inputs ?? [])];
     this.maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
+    this.timerDelays = { ...(options.timerDelays ?? {}) };
     this.screen = { ...(options.screen ?? {}) };
     this.readShareable = function* readShareable(id: unknown) {
       return yield readShareableValue(id as number);
@@ -700,7 +702,6 @@ export class Machine {
       throw new SnippetError('setTimeout expects a function');
     }
     this.registerFn(callback);
-    const delay = typeof ms === 'number' ? ms : 0;
     const gen = (callback as () => unknown)();
     if (!isGeneratorObject(gen)) {
       throw new SnippetError(
@@ -713,6 +714,8 @@ export class Machine {
         'a setTimeout callback must call an exported snippet function'
       );
     }
+    const name = this.snippet.fnInfo.get(fn)!.name;
+    const delay = this.timerDelays[name] ?? (typeof ms === 'number' ? ms : 0);
     const timerId = this.nextJobId++;
     const runtime = this.currentRuntime(core);
     const frameQueue = runtime === 'ui' || (runtime === 'rn' && !immediate);
@@ -721,7 +724,7 @@ export class Machine {
       id: timerId,
       due: this.now + wait,
       callback: repeat ? (callback as () => unknown) : () => gen,
-      label: this.snippet.fnInfo.get(fn)!.name,
+      label: name,
       interval: repeat
         ? frameQueue
           ? wait

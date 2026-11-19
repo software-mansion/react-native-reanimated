@@ -9,6 +9,7 @@ import styles from './styles.module.css';
 interface Variant {
   module: SnippetModule;
   source: string;
+  timerDelays?: Record<string, number>;
 }
 
 interface ThreadingShowcaseProps {
@@ -95,6 +96,7 @@ export default function ThreadingShowcase({
         onFullscreenChange={setFullscreen}
         durationTicks={durationTicks}
         tickMs={tickMs}
+        timerDelays={variant.timerDelays}
       />
     </div>
   );

@@ -21,7 +21,18 @@ The Worklets library adds more JavaScript runtimes to your app:
 - **Worker Runtimes** run on their own background threads. You create them for work that must not
   block either the JS thread or the UI thread.
 
-<ThreadingShowcase single={{ module: ShowcaseSingleSnippet, source: ShowcaseSingleSource }} worklets={{ module: ShowcaseSnippet, source: ShowcaseSource }}/>
+<ThreadingShowcase
+  single={{
+  module: ShowcaseSingleSnippet,
+  source: ShowcaseSingleSource,
+  timerDelays: { refreshFeed: 8, streamAudio: 32, renderMarkdown: 16 },
+}}
+  worklets={{
+  module: ShowcaseSnippet,
+  source: ShowcaseSource,
+  timerDelays: { refreshFeed: 8, streamAudio: 24, renderMarkdown: 16 },
+}}
+/>
 
 You can find installation instructions [here](./installation.mdx). If you want to learn more, please
 look into our [tutorials](../tutorials/0-concurrency-model.mdx).
