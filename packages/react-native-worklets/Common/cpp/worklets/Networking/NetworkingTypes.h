@@ -30,4 +30,19 @@ struct ResponseInfo {
   std::string url;
 };
 
+struct WebSocketConfig {
+  std::string url;
+  std::vector<std::string> protocols;
+  std::vector<std::pair<std::string, std::string>> headers;
+};
+
+/**
+ * https://www.rfc-editor.org/rfc/rfc6455#section-7.4.1 - 1005 and 1006 are
+ * reserved for a close that carried no code and an abnormal close.
+ */
+enum class WebSocketCloseCode : uint16_t {
+  NoStatusReceived = 1005,
+  AbnormalClosure = 1006,
+};
+
 } // namespace worklets
