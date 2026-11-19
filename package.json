@@ -38,6 +38,7 @@
     "prepare-vscode": "bash ./scripts/prepare-vscode.sh",
     "test:scripts": "node --experimental-strip-types --test scripts/__tests__/*.test.mts scripts/changelog/__tests__/*.test.mts apps/fabric-example/scripts/__tests__/*.test.mts",
     "toggle-bundle-mode": "bash ./scripts/toggle-bundle-mode.sh",
+    "validate-jsi-signatures": "node --experimental-strip-types scripts/validate-jsi-signatures.mts",
     "type:check:scripts": "tsc --noEmit -p scripts && tsc --noEmit -p apps/fabric-example/scripts"
   },
   "devDependencies": {
