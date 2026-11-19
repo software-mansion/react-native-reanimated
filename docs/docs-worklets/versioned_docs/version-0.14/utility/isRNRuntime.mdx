@@ -1,0 +1,33 @@
+---
+sidebar_position: 42 # Use alphabetical order
+title: isRNRuntime
+---
+
+import * as ApiIsRNRuntimeSnippet from './_examples/apiIsRNRuntime';
+import ApiIsRNRuntimeSource from '!!raw-loader!./_examples/apiIsRNRuntime';
+
+<Badges version="0.8.0">
+  # isRNRuntime
+</Badges>
+
+Checks if the current runtime is the [React Native Runtime](../concepts/runtimeKinds.mdx#rn-runtime).
+
+## Reference
+
+<ThreadingSimulation module={ApiIsRNRuntimeSnippet} source={ApiIsRNRuntimeSource}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function isRNRuntime(): boolean;
+  ```
+</details>
+
+### Returns
+
+`true` if the current runtime is the RN Runtime, `false` otherwise.
+
+## Remarks
+
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](./getRuntimeKind.mdx) for more details.

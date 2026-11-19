@@ -1,0 +1,33 @@
+---
+sidebar_position: 42 # Use alphabetical order
+title: isWorkletRuntime
+---
+
+import * as ApiIsWorkletRuntimeSnippet from './_examples/apiIsWorkletRuntime';
+import ApiIsWorkletRuntimeSource from '!!raw-loader!./_examples/apiIsWorkletRuntime';
+
+<Badges version="0.8.0">
+  # isWorkletRuntime
+</Badges>
+
+Checks if the current runtime is a [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime), either the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) or a [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+## Reference
+
+<ThreadingSimulation module={ApiIsWorkletRuntimeSnippet} source={ApiIsWorkletRuntimeSource}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function isWorkletRuntime(): boolean;
+  ```
+</details>
+
+### Returns
+
+`true` if the current runtime is a [Worklet Runtime](../concepts/runtimeKinds.mdx#worklet-runtime), `false` otherwise.
+
+## Remarks
+
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](./getRuntimeKind.mdx) for more details.

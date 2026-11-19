@@ -1,0 +1,41 @@
+---
+title: isSynchronizable
+sidebar_position: 42 # Use alphabetical order
+---
+
+import * as ApiIsSynchronizableSnippet from './_examples/apiIsSynchronizable';
+import ApiIsSynchronizableSource from '!!raw-loader!./_examples/apiIsSynchronizable';
+
+<Badges version="0.6.0">
+  # isSynchronizable
+</Badges>
+
+Asserts whether a value is a [Synchronizable](./synchronizable.mdx).
+
+You can pass a generic type argument, such as `isSynchronizable<number>(value)`, to narrow the value to `Synchronizable<number>` in TypeScript. This checks whether the value is a Synchronizable; it does not check the type of the data inside it.
+
+## Reference
+
+Check both a Synchronizable and a plain object, then guard an update with `isSynchronizable`. The shared value changes from `0` to `42`.
+
+<ThreadingSimulation module={ApiIsSynchronizableSnippet} source={ApiIsSynchronizableSource} uiRuntime={false}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function isSynchronizable<TValue = unknown>(
+    value: unknown
+  ): value is Synchronizable<TValue>;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The value to be checked.
+
+## Remarks
+
+- `isSynchronizable` can be called from any JavaScript Runtime.
