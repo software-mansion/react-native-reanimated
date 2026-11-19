@@ -15,10 +15,10 @@ export default function DocSidebarWrapper(props) {
   };
 
   const newItems = [];
-  const isNextVersion = useDocsVersion().version === 'current';
-  const experimentalItems = isNextVersion
-    ? []
-    : ['shared-element-transitions/overview'];
+  const experimentalItems =
+    useDocsVersion().version === '3.x'
+      ? ['shared-element-transitions/overview']
+      : [];
   const deprecatedItems = ['device/useAnimatedKeyboard'];
   const unreleasedItems = [];
 
