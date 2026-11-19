@@ -201,6 +201,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrier.test');
       require('./tests/layoutAnimations/sharedTransitionAnimatedStyle.test');
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
+      require('./tests/layoutAnimations/sharedTransitionCarrierReactProps.test');
       require('./tests/layoutAnimations/sharedTransitionMovingTarget.test');
       require('./tests/layoutAnimations/sharedTransitionGesture.test');
       require('./tests/layoutAnimations/sharedTransitionWindow.test');
@@ -212,6 +213,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
       require('./tests/layoutAnimations/sharedTransitionStart.test');
+      require('./tests/layoutAnimations/sharedTransitionScreenSlide.test');
       require('./tests/layoutAnimations/sharedTransitionCallback.test');
     },
   },

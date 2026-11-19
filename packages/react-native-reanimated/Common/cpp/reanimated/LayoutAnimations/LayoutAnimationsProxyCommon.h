@@ -52,6 +52,10 @@ struct AncestorClipRange {
 // Writes currentClip* and targetClip* to the values of a shared transition.
 void setClipValues(jsi::Runtime &runtime, const jsi::Object &values, const AncestorClipRange &clip);
 
+struct AnimatedClip {
+  std::optional<Float> originX, originY, width, height, borderRadius;
+};
+
 struct LayoutAnimation {
   // On Android, the props of currentView can hold only the props that the last frame changed. Read currentView with
   // LayoutAnimationsProxyCommon::currentViewOf.
@@ -63,13 +67,18 @@ struct LayoutAnimation {
   LayoutAnimationType type;
   std::shared_ptr<Serializable> config;
   react::Point frameOffset;
+  // The scroll of the target since this start. A frame is the value of the worklet plus this offset.
+  react::Point pathOffset;
   std::optional<double> contentOpacity;
   // A built-in timed shared transition interpolates the frame and the transform from startView to finalView.
   std::optional<double> geometryProgress;
 #ifdef ANDROID
   std::optional<SentFrame> sentFrame;
 #endif
-  std::optional<AncestorClip> clip;
+  // A built-in timed shared transition moves its clip with geometryProgress.
+  std::optional<double> clipProgress;
+  // The values do not include pathOffset.
+  AnimatedClip animatedClip;
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 
   const Props::Shared &framePropsBase() const {
@@ -112,6 +121,11 @@ struct ProgressLayoutAnimationStart {
   std::shared_ptr<Serializable> config;
 };
 
+struct QueuedCarrierStart {
+  ShadowView *before;
+  Props::Shared *frameProps;
+};
+
 struct LayoutAnimationCancellation {
   Tag tag;
   bool shouldStopManager;
@@ -146,6 +160,7 @@ struct LayoutAnimationsProxyDependencies {
   ReadMountedViewPropsFunction readMountedViewProps;
   SetSharedTransitionOverlayFunction setSharedTransitionOverlay;
   NativeViewPlacementFunction nativeViewPlacement;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransition;
 #endif
 };
 
@@ -204,6 +219,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void transferConfigFromNativeID(const std::string &nativeId, const int tag) const;
   void writeSharedTransitionGeometry(Tag tag, LayoutAnimation &animation) const;
   virtual void followTargetsPlacedNatively() const {}
+  void moveLayoutAnimationPath(Tag tag, LayoutAnimation &animation, react::Point offset) const;
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
@@ -223,6 +239,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   std::optional<ShadowView> takeCompletedLayoutAnimationView(Tag tag) const;
   std::optional<ShadowView> layoutAnimationViewOnScreen(Tag tag) const;
   const ShadowView *queuedLayoutStartView(Tag tag) const;
+  std::vector<QueuedCarrierStart> queuedCarrierStarts(Tag tag) const;
   std::optional<ShadowView> reparentLayoutAnimation(Tag tag, Tag parentTag) const;
   std::optional<ShadowView>
   reparentPendingLayoutAnimations(Tag tag, Tag parentTag, const ShadowView &newView, react::Point offset) const;
@@ -282,6 +299,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   struct PreparedLayoutAnimationStart {
     ManagedLayoutAnimationStart start;
     Rect window;
+    // The animations of the replaced start keep values without its pathOffset, so the new start cannot continue them.
+    bool stopsReplacedAnimation;
   };
   using PreparedLayoutAnimationOperation =
       std::variant<PreparedLayoutAnimationStart, LayoutAnimationStop, std::monostate>;
@@ -293,6 +312,7 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
 #endif
 
   std::optional<SurfaceId> progressSharedTransitionGeometry(Tag tag, const jsi::Object &newStyle) const;
+  void writeFrame(Tag tag, LayoutAnimation &animation, folly::dynamic props, const Frame &frame) const;
   UpdateValues frameValues(
       const LayoutAnimation &animation,
       const Props::Shared &base,

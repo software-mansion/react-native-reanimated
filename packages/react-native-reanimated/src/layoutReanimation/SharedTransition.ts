@@ -290,6 +290,18 @@ function interpolateValue(
   return progress < 1 ? current : target;
 }
 
+// The clip of the moving view, in the coordinates of the window. A custom animation that does not animate it gets the
+// default animation, so that the moving view stays clipped like the ancestors of the shared views.
+const CLIP_KEYS = [
+  'clipOriginX',
+  'clipOriginY',
+  'clipWidth',
+  'clipHeight',
+  'clipBorderRadius',
+];
+// The native side moves the clip keys that an animation does not set with this progress.
+const CLIP_PROGRESS_KEY = 'sharedTransitionClipProgress';
+
 function defaultProgressAnimation(
   values: SharedTransitionAnimationsValues,
   progress: number
@@ -297,6 +309,9 @@ function defaultProgressAnimation(
   'worklet';
   const style: Record<string, unknown> = {};
   for (const { key, current, target } of getChangedStyles(values)) {
+    if (CLIP_KEYS.includes(key)) {
+      continue;
+    }
     if (key === 'transform') {
       const matrix = interpolateMatrix(
         progress,
@@ -344,21 +359,6 @@ function getContentOpacityChange(values: SharedTransitionAnimationsValues) {
     current !== target
     ? { current, target }
     : undefined;
-}
-
-// The clip of the moving view, in the coordinates of the window. A custom animation that does not animate it gets the
-// default animation, so that the moving view stays clipped like the ancestors of the shared views.
-const CLIP_KEYS = [
-  'clipOriginX',
-  'clipOriginY',
-  'clipWidth',
-  'clipHeight',
-  'clipBorderRadius',
-];
-
-function getClipChanges(values: SharedTransitionAnimationsValues) {
-  'worklet';
-  return getChangedStyles(values).filter(({ key }) => CLIP_KEYS.includes(key));
 }
 
 function getInitialStyle(
@@ -536,8 +536,8 @@ export class SharedTransition
   /**
    * Tells if the built animation aims at the current geometry of the target in
    * each frame. Custom animations and timed progress animations use the
-   * geometry that the target has when they start. This is used internally by
-   * the layout animations system.
+   * geometry that the target has when they start, and move with a scroll of the
+   * target. This is used internally by the layout animations system.
    */
   followsTarget(): boolean {
     return (
@@ -704,13 +704,23 @@ export class SharedTransition
         'worklet';
         const values =
           layoutAnimationValues as unknown as SharedTransitionAnimationsValues;
-        const initialValues = progressAnimation(values, 0);
+        const timedProgressAnimation: ProgressSharedTransitionAnimation = (
+          _values,
+          progress
+        ) => {
+          'worklet';
+          const style = progressAnimation(values, progress);
+          return values.currentClipOriginX === undefined
+            ? style
+            : { ...style, [CLIP_PROGRESS_KEY]: progress };
+        };
+        const initialValues = timedProgressAnimation(values, 0);
         return {
           initialValues,
           animations: progressDrivenAnimations(
             values,
             initialValues,
-            progressAnimation,
+            timedProgressAnimation,
             () => delayFunction(delay, animation(1, config))
           ),
         };
@@ -734,17 +744,28 @@ export class SharedTransition
             contentOpacity.target
           );
         }
-        const delayedRecord = delayedAnimations as Record<string, unknown>;
-        for (const { key, target } of getClipChanges(values)) {
-          delayedRecord[key] ??= delayFunction(
-            delay,
-            animation(target as number, config)
+        const initialValues = getCustomInitialStyle(values, animations);
+        if (values.currentClipOriginX !== undefined) {
+          const clipClock = changedClipKeysOf(values).some(
+            (key) => delayedAnimations[key] === undefined
           );
+          Object.assign(
+            delayedAnimations,
+            clipClock
+              ? progressDrivenAnimations(
+                  values,
+                  { [CLIP_PROGRESS_KEY]: 0 },
+                  (_values, progress) => {
+                    'worklet';
+                    return { [CLIP_PROGRESS_KEY]: progress };
+                  },
+                  () => delayFunction(delay, animation(1, config))
+                )
+              : { [CLIP_PROGRESS_KEY]: 1 }
+          );
+          initialValues[CLIP_PROGRESS_KEY] = clipClock ? 0 : 1;
         }
-        return {
-          initialValues: getCustomInitialStyle(values, animations),
-          animations: delayedAnimations,
-        };
+        return { initialValues, animations: delayedAnimations };
       };
     }
 
@@ -833,14 +854,6 @@ export class SharedTransition
     return (values, progress) => {
       'worklet';
       let style = progressAnimation(values, progress);
-      for (const { key, current, target } of getClipChanges(values)) {
-        if ((style as Record<string, unknown>)[key] === undefined) {
-          style = {
-            ...style,
-            [key]: interpolateValue(progress, current, target),
-          };
-        }
-      }
       const contentOpacity = getContentOpacityChange(values);
       if (contentOpacity && style.contentOpacity === undefined) {
         style = {
@@ -872,6 +885,13 @@ export class SharedTransition
       return style;
     };
   }
+}
+
+function changedClipKeysOf(values: SharedTransitionAnimationsValues) {
+  'worklet';
+  return getChangedStyles(values)
+    .map(({ key }) => key)
+    .filter((key) => CLIP_KEYS.includes(key));
 }
 
 function warnUnsupportedModifier(name: string) {

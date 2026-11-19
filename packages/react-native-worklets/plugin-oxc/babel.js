@@ -63,6 +63,7 @@ function workletsPluginOxcBabelShim(babelApi) {
  */
 function transform(sourceText, filename, state) {
   warnAboutIgnoredOptions(state.opts);
+  warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
@@ -104,6 +105,77 @@ function warnAboutIgnoredOptions(options) {
       'compatibility with `react-native-worklets/plugin` but ignored — the Oxc transform ' +
       'cannot dispatch arbitrary Babel plugins. Compose them around this plugin in ' +
       'babel.config.js instead.'
+  );
+}
+
+const COMMON_FOLDER_NAMES = new Set([
+  'app',
+  'build',
+  'cjs',
+  'common',
+  'commonjs',
+  'components',
+  'core',
+  'dist',
+  'esm',
+  'helpers',
+  'lib',
+  'module',
+  'modules',
+  'shared',
+  'source',
+  'src',
+  'utils',
+]);
+
+const warnedDangerousPaths = new Set();
+
+/**
+ * @param {import('./index').PluginOptions} options
+ * @returns {void}
+ */
+function warnAboutDangerousRelativePaths(options) {
+  const relativePaths = options?.importForwarding?.relativePaths;
+  if (options?.silenceDangerousPathsWarning || !relativePaths) {
+    return;
+  }
+  for (const relativePath of relativePaths) {
+    if (
+      typeof relativePath !== 'string' ||
+      warnedDangerousPaths.has(relativePath) ||
+      !isDangerousRelativePath(relativePath)
+    ) {
+      continue;
+    }
+    warnedDangerousPaths.add(relativePath);
+    console.warn(getDangerousRelativePathWarning(relativePath));
+  }
+}
+
+/**
+ * @param {string} relativePath
+ * @returns {boolean}
+ */
+function isDangerousRelativePath(relativePath) {
+  const segments = relativePath.split('/');
+  return (
+    relativePath.length > 0 &&
+    segments.every((segment) => COMMON_FOLDER_NAMES.has(segment))
+  );
+}
+
+/**
+ * @param {string} relativePath
+ * @returns {string}
+ */
+function getDangerousRelativePathWarning(relativePath) {
+  return (
+    `[Worklets] \`importForwarding.relativePaths\` contains '${relativePath}', which has only common folder names. ` +
+    `It can also match folders inside packages in node_modules, for example 'node_modules/<package>/${relativePath}', ` +
+    `and the relative imports inside their worklets get forwarded too, which can crash the app. ` +
+    `Use a path that only your code has. ` +
+    `Set the \`silenceDangerousPathsWarning\` plugin option to \`true\` to hide this warning. ` +
+    `See https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths`
   );
 }
 
