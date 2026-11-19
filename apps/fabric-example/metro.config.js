@@ -24,18 +24,6 @@ const appsRoot = path.resolve(monorepoRoot, 'apps');
 let config = {
   projectRoot: __dirname,
   watchFolders: [monorepoRoot, appsRoot],
-  resolver: {
-    blockList,
-    extraNodeModules,
-  },
-};
-
-config = mergeConfig(defaultConfig, config);
-
-const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
-config = mergeConfig(config, bundleModeMetroConfig);
-
-config = mergeConfig(config, {
   transformer: {
     getTransformOptions: async () => ({
       transform: {
@@ -53,7 +41,16 @@ config = mergeConfig(config, {
       },
     }),
   },
-});
+  resolver: {
+    blockList,
+    extraNodeModules,
+  },
+};
+
+config = mergeConfig(defaultConfig, config);
+
+const { bundleModeMetroConfig } = require('react-native-worklets/bundleMode');
+config = mergeConfig(config, bundleModeMetroConfig);
 
 /** @type {import('@react-native/metro-config').MetroConfig} */
 module.exports = wrapWithReanimatedMetroConfig(
