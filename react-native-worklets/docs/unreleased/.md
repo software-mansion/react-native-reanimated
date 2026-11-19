@@ -30,7 +30,7 @@ function refreshFeed(page) {
   const posts = fetchFromBackend(`/feed?page=${page}`);
   setNativeProps('feed', { posts: posts.items });
   console.log(`feed page ${page} ready`);
-  setTimeout(() => refreshFeed(page + 1), 8);
+  setTimeout(() => refreshFeed(page + 1), 400);
 }
 
 function animateSpinner(angle) {
@@ -45,7 +45,7 @@ function streamAudio(chunk) {
   const mixed = mixChannels(equalized);
   setNativeProps('speaker', { pulse: playAudio(mixed) });
   console.log(`chunk ${chunk} played`);
-  setTimeout(() => streamAudio(chunk + 1), 32);
+  setTimeout(() => streamAudio(chunk + 1), 1_600);
 }
 
 function renderMarkdown(doc, revision) {
@@ -55,7 +55,7 @@ function renderMarkdown(doc, revision) {
   const styled = applyTheme(blocks);
   setNativeProps('article', renderHtml(styled));
   console.log(`rendered ${doc} r${revision}`);
-  setTimeout(() => renderMarkdown(doc, revision + 1), 16);
+  setTimeout(() => renderMarkdown(doc, revision + 1), 800);
 }
 
 function onPress(count) {
@@ -94,7 +94,7 @@ function refreshFeed(page) {
   const posts = fetchFromBackend(`/feed?page=${page}`);
   setNativeProps('feed', { posts: posts.items });
   console.log(`feed page ${page} ready`);
-  setTimeout(() => refreshFeed(page + 1), 8);
+  setTimeout(() => refreshFeed(page + 1), 400);
 }
 
 function animateSpinner(angle) {
@@ -109,7 +109,7 @@ function streamAudio(chunk) {
   const mixed = mixChannels(equalized);
   setNativeProps('speaker', { pulse: playAudio(mixed) });
   console.log(`chunk ${chunk} played`);
-  setTimeout(() => streamAudio(chunk + 1), 24);
+  setTimeout(() => streamAudio(chunk + 1), 1_200);
 }
 
 function renderMarkdown(doc, revision) {
@@ -119,7 +119,7 @@ function renderMarkdown(doc, revision) {
   const styled = applyTheme(blocks);
   setNativeProps('article', renderHtml(styled));
   console.log(`rendered ${doc} r${revision}`);
-  setTimeout(() => renderMarkdown(doc, revision + 1), 16);
+  setTimeout(() => renderMarkdown(doc, revision + 1), 800);
 }
 
 function onPress(count) {
