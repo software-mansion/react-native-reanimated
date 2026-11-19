@@ -40,8 +40,17 @@ export function setupRequestAnimationFrame() {
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
-    for (const finalizer of finalizers) {
-      finalizer();
+    let finalizerIndex = 0;
+    try {
+      for (; finalizerIndex < finalizers.length; finalizerIndex++) {
+        finalizers[finalizerIndex]();
+      }
+    } finally {
+      if (finalizerIndex < finalizers.length) {
+        queuedFinalizers = finalizers
+          .slice(finalizerIndex + 1)
+          .concat(queuedFinalizers);
+      }
     }
     globalThis.__drainMicrotasks();
   }
