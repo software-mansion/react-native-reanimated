@@ -758,7 +758,9 @@ bool LayoutAnimationsProxy::followsWithoutRestart(const SharedTransitionRun &run
 // A nested carrier moves with its parent carrier.
 void LayoutAnimationsProxy::moveWithScrolledTargets() const {
   for (auto &run : activeSharedTransitionRuns()) {
-    if (!run.movesPathWithScroll() || run.carrier->placement() == CarrierPlacement::NESTED || !hasLiveTarget(run)) {
+    const bool returnsToOwnSlot = run.target == run.carrier && isLightNodeMapped(run.target);
+    if (!run.movesPathWithScroll() || run.carrier->placement() == CarrierPlacement::NESTED ||
+        (!hasLiveTarget(run) && !returnsToOwnSlot)) {
       continue;
     }
     if (auto *animation = timedAnimation(run)) {
