@@ -548,6 +548,16 @@ const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
 
 const httpServer = http.createServer(handleEchoRequest);
 const wss = new WebSocketServer({ noServer: true });
+const RAW_FRAMES: Record<string, Buffer> = {
+  'non-minimal-16': Buffer.concat([
+    Buffer.from([0x81, 126, 0x00, 124]),
+    Buffer.alloc(124, 0x61),
+  ]),
+  'non-minimal-64': Buffer.concat([
+    Buffer.from([0x81, 127, 0, 0, 0, 0, 0, 0, 0xff, 0xff]),
+    Buffer.alloc(0xffff, 0x61),
+  ]),
+};
 const wsCloseRecords = new Map<string, { code: number; reason: string }>();
 /**
  * `handleProtocols` cannot reject a client: `ws` only calls it when the client
@@ -621,6 +631,12 @@ echoWss.on('connection', (socket, request) => {
     }
     socket.close(code, reason);
     return;
+  }
+  const rawFrame = RAW_FRAMES[options.get('rawFrame') ?? ''];
+  if (rawFrame !== undefined) {
+    (socket as unknown as { _socket: NodeJS.WritableStream })._socket.write(
+      rawFrame
+    );
   }
   if (options.get('invalidUtf8') !== null) {
     socket.send(Buffer.from([0x61, 0xff, 0x62]), { binary: false });

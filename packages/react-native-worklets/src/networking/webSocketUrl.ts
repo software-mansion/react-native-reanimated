@@ -188,17 +188,110 @@ function percentDecode(value: string): string {
 
 function domainToAscii(domain: string): string {
   const lowered = domain.toLowerCase();
-  if (isAscii(lowered)) {
-    return lowered;
-  }
   const normalized =
-    typeof lowered.normalize === 'function'
+    !isAscii(lowered) && typeof lowered.normalize === 'function'
       ? lowered.normalize('NFC')
       : lowered;
   return normalized
-    .split(/[.。．｡]/)
-    .map((label) => (isAscii(label) ? label : `xn--${punycodeEncode(label)}`))
+    .split(/[.\u3002\uFF0E\uFF61]/)
+    .map(labelToAscii)
     .join('.');
+}
+
+function labelToAscii(label: string): string {
+  if (label.includes('\uFFFD')) {
+    fail('the URL host is not valid UTF-8');
+  }
+  if (label.startsWith('xn--')) {
+    const decoded = punycodeDecode(label.slice(4));
+    if (
+      decoded === null ||
+      decoded === '' ||
+      isAscii(decoded) ||
+      hasDisallowedCodePoint(decoded) ||
+      punycodeEncode(decoded) !== label.slice(4)
+    ) {
+      fail(`the URL host has an invalid label '${label}'`);
+    }
+    return label;
+  }
+  return isAscii(label) ? label : `xn--${punycodeEncode(label)}`;
+}
+
+function hasDisallowedCodePoint(label: string): boolean {
+  for (const character of label) {
+    const codePoint = character.codePointAt(0)!;
+    if (
+      codePoint < 0x20 ||
+      (codePoint >= 0x7f && codePoint <= 0x9f) ||
+      codePoint === 0xfffd
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function punycodeDecode(input: string): string | null {
+  const BASE = 36;
+  const T_MIN = 1;
+  const T_MAX = 26;
+  const delimiter = input.lastIndexOf('-');
+  const output = Array.from(
+    delimiter === -1 ? '' : input.slice(0, delimiter),
+    (character) => character.codePointAt(0)!
+  );
+  if (output.some((codePoint) => codePoint >= 0x80)) {
+    return null;
+  }
+  let n = 0x80;
+  let i = 0;
+  let bias = 72;
+  let index = delimiter === -1 ? 0 : delimiter + 1;
+  while (index < input.length) {
+    const oldI = i;
+    let weight = 1;
+    for (let k = BASE; ; k += BASE) {
+      if (index >= input.length) {
+        return null;
+      }
+      const digit = decodeDigit(input.charCodeAt(index++));
+      if (digit === null) {
+        return null;
+      }
+      i += digit * weight;
+      const t = k <= bias ? T_MIN : k >= bias + T_MAX ? T_MAX : k - bias;
+      if (digit < t) {
+        break;
+      }
+      weight *= BASE - t;
+      if (i > 0x10ffff * (output.length + 1)) {
+        return null;
+      }
+    }
+    bias = adaptBias(i - oldI, output.length + 1, oldI === 0);
+    n += Math.floor(i / (output.length + 1));
+    i %= output.length + 1;
+    if (n > 0x10ffff || (n >= 0xd800 && n <= 0xdfff)) {
+      return null;
+    }
+    output.splice(i, 0, n);
+    i++;
+  }
+  return String.fromCodePoint(...output);
+}
+
+function decodeDigit(code: number): number | null {
+  if (code >= 0x30 && code <= 0x39) {
+    return code - 22;
+  }
+  if (code >= 0x61 && code <= 0x7a) {
+    return code - 0x61;
+  }
+  if (code >= 0x41 && code <= 0x5a) {
+    return code - 0x41;
+  }
+  return null;
 }
 
 function punycodeEncode(input: string): string {

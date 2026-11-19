@@ -419,6 +419,10 @@ internal class WorkletsWebSocket(
             protocolError("The peer sent a frame with a negative length.")
             return null
         }
+        if ((indicator == LENGTH_16_BIT && length < LENGTH_16_BIT) || (indicator == LENGTH_64_BIT && length <= MAX_16_BIT_LENGTH)) {
+            protocolError("The peer did not use the minimal payload length encoding.")
+            return null
+        }
         if (length > MAX_MESSAGE_BYTES) {
             fail("The peer sent a frame larger than $MAX_MESSAGE_BYTES bytes.", CLOSE_MESSAGE_TOO_BIG)
             return null

@@ -685,6 +685,28 @@ describe('WebSocket url and protocol negotiation', () => {
     );
   });
 
+  it('rejects hosts that are not valid UTF-8 or valid IDNA labels', () => {
+    for (const url of [
+      'ws://%FF/',
+      'ws://exa%C3mple.com/',
+      'ws://xn--/',
+      'ws://xn--abc-/',
+      'ws://xn--a.example/',
+      'ws://xn--zzzzzzzzzzzz9.example/',
+    ]) {
+      expect(() => new WebSocket(url)).toThrow(
+        expect.objectContaining({ name: 'SyntaxError' })
+      );
+    }
+    expect(openedSockets).toHaveLength(0);
+  });
+
+  it('keeps a valid A-label', () => {
+    expect(new WebSocket('ws://XN--BCHER-KVA.example/').url).toBe(
+      'ws://xn--bcher-kva.example/'
+    );
+  });
+
   it('serializes IPv4 and IPv6 hosts', () => {
     expect(new WebSocket('ws://0x7f.1/').url).toBe('ws://127.0.0.1/');
     expect(new WebSocket('ws://2130706433/').url).toBe('ws://127.0.0.1/');

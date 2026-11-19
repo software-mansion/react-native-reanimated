@@ -567,6 +567,92 @@ describeFn('WebSocket (live)', () => {
   );
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'WebSocket fails the connection on a 16-bit length that is not minimal, runtime: **%s**',
+    async (runtimeKind) => {
+      const frame = 'non-minimal-16';
+      const notification = `ws_non_minimal_done_${runtimeKind}_${frame}`;
+      const [flag, setFlag] = createTestValue('not_ok');
+      const socketUrl = `${SOCKET_URL}?rawFrame=${frame}`;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const socket = new globalThis.WebSocket(socketUrl);
+        let errored = false;
+        let delivered = false;
+        socket.onmessage = () => {
+          delivered = true;
+          setFlag('delivered the frame', notification);
+          socket.close();
+        };
+        socket.onerror = () => {
+          errored = true;
+        };
+        socket.onclose = (event: { code: number; wasClean: boolean }) => {
+          if (delivered) {
+            return;
+          }
+          if (!errored) {
+            setFlag('closed without an error event', notification);
+          } else if (event.code !== 1006 || event.wasClean !== false) {
+            setFlag(
+              `wrong close: ${event.code} ${String(event.wasClean)}`,
+              notification
+            );
+          } else {
+            setFlag('ok', notification);
+          }
+        };
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'WebSocket fails the connection on a 64-bit length that is not minimal, runtime: **%s**',
+    async (runtimeKind) => {
+      const frame = 'non-minimal-64';
+      const notification = `ws_non_minimal_done_${runtimeKind}_${frame}`;
+      const [flag, setFlag] = createTestValue('not_ok');
+      const socketUrl = `${SOCKET_URL}?rawFrame=${frame}`;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const socket = new globalThis.WebSocket(socketUrl);
+        let errored = false;
+        let delivered = false;
+        socket.onmessage = () => {
+          delivered = true;
+          setFlag('delivered the frame', notification);
+          socket.close();
+        };
+        socket.onerror = () => {
+          errored = true;
+        };
+        socket.onclose = (event: { code: number; wasClean: boolean }) => {
+          if (delivered) {
+            return;
+          }
+          if (!errored) {
+            setFlag('closed without an error event', notification);
+          } else if (event.code !== 1006 || event.wasClean !== false) {
+            setFlag(
+              `wrong close: ${event.code} ${String(event.wasClean)}`,
+              notification
+            );
+          } else {
+            setFlag('ok', notification);
+          }
+        };
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'WebSocket fails the connection on invalid UTF-8 in a text frame, runtime: **%s**',
     async (runtimeKind) => {
       const notification = `ws_bad_utf8_done_${runtimeKind}`;
