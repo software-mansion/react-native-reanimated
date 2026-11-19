@@ -73,6 +73,12 @@ declare global {
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   /** Available on runtimes with the Hermes microtask queue enabled. */
   var __drainMicrotasks: () => void;
+  /**
+   * Returns the number of outermost native calls into this runtime that have
+   * started. Available on Worklet Runtimes only with the `RUNTIME_TEST_FLAG`
+   * static feature flag.
+   */
+  var __getRootTaskId: (() => number) | undefined;
   /** Available only on the UI Runtime */
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
