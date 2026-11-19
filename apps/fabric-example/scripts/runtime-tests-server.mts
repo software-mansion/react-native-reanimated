@@ -98,7 +98,7 @@ const SANITIZERS: Record<string, Sanitizer> = {
   thread: {
     buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
     launchEnv: {
-      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
+      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0 suppressions=${path.join(projectRoot, 'tsan-suppressions.txt')}`,
     },
     runtimePrefix: 'libclang_rt.tsan',
   },
