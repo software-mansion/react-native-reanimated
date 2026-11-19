@@ -616,8 +616,106 @@ describe('WebSocket url and protocol negotiation', () => {
     );
   });
 
+  it('rejects a host with a forbidden code point', () => {
+    for (const url of [
+      'ws://exa mple.com/',
+      'ws://exa<mple.com/',
+      'ws://exa%20mple.com/',
+      'ws://exa|mple.com/',
+      'ws://[::1/',
+      'ws://[::1::2]/',
+      'ws://1.2.3.256/',
+      'ws://1.2.3.4.5/',
+      'ws://0x100000000/',
+    ]) {
+      expect(() => new WebSocket(url)).toThrow(
+        expect.objectContaining({ name: 'SyntaxError' })
+      );
+    }
+    expect(openedSockets).toHaveLength(0);
+  });
+
+  it('percent-encodes the path, the query and the userinfo', () => {
+    expect(new WebSocket('ws://example.com/a b').url).toBe(
+      'ws://example.com/a%20b'
+    );
+    expect(new WebSocket('ws://example.com/a"<>`{}^b').url).toBe(
+      'ws://example.com/a%22%3C%3E%60%7B%7D%5Eb'
+    );
+    expect(new WebSocket('ws://example.com/?a b\'c"<>').url).toBe(
+      'ws://example.com/?a%20b%27c%22%3C%3E'
+    );
+    expect(new WebSocket('ws://example.com/ż?ż').url).toBe(
+      'ws://example.com/%C5%BC?%C5%BC'
+    );
+    expect(new WebSocket('ws://a b:p;w@example.com/').url).toBe(
+      'ws://a%20b:p%3Bw@example.com/'
+    );
+    expect(new WebSocket('ws://example.com/a%20b').url).toBe(
+      'ws://example.com/a%20b'
+    );
+  });
+
+  it('serializes the path like the URL parser', () => {
+    expect(new WebSocket('ws://example.com/a/./b/../c').url).toBe(
+      'ws://example.com/a/c'
+    );
+    expect(new WebSocket('ws://example.com/a/%2e%2E/b').url).toBe(
+      'ws://example.com/b'
+    );
+    expect(new WebSocket('ws:\\\\example.com\\a\\b').url).toBe(
+      'ws://example.com/a/b'
+    );
+    expect(new WebSocket(' ws://exa\tmple.com/\n ').url).toBe(
+      'ws://example.com/'
+    );
+    expect(new WebSocket('ws:example.com').url).toBe('ws://example.com/');
+  });
+
+  it('converts a Unicode host to its ASCII form', () => {
+    expect(new WebSocket('ws://bücher.example/').url).toBe(
+      'ws://xn--bcher-kva.example/'
+    );
+    expect(new WebSocket('ws://ŻÓŁW.pl/').url).toBe('ws://xn--w-uga1v8h.pl/');
+    expect(new WebSocket('ws://%62%C3%BCcher.example/').url).toBe(
+      'ws://xn--bcher-kva.example/'
+    );
+    expect(new WebSocket('ws://例え.テスト/').url).toBe(
+      'ws://xn--r8jz45g.xn--zckzah/'
+    );
+  });
+
+  it('serializes IPv4 and IPv6 hosts', () => {
+    expect(new WebSocket('ws://0x7f.1/').url).toBe('ws://127.0.0.1/');
+    expect(new WebSocket('ws://2130706433/').url).toBe('ws://127.0.0.1/');
+    expect(new WebSocket('ws://0177.0.0.01/').url).toBe('ws://127.0.0.1/');
+    expect(new WebSocket('ws://[0:0:0:0:0:0:0:1]:8080/').url).toBe(
+      'ws://[::1]:8080/'
+    );
+    expect(new WebSocket('ws://[2001:DB8::0:1]/').url).toBe(
+      'ws://[2001:db8::1]/'
+    );
+    expect(new WebSocket('ws://[::ffff:192.168.0.1]/').url).toBe(
+      'ws://[::ffff:c0a8:1]/'
+    );
+  });
+
+  it('normalizes the port', () => {
+    expect(new WebSocket('ws://example.com:08080/').url).toBe(
+      'ws://example.com:8080/'
+    );
+    expect(new WebSocket('http://example.com:443/').url).toBe(
+      'ws://example.com:443/'
+    );
+  });
+
   it('rejects a url with no host', () => {
-    expect(() => new WebSocket('ws:///x')).toThrow('has no host');
+    expect(() => new WebSocket('ws:///')).toThrow('has no host');
+    expect(() => new WebSocket('ws://')).toThrow('has no host');
+  });
+
+  it('skips extra slashes before the host', () => {
+    expect(new WebSocket('ws:///x').url).toBe('ws://x/');
   });
 
   it('rejects a url with an empty host after the userinfo', () => {

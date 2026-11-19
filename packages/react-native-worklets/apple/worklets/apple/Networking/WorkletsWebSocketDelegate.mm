@@ -24,6 +24,7 @@ struct SocketRecord {
   std::shared_ptr<WebSocketListener> listener;
   bool closeReported;
   bool noStatus;
+  bool opened;
 };
 
 NSString *_Nullable toNSString(const std::string &value)
@@ -132,7 +133,7 @@ std::string toStdString(NSString *_Nullable string)
     [self failConnect:listener message:"The networking module was invalidated."];
     return;
   }
-  (*_state)[socketId] = SocketRecord{socketTask, std::move(listener), false, false};
+  (*_state)[socketId] = SocketRecord{socketTask, std::move(listener), false, false, false};
   [_lock unlock];
 
   [socketTask resume];
@@ -195,11 +196,19 @@ std::string toStdString(NSString *_Nullable string)
   if (task == nil) {
     return;
   }
+  [_lock lock];
+  const auto record = _state->find(socketId);
+  const bool opened = record != _state->end() && record->second.opened;
+  [_lock unlock];
+  if (!opened) {
+    [self failSocket:socketId message:"The socket was closed before the connection was established."];
+    return;
+  }
   if (code == static_cast<uint16_t>(WebSocketCloseCode::NoStatusReceived)) {
     [_lock lock];
-    const auto record = _state->find(socketId);
-    if (record != _state->end()) {
-      record->second.noStatus = true;
+    const auto openRecord = _state->find(socketId);
+    if (openRecord != _state->end()) {
+      openRecord->second.noStatus = true;
     }
     [_lock unlock];
     [task cancel];
@@ -232,6 +241,12 @@ std::string toStdString(NSString *_Nullable string)
     didOpenWithProtocol:(NSString *_Nullable)protocol
 {
   const uint64_t socketId = webSocketTask.taskDescription.longLongValue;
+  [_lock lock];
+  const auto record = _state->find(socketId);
+  if (record != _state->end()) {
+    record->second.opened = true;
+  }
+  [_lock unlock];
   if (auto listener = [self listenerFor:socketId]) {
     // NSURLSession does not surface the negotiated extensions.
     listener->onOpen(toStdString(protocol), "");

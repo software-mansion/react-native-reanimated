@@ -1,5 +1,6 @@
 package com.swmansion.worklets.networking
 
+import android.security.NetworkSecurityPolicy
 import android.util.Base64
 import java.io.BufferedInputStream
 import java.io.ByteArrayOutputStream
@@ -13,14 +14,16 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.ProxySelector
 import java.net.Socket
-import java.net.SocketTimeoutException
 import java.net.URI
 import java.security.MessageDigest
 import java.security.SecureRandom
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLSocket
 import javax.net.ssl.SSLSocketFactory
 
@@ -43,6 +46,8 @@ internal class WorkletsWebSocket(
     private var output: OutputStream? = null
     private var closeSent = false
     private var failed = false
+    private var opened = false
+    private val pongPending = AtomicBoolean(false)
 
     fun connect() {
         Thread({ run() }, "WorkletsWebSocketReader").start()
@@ -66,7 +71,7 @@ internal class WorkletsWebSocket(
                 return
             }
             closeSent = true
-            connecting = output == null
+            connecting = !opened
         }
         if (connecting) {
             abort("The socket was closed before the connection was established.")
@@ -78,10 +83,8 @@ internal class WorkletsWebSocket(
             } else {
                 closePayload(code, reason.toByteArray(Charsets.UTF_8))
             }
-        enqueue {
-            writeFrame(OPCODE_CLOSE, payload)
-            synchronized(lock) { socket?.soTimeout = CLOSE_TIMEOUT_MS }
-        }
+        enqueue { writeFrame(OPCODE_CLOSE, payload) }
+        scheduleForcedClose()
     }
 
     fun cancel() {
@@ -93,72 +96,82 @@ internal class WorkletsWebSocket(
         val protocol: String
         try {
             val uri = parseUrl(url)
+            checkCleartextPermitted(uri)
             val connected = openSocket(uri)
-            val stale =
-                synchronized(lock) {
-                    if (settled.get() || closeSent) {
-                        true
-                    } else {
-                        socket = connected
-                        input = DataInputStream(BufferedInputStream(connected.getInputStream()))
-                        output = connected.getOutputStream()
-                        false
-                    }
-                }
-            if (stale) {
-                closeQuietly(connected)
-                return
+            synchronized(lock) {
+                input = DataInputStream(BufferedInputStream(connected.getInputStream()))
+                output = connected.getOutputStream()
             }
             protocol = handshake(uri)
+            connected.soTimeout = 0
+            synchronized(lock) {
+                if (settled.get() || closeSent) {
+                    return
+                }
+                opened = true
+            }
         } catch (e: Exception) {
             abort(e.message ?: e.javaClass.simpleName)
-            return
-        }
-        if (settled.get()) {
             return
         }
         listener.onOpen(protocol, "")
         try {
             readFrames()
-        } catch (e: SocketTimeoutException) {
-            abort("The peer did not complete the closing handshake.")
         } catch (e: IOException) {
             abort(e.message ?: e.javaClass.simpleName)
         }
     }
 
-    private fun openSocket(uri: URI): Socket {
-        val port = portOf(uri)
-        val proxy = selectProxy(uri, port)
-        val raw =
-            when (proxy.type()) {
-                Proxy.Type.HTTP -> {
-                    val plain = Socket()
-                    plain.connect(proxy.address(), CONNECT_TIMEOUT_MS)
-                    tunnelThroughProxy(plain, uri.host, port)
-                    plain
-                }
-                Proxy.Type.SOCKS -> {
-                    val viaSocks = Socket(proxy)
-                    viaSocks.connect(InetSocketAddress(uri.host, port), CONNECT_TIMEOUT_MS)
-                    viaSocks
-                }
-                else -> {
-                    val plain = Socket()
-                    plain.connect(InetSocketAddress(uri.host, port), CONNECT_TIMEOUT_MS)
-                    plain
+    private fun checkCleartextPermitted(uri: URI) {
+        if (uri.scheme == "ws" && !NetworkSecurityPolicy.getInstance().isCleartextTrafficPermitted(hostOf(uri))) {
+            throw IOException("Cleartext WebSocket traffic to ${hostOf(uri)} is not permitted by the network security policy.")
+        }
+    }
+
+    private fun <T : Socket> register(candidate: T): T {
+        val stale =
+            synchronized(lock) {
+                if (settled.get() || closeSent) {
+                    true
+                } else {
+                    socket = candidate
+                    false
                 }
             }
+        if (stale) {
+            closeQuietly(candidate)
+            throw IOException("The socket was closed before the connection was established.")
+        }
+        return candidate
+    }
+
+    private fun openSocket(uri: URI): Socket {
+        val host = hostOf(uri)
+        val port = portOf(uri)
+        val proxy = selectProxy(uri, port)
+        val raw = register(if (proxy.type() == Proxy.Type.SOCKS) Socket(proxy) else Socket())
+        raw.soTimeout = CONNECT_TIMEOUT_MS
+        when (proxy.type()) {
+            Proxy.Type.HTTP -> {
+                raw.connect(proxy.address(), CONNECT_TIMEOUT_MS)
+                tunnelThroughProxy(raw, host, port)
+            }
+            else -> raw.connect(InetSocketAddress(host, port), CONNECT_TIMEOUT_MS)
+        }
         raw.tcpNoDelay = true
         if (uri.scheme != "wss") {
             return raw
         }
         val factory = SSLSocketFactory.getDefault() as SSLSocketFactory
-        val tls = factory.createSocket(raw, uri.host, port, true) as SSLSocket
+        val tls = register(factory.createSocket(raw, host, port, true) as SSLSocket)
         val parameters = tls.sslParameters
         parameters.endpointIdentificationAlgorithm = "HTTPS"
         tls.sslParameters = parameters
+        tls.soTimeout = CONNECT_TIMEOUT_MS
         tls.startHandshake()
+        if (!HttpsURLConnection.getDefaultHostnameVerifier().verify(host, tls.session)) {
+            throw IOException("The TLS certificate does not match the host $host.")
+        }
         return tls
     }
 
@@ -167,7 +180,7 @@ internal class WorkletsWebSocket(
         port: Int,
     ): Proxy {
         val selector = ProxySelector.getDefault() ?: return Proxy.NO_PROXY
-        val proxies = selector.select(URI("${httpScheme(uri)}://${uri.host}:$port"))
+        val proxies = selector.select(URI(httpScheme(uri), null, hostOf(uri), port, null, null, null))
         return proxies.firstOrNull { it.type() != Proxy.Type.DIRECT } ?: Proxy.NO_PROXY
     }
 
@@ -176,7 +189,8 @@ internal class WorkletsWebSocket(
         host: String,
         port: Int,
     ) {
-        val request = "CONNECT $host:$port HTTP/1.1\r\nHost: $host:$port\r\n\r\n"
+        val authority = if (host.contains(':')) "[$host]:$port" else "$host:$port"
+        val request = "CONNECT $authority HTTP/1.1\r\nHost: $authority\r\n\r\n"
         plain.getOutputStream().write(request.toByteArray(Charsets.ISO_8859_1))
         plain.getOutputStream().flush()
         val response = readHttpResponse(DataInputStream(plain.getInputStream()))
@@ -346,7 +360,7 @@ internal class WorkletsWebSocket(
                         handleClose(payload)
                         return
                     }
-                    OPCODE_PING -> enqueue { writeFrame(OPCODE_PONG, payload) }
+                    OPCODE_PING -> sendPong(payload)
                     else -> Unit
                 }
                 continue
@@ -442,6 +456,7 @@ internal class WorkletsWebSocket(
                 writeFrame(OPCODE_CLOSE, payload)
                 settle(code, reason, true)
             }
+            scheduleForcedClose()
         } else {
             settle(code, reason, true)
         }
@@ -457,27 +472,31 @@ internal class WorkletsWebSocket(
     ) {
         val sendClose: Boolean
         synchronized(lock) {
-            if (failed) {
+            if (failed || settled.get()) {
                 return
             }
             failed = true
-            sendClose = !closeSent && output != null
+            sendClose = !closeSent && opened
             closeSent = true
         }
         listener.onError(message)
         if (sendClose) {
             enqueue {
                 writeFrame(OPCODE_CLOSE, closePayload(code, ByteArray(0)))
-                settle(code, "", false)
+                settle(CLOSE_ABNORMAL, "", false)
             }
+            scheduleForcedClose()
         } else {
-            settle(code, "", false)
+            settle(CLOSE_ABNORMAL, "", false)
         }
     }
 
     private fun abort(message: String) {
         val report: Boolean
         synchronized(lock) {
+            if (settled.get()) {
+                return
+            }
             report = !failed
             failed = true
             closeSent = true
@@ -503,6 +522,24 @@ internal class WorkletsWebSocket(
         writer.shutdown()
         onSettled()
         listener.onClose(code, reason, wasClean)
+    }
+
+    private fun sendPong(payload: ByteArray) {
+        if (!pongPending.compareAndSet(false, true)) {
+            return
+        }
+        enqueue {
+            pongPending.set(false)
+            writeFrame(OPCODE_PONG, payload)
+        }
+    }
+
+    private fun scheduleForcedClose() {
+        FORCED_CLOSE_TIMER.schedule(
+            { abort("The peer did not complete the closing handshake.") },
+            CLOSE_TIMEOUT_MS.toLong(),
+            TimeUnit.MILLISECONDS,
+        )
     }
 
     private fun enqueueData(
@@ -647,6 +684,13 @@ internal class WorkletsWebSocket(
             }
             return uri
         }
+
+        val FORCED_CLOSE_TIMER: ScheduledExecutorService =
+            Executors.newSingleThreadScheduledExecutor { runnable ->
+                Thread(runnable, "WorkletsWebSocketCloseTimer").apply { isDaemon = true }
+            }
+
+        fun hostOf(uri: URI): String = uri.host.removeSurrounding("[", "]")
 
         fun httpScheme(uri: URI): String = if (uri.scheme == "wss") "https" else "http"
 

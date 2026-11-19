@@ -354,6 +354,40 @@ describeFn('WebSocket (live)', () => {
   );
 
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
+    'WebSocket close() while connecting fails the connection, runtime: **%s**',
+    async (runtimeKind) => {
+      const notification = `ws_close_connecting_done_${runtimeKind}`;
+      const [flag, setFlag] = createTestValue('not_ok');
+      const socketUrl = `${SOCKET_URL}?delayUpgrade=1000`;
+
+      dispatchWorklet(() => {
+        'worklet';
+        const socket = new globalThis.WebSocket(socketUrl);
+        const events: string[] = [];
+        socket.onopen = () => events.push('open');
+        socket.onerror = () => events.push('error');
+        socket.onclose = (event: { code: number; wasClean: boolean }) => {
+          events.push('close');
+          const order = events.join(',');
+          if (order !== 'error,close') {
+            setFlag(`wrong events: ${order}`, notification);
+          } else if (event.code !== 1006) {
+            setFlag(`wrong code: ${event.code}`, notification);
+          } else if (event.wasClean !== false) {
+            setFlag('reported a clean close', notification);
+          } else {
+            setFlag('ok', notification);
+          }
+        };
+        setTimeout(() => socket.close(), 200);
+      }, runtimeKind);
+
+      await waitForNotification(notification);
+      expect(flag.value).toBe('ok');
+    }
+  );
+
+  test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'WebSocket reports 1005 when closed without a code, runtime: **%s**',
     async (runtimeKind) => {
       const notification = `ws_no_status_done_${runtimeKind}`;
@@ -560,7 +594,7 @@ describeFn('WebSocket (live)', () => {
             setFlag('closed without an error event', notification);
           } else if (event.wasClean !== false) {
             setFlag('reported a clean close', notification);
-          } else if (event.code !== 1007 && event.code !== 1006) {
+          } else if (event.code !== 1006) {
             setFlag(`wrong code: ${event.code}`, notification);
           } else {
             setFlag('ok', notification);

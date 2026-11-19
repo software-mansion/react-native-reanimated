@@ -46,7 +46,7 @@ scheduleOnRuntime(runtime, async () => {
 | Response streaming | ❌ |
 | `WebSocket` | ✅ |
 
-Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration. On Android, `WebSocket` connections are made by a client that ships with Worklets, on top of `java.net` sockets with the system TLS defaults, the system proxy settings and the app's cookie storage.
+Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration. On Android, `WebSocket` connections are made by a client that ships with Worklets, on top of `java.net` sockets with the system TLS defaults, the system proxy settings, the app's cleartext traffic policy and the app's cookie storage. Customizations of React Native's `OkHttpClient`, such as certificate pinning or interceptors, do not apply to `WebSocket`.
 
 <Badges version="0.14.0">
   `WebSocket` follows the [WHATWG interface](https://websockets.spec.whatwg.org/) with `onopen`, `onmessage`, `onerror`, `onclose`, `addEventListener`, `send` for strings, `ArrayBuffer`, `ArrayBufferView` and `Blob`, `close`, `readyState`, `bufferedAmount`, `protocol` and `binaryType`.

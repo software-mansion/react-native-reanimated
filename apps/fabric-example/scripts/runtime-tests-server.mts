@@ -577,9 +577,25 @@ httpServer.on('upgrade', (request, socket, head) => {
     socket.destroy();
     return;
   }
-  target.handleUpgrade(request, socket, head, (client) => {
-    target.emit('connection', client, request);
-  });
+  const delay =
+    target === echoWss
+      ? clampInteger(
+          new URL(request.url ?? '/', 'http://localhost').searchParams.get(
+            'delayUpgrade'
+          ),
+          0,
+          0,
+          10000
+        )
+      : 0;
+  setTimeout(() => {
+    if (socket.destroyed) {
+      return;
+    }
+    target.handleUpgrade(request, socket, head, (client) => {
+      target.emit('connection', client, request);
+    });
+  }, delay);
 });
 
 /**
@@ -606,7 +622,6 @@ echoWss.on('connection', (socket, request) => {
     return;
   }
   if (options.get('invalidUtf8') !== null) {
-    // 'a', a lone 0xFF, 'b' - must reach JS as 'a\uFFFDb'.
     socket.send(Buffer.from([0x61, 0xff, 0x62]), { binary: false });
   }
   socket.on('message', (data, isBinary) => {

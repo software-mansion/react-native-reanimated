@@ -6,6 +6,7 @@ import { DOMException } from './DOMException';
 import { EventTargetLite } from './events';
 import { isToken } from './http';
 import { utf8Encode } from './utf8';
+import { parseWebSocketUrl } from './webSocketUrl';
 
 type SocketEvent =
   | { type: 'open'; payload: { protocol: string; extensions?: string } }
@@ -95,9 +96,9 @@ export class WebSocket extends EventTargetLite {
   constructor(url: string, protocols?: string | string[]) {
     super();
 
-    const parsed = parseUrl(url);
-    this.url = parsed;
-    this.origin = originOf(parsed);
+    const parsed = parseWebSocketUrl(url);
+    this.url = parsed.href;
+    this.origin = parsed.origin;
 
     const protocolList =
       protocols === undefined
@@ -111,7 +112,7 @@ export class WebSocket extends EventTargetLite {
     let constructing = true;
     const deferred: SocketEvent[] = [];
     this.socketId = globalThis.__workletsNetworking!.connectWebSocket(
-      { url: parsed, protocols: protocolList, headers: [] },
+      { url: parsed.href, protocols: protocolList, headers: [] },
       (type: string, payload: unknown) => {
         const event = { type, payload } as SocketEvent;
         if (constructing) {
@@ -284,65 +285,6 @@ export class WebSocket extends EventTargetLite {
   }
 }
 
-/**
- * https://url.spec.whatwg.org/#concept-url-serializer - the host is lowercased,
- * a default port is dropped and an empty path becomes `/`, so two spellings of
- * one endpoint produce one `url`.
- */
-function canonicalize(scheme: string, rest: string): string {
-  const withoutSlashes = rest.replace(/^\/\//, '');
-  const end = withoutSlashes.search(/[/?]/);
-  const authority = end === -1 ? withoutSlashes : withoutSlashes.slice(0, end);
-  const remainder = end === -1 ? '' : withoutSlashes.slice(end);
-  // The path comes before the query, so an empty path still serializes as `/`.
-  const suffix = remainder.startsWith('?') ? `/${remainder}` : remainder || '/';
-
-  // Only the host is lowercased; userinfo and the query keep their case.
-  const userinfoAt = authority.lastIndexOf('@');
-  const userinfo =
-    userinfoAt === -1 ? '' : `${authority.slice(0, userinfoAt + 1)}`;
-  let host = authority.slice(userinfoAt + 1);
-  let portSuffix = '';
-  const portAt = host.lastIndexOf(':');
-  const bracketAt = host.lastIndexOf(']');
-  if (portAt > bracketAt) {
-    const port = host.slice(portAt + 1);
-    if (!/^[0-9]*$/.test(port)) {
-      throw new DOMException(
-        `[Worklets] Failed to construct 'WebSocket': the URL has an invalid port.`,
-        'SyntaxError'
-      );
-    }
-    if (port !== '' && Number(port) > 65535) {
-      throw new DOMException(
-        `[Worklets] Failed to construct 'WebSocket': the URL has a port above 65535.`,
-        'SyntaxError'
-      );
-    }
-    const defaultPort = scheme === 'wss' ? 443 : 80;
-    host = host.slice(0, portAt);
-    if (port !== '' && Number(port) !== defaultPort) {
-      portSuffix = `:${port}`;
-    }
-  }
-  if (host === '') {
-    throw new DOMException(
-      `[Worklets] Failed to construct 'WebSocket': the URL has no host.`,
-      'SyntaxError'
-    );
-  }
-  return `${scheme}://${userinfo}${host.toLowerCase()}${portSuffix}${suffix}`;
-}
-
-/** https://url.spec.whatwg.org/#origin - ws and wss are their own origin scheme. */
-function originOf(url: string): string {
-  const scheme = url.startsWith('wss:') ? 'wss' : 'ws';
-  const withoutScheme = url.slice(url.indexOf('://') + 3);
-  const authority = withoutScheme.split(/[/?]/)[0];
-  const host = authority.slice(authority.lastIndexOf('@') + 1);
-  return `${scheme}://${host}`;
-}
-
 function toBuffer(data: ArrayBuffer | ArrayBufferView | Blob): ArrayBuffer {
   if (ArrayBuffer.isView(data)) {
     return toArrayBuffer(
@@ -353,30 +295,6 @@ function toBuffer(data: ArrayBuffer | ArrayBufferView | Blob): ArrayBuffer {
     return toArrayBuffer(data.__getBytes());
   }
   return data;
-}
-
-function parseUrl(url: string): string {
-  if (url.includes('#')) {
-    throw new DOMException(
-      `[Worklets] Failed to construct 'WebSocket': the URL must not have a fragment, got '${url}'.`,
-      'SyntaxError'
-    );
-  }
-  const match = /^([A-Za-z][A-Za-z0-9+\-.]*):/.exec(url);
-  const scheme = match?.[1]?.toLowerCase();
-  if (scheme === 'ws' || scheme === 'wss') {
-    return canonicalize(scheme, url.slice(scheme.length + 1));
-  }
-  if (scheme === 'http') {
-    return canonicalize('ws', url.slice(5));
-  }
-  if (scheme === 'https') {
-    return canonicalize('wss', url.slice(6));
-  }
-  throw new DOMException(
-    `[Worklets] Failed to construct 'WebSocket': only ws and wss URLs are supported, got '${url}'.`,
-    'SyntaxError'
-  );
 }
 
 function assertDistinctProtocols(protocols: string[]) {
