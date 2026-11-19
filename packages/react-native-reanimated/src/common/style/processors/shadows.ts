@@ -1,7 +1,6 @@
 'use strict';
 import type { BoxShadowValue } from 'react-native';
 
-import { IS_ANDROID } from '../../constants';
 import type { ValueProcessor } from '../../types';
 import { parseBoxShadowString } from '../../utils';
 import { processColor } from './colors';
@@ -20,15 +19,6 @@ export type ProcessedBoxShadowValue = {
   color?: number;
   spreadDistance?: number;
   inset?: boolean;
-};
-
-const parseBlurRadius = (value: string) => {
-  'worklet';
-  if (IS_ANDROID) {
-    // Android crashes when blurRadius is smaller than 1
-    return Math.max(parseFloat(value), 1);
-  }
-  return parseFloat(value);
 };
 
 export const processBoxShadow: ValueProcessor<
@@ -61,7 +51,7 @@ export const processBoxShadow: ValueProcessor<
 
     return {
       ...rest,
-      blurRadius: parseBlurRadius(blurRadius as string),
+      blurRadius: parseFloat(blurRadius as string),
       color: processColor(color, context),
       offsetX: parseFloat(offsetX as string),
       offsetY: parseFloat(offsetY as string),

@@ -1,8 +1,12 @@
 import * as React from 'react';
 import { View, Text, StyleSheet, Pressable, Dimensions } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Animated, { FadeIn } from 'react-native-reanimated';
+import Animated, {
+  FadeIn,
+  SharedTransitionBoundary,
+} from 'react-native-reanimated';
 
 type StackParamList = {
   Home: undefined;
@@ -131,9 +135,22 @@ function DetailsScreen({
   );
 }
 
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
 export default function GalleryExample() {
   return (
     <Stack.Navigator
+      screenLayout={({ children }) => (
+        <ScreenBoundary>{children}</ScreenBoundary>
+      )}
       screenOptions={{
         headerShown: false,
       }}>

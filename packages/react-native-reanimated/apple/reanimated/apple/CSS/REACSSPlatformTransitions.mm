@@ -18,14 +18,27 @@ using namespace facebook;
 using namespace facebook::react;
 using namespace reanimated::css;
 
+static NSString *const REAViewTagAnimationKey = @"reanimatedViewTag";
+
+static BOOL isAnimationOfView(CAAnimation *_Nullable animation, Tag viewTag)
+{
+  return [[animation valueForKey:REAViewTagAnimationKey] isEqual:@(viewTag)];
+}
+
 @implementation REACSSPlatformTransitions {
   __weak RCTSurfacePresenter *_surfacePresenter;
+  // React Native can recycle a view before its transitions stop, so the layer of a tag
+  // can belong to a different tag later. Only the main thread uses these maps.
+  NSMapTable<NSNumber *, CALayer *> *_layersByTag;
+  NSMapTable<CALayer *, NSNumber *> *_tagsByLayer;
 }
 
 - (instancetype)initWithSurfacePresenter:(RCTSurfacePresenter *)surfacePresenter
 {
   if (self = [super init]) {
     _surfacePresenter = surfacePresenter;
+    _layersByTag = [NSMapTable strongToWeakObjectsMapTable];
+    _tagsByLayer = [NSMapTable weakToStrongObjectsMapTable];
   }
   return self;
 }
@@ -64,16 +77,19 @@ using namespace reanimated::css;
     if (!layer) {
       return;
     }
+    [strongSelf assignLayer:layer toTag:viewTag];
 
     CABasicAnimation *anim = [CABasicAnimation animationWithKeyPath:keyPath];
     // On interruption, continue from the live presentation value, falling back to the
     // model - never to fromId, which would snap a quick tap to the settled pseudo target.
-    if ([[layer animationForKey:keyPath] isKindOfClass:[CABasicAnimation class]]) {
+    CAAnimation *runningAnimation = [layer animationForKey:keyPath];
+    if ([runningAnimation isKindOfClass:[CABasicAnimation class]] && isAnimationOfView(runningAnimation, viewTag)) {
       id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
       anim.fromValue = presentationValue ?: [layer valueForKeyPath:keyPath];
     } else {
       anim.fromValue = fromId;
     }
+    [anim setValue:@(viewTag) forKey:REAViewTagAnimationKey];
     anim.toValue = toId;
     anim.duration = durationSec;
     // beginTime is in the layer's local clock; converting keeps ancestor
@@ -107,16 +123,53 @@ using namespace reanimated::css;
       return;
     }
     CALayer *layer = [strongSelf layerForTag:viewTag];
-    if (!layer) {
+    if (layer) {
+      if (isAnimationOfView([layer animationForKey:keyPath], viewTag)) {
+        // Freeze the last visible frame into the model so the layer doesn't snap.
+        id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
+        if (presentationValue) {
+          [layer setValue:presentationValue forKeyPath:keyPath];
+        }
+        [layer removeAnimationForKey:keyPath];
+      }
+    } else {
+      // The view left the registry. React Native sets the props of a recycled view
+      // again, so only the animation is removed.
+      layer = [strongSelf->_layersByTag objectForKey:@(viewTag)];
+      if (isAnimationOfView([layer animationForKey:keyPath], viewTag)) {
+        [layer removeAnimationForKey:keyPath];
+      }
+    }
+    [strongSelf forgetLayer:layer ifIdleForTag:viewTag];
+  });
+}
+
+- (void)assignLayer:(CALayer *)layer toTag:(Tag)viewTag
+{
+  NSNumber *previousTag = [_tagsByLayer objectForKey:layer];
+  if (previousTag != nil && previousTag.intValue != viewTag) {
+    for (NSString *key in layer.animationKeys) {
+      if (isAnimationOfView([layer animationForKey:key], previousTag.intValue)) {
+        [layer removeAnimationForKey:key];
+      }
+    }
+    [_layersByTag removeObjectForKey:previousTag];
+  }
+  [_layersByTag setObject:layer forKey:@(viewTag)];
+  [_tagsByLayer setObject:@(viewTag) forKey:layer];
+}
+
+- (void)forgetLayer:(nullable CALayer *)layer ifIdleForTag:(Tag)viewTag
+{
+  for (NSString *key in layer.animationKeys) {
+    if (isAnimationOfView([layer animationForKey:key], viewTag)) {
       return;
     }
-    // Freeze the last visible frame into the model so the layer doesn't snap.
-    id presentationValue = [[layer presentationLayer] valueForKeyPath:keyPath];
-    if (presentationValue) {
-      [layer setValue:presentationValue forKeyPath:keyPath];
-    }
-    [layer removeAnimationForKey:keyPath];
-  });
+  }
+  [_layersByTag removeObjectForKey:@(viewTag)];
+  if ([[_tagsByLayer objectForKey:layer] isEqual:@(viewTag)]) {
+    [_tagsByLayer removeObjectForKey:layer];
+  }
 }
 
 @end

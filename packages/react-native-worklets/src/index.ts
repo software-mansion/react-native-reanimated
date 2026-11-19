@@ -18,6 +18,7 @@ export {
   type MakeShareableClone,
   makeShareableCloneOnUIRecursive,
   makeShareableCloneRecursive,
+  serializableMappingCache,
   shareableMappingCache,
   type ShareableRef,
 } from './deprecated';
@@ -50,7 +51,12 @@ export {
   isSerializableRef,
   registerCustomSerializable,
 } from './memory/serializable';
-export { serializableMappingCache } from './memory/serializableMappingCache';
+export {
+  getSerializableMapping,
+  hasSerializableMapping,
+  removeSerializableMapping,
+  setSerializableMapping,
+} from './memory/serializableMapping';
 export { createShareable } from './memory/shareable';
 export { createSynchronizable } from './memory/synchronizable';
 export type {
@@ -80,6 +86,7 @@ export {
   RuntimeKind,
 } from './runtimeKind';
 export {
+  abortWorkletRuntime,
   createWorkletRuntime,
   getUIRuntimeHolder,
   getUISchedulerHolder,

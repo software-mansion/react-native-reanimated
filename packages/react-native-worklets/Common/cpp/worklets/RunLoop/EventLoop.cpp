@@ -13,11 +13,13 @@ EventLoop::EventLoop(
     const AbortToken abortToken,
     const std::shared_ptr<jsi::Runtime> &runtime,
     const std::shared_ptr<AsyncQueue> &queue,
-    const std::shared_ptr<std::recursive_mutex> &runtimeMutex)
+    const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+    const std::shared_ptr<RuntimeTaskState> &taskState)
     : abortToken_(abortToken),
       runtime_(runtime),
       queue_(queue),
       runtimeMutex_(runtimeMutex),
+      taskState_(taskState),
       timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()),
       name_(name) {}
 
@@ -84,11 +86,22 @@ void EventLoop::run() {
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
   queue_->push(
-      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_}, runtimeMutex = runtimeMutex_, job = std::move(job)] {
+      [weakRuntime = std::weak_ptr<jsi::Runtime>{runtime_},
+       runtimeMutex = runtimeMutex_,
+       taskState = taskState_,
+       state = timeoutsQueueState_,
+       job = std::move(job)] {
         if (auto runtime = weakRuntime.lock()) {
           std::unique_lock lock(*runtimeMutex);
+          if (!state->running) [[unlikely]] {
+            return;
+          }
+          taskState->rootTaskRunning = true;
+          taskState->rootTaskId++;
           job(*runtime);
           runtime->drainMicrotasks();
+          taskState->microtaskCheckpointRequested = false;
+          taskState->rootTaskRunning = false;
         }
       },
       abortToken_);

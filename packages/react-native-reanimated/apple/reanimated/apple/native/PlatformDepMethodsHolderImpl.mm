@@ -4,6 +4,7 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REASharedTransitionOverlays.h>
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
@@ -86,6 +87,14 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
     [nodesManager maybeFlushUIUpdatesQueue];
   };
   return maybeFlushUIUpdatesQueueFunction;
+}
+
+IsSensorAvailableFunction makeIsSensorAvailableFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
+{
+  auto isSensorAvailableFunction = [=](int sensorType) -> bool {
+    return [reanimatedSensorContainer isSensorAvailable:(ReanimatedSensorType)sensorType];
+  };
+  return isSensorAvailableFunction;
 }
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
@@ -212,6 +221,33 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+#if TARGET_OS_IOS
+SetSharedTransitionOverlayFunction makeSetSharedTransitionOverlayFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](SurfaceId surfaceId, std::optional<Tag> tag) {
+    if (tag) {
+      [overlays showOverlayWithTag:*tag surfaceId:surfaceId];
+    } else {
+      [overlays hideOverlayForSurfaceId:surfaceId];
+    }
+  };
+}
+
+NativeViewPlacementFunction makeNativeViewPlacementFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled) {
+    return [overlays placementOfViewWithTag:tag parentTag:parentTag surfaceId:surfaceId settled:settled];
+  };
+}
+
+IsMovedByContainerTransitionFunction makeIsMovedByContainerTransitionFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](Tag tag) {
+    return [overlays isViewWithTagMovedByContainerTransition:tag];
+  };
+}
+#endif
+
 ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *nodesManager)
 {
   auto readMountedViewProps = [=](Tag tag) -> Props::Shared {
@@ -293,7 +329,10 @@ PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoS
   };
 }
 
-PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
+PlatformDepMethodsHolder makePlatformDepMethodsHolder(
+    RCTModuleRegistry *moduleRegistry,
+    REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver)
 {
   auto requestRender = makeRequestRender(nodesManager);
 
@@ -301,19 +340,32 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto readMountedViewPropsFunction = makeReadMountedViewPropsFunction(nodesManager);
 
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
+  NativeViewPlacementFunction nativeViewPlacementFunction;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransitionFunction;
+#if TARGET_OS_IOS
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    REASharedTransitionOverlays *sharedTransitionOverlays =
+        [[REASharedTransitionOverlays alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+    setSharedTransitionOverlayFunction = makeSetSharedTransitionOverlayFunction(sharedTransitionOverlays);
+    nativeViewPlacementFunction = makeNativeViewPlacementFunction(sharedTransitionOverlays);
+    isMovedByContainerTransitionFunction = makeIsMovedByContainerTransitionFunction(sharedTransitionOverlays);
+  }
+#endif
+
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
 
+  auto isSensorAvailableFunction = makeIsSensorAvailableFunction(reanimatedSensorContainer);
+
   auto registerSensorFunction = makeRegisterSensorFunction(reanimatedSensorContainer);
 
   auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
 
   auto setGestureStateFunction = makeSetGestureStateFunction(moduleRegistry);
-
-  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
 
   auto subscribeForKeyboardEventsFunction = makeSubscribeForKeyboardEventsFunction(keyboardObserver);
 
@@ -334,8 +386,12 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       requestRender,
       forceScreenSnapshotFunction,
       readMountedViewPropsFunction,
+      setSharedTransitionOverlayFunction,
+      nativeViewPlacementFunction,
+      isMovedByContainerTransitionFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
+      isSensorAvailableFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,

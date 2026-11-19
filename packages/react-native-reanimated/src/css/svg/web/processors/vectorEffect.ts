@@ -9,4 +9,6 @@ const VECTOR_EFFECT_CSS_VALUES: Record<string, string> = {
 };
 
 export const processVectorEffect = (value: string): string =>
-  VECTOR_EFFECT_CSS_VALUES[value] ?? value;
+  Object.prototype.hasOwnProperty.call(VECTOR_EFFECT_CSS_VALUES, value)
+    ? VECTOR_EFFECT_CSS_VALUES[value]
+    : value;

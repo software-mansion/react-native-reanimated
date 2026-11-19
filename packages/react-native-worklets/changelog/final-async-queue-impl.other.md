@@ -1,0 +1,1 @@
+Mark `AsyncQueueImpl` as `final`.

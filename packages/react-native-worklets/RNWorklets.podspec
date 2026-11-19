@@ -5,7 +5,8 @@ package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 worklets_config = WorkletsUtils.find_config()
 WorkletsUtils.assert_minimal_react_native_version(worklets_config)
 
-ios_min_version = '13.4'
+ios_min_version = min_ios_version_supported
+macos_min_version = defined?(min_macos_version_supported) ? min_macos_version_supported : '10.14'
 
 # Directory in which data for further processing for clangd will be stored.
 compilation_metadata_dir = "CompilationDatabase"
@@ -17,6 +18,7 @@ feature_flags = worklets_config[:feature_flags_flag]
 version_flag = "-DWORKLETS_VERSION=#{package['version']}"
 worklets_profiling_flag = ENV['IS_WORKLETS_PROFILING'] ? '-DWORKLETS_PROFILING' : ''
 hermes_v1_flag = ENV['RCT_HERMES_V1_ENABLED'] == '1' ? '-DHERMES_V1_ENABLED' : ''
+deprecation_flag = worklets_config[:is_reanimated_example_app] ? '-Werror=deprecated-declarations' : ''
 
 # React Native doesn't expose these flags, but not having them
 # can lead to runtime errors due to ABI mismatches.
@@ -33,10 +35,11 @@ Pod::Spec.new do |s|
   s.homepage     = "https://github.com/software-mansion/react-native-reanimated"
   s.license      = package["license"]
   s.authors      = { "author" => "author@domain.com" }
-  s.platforms    = { :ios => ios_min_version, :tvos => "9.0", :osx => "10.14", :visionos => "1.0" }
+  s.platforms    = { :ios => ios_min_version, :tvos => ios_min_version, :osx => macos_min_version, :visionos => "1.0" }
   s.source       = { :git => "https://github.com/software-mansion/react-native-reanimated.git", :tag => "#{s.version}" }
 
   s.header_dir = "worklets"
+  s.resource_bundles = { 'RNWorklets_privacy' => 'apple/PrivacyInfo.xcprivacy' }
 
   s.subspec "common" do |ss|
     ss.source_files = "Common/cpp/worklets/**/*.{cpp,h}"
@@ -72,10 +75,11 @@ Pod::Spec.new do |s|
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) #{hermes_debug_hidden_flags}",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited)",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => "$(inherited) RN_ALLOW_FRAMEWORKS=1 #{hermes_debug_hidden_flags}",
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => "$(inherited) RN_ALLOW_FRAMEWORKS=1",
     "OTHER_CFLAGS" => "$(inherited) #{feature_flags} #{version_flag} #{compilation_metadata_generation_flag} #{worklets_profiling_flag} #{hermes_v1_flag}",
   }
+  s.compiler_flags = deprecation_flag
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',

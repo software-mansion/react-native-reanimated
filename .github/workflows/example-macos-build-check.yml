@@ -39,13 +39,13 @@ jobs:
         run: yarn build
 
       - name: Install Pods (with caching)
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: macos
 
       - name: Cache DerivedData
-        uses: ./.github/actions/cache-derived-data
+        uses: $/.github/actions/cache-derived-data
         with:
           platform: macos
           working-directory: ${{ env.WORKING_DIRECTORY }}

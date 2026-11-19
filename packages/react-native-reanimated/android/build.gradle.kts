@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -27,6 +28,11 @@ if (shouldApplyKotlinAndroidPlugin()) {
 
 fun safeExtGet(prop: String, fallback: Any?): Any? =
     if (rootProject.extensions.extraProperties.has(prop)) rootProject.extensions.extraProperties.get(prop) else fallback
+
+fun findRootStringProperty(prop: String): String? =
+    (rootProject.findProperty(prop) as? CharSequence)
+        ?.toString()
+        ?.takeIf { it.isNotEmpty() }
 
 fun safeAppExtGet(prop: String, fallback: Any?): Any? {
     val appProject = rootProject.allprojects.find { it.plugins.hasPlugin("com.android.application") }
@@ -114,7 +120,7 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
 
     if (legacyLayoutAnimationsProxy && sharedElementTransitions) {
         throw GradleException(
-            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json."
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. If you want to use the legacy layout animations proxy, you need to explicitly disable `ENABLE_SHARED_ELEMENT_TRANSITIONS` feature flag (enabled by default) in your package.json."
         )
     }
 
@@ -165,18 +171,18 @@ if (project == rootProject) {
 
 apply(from = "./generate-stub-pch.gradle.kts")
 
-android {
+extensions.configure<LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.reanimated"
 
-    val resolvedNdkPath = rootProject.findProperty("ndkPath") as? String
-    if (!resolvedNdkPath.isNullOrEmpty()) {
+    val resolvedNdkPath = findRootStringProperty("ndkPath")
+    if (resolvedNdkPath != null) {
         ndkPath = resolvedNdkPath
     }
 
-    val resolvedNdkVersion = rootProject.findProperty("ndkVersion") as? String
-    if (!resolvedNdkVersion.isNullOrEmpty()) {
+    val resolvedNdkVersion = findRootStringProperty("ndkVersion")
+    if (resolvedNdkVersion != null) {
         ndkVersion = resolvedNdkVersion
     }
 
@@ -270,6 +276,9 @@ if (project != rootProject) {
     extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
+            if (IS_REANIMATED_EXAMPLE_APP) {
+                freeCompilerArgs.add("-Xwarning-level=DEPRECATION:error")
+            }
         }
     }
 }

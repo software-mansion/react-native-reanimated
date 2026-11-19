@@ -43,6 +43,9 @@ Checks:
   - performance-*
   # - portability-*
   # - readability-*
+
+  # The React Native 0.89 prebuilt core puts the `react/` headers in a `React/` folder.
+  - -clang-diagnostic-nonportable-include-path
 WarningsAsErrors: '*'
 CheckOptions:
   - key: cppcoreguidelines-avoid-do-while.IgnoreMacros

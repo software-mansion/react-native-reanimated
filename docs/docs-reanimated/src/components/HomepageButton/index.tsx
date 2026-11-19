@@ -30,7 +30,11 @@ const HomepageButton: React.FC<{
   enlarged = false,
 }) => {
   return (
-    <a href={href} target={target} className={styles.homepageButtonLink}>
+    <a
+      href={href}
+      target={target}
+      rel={target === '_blank' ? 'noopener noreferrer' : undefined}
+      className={styles.homepageButtonLink}>
       <div
         className={clsx(
           styles.homepageButton,

@@ -15,6 +15,9 @@ import SerializableSupportedTypesTable from '@site/src/components/SerializableTy
 import SVGDiagram from '@site/src/components/SVGDiagram';
 import PlatformTable from '@site/src/components/PlatformTable';
 import CallTable from '@site/src/components/CallTable';
+import ThreadingSimulation from '@site/src/components/ThreadingSimulation';
+import ThreadingDiagram from '@site/src/components/ThreadingDiagram';
+import ThreadingShowcase from '@site/src/components/ThreadingShowcase';
 
 export default {
   // Re-use the default mapping
@@ -34,4 +37,7 @@ export default {
   SVGDiagram,
   PlatformTable,
   CallTable,
+  ThreadingSimulation,
+  ThreadingDiagram,
+  ThreadingShowcase,
 };

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useColorMode } from '@docusaurus/theme-common';
 import Animated, {
+  Easing,
   FadeInLeft,
   FadeInDown,
   FadeOut,

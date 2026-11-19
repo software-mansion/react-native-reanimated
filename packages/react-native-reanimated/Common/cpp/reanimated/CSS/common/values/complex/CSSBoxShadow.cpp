@@ -9,11 +9,7 @@ namespace reanimated::css {
 CSSBoxShadow::CSSBoxShadow(
     CSSDouble offsetX,
     CSSDouble offsetY,
-#ifdef ANDROID
-    CSSShadowRadiusAndroid blurRadius,
-#else
     CSSDouble blurRadius,
-#endif
     CSSDouble spreadDistance,
     CSSColor color,
     std::optional<CSSBoolean> inset)
@@ -22,8 +18,7 @@ CSSBoxShadow::CSSBoxShadow(
       blurRadius(std::move(blurRadius)),
       spreadDistance(std::move(spreadDistance)),
       color(std::move(color)),
-      inset(std::move(inset)) {
-}
+      inset(std::move(inset)) {}
 
 CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
   const auto &obj = jsiValue.asObject(rt);
@@ -37,11 +32,7 @@ CSSBoxShadow::CSSBoxShadow(jsi::Runtime &rt, const jsi::Value &jsiValue) {
     offsetY = CSSDouble(rt, obj.getProperty(rt, "offsetY"));
   }
   if (obj.hasProperty(rt, "blurRadius")) {
-#ifdef ANDROID
-    blurRadius = CSSShadowRadiusAndroid(rt, obj.getProperty(rt, "blurRadius"));
-#else
     blurRadius = CSSDouble(rt, obj.getProperty(rt, "blurRadius"));
-#endif
   }
   if (obj.hasProperty(rt, "spreadDistance")) {
     spreadDistance = CSSDouble(rt, obj.getProperty(rt, "spreadDistance"));
@@ -63,11 +54,7 @@ CSSBoxShadow::CSSBoxShadow(const folly::dynamic &value) {
     offsetY = CSSDouble(value["offsetY"]);
   }
   if (value.count("blurRadius") > 0) {
-#ifdef ANDROID
-    blurRadius = CSSShadowRadiusAndroid(value["blurRadius"]);
-#else
     blurRadius = CSSDouble(value["blurRadius"]);
-#endif
   }
   if (value.count("spreadDistance") > 0) {
     spreadDistance = CSSDouble(value["spreadDistance"]);

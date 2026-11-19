@@ -202,6 +202,7 @@ describe(processKeyframes, () => {
         },
       };
 
+      // @ts-ignore Available since RN 0.87
       expect(processKeyframes(keyframes, propsBuilder)).toEqual([
         {
           offset: 0,

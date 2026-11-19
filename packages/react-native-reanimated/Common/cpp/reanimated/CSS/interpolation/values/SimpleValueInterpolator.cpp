@@ -10,11 +10,13 @@
 #include <reanimated/CSS/common/values/CSSKeyword.h>
 #include <reanimated/CSS/common/values/CSSLength.h>
 #include <reanimated/CSS/common/values/CSSNumber.h>
+#include <reanimated/CSS/common/values/CSSPlatformColor.h>
 #include <reanimated/CSS/common/values/complex/CSSBoxShadow.h>
 #include <reanimated/CSS/common/values/complex/CSSGradient.h>
 #include <reanimated/CSS/svg/values/CSSLengthArray.h>
 #include <reanimated/CSS/svg/values/SVGBrush.h>
 #include <reanimated/CSS/svg/values/SVGPath.h>
+#include <reanimated/CSS/svg/values/SVGPlatformBrush.h>
 #include <reanimated/CSS/svg/values/SVGStops.h>
 #include <reanimated/CSS/svg/values/SVGStrokeDashArray.h>
 
@@ -52,7 +54,7 @@ folly::dynamic SimpleValueInterpolator<AllowedTypes...>::interpolateValue(
     const auto &to = std::static_pointer_cast<ValueType>(toValue);
     return from->interpolate(progress, *to, context).toDynamic();
   } else {
-    // Only instantiated as ResolvableValueInterpolator's base, which overrides
+    // Only instantiated as RelativeValueInterpolator's base, which overrides
     // this and can build the context these values ask for.
     throw std::runtime_error(
         "[Reanimated] Cannot interpolate " + fromValue->toString() + " to " + toValue->toString() +
@@ -68,7 +70,7 @@ template class SimpleValueInterpolator<CSSTextDouble>;
 template class SimpleValueInterpolator<CSSInteger>;
 template class SimpleValueInterpolator<CSSIndex>;
 template class SimpleValueInterpolator<CSSAngle>;
-template class SimpleValueInterpolator<CSSColor>;
+template class SimpleValueInterpolator<CSSColor, CSSPlatformColor>;
 template class SimpleValueInterpolator<CSSBoolean>;
 template class SimpleValueInterpolator<CSSDisplay>;
 template class SimpleValueInterpolator<CSSKeyword>;
@@ -80,6 +82,7 @@ template class SimpleValueInterpolator<SVGPath>;
 template class SimpleValueInterpolator<CSSLengthArray>;
 template class SimpleValueInterpolator<SVGStops>;
 template class SimpleValueInterpolator<SVGStrokeDashArray, CSSKeyword>;
-template class SimpleValueInterpolator<SVGBrush>;
+template class SimpleValueInterpolator<SVGBrush, CSSPlatformColor>;
+template class SimpleValueInterpolator<SVGBrush, SVGPlatformBrush>;
 
 } // namespace reanimated::css

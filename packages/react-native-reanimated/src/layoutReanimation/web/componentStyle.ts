@@ -1,5 +1,6 @@
 'use strict';
 
+import type { AnimatableDOMElement } from '../../createAnimatedComponent/commonTypes';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
 import { _updatePropsJS } from '../../ReanimatedModule/js-reanimated';
 
@@ -16,7 +17,10 @@ export interface ScrollOffsets {
   scrollLeftOffset: number;
 }
 
-export const snapshots = new WeakMap<HTMLElement, ReanimatedSnapshot>();
+export const snapshots = new WeakMap<
+  AnimatableDOMElement,
+  ReanimatedSnapshot
+>();
 
 export function makeElementVisible(element: HTMLElement, delay: number) {
   if (delay === 0) {

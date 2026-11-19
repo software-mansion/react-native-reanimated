@@ -1,4 +1,4 @@
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/Tools/JSScheduler.h>
 
 #include <utility>

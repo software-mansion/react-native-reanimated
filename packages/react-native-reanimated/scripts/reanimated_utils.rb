@@ -60,7 +60,7 @@ module ReanimatedUtils
     shared_element_transitions = feature_flags['ENABLE_SHARED_ELEMENT_TRANSITIONS'] == 'true'
 
     if legacy_layout_animations_proxy && shared_element_transitions
-      raise "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json"
+      raise "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. If you want to use the legacy layout animations proxy, you need to explicitly disable `ENABLE_SHARED_ELEMENT_TRANSITIONS` feature flag (enabled by default) in your package.json"
     end
 
     use_animation_backend = feature_flags['USE_ANIMATION_BACKEND'] == 'true'

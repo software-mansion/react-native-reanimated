@@ -1,0 +1,18 @@
+[
+  { "from": "/docs/category/fundamentals", "to": "/docs/category/concepts" },
+  {
+    "from": "/docs/category/worklets-plugin",
+    "to": "/docs/worklets-plugin/about"
+  },
+  { "from": "/docs/fundamentals/closures", "to": "/docs/concepts/closures" },
+  { "from": "/docs/fundamentals/getting-started", "to": "/docs/" },
+  { "from": "/docs/fundamentals/glossary", "to": "/docs/category/concepts" },
+  {
+    "from": "/docs/fundamentals/runtimeKinds",
+    "to": "/docs/concepts/runtimeKinds"
+  },
+  {
+    "from": "/docs/fundamentals/sharing-memory",
+    "to": "/docs/concepts/sharing-memory"
+  }
+]

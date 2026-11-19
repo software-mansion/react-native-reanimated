@@ -30,7 +30,7 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
   dampingRatioV?: number;
   massV?: number;
   stiffnessV?: number;
-  overshootClampingV?: number;
+  overshootClampingV?: boolean;
   energyThresholdV?: number;
   static createInstance: <T extends typeof BaseAnimationBuilder>(
     this: T
@@ -194,13 +194,13 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
    */
   static overshootClamping<T extends AnimationConfigBuilderClass>(
     this: T,
-    overshootClamping: number
+    overshootClamping: boolean
   ): InstanceType<T> {
     const instance = this.createInstance();
     return instance.overshootClamping(overshootClamping);
   }
 
-  overshootClamping(overshootClamping: number): this {
+  overshootClamping(overshootClamping: boolean): this {
     this.overshootClampingV = overshootClamping;
     return this;
   }
@@ -301,12 +301,15 @@ export class AnimationConfigBuilder extends BaseAnimationBuilder {
         { variableName: 'stiffness', value: stiffness },
         { variableName: 'overshootClamping', value: overshootClamping },
         { variableName: 'energyThreshold', value: energyThreshold },
-        { variableName: 'duration', value: duration },
         { variableName: 'rotate', value: rotate },
       ] as const
     ).forEach(({ value, variableName }) =>
       maybeSetConfigValue(value, variableName)
     );
+
+    if (duration !== undefined) {
+      config.duration = duration;
+    }
 
     return [animation, config];
   }

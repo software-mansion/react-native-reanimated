@@ -9,7 +9,7 @@ export const processFontWeight: ValueProcessor<number | string> = (value) => {
     return String(value);
   }
 
-  if (value in FONT_WEIGHT_MAPPINGS) {
+  if (Object.prototype.hasOwnProperty.call(FONT_WEIGHT_MAPPINGS, value)) {
     return FONT_WEIGHT_MAPPINGS[value as keyof typeof FONT_WEIGHT_MAPPINGS];
   }
 };

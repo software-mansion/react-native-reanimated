@@ -29,7 +29,7 @@ jobs:
         run: yarn install
 
       - name: Build Reanimated and Worklets docs
-        uses: ./.github/actions/docs-build
+        uses: $/.github/actions/docs-build
         with:
           REANIMATED_DOCS_DIR: ${{ env.REANIMATED_DOCS_DIR }}
           WORKLETS_DOCS_DIR: ${{ env.WORKLETS_DOCS_DIR }}

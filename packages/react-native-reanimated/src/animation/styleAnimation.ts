@@ -12,7 +12,7 @@ import type {
 } from '../commonTypes';
 import type { StyleLayoutAnimation } from './commonTypes';
 import { withTiming } from './timing';
-import { defineAnimation, isValidLayoutAnimationProp } from './util';
+import { defineAnimation } from './util';
 
 // resolves path to value for nested objects
 // if path cannot be resolved returns undefined
@@ -74,7 +74,8 @@ interface NestedObjectEntry<T> {
 export function withStyleAnimation(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   styleAnimations: AnimatedStyle<any>,
-  callback?: (finished: boolean) => void
+  callback?: (finished: boolean) => void,
+  startFromPreviousAnimation = false
 ): StyleLayoutAnimation {
   'worklet';
   return defineAnimation<StyleLayoutAnimation>({}, () => {
@@ -187,7 +188,12 @@ export function withStyleAnimation(
             currentEntry.path
           );
           let prevVal = resolvePath(value, currentEntry.path);
-          if (prevAnimation && prevVal === undefined) {
+          if (
+            prevAnimation &&
+            (prevVal === undefined ||
+              (startFromPreviousAnimation &&
+                (prevAnimation as AnimationObject).onStart !== undefined))
+          ) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             prevVal = (prevAnimation as any).current;
           }
@@ -197,15 +203,6 @@ export function withStyleAnimation(
                 `Initial values for animation are missing for property ${currentEntry.path.join(
                   '.'
                 )}`
-              );
-            }
-            const propName = currentEntry.path[0];
-            if (
-              typeof propName === 'string' &&
-              !isValidLayoutAnimationProp(propName.trim())
-            ) {
-              logger.warn(
-                `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
               );
             }
           }

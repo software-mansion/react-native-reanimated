@@ -24,7 +24,7 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](/docs/threading/createWorkletRuntime#enablenetworking).
+In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](../threading/createWorkletRuntime.mdx#enablenetworking).
 
 ```tsx
 const runtime = createWorkletRuntime({ name: 'worker' });
@@ -41,7 +41,7 @@ scheduleOnRuntime(runtime, async () => {
 | `fetch`, `Headers`, `Request`, `Response` | ✅ |
 | `XMLHttpRequest` | ✅ |
 | `Blob`, `FileReader` | ✅ |
-| `AbortController`, `AbortSignal` | ✅ | |
+| `AbortController`, `AbortSignal` | ✅ |
 | `FormData` | String fields only, encoded as `multipart/form-data`. |
 | Response streaming | ❌ |
 | `WebSocket` | coming soon |

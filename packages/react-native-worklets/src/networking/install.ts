@@ -33,6 +33,5 @@ export function installNetworking() {
   global.AbortController ??= AbortController;
   global.AbortSignal ??= AbortSignal;
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('whatwg-fetch');
 }

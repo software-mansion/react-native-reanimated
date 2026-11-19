@@ -77,7 +77,12 @@ const SWITCH_TRAVEL_PX = 20;
 
 // Boxes are compared by progress: 0 at the start value, 1 at the target.
 
-// Reads land a frame or two apart; a restart or a pause is worth 25% or more.
+// A box's offset to the others is compared with its own earlier offset, not
+// with zero: a CSS box starts at its registration on the JS thread, while a
+// `useAnimatedStyle` box starts on the first UI frame after its effect, so a
+// busy main thread at mount puts the two groups a few hundred milliseconds
+// apart for the whole animation. Reads land a frame or two apart; a restart or
+// a pause is worth 25% or more.
 const SPREAD_TOLERANCE = 0.1;
 
 // Slack for re-renders, pushes, pops and re-attaches around a read.
@@ -322,25 +327,62 @@ function finishedReport(reading: Reading) {
   return rangeReport(reading, 1 - END_TOLERANCE, 1 + END_TOLERANCE);
 }
 
+function offsets({ values }: Reading) {
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+  return values.map((value) => value - mean);
+}
+
+/**
+ * A box whose offset to the others changed between two reads: it paused or
+ * restarted.
+ */
+export function driftReport(before: Reading, after: Reading) {
+  const was = offsets(before);
+  const now = offsets(after);
+  const drifted = after.names
+    .map((name, index) => ({ name, drift: now[index] - was[index] }))
+    .filter(({ drift }) => Math.abs(drift) > SPREAD_TOLERANCE);
+
+  if (drifted.length === 0) {
+    return ALIGNED;
+  }
+
+  return drifted
+    .map(({ name, drift }) => `${name} drifted ${percent(drift)}`)
+    .join(', ')
+    .concat(
+      ` in ${(after.at - before.at).toFixed(0)}ms, tolerated ${percent(SPREAD_TOLERANCE)}`
+    );
+}
+
+function maxDrift(before: Reading, after: Reading) {
+  const was = offsets(before);
+  const now = offsets(after);
+
+  return Math.max(...now.map((offset, index) => Math.abs(offset - was[index])));
+}
+
 /** Samples a window, to tell a drifting box from a late read. */
 export async function worstAlignmentReport(
   durationMs: number,
   boxes: readonly Box[] = TRACKED_BOXES
 ) {
+  const baseline = await readBoxes(boxes);
   const deadline = performance.now() + durationMs;
-  let worstSpread = 0;
+  let worstDrift = 0;
   let report = ALIGNED;
 
   do {
-    const reading = await readBoxes(boxes);
-    const spread = Math.max(...reading.values) - Math.min(...reading.values);
-
-    if (spread > worstSpread) {
-      worstSpread = spread;
-      report = alignmentReport(reading);
-    }
-
     await waitForFrames(ALIGNMENT_SAMPLE_FRAMES);
+
+    const reading = await readBoxes(boxes);
+    const drift = maxDrift(baseline, reading);
+
+    if (drift > worstDrift) {
+      worstDrift = drift;
+      report = driftReport(baseline, reading);
+    }
   } while (performance.now() < deadline);
 
   return report;

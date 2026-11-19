@@ -16,14 +16,7 @@ namespace reanimated::css {
 struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
   CSSDouble offsetX;
   CSSDouble offsetY;
-#ifdef ANDROID
-  // For some reason Android crashes when blurRadius is smaller
-  // than 1, so we use a custom value type that will never be
-  // smaller than 1
-  CSSShadowRadiusAndroid blurRadius;
-#else
   CSSDouble blurRadius;
-#endif
   CSSDouble spreadDistance;
   CSSColor color;
   // inset has no default value - it must be the same as in the other
@@ -34,11 +27,7 @@ struct CSSBoxShadow : public CSSSimpleValue<CSSBoxShadow> {
   explicit CSSBoxShadow(
       CSSDouble offsetX,
       CSSDouble offsetY,
-#ifdef ANDROID
-      CSSShadowRadiusAndroid blurRadius,
-#else
       CSSDouble blurRadius,
-#endif
       CSSDouble spreadDistance,
       CSSColor color,
       std::optional<CSSBoolean> inset);
