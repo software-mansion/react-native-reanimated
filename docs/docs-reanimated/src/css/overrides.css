@@ -225,14 +225,3 @@ details .tabs__item--active {
   opacity: 1;
   border-bottom-color: var(--swm-details-color) !important;
 }
-
-.rotation-gifs {
-  display: flex;
-  gap: 4px;
-  text-align: center;
-}
-
-.rotation-gifs > div {
-  flex: 1;
-  min-width: 0;
-}
