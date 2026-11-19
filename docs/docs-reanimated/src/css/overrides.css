@@ -226,7 +226,6 @@ details .tabs__item--active {
   border-bottom-color: var(--swm-details-color) !important;
 }
 
-/* useAnimatedSensor: roll / pitch / yaw GIFs side by side, stacked on phones */
 .rotation-gifs {
   display: flex;
   gap: 4px;
