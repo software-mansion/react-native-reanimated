@@ -414,6 +414,52 @@ describe('Shared transition live target geometry', () => {
     }
   );
 
+  test.each(['custom', 'progress'] as const)(
+    'follows a scroll view on the way back to its own slot, transition: %s',
+    async (kind) => {
+      const state = counters();
+      const transition =
+        kind === 'custom'
+          ? linearCustomTransition(1200, state)
+          : countedTransition(1200, state).defaultTransitionType(
+              SharedTransitionType.PROGRESS_ANIMATION
+            );
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(
+        <ScrolledSourceScreens active={false} transition={transition} />
+      );
+      await waitForFrames();
+      const slot = await geometryOf('source');
+      await render(<ScrolledSourceScreens active transition={transition} />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(300);
+      await render(
+        <ScrolledSourceScreens active={false} transition={transition} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(300);
+      const carrier = await geometryOf('source');
+      const stop = await recordStarts(state);
+      try {
+        scrollRef.current!.scrollTo({ y: 100, animated: false });
+        await waitForFrames(3);
+        expect((await geometryOf('source')).y).toBe(
+          carrier.y - 100,
+          ComparisonMode.PIXEL
+        );
+        expect(state.value.starts).toBe(0);
+        await advanceAnimationTimer(1200);
+        await expectEventually(() => state.value.success).toBe(1);
+        expect((await geometryOf('source')).y).toBe(
+          slot.y - 100,
+          ComparisonMode.PIXEL
+        );
+      } finally {
+        await stop();
+      }
+    }
+  );
+
   test('continues the animations of a new start without a scroll', async () => {
     const state = counters();
     const transition = springOriginYTransition();
@@ -744,6 +790,38 @@ function ScrolledTarget({
         </View>
       </SharedTransitionBoundary>
     </ScrollView>
+  );
+}
+
+function ScrolledSourceScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View style={styles.root}>
+      <ScrollView ref={scrollRef} style={styles.scrollView}>
+        <SharedTransitionBoundary isActive={!active}>
+          <View style={styles.scrollContent}>
+            <Animated.View
+              ref={useTestRef('source')}
+              sharedTransitionTag="scrolled-source"
+              sharedTransitionStyle={transition}
+              style={styles.source}
+            />
+          </View>
+        </SharedTransitionBoundary>
+      </ScrollView>
+      <SharedTransitionBoundary isActive={active}>
+        <Animated.View
+          sharedTransitionTag="scrolled-source"
+          sharedTransitionStyle={transition}
+          style={styles.target}
+        />
+      </SharedTransitionBoundary>
+    </View>
   );
 }
 
