@@ -801,7 +801,7 @@ bool LayoutAnimationsProxy::isFollowedBySharedTransition(const LightNode &node) 
   return node.followedInSynchronousBatch == synchronousBatch_;
 }
 
-// A carrier shows the frames of its own run, so a run that aims at the carrier of another run does not follow it.
+// A carrier shows the frames of its run. A run reads the committed slot of its own carrier, but not of another carrier.
 bool LayoutAnimationsProxy::hasLiveTarget(const SharedTransitionRun &run) const {
   return isLightNodeMapped(run.target) && !run.target->isExiting() &&
       (!run.target->isCarrier() || run.target == run.carrier);
@@ -1954,14 +1954,11 @@ void LayoutAnimationsProxy::finishCoveredSharedTransitions(
     if (run.lifecycle != SharedTransitionLifecycle::ACTIVE) {
       continue;
     }
-    const auto &target = run.target;
-    // A target that carries another run moves above the screens or inside its moving ancestor.
-    const bool carriesAnotherRun = target->isCarrier() && target != run.carrier;
     // Without an active boundary, the new screen covers every target.
-    const bool onTopScreen = topScreen && isInSubtree(target, topScreen);
+    const bool onTopScreen = topScreen && isInSubtree(run.target, topScreen);
     const bool movesWithAncestor =
         run.carrier->placement() == CarrierPlacement::NESTED && carrierAncestorOf(run.carrier);
-    if (!isLightNodeMapped(target) || target->isExiting() || carriesAnotherRun || onTopScreen || movesWithAncestor) {
+    if (!hasLiveTarget(run) || onTopScreen || movesWithAncestor) {
       continue;
     }
     if (hasUnqueuedCarrierFrame(carrierTag)) {
@@ -3788,7 +3785,7 @@ void LayoutAnimationsProxy::followProgressTargets(const PropsParserContext &prop
     if (run.driver != SharedTransitionDriver::GESTURE) {
       continue;
     }
-    if (!isLightNodeMapped(run.target) || run.target->isExiting() || run.target->isCarrier()) {
+    if (!hasLiveTarget(run)) {
       continue;
     }
     const auto carrierTag = run.carrier->current.tag;

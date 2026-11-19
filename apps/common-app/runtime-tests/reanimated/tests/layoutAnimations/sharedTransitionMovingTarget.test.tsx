@@ -373,7 +373,7 @@ describe('Shared transition live target geometry', () => {
         await waitForFrames(3);
         const scrolledTarget = await geometryOf('target');
         expect(scrolledTarget.y).toBe(target.y - 100, ComparisonMode.PIXEL);
-        // A built-in run at a quarter of its time moves by a quarter of the scroll.
+        // A linear built-in run at a quarter of its time moves by a quarter of the scroll.
         const shift = kind === 'builtIn' ? 25 : 100;
         expect((await geometryOf('source')).y).toBe(
           carrier.y - shift,
