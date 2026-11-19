@@ -1,1 +1,0 @@
-Fix a memory leak in which a worklet and a JS function it calls kept each other alive, with everything they captured, when the closure of the function reached the worklet (for example a `runOnJS` callback in a scroll or gesture handler).

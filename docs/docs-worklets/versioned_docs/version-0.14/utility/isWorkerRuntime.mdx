@@ -1,0 +1,33 @@
+---
+sidebar_position: 42 # Use alphabetical order
+title: isWorkerRuntime
+---
+
+import * as ApiIsWorkerRuntimeSnippet from './_examples/apiIsWorkerRuntime';
+import ApiIsWorkerRuntimeSource from '!!raw-loader!./_examples/apiIsWorkerRuntime';
+
+<Badges version="0.8.0">
+  # isWorkerRuntime
+</Badges>
+
+Checks if the current runtime is a [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+## Reference
+
+<ThreadingSimulation module={ApiIsWorkerRuntimeSnippet} source={ApiIsWorkerRuntimeSource}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function isWorkerRuntime(): boolean;
+  ```
+</details>
+
+### Returns
+
+`true` if the current runtime is the [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime), `false` otherwise.
+
+## Remarks
+
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](./getRuntimeKind.mdx) for more details.
