@@ -2,7 +2,7 @@
 
 import { utf8Decode, utf8Encode } from './utf8';
 
-export type WebSocketUrl = {
+type WebSocketUrl = {
   href: string;
   origin: string;
 };
