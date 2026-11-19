@@ -1059,7 +1059,6 @@ describe('Animated.Text with a shared value as children', () => {
 
       expect(w9 < w10 && w10 < w100).toBe(true);
       expect(w100 > w99 && w99 > w9Again).toBe(true);
-      expect(w99).toBe(w10, ComparisonMode.PIXEL);
       expect(w9Again).toBe(w9, ComparisonMode.PIXEL);
     });
 

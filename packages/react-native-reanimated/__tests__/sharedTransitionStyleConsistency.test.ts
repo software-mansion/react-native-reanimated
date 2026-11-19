@@ -46,7 +46,7 @@ test('the iOS carrier copies the typed fields and border edges that SharedTransi
   const fields = [...methods.matchAll(/sourceViewProps\.(\w+)/g)]
     .map(([, name]) => name)
     .filter((name) => !['getBorderWidths', 'elevation'].includes(name));
-  const copied = [...copy.matchAll(/viewProps\.(\w+) = sourceProps\./g)].map(
+  const copied = [...copy.matchAll(/copy\(&ViewProps::(\w+)\)/g)].map(
     ([, name]) => name
   );
   expect(sorted(copied)).toEqual(

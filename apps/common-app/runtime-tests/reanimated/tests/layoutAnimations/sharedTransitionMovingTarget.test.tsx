@@ -18,6 +18,7 @@ import Animated, {
   SharedTransitionType,
   setDynamicFeatureFlag,
   useAnimatedStyle,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import type { AffineMatrixFlat } from 'react-native-reanimated/src/animation/transformationMatrix/matrixUtils';
@@ -336,36 +337,71 @@ describe('Shared transition live target geometry', () => {
     );
   });
 
-  test.each(['builtIn', 'custom'] as const)(
-    'keeps one clock while a scroll view moves the target, transition: %s',
-    async (kind) => {
+  test.each([
+    ['builtIn', 'row'],
+    ['custom', 'row'],
+    ['progress', 'row'],
+    ['custom', 'scrollView'],
+    ['progress', 'scrollView'],
+  ] as const)(
+    'keeps one clock while a scroll view moves the target, transition: ${0}, clipped by: ${1}',
+    async ([kind, clippedBy]) => {
       const state = counters();
-      const transition =
-        kind === 'builtIn'
-          ? countedTransition(1200, state)
-          : linearCustomTransition(1200, state);
+      const transition = {
+        builtIn: () => countedTransition(1200, state),
+        custom: () => linearCustomTransition(1200, state),
+        progress: () =>
+          countedTransition(1200, state).defaultTransitionType(
+            SharedTransitionType.PROGRESS_ANIMATION
+          ),
+      }[kind]();
+      const screens = { clippedBy, transition };
       await mockAnimationTimer({ autoAdvance: false });
-      await render(<ScrollScreens active={false} transition={transition} />);
+      await render(<ScrollScreens active={false} {...screens} />);
       await waitForFrames();
       const source = await geometryOf('source');
       const stop = await recordStarts(state);
       try {
-        await render(<ScrollScreens active transition={transition} />);
+        await render(<ScrollScreens active {...screens} />);
         await waitForFrames(3);
+        const startClipY = await carrierClipY();
         await advanceAnimationTimer(300);
         const target = await geometryOf('target');
+        const carrier = await geometryOf('source');
+        const clipY = await carrierClipY();
         scrollRef.current!.scrollTo({ y: 100, animated: false });
         await waitForFrames(3);
         const scrolledTarget = await geometryOf('target');
         expect(scrolledTarget.y).toBe(target.y - 100, ComparisonMode.PIXEL);
-        await render(<ScrollScreens active extraRow transition={transition} />);
+        // A built-in run at a quarter of its time moves by a quarter of the scroll.
+        const shift = kind === 'builtIn' ? 25 : 100;
+        expect((await geometryOf('source')).y).toBe(
+          carrier.y - shift,
+          ComparisonMode.PIXEL
+        );
+        // The end of a ScrollView clip does not scroll, so the clip moves by three quarters of the scroll.
+        const clipShift = clippedBy === 'row' ? shift : 75;
+        expect(await carrierClipY()).toBe(
+          clipY - clipShift,
+          ComparisonMode.PIXEL
+        );
+        await render(<ScrollScreens active extraRow {...screens} />);
         await waitForFrames(3);
         expect(state.value.starts).toBe(1);
         await advanceAnimationTimer(300);
+        const startShift = kind === 'builtIn' ? 0 : 100;
         await expectCarrierBetween(
-          source,
-          kind === 'builtIn' ? scrolledTarget : target,
+          { ...source, y: source.y - startShift },
+          scrolledTarget,
           0.5
+        );
+        const endClipY =
+          clippedBy === 'row'
+            ? scrolledTarget.y
+            : source.y + styles.scrollView.top;
+        expect(await carrierClipY()).toBe(
+          (startClipY - startShift + endClipY) / 2,
+          ComparisonMode.PIXEL
         );
         await advanceAnimationTimer(600);
         await expectEventually(() => state.value.success).toBe(1);
@@ -377,6 +413,41 @@ describe('Shared transition live target geometry', () => {
       }
     }
   );
+
+  test('continues the animations of a new start without a scroll', async () => {
+    const state = counters();
+    const transition = springOriginYTransition();
+    const originYAfterFlight = async (restarts: boolean) => {
+      await render(<ScrollScreens active={false} transition={transition} />);
+      await waitForFrames();
+      await render(<ScrollScreens active transition={transition} />);
+      await waitForFrames(3);
+      for (let frame = 0; frame < 3; frame++) {
+        await advanceAnimationTimer(SPRING_FRAME);
+      }
+      if (restarts) {
+        await render(
+          <ScrollScreens active targetWidth={110} transition={transition} />
+        );
+        await waitForFrames(3);
+      }
+      await advanceAnimationTimer(SPRING_FRAME);
+      const { y } = await geometryOf('source');
+      await render(<View />);
+      await waitForFrames();
+      return y;
+    };
+    await mockAnimationTimer({ autoAdvance: false });
+    const withoutRestart = await originYAfterFlight(false);
+    const stop = await recordStarts(state);
+    try {
+      const withRestart = await originYAfterFlight(true);
+      expect(state.value.starts).toBe(2);
+      expect(withRestart).toBe(withoutRestart, ComparisonMode.PIXEL);
+    } finally {
+      await stop();
+    }
+  });
 
   test.each(Object.keys(PARENT_TRANSFORMS) as ParentTransforms[])(
     'lands a built-in animation on a target under %s',
@@ -565,6 +636,14 @@ async function expectCarrierBetween(
   }
 }
 
+async function carrierClipY() {
+  const content = await RuntimeTestObserver!.observeParent(
+    getTestComponent('source').getTag()
+  );
+  const clip = await RuntimeTestObserver!.observeParent(content ?? -1);
+  return (await RuntimeTestObserver!.observeLocationOnScreen(clip ?? -1))!.y;
+}
+
 // An outline on a view that clips makes React Native put a native view between it and its children.
 function NativeParentScreens({
   active,
@@ -601,13 +680,19 @@ function NativeParentScreens({
 
 const scrollRef = createRef<ComponentRef<typeof ScrollView>>();
 
+type ClippedBy = 'row' | 'scrollView';
+
 function ScrollScreens({
   active,
+  clippedBy = 'row',
   extraRow = false,
+  targetWidth = 90,
   transition,
 }: {
   active: boolean;
+  clippedBy?: ClippedBy;
   extraRow?: boolean;
+  targetWidth?: number;
   transition: SharedTransition;
 }) {
   return (
@@ -620,31 +705,42 @@ function ScrollScreens({
           style={styles.source}
         />
       </SharedTransitionBoundary>
-      {active && <ScrolledTarget extraRow={extraRow} transition={transition} />}
+      {active && (
+        <ScrolledTarget
+          clippedBy={clippedBy}
+          extraRow={extraRow}
+          targetWidth={targetWidth}
+          transition={transition}
+        />
+      )}
     </View>
   );
 }
 
 function ScrolledTarget({
+  clippedBy,
   extraRow,
+  targetWidth,
   transition,
 }: {
+  clippedBy: ClippedBy;
   extraRow: boolean;
+  targetWidth: number;
   transition: SharedTransition;
 }) {
   return (
     <ScrollView ref={scrollRef} style={styles.scrollView}>
       <SharedTransitionBoundary isActive>
         <View style={styles.scrollContent}>
-          <View style={styles.clippedRow}>
+          <View style={[styles.row, clippedBy === 'row' && styles.clipped]}>
             <Animated.View
               ref={useTestRef('target')}
               sharedTransitionTag="scrolled-target"
               sharedTransitionStyle={transition}
-              style={styles.target}
+              style={[styles.target, { width: targetWidth }]}
             />
           </View>
-          {extraRow && <View style={styles.clippedRow} />}
+          {extraRow && <View style={styles.row} />}
         </View>
       </SharedTransitionBoundary>
     </ScrollView>
@@ -858,8 +954,27 @@ function linearCustomTransition(
       width: withTiming(values.targetWidth, config),
       height: withTiming(values.targetHeight, config),
     };
-  }).withCallback(completionCounter(state));
+  })
+    .duration(duration)
+    .easing(Easing.linear)
+    .withCallback(completionCounter(state));
 }
+
+function springOriginYTransition() {
+  const config = { duration: 1200, easing: Easing.linear };
+  return SharedTransition.custom((values) => {
+    'worklet';
+    return {
+      originX: withTiming(values.targetOriginX, config),
+      originY: withSpring(values.targetOriginY),
+      width: withTiming(values.targetWidth, config),
+      height: withTiming(values.targetHeight, config),
+    };
+  });
+}
+
+// A mocked clock moves a spring by at most 64 ms in a frame.
+const SPRING_FRAME = 50;
 
 function completionCounter(state: ReturnType<typeof counters>) {
   return (finished: boolean) => {
@@ -949,7 +1064,8 @@ const styles = StyleSheet.create({
   sameGeometry: { width: 30, height: 30 },
   scrollView: { position: 'absolute', top: 100, width: 380, height: 400 },
   scrollContent: { paddingTop: 200, paddingBottom: 800, paddingLeft: 120 },
-  clippedRow: { width: 120, height: 120, overflow: 'hidden' },
+  row: { width: 120, height: 120 },
+  clipped: { overflow: 'hidden' },
   nativeParentHost: {
     marginTop: 40,
     marginLeft: 120,

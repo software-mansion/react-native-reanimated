@@ -1,5 +1,5 @@
 diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp
-index 397db82b51af137a657b9079040b9a716225c20e..cf56a6d64125f6c9c06848e576953b3450f6062a 100644
+index 397db82..cf56a6d 100644
 --- a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp
 +++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.cpp
 @@ -13,11 +13,13 @@ folly::dynamic RNSScreenStackHeaderConfigState::getDynamic() const {
@@ -17,7 +17,7 @@ index 397db82b51af137a657b9079040b9a716225c20e..cf56a6d64125f6c9c06848e576953b34
  }
  #endif // ANDROID
 diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h
-index f42c483b42bd7481456153fb533627f26b7af66a..b2566011227fb3b5cbe3af29b7ab999f0750b513 100644
+index f42c483..b256601 100644
 --- a/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h
 +++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenStackHeaderConfigState.h
 @@ -1,5 +1,7 @@

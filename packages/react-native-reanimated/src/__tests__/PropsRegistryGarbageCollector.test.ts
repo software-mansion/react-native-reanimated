@@ -15,7 +15,7 @@ import {
 } from '../common/style/processors';
 import { ValueProcessorTarget } from '../common/types';
 import type { StyleProps } from '../commonTypes';
-import { unprocessSettledUpdate } from '../PropsRegistryGarbageCollector';
+import { unprocessSettledUpdate } from '../PropsRegistryGarbageCollector.native';
 
 const context = { target: ValueProcessorTarget.Default };
 

@@ -1,11 +1,11 @@
 #pragma once
 
 #include <folly/dynamic.h>
-#include <react/debug/react_native_assert.h>
 #include <react/renderer/components/rnreanimated/Props.h>
-#include <react/renderer/components/view/ViewProps.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
+#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>
@@ -369,6 +369,14 @@ class CarrierPlacements {
     leave(node);
   }
 
+  void rehost(const std::shared_ptr<LightNode> &node, std::shared_ptr<LightNode> host) {
+    const auto position = static_cast<std::ptrdiff_t>(positionAtRoot(node));
+    atRoot_.erase(atRoot_.begin() + position);
+    hosts_.erase(hosts_.begin() + position);
+    atRoot_.push_back(node);
+    hosts_.push_back(std::move(host));
+  }
+
   // A removed carrier has no logical parent, so this also unlinks it. It stays mounted at the root.
   void retain(const std::shared_ptr<LightNode> &node) {
     react_native_assert(
@@ -395,7 +403,7 @@ class CarrierPlacements {
 
  private:
   std::vector<std::shared_ptr<LightNode>> atRoot_;
-  // The layout root that mounts the carrier at the same position in atRoot_.
+  // The view whose carrier layer mounts the carrier at the same position in atRoot_.
   std::vector<std::shared_ptr<LightNode>> hosts_;
 
   size_t positionAtRoot(const std::shared_ptr<LightNode> &node) const {
@@ -425,6 +433,11 @@ class CarrierPlacements {
     }
   }
 };
+
+static inline ShadowView withProps(ShadowView view, const Props::Shared &props) {
+  view.props = props;
+  return view;
+}
 
 static inline void
 updateLayoutMetrics(LayoutMetrics &layoutMetrics, const Frame &frame, const react::Point &offset = {}) {
