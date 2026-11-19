@@ -13830,7 +13830,7 @@ __metadata:
     react-native-nitro-modules: "npm:0.36.5"
     react-native-reanimated: "workspace:*"
     react-native-safe-area-context: "npm:5.8.1"
-    react-native-screens: "patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch"
+    react-native-screens: "patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch"
     react-native-svg: "patch:react-native-svg@npm%3A15.15.5#~/.yarn/patches/react-native-svg-npm-15.15.5-88bb60fb23.patch"
     react-native-worklets: "workspace:*"
     react-strict-dom: "npm:0.0.55"
@@ -17305,7 +17305,7 @@ __metadata:
     common-app: "workspace:*"
     react: "npm:19.3.0"
     react-native: "npm:0.88.0"
-    react-native-screens: "patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch"
+    react-native-screens: "patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch"
     typescript: "npm:5.9.3"
     worklets-oxc-plugin: "workspace:*"
     ws: "npm:8.21.0"
@@ -27239,29 +27239,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-native-screens@npm:4.27.0":
-  version: 4.27.0
-  resolution: "react-native-screens@npm:4.27.0"
+"react-native-screens@npm:4.30.1":
+  version: 4.30.1
+  resolution: "react-native-screens@npm:4.30.1"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/fbbe2c63b1af67be1c2cab0143a02ac8dee542569695acd904c44d6799d3bbbe68edf99404169dad30ce8d87269b65282e49c7ec3cde376595a0a28430138be3
+  checksum: 10/a832e7830251fdd2a99cfe685a5b07203110e380462a2b9bfb79700d4e54a527190fefea75ad550660ed38d1666ed435e978057089148cbfdf4e368eadff8cc3
   languageName: node
   linkType: hard
 
-"react-native-screens@patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch":
-  version: 4.27.0
-  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch::version=4.27.0&hash=99f75e"
+"react-native-screens@patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch":
+  version: 4.30.1
+  resolution: "react-native-screens@patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch::version=4.30.1&hash=e34182"
   dependencies:
     react-freeze: "npm:^1.0.0"
     warn-once: "npm:^0.1.0"
   peerDependencies:
     react: "*"
     react-native: "*"
-  checksum: 10/afbf5f4de3d9bdf09cc71291fb5a0ab9ecb3a67d498ab3ed2c6dbab7e05fcb8e7b41dfe5de30e96081f4846739b96808a86ad056162bdc0e719655adc8c90ba0
+  checksum: 10/6454956389c1cd62ee20e6772c30a4e46545dc7dee0e0a11e991445e2b417b1080d42159465155a2695182351b0f5326a81bb875076c13dcc307f781263140d8
   languageName: node
   linkType: hard
 
@@ -30696,7 +30696,7 @@ __metadata:
     react: "npm:19.2.8"
     react-native: "npm:react-native-tvos@0.86.2-0"
     react-native-reanimated: "workspace:*"
-    react-native-screens: "patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch"
+    react-native-screens: "patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch"
     react-native-worklets: "workspace:*"
     react-test-renderer: "npm:19.2.8"
     typescript: "npm:5.9.3"
@@ -31605,7 +31605,7 @@ __metadata:
     react: "npm:19.3.0"
     react-dom: "npm:19.3.0"
     react-native: "npm:0.88.0"
-    react-native-screens: "patch:react-native-screens@npm%3A4.27.0#~/.yarn/patches/react-native-screens-npm-4.27.0-618dab7873.patch"
+    react-native-screens: "patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch"
     react-native-web: "npm:0.21.2"
     react-strict-dom: "npm:0.0.55"
     serve: "npm:14.2.6"
