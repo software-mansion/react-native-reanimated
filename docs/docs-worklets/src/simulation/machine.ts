@@ -115,7 +115,10 @@ export class Machine {
     this.bundleMode = options.bundleMode ?? false;
     this.inputs = [...(options.inputs ?? [])];
     this.maxDepth = options.maxDepth ?? DEFAULT_MAX_DEPTH;
-    this.timeScale = options.timeScale ?? 1;
+    this.timeScale =
+      options.timeScale !== undefined && options.timeScale > 0
+        ? options.timeScale
+        : 1;
     this.screen = { ...(options.screen ?? {}) };
     this.readShareable = function* readShareable(id: unknown) {
       return yield readShareableValue(id as number);
