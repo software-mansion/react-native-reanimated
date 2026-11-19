@@ -1,1 +1,0 @@
-Fix an exiting animation that interrupts a running layout animation, such as the view's entering animation, jumping to its initial values instead of continuing from the view's current values (on web, for `opacity`).
