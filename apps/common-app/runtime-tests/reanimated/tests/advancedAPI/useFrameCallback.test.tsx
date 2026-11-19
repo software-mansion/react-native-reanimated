@@ -30,8 +30,13 @@ const LAST_STEP = 'LAST_STEP';
 const DELTA_SUM = 'DELTA_SUM';
 const TIME_SINCE_FIRST_FRAME = 'TIME_SINCE_FIRST_FRAME';
 
+// Long enough to see a doubled frame loop or a callback that did not stop.
 const MEASURED_FRAMES = 10;
+// Lets an autostarted callback get past its first frame.
 const WARM_UP_FRAMES = 5;
+// Same as ComparisonMode.FLOAT_DISTANCE. The sum of a few dozen float deltas
+// stays far below it.
+const DELTA_SUM_TOLERANCE = 1e-5;
 
 let frameCallbacks: Record<string, FrameCallback> = {};
 let counts: Record<string, SharedValue<number>> = {};
@@ -59,8 +64,8 @@ type ProbeProps = {
 };
 
 // VIOLATIONS counts inconsistent FrameInfo and second calls within one frame
-// (a leaked registration or a second loop). DELTA_SUM must equal
-// timeSinceFirstFrame.
+// (a leaked registration or a second loop), and frames on which DELTA_SUM
+// differs from timeSinceFirstFrame, so that two wrong deltas cannot cancel out.
 function Probe({ name, autostart, step }: ProbeProps) {
   const count = useSharedValue(0);
   const firstFrames = useSharedValue(0);
@@ -99,6 +104,11 @@ function Probe({ name, autostart, step }: ProbeProps) {
       }
       if (timeSincePreviousFrame !== null) {
         deltaSum.value += timeSincePreviousFrame;
+      }
+      if (
+        Math.abs(deltaSum.value - timeSinceFirstFrame) > DELTA_SUM_TOLERANCE
+      ) {
+        violations.value += 1;
       }
       lastTimestamp.value = timestamp;
       lastTimeSinceFirstFrame.value = timeSinceFirstFrame;
@@ -194,6 +204,10 @@ async function expectDeltasAddUp(probe: string) {
   );
 }
 
+// Replaces the manual checks of FrameCallbackExample (#3372, FrameInfo since
+// #3455): a callback runs on every frame, it can be started and stopped at any
+// moment, two callbacks do not affect each other, and FrameInfo stays
+// consistent. Calls and frames are counted on the UI runtime.
 describe('useFrameCallback', () => {
   beforeEach(() => {
     frameCallbacks = {};
@@ -296,7 +310,8 @@ describe('useFrameCallback', () => {
     );
     expect(await readValue(SECOND, COUNT)).toBe(0, ComparisonMode.NUMBER);
     getFrameCallback(SECOND).setActive(true);
-    await waitForFrames(MEASURED_FRAMES);
+    await expectRunsForEveryFrame(FIRST);
+    await expectRunsForEveryFrame(SECOND);
     getFrameCallback(FIRST).setActive(false);
     await waitForFrames(MEASURED_FRAMES);
     // The restart resets FIRST's sums, so check the first run now.
