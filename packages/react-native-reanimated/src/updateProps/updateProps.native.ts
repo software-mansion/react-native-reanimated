@@ -24,41 +24,6 @@ import { requestSettledPropsSync } from '../PropsRegistryGarbageCollector';
 
 const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
-const updateProps: (
-  viewDescriptors: ViewDescriptorsWrapper,
-  updates: PropUpdates,
-  isAnimatedProps?: boolean
-) => void = (viewDescriptors, updates, isAnimatedProps = false) => {
-  'worklet';
-
-  // TODO: Remove this if once we have SVG props builder implemented
-  // We need to keep it for now to prevent regression in SVG props processing
-  if (isAnimatedProps) {
-    processColorsInProps(updates);
-    if ('transformOrigin' in updates) {
-      processStylePropInPlace(
-        updates,
-        'transformOrigin',
-        processTransformOrigin
-      );
-    }
-    if ('transform' in updates) {
-      processStylePropInPlace(updates, 'transform', processTransform);
-    }
-  }
-
-  global.UpdatePropsManager.update(
-    viewDescriptors,
-    // Use props builder only for style updaters, since animated props
-    // can contain any properties of different types, depending on the
-    // component, which we cannot process properly with the props builder.
-    isAnimatedProps ? updates : stylePropsBuilder.build(updates),
-    isAnimatedProps
-  );
-};
-
-export default updateProps;
-
 function updateJSProps(operations: JSPropsOperation[]) {
   jsPropsUpdater.updateProps(operations);
 }
@@ -178,8 +143,50 @@ function createUpdatePropsManager() {
   };
 }
 
+// `updateProps` must stay below `createUpdatePropsManager`: the worklets
+// plugin turns the function declaration into a `var` assignment, so it is not
+// hoisted and `updateProps` would capture `undefined`.
+const updateProps: (
+  viewDescriptors: ViewDescriptorsWrapper,
+  updates: PropUpdates,
+  isAnimatedProps?: boolean
+) => void = (viewDescriptors, updates, isAnimatedProps = false) => {
+  'worklet';
+
+  // TODO: Remove this if once we have SVG props builder implemented
+  // We need to keep it for now to prevent regression in SVG props processing
+  if (isAnimatedProps) {
+    processColorsInProps(updates);
+    if ('transformOrigin' in updates) {
+      processStylePropInPlace(
+        updates,
+        'transformOrigin',
+        processTransformOrigin
+      );
+    }
+    if ('transform' in updates) {
+      processStylePropInPlace(updates, 'transform', processTransform);
+    }
+  }
+
+  // The module-level initialization below is scheduled once and can lose the
+  // race with the first mapper run during a cold start, so create the manager
+  // on demand.
+  global.UpdatePropsManager ??= createUpdatePropsManager();
+  global.UpdatePropsManager.update(
+    viewDescriptors,
+    // Use props builder only for style updaters, since animated props
+    // can contain any properties of different types, depending on the
+    // component, which we cannot process properly with the props builder.
+    isAnimatedProps ? updates : stylePropsBuilder.build(updates),
+    isAnimatedProps
+  );
+};
+
+export default updateProps;
+
 // is-tree-shakable-suppress
 scheduleOnUI(() => {
   'worklet';
-  global.UpdatePropsManager = createUpdatePropsManager();
+  global.UpdatePropsManager ??= createUpdatePropsManager();
 });
