@@ -40,9 +40,11 @@ scheduleOnRuntime(runtime, async () => {
 | `AbortController`, `AbortSignal`          | ✅                                                     |
 | `FormData`                                | String fields only, encoded as `multipart/form-data`. |
 | Response streaming                        | ❌                                                     |
-| `WebSocket`                               | coming soon                                           |
+| `WebSocket`                               | ✅                                                     |
 
-Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
+Requests share the app's cookie storage and TLS configuration. On Android, `WebSocket` also respects the system proxy settings and the app's cleartext traffic policy. React Native networking customizations, such as certificate pinning or interceptors, do not apply to `WebSocket`.
+
+`WebSocket` follows the [WHATWG interface](https://websockets.spec.whatwg.org/) and supports text, binary data, event listeners and subprotocols. Host names must be plain ASCII: internationalized host names, in Unicode or in their `xn--` form, throw a `SyntaxError`.
 
 ## Reference
 

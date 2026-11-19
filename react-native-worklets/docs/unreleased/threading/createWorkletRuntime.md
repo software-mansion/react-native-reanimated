@@ -108,7 +108,7 @@ When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, 
 
 ##### `enableNetworking`
 
-Determines whether the [networking API](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest` and their supporting globals - is installed on the Runtime. Defaults to `true`.
+Determines whether the [networking API](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode/usage#running-network-requests-in-worklets) - `fetch`, `XMLHttpRequest`, `WebSocket` and their supporting globals - is installed on the Runtime. Defaults to `true`.
 
 ##### `abortable`
 
