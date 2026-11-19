@@ -34,6 +34,7 @@
 
 ## Core
 
+- [animatedText](https://docs.swmansion.com/react-native-reanimated/docs/core/animatedText)
 - [cancelAnimation](https://docs.swmansion.com/react-native-reanimated/docs/core/cancelAnimation)
 - [createAnimatedComponent](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent)
 - [useAnimatedProps](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps)
@@ -104,6 +105,7 @@
 - [Performance](https://docs.swmansion.com/react-native-reanimated/docs/guides/performance)
 - [supported-properties](https://docs.swmansion.com/react-native-reanimated/docs/guides/supported-properties)
 - [testing-with-jest](https://docs.swmansion.com/react-native-reanimated/docs/guides/testing)
+- [Text animations](https://docs.swmansion.com/react-native-reanimated/docs/guides/text-animations)
 - [Troubleshooting](https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooting)
 - [Web Support](https://docs.swmansion.com/react-native-reanimated/docs/guides/web-support)
 - [worklets](https://docs.swmansion.com/react-native-reanimated/docs/guides/worklets)
@@ -125,7 +127,14 @@
 
 ## Shared Element Transitions
 
+- [Children of shared views](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views)
+- [Custom animations](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations)
+- [Limitations and troubleshooting](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/limitations)
 - [Shared Element Transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview)
+- [Progress-based transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/progress-transitions)
+- [Screens and boundaries](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries)
+- [Shared transition props](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props)
+- [SharedTransition](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition)
 
 ## Utilities
 

@@ -943,7 +943,7 @@ The value on which the animation will come at rest. Supported categories:
   * Named colors - e.g. `"dodgerblue"`.
 * **objects** - object with properties that will be animated separately,
 * **array** - array of numbers, each value will be animated separately.
-* **transformation matrix** - an array consisting of exactly 16 numerical values is by default animated as a transformation matrix. The numbers in the matrix aren't animated separately. Instead, the array gets decomposed into 3 basic transformations - rotation, scale, and translation – which are then animated separately.
+* **transformation matrix** - an array consisting of exactly 16 numerical values is by default animated as a transformation matrix. The matrix is decomposed into rotation, scale, skew, translation, and perspective, which are animated separately. Singular matrices, such as a transform with zero scale, use interpolation of individual matrix entries instead.
 
 Please mind, that `toValue` and the animated shared value have to share the same category (e.g. you can't animate `width` from `100px` to `50%`).
 
@@ -1517,6 +1517,75 @@ A function called upon animation completion. If the animation is cancelled, the 
 ## Remarks
 
 * The callback passed to the 3rd argument is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and ran on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/core/animatedText
+# Title: animatedText
+
+# Animated.Text
+
+`Animated.Text` is a built-in [Animated component](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#animated-component) based on the React Native `Text`. Besides animating its styles and props, since Reanimated 4.8.0 it accepts [shared values](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value) as children. The text is updated on the UI thread, without re-rendering the component.
+
+## Reference
+
+```javascript
+import Animated, { useSharedValue } from 'react-native-reanimated';
+
+function App() {
+  const count = useSharedValue(0);
+
+  return <Animated.Text>{count}</Animated.Text>;
+}
+```
+
+Type definitions
+
+```typescript
+type AnimatedTextChild =
+  | ReactNode
+  | Omit<SharedValue<string | number | null | undefined>, 'set' | 'modify'>;
+
+type AnimatedTextProps = Omit<AnimatedProps<TextProps>, 'children'> & {
+  children?: AnimatedTextChild | AnimatedTextChild[];
+};
+```
+
+### Props
+
+`Animated.Text` accepts all props of the React Native `Text` component, and every style and prop can be animated the same way as in other Animated components.
+
+#### `children`
+
+A shared value, a derived value, or any children supported by `Text`. Shared values can be mixed with static children in a single `Animated.Text`:
+
+```jsx
+<Animated.Text>Progress: {progress}%</Animated.Text>
+```
+
+A shared value used as a child has to hold a `string`, a `number`, `null` or `undefined`. Other types, like `boolean`, objects and arrays, are rejected by TypeScript.
+
+## Example
+
+## Remarks
+
+* Pass the shared value itself as a child. Don't read its `value` property during render, as in `<Animated.Text>{progress.value}</Animated.Text>`. Reading `value` during render is a side effect, it blocks the JavaScript thread until the value is fetched from the UI thread, and the text becomes a static snapshot that never updates. See [`useSharedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useSharedValue#remarks) for more details.
+
+  ```jsx
+  // 🚨 reads the value during render, the text doesn't update
+  <Animated.Text>{progress.value}</Animated.Text>
+
+  // ✅ the text follows the shared value
+  <Animated.Text>{progress}</Animated.Text>
+  ```
+
+* A `null`, `undefined` or empty string value renders an empty text. Reanimated keeps the `Text` from collapsing by rendering a zero-width space in its place.
+
+* A number is converted to a string, so use [`useDerivedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue) to format it, for example to round it or to add a unit.
+
+* `Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags) static feature flag is enabled.
 
 ## Platform compatibility
 
@@ -4285,6 +4354,8 @@ Also consider exploring the built-in [components](https://kirillzyusko.github.io
 # URL: https://docs.swmansion.com/react-native-reanimated/docs/device/useAnimatedSensor
 # Title: useAnimatedSensor
 
+# useAnimatedSensor
+
 `useAnimatedSensor` lets you create animations based on data from the device's sensors. You can access:
 
 * **Accelerometer** - the device acceleration (without gravity).
@@ -4316,10 +4387,10 @@ Type definitions
 ```typescript
 // --- Function declaration ---
 
-function useAnimatedSensor(
-  sensorType: SensorType,
+function useAnimatedSensor<T extends SensorType>(
+  sensorType: T,
   config?: Partial<SensorConfig>
-): AnimatedSensor<ValueRotation | Value3D>;
+): AnimatedSensor<SensorValueMap[T]>;
 
 // --- Configuration types ---
 
@@ -4347,7 +4418,17 @@ enum IOSReferenceFrame {
 
 // --- Return types ---
 
-type AnimatedSensor<T extends Value3D | ValueRotation> = {
+type SensorValueMap = {
+  [SensorType.ACCELEROMETER]: Value3D;
+  [SensorType.GYROSCOPE]: Value3D;
+  [SensorType.GRAVITY]: Value3D;
+  [SensorType.MAGNETIC_FIELD]: Value3D;
+  [SensorType.ROTATION]: ValueRotation;
+};
+
+type SensorValue = SensorValueMap[SensorType];
+
+type AnimatedSensor<T extends SensorValue> = {
   sensor: SharedValue<T>;
   unregister: () => void;
   isAvailable: boolean;
@@ -4842,7 +4923,9 @@ It takes two steps to add Reanimated 4 to an Expo project:
 
 ### Step 1: Install the package
 
-Install `react-native-reanimated` and `react-native-worklets` packages from npm:
+Run `npx expo install react-native-reanimated react-native-worklets`. It installs the pair that your Expo SDK selects, so skip the package manager commands below. If your SDK selects Reanimated 3, which does not use `react-native-worklets`, upgrade the SDK first.
+
+Without the Expo CLI, install `react-native-reanimated` and `react-native-worklets` packages from npm:
 
 ```bash
 npm install react-native-reanimated
@@ -4856,6 +4939,8 @@ yarn add react-native-reanimated
 
 This library requires an installation of the `react-native-worklets` dependency. It was separated from `react-native-reanimated` for better modularity and must be installed separately.
 You can read more about Worklets in the [Worklets documentation](https://docs.swmansion.com/react-native-worklets/).
+
+Install the version of `react-native-worklets` that matches your version of Reanimated. The [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility#supported-react-native-worklets-versions) lists which versions work together.
 
 ```bash
 npm install react-native-worklets
@@ -6131,7 +6216,7 @@ Feature flags allow developers to opt-in for experimental changes or opt-out fro
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.4.0+  `false` otherwise |
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   | 4.7.0 | `true` for 4.3.0+  `false` otherwise |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+  `false` otherwise |
-| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.8.0+  `false` otherwise |
 | [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_legacy_layout_animations_proxy)                         | [static](#static-feature-flags) |  4.7.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+  `false` otherwise |
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
@@ -6229,7 +6314,7 @@ This feature flag is supposed to fix performance regressions of animations while
 
 ### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
 
-When enabled, Shared Element Transitions are available to use. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+When enabled, [Shared Element Transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview) are available to use. The flag is enabled by default from Reanimated 4.8.0. To turn the feature off, set this flag to `false` in `reanimated.staticFeatureFlags` in your app's `package.json`.
 
 This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_legacy_layout_animations_proxy) and they cannot be enabled simultaneously, because the legacy layout animations proxy does not support Shared Element Transitions.
 
@@ -6237,7 +6322,7 @@ This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_leg
 
 When enabled, layout animations run on the legacy layout animations proxy instead of the current default implementation. This is a rollback flag: use it only when the default proxy causes a regression in your app. If it does, please report an issue. The legacy proxy has no light tree, so [`TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`](#track_synchronous_props_in_layout_animations) has no effect with it.
 
-This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously.
+This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously. From Reanimated 4.8.0, `ENABLE_SHARED_ELEMENT_TRANSITIONS` is enabled by default, so you need to explicitly disable it in your app's `package.json` when enabling `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`.
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 
@@ -6313,7 +6398,9 @@ Keep this flag off unless you see the warning described below.
 
 With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props that don't require layout recalculation go straight to the native views and skip the bookkeeping that Shared Element Transitions and Layout Animations start from. A running layout animation always receives those props. An animation that starts later starts with stale values if one of those props was animated before.
 
-When enabled, the synchronous path also updates that bookkeeping. This costs one props clone for each synchronously updated view on every frame. Enable the flag only for the screens that hit the case above, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
+A running shared element transition also keeps this bookkeeping current for the view it moves, even when this flag is off. This keeps synchronous prop values when the transition target changes or when the view returns to its parent. A running built-in timed transition does the same for its target and the parents of its target, so it follows their synchronous transforms. This exception does not track props written before the view starts moving, or props written to other views.
+
+When enabled, the synchronous path also updates that bookkeeping for other views. This costs one extra props clone per view in each synchronous update batch. Running layout animations also merge synchronous props into their animation records, so this flag does not control all props clone costs. Enable the flag only for the screens where a later animation starts with stale values, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
 
 When disabled, a development build logs a warning once per view when a layout animation or a shared element transition starts on a view whose synchronous props are missing from that bookkeeping. A shared element transition also warns when it starts under an ancestor whose synchronous transform is missing from it.
 
@@ -6699,11 +6786,11 @@ const pan = useMemo(
 );
 ```
 
-### 💡 Animate `TextInput` instead of re-rendering `Text` component
+### 💡 Use `Animated.Text` instead of re-rendering `Text` component
 
-When implementing an animated number counter, don't use React state to periodically update the counter. Instead, store the number in a shared value and use an animated `TextInput` component to display the current value. For more details, see [this example](https://github.com/software-mansion/react-native-reanimated/blob/89db30708664ca07ce904030cc253fd0774e8ef8/apps/common-app/src/apps/reanimated/examples/CounterExample.tsx).
+When implementing text animations (e.g. animated counters), don't use React state to periodically update the counter. Instead, store the number in a shared value and pass it (or a derived value that formats it) as a child of the [`Animated.Text`](https://docs.swmansion.com/react-native-reanimated/docs/core/animatedText) component. This way, the text is updated on the UI thread without re-rendering the component. For more details, see [Text animations](https://docs.swmansion.com/react-native-reanimated/docs/guides/text-animations) guide.
 
-We are also working on adding support for animating text inside `Animated.Text` component using a shared value – see [PR #8595](https://github.com/software-mansion/react-native-reanimated/pull/8595).
+Prefer `Animated.Text` over the older pattern of animating the `text` prop of a `TextInput` component with `useAnimatedProps`.
 
 You can also consider implementing your own native component with rolling ticket using `contentTransition(.numericText())` modifier in SwiftUI (requires iOS 16+).
 
@@ -6714,170 +6801,175 @@ You can also consider implementing your own native component with rolling ticket
 
 # Supported style properties
 
-Not all CSS properties are available and animatable in React Native. The following table describes which style properties can be animated on which platform.
+Not all CSS properties are available and animatable in React Native. The following table lists, in alphabetical order, which style properties can be animated on which platform. A supported cell without a version label means the property has been animatable on that platform since Reanimated 4.0.0; a label shows the version that added the support.
 
 For animating `react-native-svg` components, see [Animating SVG](https://docs.swmansion.com/react-native-reanimated/docs/guides/animating-svg).
 
-| Property                | Android | iOS    | Web    |
-| ----------------------- | ------- | ------ | ------ |
-| flex                    |   |  |  |
-| flexBasis               |    |   |  |
-| flexDirection           |   |  |  |
-| justifyContent          |   |  |  |
-| alignItems              |   |  |  |
-| alignSelf               |   |  |  |
-| alignContent            |   |  |  |
-| flexGrow                |   |  |  |
-| flexShrink              |   |  |  |
-| flexWrap                |   |  |  |
-| gap                     |   |  |  |
-| rowGap                  |   |  |  |
-| columnGap               |   |  |  |
-| start                   |   |  |   |
-| end                     |   |  |   |
-| direction               |   |  |   |
-| height                  |   |  |  |
-| width                   |   |  |  |
-| maxHeight               |   |  |  |
-| maxWidth                |   |  |  |
-| minHeight               |   |  |  |
-| minWidth                |   |  |  |
-| margin                  |   |  |  |
-| marginTop               |   |  |  |
-| marginRight             |   |  |  |
-| marginBottom            |   |  |  |
-| marginLeft              |   |  |  |
-| marginStart             |   |  |  |
-| marginEnd               |   |  |  |
-| marginBlock             |   |  |  |
-| marginBlockEnd          |   |  |  |
-| marginBlockStart        |   |  |  |
-| marginInline            |   |  |  |
-| marginInlineEnd         |   |  |  |
-| marginInlineStart       |   |  |  |
-| marginHorizontal        |   |  |  |
-| marginVertical          |   |  |  |
-| padding                 |   |  |  |
-| paddingTop              |   |  |  |
-| paddingRight            |   |  |  |
-| paddingBottom           |   |  |  |
-| paddingLeft             |   |  |  |
-| paddingStart            |   |  |  |
-| paddingEnd              |   |  |  |
-| paddingBlock            |   |  |  |
-| paddingBlockEnd         |   |  |  |
-| paddingBlockStart       |   |  |  |
-| paddingInline           |   |  |  |
-| paddingInlineEnd        |   |  |  |
-| paddingInlineStart      |   |  |  |
-| paddingHorizontal       |   |  |  |
-| paddingVertical         |   |  |  |
-| top                     |   |  |  |
-| left                    |   |  |  |
-| bottom                  |   |  |  |
-| right                   |   |  |  |
-| inset                   |   |  |  |
-| insetBlock              |   |  |  |
-| insetInline             |   |  |  |
-| insetBlockStart         |   |  |  |
-| insetBlockEnd           |   |  |  |
-| insetInlineStart        |   |  |  |
-| insetInlineEnd          |   |  |  |
-| position                |   |  |  |
-| display                 |   |  |  |
-| overflow                |   |  |  |
-| zIndex                  |   |  |  |
-| aspectRatio             |   |  |  |
-| boxSizing               |    |   |  |
-| backgroundColor         |   |  |  |
-| color                   |   |  |  |
-| textDecorationColor     |    |  |  |
-| textShadowColor         |   |  |  |
-| borderColor             |   |  |  |
-| borderTopColor          |   |  |  |
-| borderBlockStartColor   |   |  |  |
-| borderRightColor        |   |  |  |
-| borderEndColor          |   |  |  |
-| borderBottomColor       |   |  |  |
-| borderBlockEndColor     |   |  |  |
-| borderLeftColor         |   |  |  |
-| borderStartColor        |   |  |  |
-| borderBlockColor        |   |  |  |
-| outlineColor            |   |  |  |
-| shadowColor             |   |  |  |
-| overlayColor            |    |   |   |
-| tintColor               |   |  |   |
-| shadowOffset            |    |  |  |
-| shadowOpacity           |    |  |  |
-| shadowRadius            |    |  |  |
-| elevation               |   |   |   |
-| textShadowOffset        |   |  |  |
-| textShadowRadius        |   |  |  |
-| boxShadow               |   |  |  |
-| borderRadius            |   |  |  |
-| borderTopLeftRadius     |   |  |  |
-| borderTopStartRadius    |   |  |  |
-| borderStartStartRadius  |   |  |  |
-| borderTopRightRadius    |   |  |  |
-| borderTopEndRadius      |   |  |  |
-| borderStartEndRadius    |   |  |  |
-| borderBottomLeftRadius  |   |  |  |
-| borderBottomStartRadius |   |  |  |
-| borderEndStartRadius    |   |  |  |
-| borderBottomRightRadius |   |  |  |
-| borderBottomEndRadius   |   |  |  |
-| borderEndEndRadius      |   |  |  |
-| borderWidth             |   |  |  |
-| borderTopWidth          |   |  |  |
-| borderStartWidth        |   |  |  |
-| borderBottomWidth       |   |  |  |
-| borderEndWidth          |   |  |  |
-| borderLeftWidth         |   |  |  |
-| borderRightWidth        |   |  |  |
-| borderCurve             |    |   |   |
-| borderStyle             |   |  |  |
-| outlineOffset           |   |  |  |
-| outlineStyle            |   |  |  |
-| outlineWidth            |   |  |  |
-| transformOrigin         |   |  |  |
-| transform               |   |  |  |
-| transformMatrix         |    |   |   |
-| rotation                |    |   |   |
-| scaleX                  |    |   |   |
-| scaleY                  |    |   |   |
-| translateX              |    |   |   |
-| translateY              |    |   |   |
-| backfaceVisibility      |   |  |  |
-| opacity                 |   |  |  |
-| mixBlendMode            |   |  |  |
-| fontFamily              |   |  |  |
-| fontSize                |   |  |  |
-| fontStyle               |   |  |  |
-| fontVariant             |   |  |  |
-| fontWeight              |   |  |  |
-| textAlign               |   |  |  |
-| textAlignVertical       |   |   |   |
-| verticalAlign           |    |   |  |
-| letterSpacing           |   |  |  |
-| lineHeight              |   |  |  |
-| textTransform           |   |  |  |
-| textDecorationLine      |   |  |  |
-| textDecorationStyle     |    |  |  |
-| userSelect              |    |   |  |
-| writingDirection        |    |   |   |
-| includeFontPadding      |   |   |   |
-| resizeMode              |   |  |   |
-| objectFit               |    |   |   |
-| cursor                  |   |  |  |
-| pointerEvents           |   |  |  |
-| filter                  |   |  |  |
-| isolation               |    |   |  |
+| Property                | Android            | iOS                | Web    |
+| ----------------------- | ------------------ | ------------------ | ------ |
+| alignContent            |              |              |  |
+| alignItems              |              |              |  |
+| alignSelf               |              |              |  |
+| aspectRatio             |              |              |  |
+| backfaceVisibility      |              |              |  |
+| backgroundColor         |              |              |  |
+| backgroundImage         |  |  |  |
+| borderBlockColor        |              |              |  |
+| borderBlockEndColor     |              |              |  |
+| borderBlockStartColor   |              |              |  |
+| borderBottomColor       |              |              |  |
+| borderBottomEndRadius   |              |              |  |
+| borderBottomLeftRadius  |              |              |  |
+| borderBottomRightRadius |              |              |  |
+| borderBottomStartRadius |              |              |  |
+| borderBottomWidth       |              |              |  |
+| borderColor             |              |              |  |
+| borderCurve             |               |  |   |
+| borderEndColor          |              |              |  |
+| borderEndEndRadius      |              |              |  |
+| borderEndStartRadius    |              |              |  |
+| borderEndWidth          |              |              |  |
+| borderLeftColor         |              |              |  |
+| borderLeftWidth         |              |              |  |
+| borderRadius            |              |              |  |
+| borderRightColor        |              |              |  |
+| borderRightWidth        |              |              |  |
+| borderStartColor        |              |              |  |
+| borderStartEndRadius    |              |              |  |
+| borderStartStartRadius  |              |              |  |
+| borderStartWidth        |              |              |  |
+| borderStyle             |              |              |  |
+| borderTopColor          |              |              |  |
+| borderTopEndRadius      |              |              |  |
+| borderTopLeftRadius     |              |              |  |
+| borderTopRightRadius    |              |              |  |
+| borderTopStartRadius    |              |              |  |
+| borderTopWidth          |              |              |  |
+| borderWidth             |              |              |  |
+| bottom                  |              |              |  |
+| boxShadow               |              |              |  |
+| boxSizing               |               |               |  |
+| color                   |              |              |  |
+| columnGap               |              |              |  |
+| cursor                  |              |              |  |
+| direction               |              |              |   |
+| display                 |              |              |  |
+| elevation               |              |               |   |
+| end                     |              |              |   |
+| filter                  |  |  |  |
+| flex                    |              |              |  |
+| flexBasis               |               |               |  |
+| flexDirection           |              |              |  |
+| flexGrow                |              |              |  |
+| flexShrink              |              |              |  |
+| flexWrap                |              |              |  |
+| fontFamily              |              |              |  |
+| fontSize                |              |              |  |
+| fontStyle               |              |              |  |
+| fontVariant             |              |              |  |
+| fontWeight              |              |              |  |
+| gap                     |              |              |  |
+| height                  |              |              |  |
+| includeFontPadding      |              |               |   |
+| inset                   |              |              |  |
+| insetBlock              |              |              |  |
+| insetBlockEnd           |              |              |  |
+| insetBlockStart         |              |              |  |
+| insetInline             |              |              |  |
+| insetInlineEnd          |              |              |  |
+| insetInlineStart        |              |              |  |
+| isolation               |               |               |  |
+| justifyContent          |              |              |  |
+| left                    |              |              |  |
+| letterSpacing           |              |              |  |
+| lineHeight              |              |              |  |
+| margin                  |              |              |  |
+| marginBlock             |              |              |  |
+| marginBlockEnd          |              |              |  |
+| marginBlockStart        |              |              |  |
+| marginBottom            |              |              |  |
+| marginEnd               |              |              |  |
+| marginHorizontal        |              |              |  |
+| marginInline            |              |              |  |
+| marginInlineEnd         |              |              |  |
+| marginInlineStart       |              |              |  |
+| marginLeft              |              |              |  |
+| marginRight             |              |              |  |
+| marginStart             |              |              |  |
+| marginTop               |              |              |  |
+| marginVertical          |              |              |  |
+| maxHeight               |              |              |  |
+| maxWidth                |              |              |  |
+| minHeight               |              |              |  |
+| minWidth                |              |              |  |
+| mixBlendMode            |              |              |  |
+| objectFit               |  |  |   |
+| opacity                 |              |              |  |
+| outlineColor            |              |              |  |
+| outlineOffset           |              |              |  |
+| outlineStyle            |              |              |  |
+| outlineWidth            |              |              |  |
+| overflow                |              |              |  |
+| overlayColor            |               |               |   |
+| padding                 |              |              |  |
+| paddingBlock            |              |              |  |
+| paddingBlockEnd         |              |              |  |
+| paddingBlockStart       |              |              |  |
+| paddingBottom           |              |              |  |
+| paddingEnd              |              |              |  |
+| paddingHorizontal       |              |              |  |
+| paddingInline           |              |              |  |
+| paddingInlineEnd        |              |              |  |
+| paddingInlineStart      |              |              |  |
+| paddingLeft             |              |              |  |
+| paddingRight            |              |              |  |
+| paddingStart            |              |              |  |
+| paddingTop              |              |              |  |
+| paddingVertical         |              |              |  |
+| pointerEvents           |              |              |  |
+| position                |              |              |  |
+| resizeMode              |              |              |   |
+| right                   |              |              |  |
+| rotation                |               |               |   |
+| rowGap                  |              |              |  |
+| scaleX                  |               |               |   |
+| scaleY                  |               |               |   |
+| shadowColor             |              |              |  |
+| shadowOffset            |               |              |  |
+| shadowOpacity           |               |              |  |
+| shadowRadius            |               |              |  |
+| start                   |              |              |   |
+| textAlign               |              |              |  |
+| textAlignVertical       |              |               |   |
+| textDecorationColor     |               |              |  |
+| textDecorationLine      |              |              |  |
+| textDecorationStyle     |               |              |  |
+| textShadowColor         |              |              |  |
+| textShadowOffset        |              |              |  |
+| textShadowRadius        |              |              |  |
+| textTransform           |              |              |  |
+| tintColor               |              |              |   |
+| top                     |              |              |  |
+| transform               |              |              |  |
+| transformMatrix         |               |               |   |
+| transformOrigin         |              |              |  |
+| translateX              |               |               |   |
+| translateY              |               |               |   |
+| userSelect              |               |               |  |
+| verticalAlign           |  |               |  |
+| width                   |              |              |  |
+| writingDirection        |               |  |   |
+| zIndex                  |              |              |  |
 
 ## Remarks
 
 ### Style Inheritance
 
 Style inheritance is not supported. Properties that would normally inherit values (e.g., textDecorationColor inheriting from color) must be provided separately, as inheritance is not implemented.
+
+### Invalid values
+
+A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](https://docs.swmansion.com/react-native-reanimated/docs/debugging/logger-configuration) as long as its strict mode is enabled.
 
 ### Relative Margins
 
@@ -6962,6 +7054,14 @@ and the shadow styles aren't inherited from the style object provided to the ele
 Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
 
 We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
+
+### Animating background image
+
+The `backgroundImage` style property has this name since React Native 0.87. On older React Native versions use `experimental_backgroundImage` instead; both names are supported and animate the same way.
+
+`useAnimatedStyle` supports `backgroundImage` since 4.7 on native and 4.0 on the web.
+
+On the Web, browsers do not interpolate `background-image` values, so the gradient switches at the midpoint between keyframes instead of animating.
 
 ### Animating image tint color
 
@@ -7105,6 +7205,112 @@ jest.mock('react-native-svg', () => require('react-native-reanimated/mock'));
 
 * [@testing-library/react-native](https://testing-library.com/docs/react-native-testing-library/intro)
 * [@testing-library/react-hooks](https://react-hooks-testing-library.com/) - for dealing with hooks
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/guides/text-animations
+# Title: Text animations
+
+# Text animations
+
+This guide explains how to animate text using Reanimated. In particular, it focuses on the type of text animations in which the sequence of characters changes between individual animation frames, like in a stopwatch or a digital speedometer.
+
+## Animating text style
+
+For animating text style (e.g. text color, font size or text shadow), you need to use [`useAnimatedStyle`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedStyle) hook and pass the animated styles to `Animated.Text` component just like you would do with any other animated component.
+
+## Animating text content
+
+For animating the text content itself, you need to choose one of the approaches described below. If your app uses an older version of Reanimated or enables the [`USE_ANIMATION_BACKEND`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags) static feature flag, use [`AnimatedTextInput`](#using-animatedtextinput) instead.
+
+### Using `Animated.Text`&#x20;
+
+The recommended approach is to pass a shared value as a child of the [`Animated.Text`](https://docs.swmansion.com/react-native-reanimated/docs/core/animatedText) component. The current value is committed as the children during the first render and then the displayed text is updated directly on the UI thread, without triggering React re-renders.
+
+> **Warning**
+>
+> `Animated.Text` doesn't update shared value children when the [`USE_ANIMATION_BACKEND`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags) static feature flag is enabled. In such case, use [`AnimatedTextInput`](#using-animatedtextinput).
+
+#### Shared value as children
+
+You can pass a shared value directly as the children of `Animated.Text` component. Use [`useDerivedValue`](https://docs.swmansion.com/react-native-reanimated/docs/core/useDerivedValue) hook to format the value:
+
+```tsx
+function Counter() {
+  const sv = useSharedValue(0);
+
+  // ...
+
+  const text = useDerivedValue(() => {
+    return `Current value: ${Math.round(sv.value)}`;
+  });
+
+  // highlight-next-line
+  return <Animated.Text>{text}</Animated.Text>;
+}
+```
+
+#### Static text mixed with shared values
+
+You can also mix static strings with one or more shared values in the children of `Animated.Text` component. Each shared value is updated independently whenever it changes:
+
+```tsx
+function Counter() {
+  // ...
+
+  const count = useDerivedValue(() => {
+    return String(Math.round(sv.value));
+  });
+
+  // highlight-next-line
+  return <Animated.Text>Current value: {count}</Animated.Text>;
+}
+```
+
+#### Caveats
+
+Pass the shared value itself as a child. Don't read its `value` property during render, as in `<Animated.Text>{sv.value}</Animated.Text>`, because the text becomes a static snapshot that never updates.
+
+A shared value used as a child has to hold a `string`, a `number`, `null` or `undefined`. A number is converted to a string automatically.
+
+`Animated.Text` can also be placed inside another `Text` component or `Animated.Text` component with animated style.
+
+> **Tip**
+>
+> Use `fontVariant: ['tabular-nums']` to keep the layout stable when animating numbers.
+
+### Using `AnimatedTextInput`
+
+Another approach is to animate the value of `TextInput` component. This approach is no longer recommended and should be used only in apps that run a Reanimated version older than 4.8.0 or enable the [`USE_ANIMATION_BACKEND`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags) static feature flag, where `Animated.Text` doesn't update shared value children. In some cases, the contents can be incorrectly cropped resulting in showing the ellipsis instead of the last character. Also, it is prone to crashes during a reload ([link to the issue](https://github.com/software-mansion/react-native-reanimated/issues/7647)).
+
+Reanimated does not expose `Animated.TextInput` on its own, so you need to create an animated component yourself using [`createAnimatedComponent`](https://docs.swmansion.com/react-native-reanimated/docs/core/createAnimatedComponent) function:
+
+```tsx
+const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
+```
+
+You need to animate both the `defaultValue` prop (for the initial render) and the `text` prop (for the consecutive animation frames) using [`useAnimatedProps`](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps) hook:
+
+```tsx
+const animatedProps = useAnimatedProps(() => {
+  const text = `Current value: ${Math.round(sv.value)}`;
+  // highlight-next-line
+  return { text, defaultValue: text };
+});
+```
+
+Finally, you can use the `AnimatedTextInput` component with the animated props. Don't forget to set `editable` prop to `false` to disable user interactions as well as set `underlineColorAndroid` to `transparent`.
+
+```tsx
+return (
+  <AnimatedTextInput
+    // highlight-next-line
+    animatedProps={animatedProps}
+    editable={false}
+    underlineColorAndroid="transparent"
+  />
+);
+```
 
 
 ---
@@ -7783,11 +7989,12 @@ Reanimated comes with a bunch of predefined animations you can customize. For mo
 * `withInitialValues` and `withTargetValues` are typed per preset, so only props specific to the animation preset are accepted (see each preset's *Values & Type definitions* block).
 * &#x20;For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated since 4.4.0.
 * `withInitialValues` overrides the initial values of the animation (the state the element starts from).
+* &#x20;An exiting animation that interrupts a running layout animation, such as an entering one, starts each property that the running animation drives from its current value. This takes precedence over `withInitialValues`. On web, this applies only to `opacity` of predefined animations.
 * &#x20;`withTargetValues` overrides the target values of the animation (the state the element animates to).
 * *Values & Type definitions* blocks after each animation preset show the exact type for both `withInitialValues` and `withTargetValues` (they accept the same props per preset). The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
 * If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
 * On the New Architecture:
-  * `nativeID` is used internally to configure entering animations, so overwriting it will result in entering animations not running. Some components (e.g. TouchableWithoutFeedback) overwrite `nativeID` of its children. To work around this issue wrap your animated children with a `View`.
+  * `nativeID` is used internally to configure entering animations, so a component with its own `nativeID` does not run its entering animation. Some components (e.g. `TouchableWithoutFeedback` with a `nativeID`) give their `nativeID` to their child. To work around this issue, put the `nativeID` on a `View` that wraps the animated component. `nativeID={undefined}` does not stop the entering animation.
   * removing a non-animated view will trigger exiting animations in its children, but the non-animated view will not wait for the children's animations to finish. This is due to view flattening and can be mitigated by using `collapsable={false}`.
 
 ## Fade
@@ -9894,135 +10101,1003 @@ An optional shared value to be updated with the scroll offset. If not provided a
 
 
 ---
-# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
-# Title: Shared Element Transitions
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views
+# Title: Children of shared views
 
-# Shared Element Transitions
+# Children of shared views
 
-> **Caution**
->
-> Shared Element Transitions is an experimental feature available [behind a feature flag](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#enable_shared_element_transitions), not recommended for production use yet. We are waiting for your feedback to improve the implementation.
+By default, the shared view moves together with its own children, and the children of the target view show at once when the transition ends. When the two views have different children, for example a card in a list and a header on a details screen, this change is sudden. You can change this in two ways, also together:
 
-Shared Element Transitions allow you to smoothly transform a component from one screen into a component on another screen.
+* Give a child its [own `sharedTransitionTag`](#children-with-their-own-tag) when the same child is on both screens, for example an icon. The child then moves to its own match, as a separate shared view.
+* Use [`fadeContent()`](#fadecontent) for the other children. The children of the moving view fade out while it moves, and the children of the target view fade in when the transition ends. The view itself stays visible, and its frame and style animate as usual.
+
+## Children with their own tag
+
+A child with its own matching `sharedTransitionTag` moves from its place in the old view to its place in the new view. It does not fade with its parent, also with `fadeContent()`. When its target is inside the target of the parent, it moves inside the moving parent: it keeps its place in the drawing order and the clipping of the parent, and the two land together when the slower one ends. In other cases, for example when the child is inside a shared view on only one of the screens, it moves on its own, above the other views. To see the difference, toggle the **Icon has its own tag** switch in the demo above.
+
+```tsx
+<Animated.View sharedTransitionTag="card" sharedTransitionStyle={transition}>
+  // highlight-next-line
+  <Animated.Text sharedTransitionTag="card-icon">☀</Animated.Text>
+  <Text>Sun</Text>
+</Animated.View>
+```
+
+Give the child the same tag on both screens, and use the same native component on both screens, as for any [shared view](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag).
+
+The moving view keeps its own content, so a different `fontSize` on the two screens changes at once when the transition ends. To change the size of a child smoothly, give it the same `fontSize` on both screens and scale it with `transform`, which animates.
+
+## `fadeContent()`
+
+### Reference
+
+```tsx
+import Animated, { SharedTransition } from 'react-native-reanimated';
+
+// highlight-next-line
+const transition = SharedTransition.duration(450).fadeContent();
+
+function Card() {
+  return (
+    <Animated.View
+      sharedTransitionTag="card"
+      sharedTransitionStyle={transition}>
+      <Text>Florence</Text>
+    </Animated.View>
+  );
+}
+```
+
+Type definitions
+
+```typescript
+type FadeContentConfig = {
+  fadeOut?: { end?: number };
+  fadeIn?: { duration?: number };
+};
+
+class SharedTransition {
+  static fadeContent(config?: FadeContentConfig): SharedTransition;
+  fadeContent(config?: FadeContentConfig): this;
+  // ...
+}
+```
+
+### Arguments
+
+#### `config`&#x20;
+
+An object with two optional fields:
+
+* `fadeOut.end` - the point of the move, more than 0 and at most 1, where the children reach opacity 0. For example, with `0.5` the children are gone in the middle of the move. The point follows the easing or the spring of the move. Defaults to `1`.
+* `fadeIn.duration` - the length of the fade-in after the transition ends, in milliseconds. Defaults to half of the transition duration.
+
+```tsx
+const transition = SharedTransition.duration(450).fadeContent({
+  // highlight-next-line
+  fadeOut: { end: 0.5 },
+  // highlight-next-line
+  fadeIn: { duration: 150 },
+});
+```
+
+## Remarks
+
+* The direct children of the shared view fade, also a child that fills the view, for example a background image. A nested shared view and the views that contain it keep their opacity. The views beside them fade instead.
+* A shared view without children, for example a shared `Image`, has nothing to fade.
+* A child of the target view that fades and has an [`entering`](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations) animation plays it after the transition ends, in place of the fade-in.
+* The transition uses the builder of the view that it starts from. To fade the content in both directions, give `fadeContent()` to both views.
+* A nested shared view moves relative to its moving parent. If the two have different timing, the nested view does not move along a straight line on screen.
+* With [`SharedTransition.custom()`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations), the children fade with the duration, easing or spring of the builder, not with the timing of your worklet. To fade them over the whole move, give the builder the same timing, for example `SharedTransition.custom(animation).duration(800).fadeContent()`.
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations
+# Title: Custom animations
+
+# Custom animations
+
+Use a custom animation when the [`SharedTransition`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) modifiers are not sufficient, for example for a curved path or a different timing for each property. You write a worklet that gets the values of the two views and returns an animation for each style property.
 
 ## Reference
 
-```javascript
-import Animated from 'react-native-reanimated';
-
-const Stack = createNativeStackNavigator();
-
-function One({ navigation }) {
-  return (
-    <>
-      <Animated.View
-        // highlight-start
-        sharedTransitionTag="sharedTag"
-        // highlight-end
-      />
-      <Button title="Two" onPress={() => navigation.navigate('Two')} />
-    </>
-  );
-}
-
-function Two({ navigation }) {
-  return (
-    <>
-      <Animated.View
-        // highlight-start
-        sharedTransitionTag="sharedTag"
-        // highlight-end
-      />
-      <Button title="One" onPress={() => navigation.navigate('One')} />
-    </>
-  );
-}
-
-export default function SharedElementExample() {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen name="One" component={One} />
-        <Stack.Screen name="Two" component={Two} />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-}
-```
-
-## Overview
-
-When Reanimated detects that the current top screen on the stack changes, it checks if there are components with the same `sharedTransitionTag` on the new and old top screen.
-
-If it finds two matching components, it hides both of them by changing their opacity and creates a third view, that is displayed over the view hierarchy, that looks exactly like the source view, and is then animated to look like the target view. This implementation detail is subject to change as we might want to avoid creating a redundant instance of the same component.
-
-After the animation is complete, the third view is removed, and the opacity of both original views is restored.
-
-Currently you can't define a fully custom animation function. You can however customize the duration and use spring-based animations. You can expect `width`, `height`, `originX`, `originY`, `transform`, `backgroundColor` and `opacity` to be animated by default with a duration of 500 ms using the [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) animation function.
-
-## Usage
-
-To create a shared transition animation between two components on different screens, simply assign the same `sharedTransitionTag` to both components. When you navigate between screens, the shared transition animation will automatically play.
-
-If you want to use more than one shared view on the same screen, be sure to assign a **unique** shared tag to each component.
-
-**Screen A**
-
-```tsx {2}
-<Animated.View
-  sharedTransitionTag="sharedTag"
-  style={{ width: 150, height: 150, backgroundColor: 'green' }}
-/>
-```
-
-**Screen B**
-
-```tsx {2}
-<Animated.View
-  sharedTransitionTag="sharedTag"
-  style={{ width: 100, height: 100, backgroundColor: 'green' }}
-/>
-```
-
-## Custom animation
-
-You can customize the transition with the `SharedTransition` builder class. The available customization will be extended as the feature matures.
-
 ```tsx
-import { SharedTransition } from 'react-native-reanimated';
+import Animated, {
+  SharedTransition,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 
-const transition = SharedTransition.duration(550).springify();
+// highlight-start
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    originX: withTiming(values.targetOriginX, { duration: 600 }),
+    originY: withSpring(values.targetOriginY),
+    width: withTiming(values.targetWidth, { duration: 600 }),
+    height: withTiming(values.targetHeight, { duration: 600 }),
+  };
+});
+// highlight-end
 
-function SharedView() {
+function Photo() {
   return (
     <Animated.View
-      sharedTransitionTag="reanimatedTransition"
-      // highlight-next-line
+      sharedTransitionTag="photo"
       sharedTransitionStyle={transition}
-      style={{ backgroundColor: 'blue', width: 200, height: 100 }}
     />
   );
 }
 ```
 
-On iOS, when the animation is triggered by a swipe gesture or the OS back button we instead run a progress-based transition. This way the animation responds to the user swiping their finger accordingly, and allows for transition cancellation. This behavior will be possible to customize in the future.
+Type definitions
+
+```typescript
+type CustomSharedTransitionAnimation = (
+  values: SharedTransitionAnimationsValues
+) => StyleProps;
+
+class SharedTransition {
+  static custom(animation: CustomSharedTransitionAnimation): SharedTransition;
+  custom(animation: CustomSharedTransitionAnimation): this;
+  // ...
+}
+```
+
+### Arguments
+
+#### `animation`
+
+A worklet that gets `values` and returns an object with an animation, for example from [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) or [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring), for each style property that you want to animate.
+
+The worklet returns the animations directly. This is different from [custom layout animations](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/custom-animations), which return `{ initialValues, animations }`. Every animation starts from the value of the source view.
+
+`values` has the values of the source view with the `current` prefix, the values of the target view with the `target` prefix, and the size of the window:
+
+| Value                                         | Description                                                                                           |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `currentOriginX`, `targetOriginX`             | The x coordinate of the top-left corner, in window coordinates.                                       |
+| `currentOriginY`, `targetOriginY`             | The y coordinate of the top-left corner, in window coordinates.                                       |
+| `currentWidth`, `targetWidth`                 | The width of the view.                                                                                |
+| `currentHeight`, `targetHeight`               | The height of the view.                                                                               |
+| `currentOpacity`, `targetOpacity`             | The opacity of the view, multiplied by the opacities of its ancestors.                                |
+| `currentBackgroundColor`, `targetBackgroundColor` | The background color.                                                                             |
+| `currentBorderRadius`, `targetBorderRadius`   | The border radius. Per-corner values, for example `currentBorderTopLeftRadius`, show when one of the views sets them. |
+| `currentBorderWidth`, `targetBorderWidth`     | The border width. Per-side values, for example `currentBorderLeftWidth`, show when one of the views sets them. |
+| `currentBorderColor`, `targetBorderColor`     | The border color. Per-side values, for example `currentBorderLeftColor`, show when one of the views sets them. |
+| `currentTransform`, `targetTransform`         | The transform as `{ matrix }`, a flat 4×4 matrix.                                                     |
+| `currentTransformOrigin`, `targetTransformOrigin` | The transform origin as `[x, y, z]`.                                                              |
+| `currentBoxShadow`, `targetBoxShadow`         | The box shadows.                                                                                      |
+| `currentShadowColor`, `currentShadowOffset`, `currentShadowOpacity`, `currentShadowRadius` and the `target` values | The `shadow*` properties.                       |
+| `currentElevation`, `targetElevation`         | The elevation, on Android only.                                                                       |
+| `currentClipOriginX`, `currentClipOriginY`, `currentClipWidth`, `currentClipHeight`, `currentClipBorderRadius` and the `target` values | The clip of the moving view in window coordinates: the bounds of the ancestors that clip their content, with `overflow: 'hidden'` or `'scroll'`. At an end without such an ancestor, the clip is the frame of the view, or the window when the view can draw outside its frame. They are present only when an ancestor clips either view. |
+| `windowWidth`, `windowHeight`                 | The size of the window.                                                                               |
 
 ## Example
 
-## Current limitations
+To move the view on a curve, give the two axes different curves:
 
-* Only the [native stack](https://reactnavigation.org/docs/native-stack-navigator/) is supported.
-* The [Tab navigator](https://reactnavigation.org/docs/bottom-tab-navigator/) is not supported yet, using it in on path that uses shared transitions may result in no animation being ran.
-* Transitions with native modals (using `transparentModal`) don't work properly on iOS (the modal is obstructing the Shared Element).
-* You can't define custom animation functions.
-* Some properties (e.g. `backgroundColor`) are not supported in progress-based transitions.
-* On iOS you can encounter some issues with the vertical positioning of transitioning views. This is due to issues with header height information propagation.
-* There are some performance bottlenecks, that stem from transforms being recalculated too eagerly.
-* We have to use a workaround for react-native-screens to not keep a snapshot of the transitioning view on the popped screen. Currently the fix is available in 3.19+ versions.
-* Enabling the feature flag causes the `zIndex` of views with exiting animations to change (they are brought to the front). This differs from the current behavior in Reanimated 4.
-* Sometimes on a fast refresh, the transition will run for elements that are on the same screen. It can happen when the navigator is wrapped with a context provider, and the native view that represents the screen changed, so the SET logic was triggered.
+```tsx
+const arc = SharedTransition.custom((values) => {
+  'worklet';
+  const config = { duration: 600 };
+  return {
+    // highlight-next-line
+    originX: withTiming(values.targetOriginX, { ...config, easing: Easing.out(Easing.quad) }),
+    // highlight-next-line
+    originY: withTiming(values.targetOriginY, { ...config, easing: Easing.in(Easing.quad) }),
+    width: withTiming(values.targetWidth, config),
+    height: withTiming(values.targetHeight, config),
+    borderRadius: withTiming(values.targetBorderRadius, config),
+  };
+});
+```
 
-## Platform Compatibility
+To animate the transform, animate the whole matrix:
+
+```tsx
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    // highlight-next-line
+    transform: [{ matrix: withTiming(values.targetTransform.matrix) }],
+  };
+});
+```
+
+## Remarks
+
+* The callback passed to `SharedTransition.custom` is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and runs on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+* Reanimated does not animate the properties that you do not return. Such a property keeps the value of the source view until the transition ends.
+* The clip is an exception: when you do not return the `clip*` properties, they animate with the duration and the easing of the builder, in a straight line. If the view moves on a curve or with other timing, it can move outside of its clip. Return the `clip*` properties with the same animations as `originX`, `originY`, `width` and `height` to keep the view inside its clip.
+* The clip uses the bounds of the clipping ancestors without their transforms, also in the default transition. If such an ancestor is transformed, the clip does not follow it on screen. For example, a rounded card scaled by a press animation gives the view corners that do not match the card, and a sheet moved with `translateY` moves away from its clip. Scale or move the shared view itself instead.
+* Animate the transform as a whole, with `transform: [{ matrix }]`. Separate transform operations, for example `transform: [{ scale: withTiming(2) }]`, are not supported.
+* The worklet controls the timing of each animation. The `.delay()` and `.withCallback()` modifiers of the builder still apply, for example `SharedTransition.custom(animation).delay(100)`.
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/limitations
+# Title: Limitations and troubleshooting
+
+# Limitations and troubleshooting
+
+## The view does not move
+
+Check these points:
+
+* Both views have the same [`sharedTransitionTag`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag), and each tag shows only once on a screen.
+* Each screen is in a [`SharedTransitionBoundary`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
+* No boundary that is always active is around the boundaries of your screens, for example a boundary around a [nested navigator](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#nested-navigators).
+* Both views are mounted when the active boundary changes. A view that [mounts later](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag), for example after its data loads, does not move. On Android, a view with a `nativeID` prop must mount before the update that changes `isActive`.
+* Both views are animated components of the same native type, for example `Animated.View` and `Animated.View`. With different types, a debug build stops on an assertion.
+* The tag is on a component with its own native view. A `Text` inside another `Text` has no native view, so it cannot be a shared view.
+* The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of its boundary. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
+* Both views are in the same window. See [Modals and windows](#modals-and-windows).
+* The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
+
+When Reanimated cannot run a transition, the two views show in their own places, and the callback of [`.withCallback()`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) gets `false`.
+
+## Modals and windows
+
+A shared view moves only between two views in the same window.
+
+* On Android, a React Native `Modal` has its own window. A view can move between two views in the same `Modal`. It cannot move between the screen and a `Modal`, between two `Modal`s, or to or from a sheet that a library shows in its own window.
+* On iOS, both views must be in the window of the React Native root view or in a modal presented over it. A view cannot move to or from another `UIWindow`.
+* On iOS, the view lands only when the screen of the target is in the window. If the screen is not there 500 ms after its boundary becomes active, the transition stops.
+
+## Updates during the transition
+
+* React updates to the props or the layout of the moving view apply when the transition ends, which can look like a jump. This includes `useAnimatedStyle` updates that go through React. The children of the moving view update during the move.
+* A style change of the target view also shows only when the transition ends.
+* A view that moves with a built-in timing or spring animation follows its target when a transform moves the parents of the target or when a scroll view scrolls the target. A custom animation or a timed progress animation follows only the scroll.
+* If the layout of the target changes during the transition, the view starts a new move from its current frame. The new move can take the full duration again.
+* With the [`USE_ANIMATION_BACKEND`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#use_animation_backend) feature flag, the moving view does not follow the transforms that the animation backend applies to the parents of the target. Disable the flag if these parents move during a transition.
+* A text input that the target screen focuses when it opens shows the keyboard during the transition. If the keyboard moves the target view, for example in a `KeyboardAvoidingView`, the moving view changes its course. Focus the input when the transition ends: use the [`.withCallback()`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) callback of the outermost shared view, when `finished` is `true`. The `transitionEnd` event of the screen can come while the view still moves.
+
+## Press feedback
+
+The moving view starts with the opacity of its parents on the old screen, as React last rendered them. A component that dims while it is pressed, for example `TouchableOpacity` or a `Pressable` with a `({ pressed })` style that changes `opacity`, is usually still dim in that render when its `onPress` navigates. The moving view then starts dim and fades in during the move, separately from the press animation of the component, so the press shows twice.
+
+`TouchableOpacity` fades back with the native driver of React Native `Animated`, which React does not render. If the transition starts late, for example in a development build, the view is already brighter on screen and visibly dims again before it fades in.
+
+To show press feedback on a view that holds a shared view:
+
+* With Gesture Handler 3, use [`Touchable`](https://docs.swmansion.com/react-native-gesture-handler/docs/components/touchable) with `activeOpacity`. It dims the native view and does not change the `opacity` style, so the view moves with full opacity.
+* Otherwise, use a `Pressable` whose pressed style does not change `opacity`, for example a background color or `android_ripple`.
+
+```tsx
+import { Touchable } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
+
+function PhotoCard({ onPress }: { onPress: () => void }) {
+  return (
+    <Touchable activeOpacity={0.6} onPress={onPress}>
+      <Animated.Image sharedTransitionTag="photo" source={photo} />
+    </Touchable>
+  );
+}
+```
+
+## Known issues
+
+* On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that moves to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
+* On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
+* The first time that the user opens a tab, a view that moves to the new tab screen can stay at its old place for a moment and then jump to its target. On iOS, this happens with the default `detachInactiveScreens` of bottom tabs, and `detachInactiveScreens={false}` prevents it. On Android, it happens with `freezeOnBlur`.
+* Reanimated does not see screen animations that run with the native driver of React Native `Animated`, for example the screen animations of `@react-navigation/stack` or the `fade` animation of bottom tabs. A view that moves to such a screen goes to the place where the screen starts its animation, and then jumps when the animation ends. Use `@react-navigation/native-stack`, or bottom tabs without an animation.
+* On Android, a view that moves into a sheet that a native library positions, for example the sheet of `@swmansion/react-native-bottom-sheet`, moves to a place without the offset of the sheet and then jumps to its target. A sheet that React positions, for example `@gorhom/bottom-sheet`, does not have this issue. On iOS, a built-in transition follows the sheet.
+* A view between a [nested shared view](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views#children-with-their-own-tag) and its shared parent keeps its source size and place during the move, so its `overflow: hidden` and its background can look wrong. Put the clipping and the background on the shared parent, or give that view its own `sharedTransitionTag`.
+* During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
+
+## Videos and media
+
+The moving view keeps its own content, for example an image or a video player, until the transition ends.
+
+For images:
+
+* The moving image keeps its `resizeMode`. The `resizeMode` of the target, for example `contain` after `cover`, shows when the transition ends.
+* The target image shows when the transition ends, also when it is still loading. To prevent an empty image, use the same image source on both screens. For example, share the thumbnail, and show the full image above it on the details screen when it loads.
+
+For videos with expo-video:
+
+* On iOS, give the same video player to the video views on both screens. Then the playback continues from the same position.
+* On Android, expo-video cannot show one player in two mounted views. Use a separate player on each screen. The two players can be at different positions, so the video can jump when the target shows. See the [expo-video guide](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
+* On Android, set `surfaceType="textureView"` on a `VideoView` that moves over other content. A `TextureView` moves and overlaps like other views, but it cannot show DRM content.
+* `useVideoPlayer` releases its player when its component unmounts, also when the shared view still moves, for example after `navigation.goBack()`. Create the player in a component that stays mounted, for example above the navigator, or create it with `createVideoPlayer` and call `release()` when no view needs it.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/overview
+# Title: Shared Element Transitions
+
+# Shared Element Transitions
+
+Shared Element Transitions move a view from one screen to another. When you navigate, a view on the old screen moves to the position of the matching view on the new screen. Its size and style change during the transition.
+
+## Setup
+
+This chapter describes Shared Element Transitions in Reanimated 4.8 and newer, where they are on by default. They need the matching version of `react-native-worklets` and a React Native version that Reanimated supports. See the [compatibility table](https://docs.swmansion.com/react-native-reanimated/docs/guides/compatibility). Reanimated 4.2 to 4.7 have an experimental version behind the [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#enable_shared_element_transitions) feature flag.
+
+* **Expo**: an Expo SDK selects the versions that `npx expo install` installs, and it can select a Reanimated version older than 4.8. Use an Expo SDK with a React Native version that Reanimated 4.8 supports. Install Reanimated 4.8 or newer together with the matching `react-native-worklets`, and then build your [development build](https://docs.expo.dev/develop/development-builds/introduction/) again. Expo Go has only the native code of the versions that its SDK selects.
+* **Android**: use `react-native-screens` 4.28 or newer. In older versions, an app can crash in `MountingCoordinator::pullTransaction` after a race at startup. See [react-native-screens#4413](https://github.com/software-mansion/react-native-screens/pull/4413). After you upgrade it, build the app again.
+
+## Your first shared element transition
+
+```tsx
+import { Pressable } from 'react-native';
+import { useIsFocused } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+
+const Stack = createNativeStackNavigator();
+
+function ListScreen({ navigation }) {
+  return (
+    <Pressable onPress={() => navigation.navigate('Details')}>
+      <Animated.View
+        // highlight-next-line
+        sharedTransitionTag="photo"
+        style={{ width: 100, height: 100, backgroundColor: '#b58df1' }}
+      />
+    </Pressable>
+  );
+}
+
+function DetailsScreen() {
+  return (
+    <Animated.View
+      // highlight-next-line
+      sharedTransitionTag="photo"
+      style={{ width: '100%', height: 300, backgroundColor: '#b58df1' }}
+    />
+  );
+}
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  const isFocused = useIsFocused();
+
+  return (
+    // highlight-next-line
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+      // highlight-next-line
+    </SharedTransitionBoundary>
+  );
+}
+
+function App() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="List" component={ListScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
+    </Stack.Navigator>
+  );
+}
+```
+
+To make a shared element transition:
+
+1. Give the same [`sharedTransitionTag`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag) to an animated component on each screen.
+2. Wrap each screen in a [`SharedTransitionBoundary`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#sharedtransitionboundary). Set `isActive` to `true` on the screen that the user sees. In the example, the [`screenLayout`](https://reactnavigation.org/docs/navigator/#screen-layout) prop of the navigator wraps all of its screens. For other ways to wrap screens, see [Usage with navigation](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#usage-with-navigation).
+
+When the active boundary changes, Reanimated finds the views with the same tag in the old and the new boundary and runs the transition between them.
+
+## How it works
+
+During the transition, Reanimated moves the view from the old screen above the screen content and hides the view on the new screen. Then it animates the moving view from its old frame and style to the frame and style of the new view. When the animation ends, the view on the new screen shows in its place.
+
+By default, the transition is a 500 ms [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) animation of every property that is different on the two views:
+
+* position and size,
+* `opacity` and `backgroundColor`,
+* `borderRadius`, `borderWidth` and `borderColor`, also per side and per corner,
+* `transform` and `transformOrigin`,
+* `boxShadow` and the `shadow*` properties,
+* on Android, `elevation`.
+
+The view moves together with its own children, and the children of the target view show at once when the transition ends. To fade between different children, use [`fadeContent()`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views#fadecontent).
+
+## Example
+
+## What's next
+
+* [Shared transition props](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props) - how views find their match and which transition they use.
+* [Screens and boundaries](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries) - how to set up screens in stacks, tabs, nested navigators and modals.
+* [`SharedTransition`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) - how to change the duration, the easing, or to use a spring.
+* [Children of shared views](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views), [Custom animations](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations) and [Progress-based transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/progress-transitions) - for more control.
+* [Limitations and troubleshooting](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/limitations) - what to know before you release your app.
+
+## Platform compatibility
+
+On web, `SharedTransitionBoundary` renders only its children, and shared views show in their places without a transition.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/progress-transitions
+# Title: Progress-based transitions
+
+# Progress-based transitions
+
+On iOS, the user can go back with a swipe from the edge of the screen. During this swipe, the shared view does not run an animation of its own. It follows the progress of the swipe, from 0 to 1. If the user cancels the swipe, the view goes back to its start position. The same applies when the user closes a sheet with a swipe. When the user taps the native back button, the view follows the progress of the screen change.
+
+By default, Reanimated interpolates every property that is different on the two views in a straight line. You can change this with a progress animation.
+
+## Reference
+
+```tsx
+import Animated, { SharedTransition } from 'react-native-reanimated';
+
+// highlight-start
+const transition = SharedTransition.progressAnimation((values, progress) => {
+  'worklet';
+  const lerp = (from: number, to: number) => from + (to - from) * progress;
+  return {
+    originX: lerp(values.currentOriginX, values.targetOriginX),
+    originY: lerp(values.currentOriginY, values.targetOriginY),
+    width: lerp(values.currentWidth, values.targetWidth),
+    height: lerp(values.currentHeight, values.targetHeight),
+    // round in the middle of the move
+    borderRadius: 16 + 48 * Math.sin(progress * Math.PI),
+  };
+});
+// highlight-end
+
+function Photo() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+Type definitions
+
+```typescript
+type ProgressSharedTransitionAnimation = (
+  values: SharedTransitionAnimationsValues,
+  progress: number
+) => StyleProps;
+
+enum SharedTransitionType {
+  ANIMATION = 'animation',
+  PROGRESS_ANIMATION = 'progressAnimation',
+}
+
+class SharedTransition {
+  static progressAnimation(animation: ProgressSharedTransitionAnimation): SharedTransition;
+  progressAnimation(animation: ProgressSharedTransitionAnimation): this;
+  static defaultTransitionType(type: SharedTransitionType): SharedTransition;
+  defaultTransitionType(type: SharedTransitionType): this;
+  // ...
+}
+```
+
+## Modifiers
+
+### `progressAnimation`&#x20;
+
+A worklet that gets the same [`values`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations#arguments) as a custom animation and the `progress`. Progress goes from 0 to 1 when the transition completes. A spring can overshoot this range. It returns the style of the view at this progress: plain values, not animations. Reanimated does not animate the properties that you do not return.
+
+### `defaultTransitionType`&#x20;
+
+Selects which animation a transition uses when it does not follow a gesture:
+
+* `SharedTransitionType.ANIMATION` - the default. The transition uses the normal animation of the builder: the timing or spring, or the [custom animation](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations). Only the iOS back navigation uses the progress animation.
+* `SharedTransitionType.PROGRESS_ANIMATION` - every transition uses the progress animation. During the iOS back navigation, the screen change controls the progress. In all other cases, the builder controls it: for example, with `.duration(800)` the progress goes from 0 to 1 in 800 ms, and with `.springify()` it follows a spring.
+
+```tsx
+import { SharedTransition, SharedTransitionType } from 'react-native-reanimated';
+
+const transition = SharedTransition.duration(800)
+  .progressAnimation(myProgressAnimation)
+  // highlight-next-line
+  .defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION);
+```
+
+## Remarks
+
+* The callback passed to `progressAnimation` is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and runs on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
+* With `PROGRESS_ANIMATION`, the same worklet sets the look of the transition in both cases: when the user swipes and when the builder runs it. Use it when you want the two to look the same.
+* With `.springify()`, keep the returned styles valid when progress goes past an endpoint. Use `.overshootClamping(true)` to prevent overshoot, or clamp progress inside the worklet for properties that need a bounded range.
+
+## Platform compatibility
+
+On Android, transitions do not follow the back gesture. After a back gesture, the transition runs with the builder: a normal animation, or a progress animation with `SharedTransitionType.PROGRESS_ANIMATION`.
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries
+# Title: Screens and boundaries
+
+# Screens and boundaries
+
+Shared Element Transitions run between screens. A boundary tells Reanimated where a screen is: you put a boundary around the content of each screen, and you tell each boundary if its screen is the one that the user sees. When the active boundary changes, Reanimated runs a transition between the views with the same [`sharedTransitionTag`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag) in the old and the new boundary.
+
+With boundaries, Shared Element Transitions work with any navigation setup: stacks, tabs, nested navigators, modals, or screens that you show without a navigator.
+
+## `SharedTransitionBoundary`
+
+The component that marks a screen for Shared Element Transitions.
+
+### Reference
+
+```tsx
+import { useIsFocused } from '@react-navigation/native';
+import Animated, { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function DetailsScreen() {
+  const isFocused = useIsFocused();
+
+  return (
+    // highlight-next-line
+    <SharedTransitionBoundary isActive={isFocused}>
+      <Animated.View sharedTransitionTag="photo" />
+      {/* the rest of the screen */}
+      // highlight-next-line
+    </SharedTransitionBoundary>
+  );
+}
+```
+
+Type definitions
+
+```typescript
+interface SharedTransitionBoundaryProps {
+  isActive: boolean;
+  children?: ReactNode;
+}
+```
+
+### Arguments
+
+#### `isActive`
+
+A boolean that tells if the user sees this screen. With React Navigation, use the value of [`useIsFocused()`](https://reactnavigation.org/docs/use-is-focused). When the active boundary changes, the transition starts.
+
+#### `children`&#x20;
+
+The content of the screen. `SharedTransitionBoundary` does not change the layout: it renders with `display: 'contents'`.
+
+### Example
+
+## Usage with navigation
+
+One boundary should contain all shared views of its screen, so wrap whole screens, not single views. Set `isActive` to `true` only while the screen is focused.
+
+Use `@react-navigation/core` 7.16.0 or newer, which `@react-navigation/native` 7.1.32 and newer require. In older versions, `useIsFocused()` changes one update after a screen is removed, so on Android the transition back to the previous screen sometimes does not run.
+
+You can wrap screens in three ways:
+
+* **All screens of a navigator**, with `screenLayout`. Use it when the screens of the navigator are normal screens, not other navigators.
+* **One screen component**, with a higher-order component. Use it when only some screens have shared views, or when the screens of a navigator are other navigators.
+* **The content of a screen**, by hand. Use it when a screen needs its own `isActive` value, for example with a React Native [`Modal`](#react-native-modal).
+
+### All screens of a navigator
+
+The [`screenLayout`](https://reactnavigation.org/docs/navigator/#screen-layout) prop of a React Navigation navigator wraps each of its screens:
+
+```tsx
+import { useIsFocused } from '@react-navigation/native';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
+const Stack = createNativeStackNavigator();
+
+function App() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="List" component={ListScreen} />
+      <Stack.Screen name="Details" component={DetailsScreen} />
+    </Stack.Navigator>
+  );
+}
+```
+
+`screenLayout` works the same way with tabs and other navigators. To wrap only some screens, use the [`layout`](https://reactnavigation.org/docs/screen/#layout) prop of each `Stack.Screen`.
+
+### One screen component
+
+A small higher-order component wraps one screen:
+
+```tsx
+function withSharedTransitionBoundary<P extends object>(
+  Screen: React.ComponentType<P>
+) {
+  return function ScreenWithBoundary(props: P) {
+    const isFocused = useIsFocused();
+
+    return (
+      <SharedTransitionBoundary isActive={isFocused}>
+        <Screen {...props} />
+      </SharedTransitionBoundary>
+    );
+  };
+}
+
+// highlight-start
+const List = withSharedTransitionBoundary(ListScreen);
+const Details = withSharedTransitionBoundary(DetailsScreen);
+// highlight-end
+
+function App() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="List" component={List} />
+      <Stack.Screen name="Details" component={Details} />
+    </Stack.Navigator>
+  );
+}
+```
+
+Create each wrapped screen outside of components, as in the example. A new component on each render mounts the screen again.
+
+### The content of a screen
+
+You can also put the boundary in the screen itself. Make it the outer element of the screen:
+
+```tsx
+function DetailsScreen() {
+  const isFocused = useIsFocused();
+
+  return (
+    // highlight-next-line
+    <SharedTransitionBoundary isActive={isFocused}>
+      <Header />
+      <Animated.View sharedTransitionTag="photo" style={styles.photo} />
+      <Description />
+      // highlight-next-line
+    </SharedTransitionBoundary>
+  );
+}
+```
+
+### Nested navigators
+
+Reanimated looks for the active boundary from the root of the app, and it does not look for other boundaries inside an active boundary. A boundary around a navigator stays active while any of its screens shows, so it hides the boundaries of these screens.
+
+For this reason, do not use `screenLayout` on a navigator whose screens are other navigators. Use it on the inner navigators, and wrap the other screens one by one:
+
+```tsx
+function HomeStack() {
+  return (
+    <Stack.Navigator
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="Feed" component={FeedScreen} />
+      <Stack.Screen name="Post" component={PostScreen} />
+    </Stack.Navigator>
+  );
+}
+
+// highlight-next-line
+const Settings = withSharedTransitionBoundary(SettingsScreen);
+
+function App() {
+  return (
+    // no screenLayout here: HomeStack is a navigator
+    <Tab.Navigator>
+      <Tab.Screen name="HomeStack" component={HomeStack} />
+      <Tab.Screen name="Settings" component={Settings} />
+    </Tab.Navigator>
+  );
+}
+```
+
+### Without a navigator
+
+You do not need a navigator. Set `isActive` from your own state:
+
+```tsx
+function Gallery() {
+  const [selected, setSelected] = useState<string | null>(null);
+
+  return (
+    <>
+      <SharedTransitionBoundary isActive={selected === null}>
+        <Grid onSelect={setSelected} />
+      </SharedTransitionBoundary>
+      {selected !== null && (
+        <SharedTransitionBoundary isActive>
+          <Details id={selected} onClose={() => setSelected(null)} />
+        </SharedTransitionBoundary>
+      )}
+    </>
+  );
+}
+```
+
+### Expo Router
+
+With Expo Router, import `useIsFocused` from `expo-router`. Put the boundaries in the layouts of the stacks that show your screens:
+
+```tsx
+// app/(tabs)/gallery/_layout.tsx
+import { Stack, useIsFocused } from 'expo-router';
+import { SharedTransitionBoundary } from 'react-native-reanimated';
+
+function ScreenBoundary({ children }: { children: React.ReactNode }) {
+  // highlight-next-line
+  const isFocused = useIsFocused();
+
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      {children}
+    </SharedTransitionBoundary>
+  );
+}
+
+export default function GalleryLayout() {
+  return (
+    <Stack
+      // highlight-next-line
+      screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="[id]" />
+    </Stack>
+  );
+}
+```
+
+* Do not use `screenLayout` in a layout whose routes are other navigators, for example in the root `_layout.tsx` that shows a `(tabs)` group, or in the layout of the `(tabs)` group. See [Nested navigators](#nested-navigators).
+* A route that the root stack shows as a modal, for example `photo/[id]` with `presentation: 'modal'`, is a screen of the root stack. Put its boundary in the [content of the screen](#the-content-of-a-screen).
+
+### Modals
+
+During a transition to or from a modal, the moving view shows above the modal.
+
+#### Native stack modals
+
+A screen that a native stack presents as a modal is a normal screen of the navigator. Wrap it in the same way as the other screens:
+
+```tsx
+<Stack.Navigator
+  screenLayout={({ children }) => <ScreenBoundary>{children}</ScreenBoundary>}>
+  <Stack.Screen name="List" component={ListScreen} />
+  <Stack.Screen
+    name="Photo"
+    component={PhotoScreen}
+    // highlight-next-line
+    options={{ presentation: 'formSheet' }}
+  />
+</Stack.Navigator>
+```
+
+On iOS, when the user closes a sheet with a swipe, the view follows the swipe. If the user cancels the swipe, the view goes back to the sheet.
+
+#### React Native `Modal`
+
+A React Native [`Modal`](https://reactnative.dev/docs/modal) is not a screen, so `useIsFocused()` does not change when it opens. Set `isActive` of both boundaries from the state of the modal:
+
+```tsx
+<SharedTransitionBoundary isActive={isFocused && !isModalVisible}>
+  {/* screen content */}
+</SharedTransitionBoundary>
+<Modal visible={isModalVisible}>
+  <SharedTransitionBoundary isActive={isModalVisible}>
+    {/* modal content */}
+  </SharedTransitionBoundary>
+</Modal>
+```
+
+On Android, a view does not move between the screen and a `Modal`. See [Modals and windows](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/limitations#modals-and-windows).
+
+## Remarks
+
+* Reanimated runs a transition only between two boundaries. A view outside of all boundaries does not take part.
+* Only one boundary should be active at a time. If more boundaries are active, Reanimated uses the one that React renders last.
+* A shared view that mounts under an inactive boundary shows as usual, for example in a list under a sheet. Reanimated hides it only when the active boundary shows a view with the same tag, or when a transition moves that tag.
+* When a new boundary becomes active during a transition, for example when the user goes back before the transition ends, the view turns and moves to its match in the new boundary. If the new boundary has no match, the transition stops and the views show in their own places at once.
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props
+# Title: Shared transition props
+
+# Shared transition props
+
+Every animated component accepts two props for Shared Element Transitions. `sharedTransitionTag` selects the views that take part in a transition. `sharedTransitionStyle` selects how they move.
+
+## `sharedTransitionTag`
+
+A string that pairs this view with a view on another screen. When the active [`SharedTransitionBoundary`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#sharedtransitionboundary) changes, Reanimated looks for a view with the same tag in the old boundary and in the new boundary. If it finds both, it moves the old view to the place of the new view.
+
+### Reference
+
+```tsx
+import Animated from 'react-native-reanimated';
+
+function Thumbnail({ id }) {
+  return (
+    <Animated.Image
+      // highlight-next-line
+      sharedTransitionTag={`photo-${id}`}
+      source={{ uri: `https://picsum.photos/id/${id}/200` }}
+      style={{ width: 80, height: 80 }}
+    />
+  );
+}
+```
+
+Type definitions
+
+```typescript
+interface AnimatedProps {
+  sharedTransitionTag?: string;
+  // ...
+}
+```
+
+### Remarks
+
+* Use a tag only once on a screen. To animate more views at the same time, give each of them a different tag. For a list, build the tag from the item key, for example `` `photo-${item.id}` ``.
+* Use the same native component on both screens, for example `Animated.View` and `Animated.View`, or `Animated.Image` and `Animated.Image`. Do not pair an `Animated.View` with an `Animated.Image`, or image components from two different libraries.
+* You can change the tag at any time. The next transition uses the new tag. To turn off the transition for a view, remove the tag or set it to an empty string.
+* In a pager whose pages all have a match on the other screen, for example a details pager over a grid, give the tag only to the page that the user sees. If not, every mounted page moves to its match at the same time.
+* Reanimated pairs the views when the active boundary changes. A view that mounts later, for example an image that shows after its data loads, does not move. Mount the tagged view at once with its final size, for example an `Animated.Image` without a source, and set the source when the data loads. See also [Videos and media](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/limitations#videos-and-media).
+* A view and its child can both have a tag. See [Children with their own tag](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views#children-with-their-own-tag).
+* The transition replaces the [`entering`](https://docs.swmansion.com/react-native-reanimated/docs/layout-animations/entering-exiting-animations) animation of the target view, and the callback of that animation does not run. The view plays its entering animation only when it shows without a transition.
+
+## `sharedTransitionStyle`
+
+A [`SharedTransition`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) builder that sets how the view moves. Without this prop, the view uses the default transition: a 500 ms [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) animation.
+
+### Reference
+
+```tsx
+import Animated, { SharedTransition } from 'react-native-reanimated';
+
+// highlight-next-line
+const transition = SharedTransition.duration(800);
+
+function Thumbnail() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      // highlight-next-line
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+Type definitions
+
+```typescript
+interface AnimatedProps {
+  sharedTransitionStyle?: SharedTransition;
+  // ...
+}
+```
+
+### Example
+
+### Remarks
+
+* A transition uses the `sharedTransitionStyle` of the view that it starts from. When you navigate forward, it uses the style of the view on the old screen. When you go back, it uses the style of the view on the screen that closes. To get the same transition in both directions, give the same builder to both views.
+* Create the builder once, outside of the component, or memoize it. A new builder on each render configures the transition again.
+* To change how the view moves, see [`SharedTransition`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition), [Children of shared views](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views), [Custom animations](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations) and [Progress-based transitions](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/progress-transitions).
+
+## Platform compatibility
+
+
+---
+# URL: https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition
+# Title: SharedTransition
+
+# SharedTransition
+
+`SharedTransition` is a builder that sets how a shared view moves. Pass it to the [`sharedTransitionStyle`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitionstyle) prop. Without modifiers, the view moves with a 500 ms [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) animation.
+
+## Reference
+
+```tsx
+import Animated, { SharedTransition, Easing } from 'react-native-reanimated';
+
+// highlight-next-line
+const transition = SharedTransition.duration(400).easing(Easing.out(Easing.cubic));
+
+function Photo() {
+  return (
+    <Animated.View
+      sharedTransitionTag="photo"
+      // highlight-next-line
+      sharedTransitionStyle={transition}
+    />
+  );
+}
+```
+
+## Modifiers
+
+### Easing&#x20;
+
+Easing modifiers use the [`withTiming`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withTiming) function.
+
+```javascript
+SharedTransition.duration(400).easing(Easing.out(Easing.cubic));
+```
+
+* `.easing(easingFunction: EasingFunction)` sets the animation curve. Defaults to `Easing.inOut(Easing.quad)`.
+
+> **Note**
+>
+> The `.easing(...)` modifier has no effect when you use `.springify()`.
+
+### Spring-based&#x20;
+
+Spring-based modifiers use the [`withSpring`](https://docs.swmansion.com/react-native-reanimated/docs/animations/withSpring) function. As in the `withSpring` config, a spring is duration-based (`duration` and `dampingRatio`) or physics-based (`mass`, `damping` and `stiffness`).
+
+```javascript
+// duration-based
+SharedTransition.springify(600).dampingRatio(0.7);
+
+// physics-based
+SharedTransition.springify().damping(15).stiffness(150);
+```
+
+* `.springify(duration?: number)` uses a spring for the transition. The optional argument sets the perceptual duration of the spring in milliseconds. The spring stops after about 1.5 times this value. Defaults to `500`.
+* `.dampingRatio(value: number)` sets how damped the spring is. Value `1` means that the spring is critically damped, and value `>1` means that the spring is overdamped. Defaults to `1`.
+* `.damping(value: number)` sets how quickly the spring stops. Higher damping means that the spring stops faster. Defaults to `120`.
+* `.mass(value: number)` is the weight of the spring. A lower value makes the animation faster. Defaults to `4`.
+* `.stiffness(value: number)` sets the stiffness of the spring. Defaults to `900`.
+* `.overshootClamping(value: boolean)` sets whether the spring can go past its target. Defaults to `false`.
+* `.energyThreshold(value: number)` sets the relative energy below which the spring stops. Defaults to `6e-9`.
+
+> **Info**
+>
+> If you set `damping`, `mass` or `stiffness` without a duration and without `dampingRatio`, the spring is physics-based. In all other cases, the spring uses a duration, which is 500 ms by default.
+
+### Common&#x20;
+
+```javascript
+SharedTransition.duration(400)
+  .delay(100)
+  .reduceMotion(ReduceMotion.System)
+  .withCallback((finished) => {
+    'worklet';
+    console.log(`finished without interruptions: ${finished}`);
+  });
+```
+
+* `.duration(duration: number)` sets the length of the animation in milliseconds. Defaults to `500`.
+* `.delay(duration: number)` sets the time before the animation starts, in milliseconds. Defaults to `0`.
+* `.reduceMotion(reduceMotion: ReduceMotion)` sets how the transition responds to the reduced motion [accessibility](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility) setting of the device. When reduced motion applies to one of the two views, the transition does not run, and the views show in their own places.
+* `.withCallback(callback: (finished: boolean) => void)` sets a function that runs once, when the transition ends. The callback is automatically [workletized](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) and runs on the [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread). `finished` is `true` when the view lands at its target, and `false` when the transition stops before that or does not move the view.
+
+When a new transition of the same tag starts before the first one ends, for example when the user goes back, the first callback gets `false`, and the new transition reports its own result. During an iOS back gesture, the callback gets `true` when the navigation completes, and `false` when the user cancels the gesture.
+
+### Shared transition modifiers&#x20;
+
+* [`.fadeContent(config?)`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views#fadecontent) fades the children of the view during the transition.
+* [`.custom(animation)`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/custom-animations) uses your own animation worklet.
+* [`.progressAnimation(animation)` and `.defaultTransitionType(type)`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/progress-transitions) set the transition that follows the progress of the screen change.
+
+## Remarks
+
+* `.springify()` sets the duration again. Call `.springify(duration)` with the duration that you want, not `.duration(...)` before `.springify()`.
+* The transition uses the builder of the view that it starts from. See [`sharedTransitionStyle`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitionstyle).
+
+## Platform compatibility
 
 
 ---

@@ -1,0 +1,84 @@
+# Limitations and troubleshooting
+
+## The view does not move
+
+Check these points:
+
+* Both views have the same [`sharedTransitionTag`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag), and each tag shows only once on a screen.
+* Each screen is in a [`SharedTransitionBoundary`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#sharedtransitionboundary), and `isActive` changes from the old screen to the new screen when you navigate.
+* No boundary that is always active is around the boundaries of your screens, for example a boundary around a [nested navigator](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/screens-and-boundaries#nested-navigators).
+* Both views are mounted when the active boundary changes. A view that [mounts later](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition-props#sharedtransitiontag), for example after its data loads, does not move. On Android, a view with a `nativeID` prop must mount before the update that changes `isActive`.
+* Both views are animated components of the same native type, for example `Animated.View` and `Animated.View`. With different types, a debug build stops on an assertion.
+* The tag is on a component with its own native view. A `Text` inside another `Text` has no native view, so it cannot be a shared view.
+* The view is not in a native header. React Navigation renders `headerTitle`, `headerLeft` and `headerRight` outside of the screen, so they are outside of its boundary. Put the view in the content of the screen, or hide the native header and render your own header in the screen.
+* Both views are in the same window. See [Modals and windows](#modals-and-windows).
+* The [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#use_legacy_layout_animations_proxy) feature flag is off. The legacy layout animations proxy does not support Shared Element Transitions.
+
+When Reanimated cannot run a transition, the two views show in their own places, and the callback of [`.withCallback()`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) gets `false`.
+
+## Modals and windows
+
+A shared view moves only between two views in the same window.
+
+* On Android, a React Native `Modal` has its own window. A view can move between two views in the same `Modal`. It cannot move between the screen and a `Modal`, between two `Modal`s, or to or from a sheet that a library shows in its own window.
+* On iOS, both views must be in the window of the React Native root view or in a modal presented over it. A view cannot move to or from another `UIWindow`.
+* On iOS, the view lands only when the screen of the target is in the window. If the screen is not there 500 ms after its boundary becomes active, the transition stops.
+
+## Updates during the transition
+
+* React updates to the props or the layout of the moving view apply when the transition ends, which can look like a jump. This includes `useAnimatedStyle` updates that go through React. The children of the moving view update during the move.
+* A style change of the target view also shows only when the transition ends.
+* A view that moves with a built-in timing or spring animation follows its target when a transform moves the parents of the target or when a scroll view scrolls the target. A custom animation or a timed progress animation follows only the scroll.
+* If the layout of the target changes during the transition, the view starts a new move from its current frame. The new move can take the full duration again.
+* With the [`USE_ANIMATION_BACKEND`](https://docs.swmansion.com/react-native-reanimated/docs/guides/feature-flags#use_animation_backend) feature flag, the moving view does not follow the transforms that the animation backend applies to the parents of the target. Disable the flag if these parents move during a transition.
+* A text input that the target screen focuses when it opens shows the keyboard during the transition. If the keyboard moves the target view, for example in a `KeyboardAvoidingView`, the moving view changes its course. Focus the input when the transition ends: use the [`.withCallback()`](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/shared-transition) callback of the outermost shared view, when `finished` is `true`. The `transitionEnd` event of the screen can come while the view still moves.
+
+## Press feedback
+
+The moving view starts with the opacity of its parents on the old screen, as React last rendered them. A component that dims while it is pressed, for example `TouchableOpacity` or a `Pressable` with a `({ pressed })` style that changes `opacity`, is usually still dim in that render when its `onPress` navigates. The moving view then starts dim and fades in during the move, separately from the press animation of the component, so the press shows twice.
+
+`TouchableOpacity` fades back with the native driver of React Native `Animated`, which React does not render. If the transition starts late, for example in a development build, the view is already brighter on screen and visibly dims again before it fades in.
+
+To show press feedback on a view that holds a shared view:
+
+* With Gesture Handler 3, use [`Touchable`](https://docs.swmansion.com/react-native-gesture-handler/docs/components/touchable) with `activeOpacity`. It dims the native view and does not change the `opacity` style, so the view moves with full opacity.
+* Otherwise, use a `Pressable` whose pressed style does not change `opacity`, for example a background color or `android_ripple`.
+
+```tsx
+import { Touchable } from 'react-native-gesture-handler';
+import Animated from 'react-native-reanimated';
+
+function PhotoCard({ onPress }: { onPress: () => void }) {
+  return (
+    <Touchable activeOpacity={0.6} onPress={onPress}>
+      <Animated.Image sharedTransitionTag="photo" source={photo} />
+    </Touchable>
+  );
+}
+```
+
+## Known issues
+
+* On iOS, a screen that a native stack shows for the first time gets its header size a moment later. A view that moves to such a screen, for example to the first screen of a nested stack, can first move too high and then move down.
+* On iOS, if the header of a covered screen changes, for example after a theme change, a view that goes back to this screen can stop at the old place and then jump.
+* The first time that the user opens a tab, a view that moves to the new tab screen can stay at its old place for a moment and then jump to its target. On iOS, this happens with the default `detachInactiveScreens` of bottom tabs, and `detachInactiveScreens={false}` prevents it. On Android, it happens with `freezeOnBlur`.
+* Reanimated does not see screen animations that run with the native driver of React Native `Animated`, for example the screen animations of `@react-navigation/stack` or the `fade` animation of bottom tabs. A view that moves to such a screen goes to the place where the screen starts its animation, and then jumps when the animation ends. Use `@react-navigation/native-stack`, or bottom tabs without an animation.
+* On Android, a view that moves into a sheet that a native library positions, for example the sheet of `@swmansion/react-native-bottom-sheet`, moves to a place without the offset of the sheet and then jumps to its target. A sheet that React positions, for example `@gorhom/bottom-sheet`, does not have this issue. On iOS, a built-in transition follows the sheet.
+* A view between a [nested shared view](https://docs.swmansion.com/react-native-reanimated/docs/shared-element-transitions/children-of-shared-views#children-with-their-own-tag) and its shared parent keeps its source size and place during the move, so its `overflow: hidden` and its background can look wrong. Put the clipping and the background on the shared parent, or give that view its own `sharedTransitionTag`.
+* During development, a Fast Refresh can start a transition between the old and the new version of a view on the same screen. This does not happen in release builds.
+
+## Videos and media
+
+The moving view keeps its own content, for example an image or a video player, until the transition ends.
+
+For images:
+
+* The moving image keeps its `resizeMode`. The `resizeMode` of the target, for example `contain` after `cover`, shows when the transition ends.
+* The target image shows when the transition ends, also when it is still loading. To prevent an empty image, use the same image source on both screens. For example, share the thumbnail, and show the full image above it on the details screen when it loads.
+
+For videos with expo-video:
+
+* On iOS, give the same video player to the video views on both screens. Then the playback continues from the same position.
+* On Android, expo-video cannot show one player in two mounted views. Use a separate player on each screen. The two players can be at different positions, so the video can jump when the target shows. See the [expo-video guide](https://docs.expo.dev/versions/latest/sdk/video/#using-the-videoplayer-directly).
+* On Android, set `surfaceType="textureView"` on a `VideoView` that moves over other content. A `TextureView` moves and overlaps like other views, but it cannot show DRM content.
+* `useVideoPlayer` releases its player when its component unmounts, also when the shared view still moves, for example after `navigation.goBack()`. Create the player in a component that stays mounted, for example above the navigator, or create it with `createVideoPlayer` and call `release()` when no view needs it.
