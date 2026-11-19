@@ -414,16 +414,18 @@ describe('Shared transition live target geometry', () => {
     }
   );
 
-  test.each(['custom', 'progress'] as const)(
+  test.each(['builtIn', 'custom', 'progress'] as const)(
     'follows a scroll view on the way back to its own slot, transition: %s',
     async (kind) => {
       const state = counters();
-      const transition =
-        kind === 'custom'
-          ? linearCustomTransition(1200, state)
-          : countedTransition(1200, state).defaultTransitionType(
-              SharedTransitionType.PROGRESS_ANIMATION
-            );
+      const transition = {
+        builtIn: () => countedTransition(1200, state),
+        custom: () => linearCustomTransition(1200, state),
+        progress: () =>
+          countedTransition(1200, state).defaultTransitionType(
+            SharedTransitionType.PROGRESS_ANIMATION
+          ),
+      }[kind]();
       await mockAnimationTimer({ autoAdvance: false });
       await render(
         <ScrolledSourceScreens active={false} transition={transition} />
@@ -443,8 +445,10 @@ describe('Shared transition live target geometry', () => {
       try {
         scrollRef.current!.scrollTo({ y: 100, animated: false });
         await waitForFrames(3);
+        // A built-in run at a quarter of its time moves by a quarter of the scroll.
+        const shift = kind === 'builtIn' ? 25 : 100;
         expect((await geometryOf('source')).y).toBe(
-          carrier.y - 100,
+          carrier.y - shift,
           ComparisonMode.PIXEL
         );
         expect(state.value.starts).toBe(0);

@@ -758,10 +758,7 @@ bool LayoutAnimationsProxy::followsWithoutRestart(const SharedTransitionRun &run
 // A nested carrier moves with its parent carrier.
 void LayoutAnimationsProxy::moveWithScrolledTargets() const {
   for (auto &run : activeSharedTransitionRuns()) {
-    const bool returnsToOwnSlot =
-        run.target == run.carrier && isLightNodeMapped(run.target) && !run.target->isExiting();
-    if (!run.movesPathWithScroll() || run.carrier->placement() == CarrierPlacement::NESTED ||
-        (!hasLiveTarget(run) && !returnsToOwnSlot)) {
+    if (!run.movesPathWithScroll() || run.carrier->placement() == CarrierPlacement::NESTED || !hasLiveTarget(run)) {
       continue;
     }
     if (auto *animation = timedAnimation(run)) {
@@ -804,9 +801,10 @@ bool LayoutAnimationsProxy::isFollowedBySharedTransition(const LightNode &node) 
   return node.followedInSynchronousBatch == synchronousBatch_;
 }
 
-// A carrier shows the frames of its own run, so a run that aims at a carrier does not follow it.
+// A carrier shows the frames of its own run, so a run that aims at the carrier of another run does not follow it.
 bool LayoutAnimationsProxy::hasLiveTarget(const SharedTransitionRun &run) const {
-  return isLightNodeMapped(run.target) && !run.target->isExiting() && !run.target->isCarrier();
+  return isLightNodeMapped(run.target) && !run.target->isExiting() &&
+      (!run.target->isCarrier() || run.target == run.carrier);
 }
 
 ShadowView LayoutAnimationsProxy::withGeometryOf(
