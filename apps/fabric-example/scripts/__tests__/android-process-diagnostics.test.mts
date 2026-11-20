@@ -56,6 +56,27 @@ describe('filterAppLogcat', () => {
     assert.equal(filterAppLogcat(logcat, APP, []).length, 6);
   });
 
+  it('keeps the lines of a dead app pid that only a process death record names', () => {
+    const records = [
+      '11-20 10:00:02.000  1500  1600 I am_proc_died: [0,4242,com.fabricexample,0,2]',
+      '11-20 10:00:02.000  1500  1600 I am_kill : [0,4343,com.fabricexample,0,lmk]',
+      "11-20 10:00:02.000   300   300 I lowmemorykiller: Kill 'com.fabricexample' (4444), uid 10190, oom_score_adj 0",
+      '11-20 10:00:02.000  1500  1600 I ActivityManager: Killing 4545:com.fabricexample/u0a190 (adj 0): lmk',
+      '11-20 10:00:02.000  1500  1600 I ActivityManager: Process com.fabricexample (pid 4646) has died: fg',
+    ];
+    for (const record of records) {
+      const pid = /(4\d{3})/.exec(record)![1];
+      const appLine = `11-20 10:00:01.000  ${pid}  4300 I ReactNativeJS: before death`;
+      const logcat = [
+        appLine,
+        '11-20 10:00:01.500  2000  2001 I OtherApp: unrelated',
+        record,
+      ].join('\n');
+
+      assert.deepEqual(filterAppLogcat(logcat, APP, []), [appLine, record]);
+    }
+  });
+
   it('does not match a package whose name only starts with the app id', () => {
     const logcat = [
       '11-20 10:00:00.000  1500  1600 I ActivityManager: Start proc 8888:com.fabricexample.other/u0a191 for service',

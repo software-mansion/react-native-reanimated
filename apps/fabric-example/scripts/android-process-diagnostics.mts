@@ -44,6 +44,11 @@ function appPidsInLogcat(lines: string[], packageName: string): string[] {
     new RegExp(`Start proc (\\d+):${name}[/:\\s]`),
     new RegExp(`am_proc_start\\s*: \\[\\d+,(\\d+),\\d+,${name}[,\\]]`),
     new RegExp(`am_proc_bound\\s*: \\[\\d+,(\\d+),${name}[,\\]]`),
+    new RegExp(`am_proc_died\\s*: \\[\\d+,(\\d+),${name}[,\\]]`),
+    new RegExp(`am_kill\\s*: \\[\\d+,(\\d+),${name}[,\\]]`),
+    new RegExp(`Kill '${name}' \\((\\d+)\\)`),
+    new RegExp(`Killing (\\d+):${name}[/:\\s]`),
+    new RegExp(`Process ${name} \\(pid (\\d+)\\) has died`),
   ];
   return lines.flatMap((line) =>
     patterns.flatMap((pattern) => {
