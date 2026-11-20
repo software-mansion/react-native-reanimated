@@ -16,17 +16,17 @@ void UIScheduler::triggerUI() {
     return;
   }
   drainingUI_ = true;
-  struct ResetDraining {
-    bool &draining;
-    ~ResetDraining() {
-      draining = false;
+  try {
+    scheduledOnUI_ = false;
+    while (!uiJobs_.empty()) {
+      const auto job = uiJobs_.pop();
+      job();
     }
-  } reset{drainingUI_};
-  scheduledOnUI_ = false;
-  while (!uiJobs_.empty()) {
-    const auto job = uiJobs_.pop();
-    job();
+  } catch (...) {
+    drainingUI_ = false;
+    throw;
   }
+  drainingUI_ = false;
 }
 
 bool UIScheduler::isOnUIThread() const {
