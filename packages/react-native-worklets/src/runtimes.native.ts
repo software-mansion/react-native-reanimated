@@ -4,12 +4,9 @@ import {
   installLazyBundleRegistrar,
   makeLazyBundleRegistrar,
 } from './bundleMode/lazyBundles';
-import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
-import { addNoBundleModeGuardImplementation } from './guardImplementation';
 import {
   getMemorySafeCapturableConsole,
-  setupConsole,
   setupConsoleForwarding,
   setupSerializer,
 } from './initializers/initializers';
@@ -17,7 +14,6 @@ import {
   createSerializable,
   makeShareableCloneOnUIRecursive,
 } from './memory/serializable';
-import { serializableMappingCache } from './memory/serializableMappingCache';
 import type { SerializableRef } from './memory/types';
 import { setupRunLoop } from './runLoop/workletRuntime';
 import { RuntimeKind } from './runtimeKind';
@@ -75,10 +71,9 @@ export function createWorkletRuntime(
   nameOrConfig?: string | WorkletRuntimeConfigInternal,
   initializer?: WorkletFunction<[], void>
 ): WorkletRuntime {
-  const runtimeBoundCapturableConsole =
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
-      ? null
-      : getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole = __DEV__
+    ? getMemorySafeCapturableConsole()
+    : null;
 
   let name: string;
   let initializerFn: (() => void) | undefined;
@@ -139,9 +134,7 @@ export function createWorkletRuntime(
     createSerializable(() => {
       'worklet';
       setupSerializer();
-      if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-        setupConsole(runtimeBoundCapturableConsole!);
-      } else if (__DEV__) {
+      if (__DEV__) {
         setupConsoleForwarding(runtimeBoundCapturableConsole!);
         installLazyBundleRegistrar(lazyBundleRegistrar);
       }
@@ -206,34 +199,6 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
   );
 }
 
-if (!isBundleModeEnabled()) {
-  function scheduleOnRuntimeWorklet<Args extends unknown[], ReturnValue>(
-    workletRuntime: WorkletRuntime,
-    worklet: WorkletFunction<Args, ReturnValue>,
-    ...args: Args
-  ): void {
-    'worklet';
-    if (__DEV__ && !isWorkletFunction(worklet)) {
-      throw new Error(
-        '[Worklets] The function passed to `scheduleOnRuntime` is not a worklet.'
-      );
-    }
-
-    globalThis.__workletsModuleProxy.scheduleOnRuntime(
-      workletRuntime,
-      globalThis.__serializer(() => {
-        'worklet';
-        worklet(...args);
-      })
-    );
-  }
-
-  serializableMappingCache.set(
-    scheduleOnRuntime,
-    createSerializable(scheduleOnRuntimeWorklet)
-  );
-}
-
 /**
  * Lets you asynchronously run a
  * [worklet](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/glossary#worklet)
@@ -282,34 +247,6 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
   );
 }
 
-if (!isBundleModeEnabled()) {
-  function scheduleOnRuntimeWithIdWorklet<Args extends unknown[], ReturnValue>(
-    runtimeId: number,
-    worklet: WorkletFunction<Args, ReturnValue>,
-    ...args: Args
-  ): void {
-    'worklet';
-    if (__DEV__ && !isWorkletFunction(worklet)) {
-      throw new Error(
-        '[Worklets] The function passed to `scheduleOnRuntimeWithId` is not a worklet.'
-      );
-    }
-
-    globalThis.__workletsModuleProxy.scheduleOnRuntimeWithId(
-      runtimeId,
-      globalThis.__serializer(() => {
-        'worklet';
-        worklet(...args);
-      })
-    );
-  }
-
-  serializableMappingCache.set(
-    scheduleOnRuntimeWithId,
-    createSerializable(scheduleOnRuntimeWithIdWorklet)
-  );
-}
-
 /**
  * @deprecated Use `scheduleOnRuntime` instead.
  *
@@ -343,14 +280,6 @@ type WorkletRuntimeConfigInternal = WorkletRuntimeConfig & {
  * Lets you run a function synchronously on a [Worker
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime).
  *
- * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
- *   or another [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
- *
  * @param workletRuntime - The runtime to run the worklet on.
  * @param worklet - The worklet to run.
  * @param args - The arguments to pass to the worklet.
@@ -383,13 +312,6 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worklet-runtime)
  * identified by the runtime's id.
  *
- * - This function cannot be called from the [UI
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime)
- *   or a [Worker
- *   Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#worker-runtime),
- *   unless the [Bundle
- *   Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/) is
- *   enabled.
  * - You can target the UI Runtime with this function by passing
  *   {@link UIRuntimeId} as the `runtimeId` argument.
  *
@@ -585,17 +507,6 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
   });
 }
 
-if (__DEV__ && !isBundleModeEnabled()) {
-  /**
-   * QoL guards to give a meaningful error message when the user tries to call
-   * these functions on Worklet Runtimes outside of the Bundle Mode.
-   */
-  addNoBundleModeGuardImplementation(runOnRuntimeAsync);
-  addNoBundleModeGuardImplementation(runOnRuntimeAsyncWithId);
-  addNoBundleModeGuardImplementation(runOnRuntimeSync);
-  addNoBundleModeGuardImplementation(runOnRuntimeSyncWithId);
-}
-
 export function getUIRuntimeHolder(): object {
   return WorkletsModule.getUIRuntimeHolder();
 }
@@ -606,16 +517,4 @@ export function getUISchedulerHolder(): object {
 
 export function abortWorkletRuntime(runtimeId: number): boolean {
   return WorkletsModule.abortWorkletRuntime(runtimeId);
-}
-
-if (!isBundleModeEnabled()) {
-  function abortWorkletRuntimeWorklet(runtimeId: number): boolean {
-    'worklet';
-    return globalThis.__workletsModuleProxy.abortWorkletRuntime(runtimeId);
-  }
-
-  serializableMappingCache.set(
-    abortWorkletRuntime,
-    createSerializable(abortWorkletRuntimeWorklet)
-  );
 }

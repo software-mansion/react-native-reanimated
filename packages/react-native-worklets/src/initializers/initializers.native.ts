@@ -14,7 +14,6 @@ import { makeShareableCloneOnUIRecursive } from '../memory/serializable';
 import { installShareableGuestUnpacker } from '../memory/shareableGuestUnpacker';
 import { installShareableHostUnpacker } from '../memory/shareableHostUnpacker';
 import { installSynchronizableUnpacker } from '../memory/synchronizableUnpacker';
-import { installValueUnpacker } from '../memory/valueUnpacker';
 import { installNetworking } from '../networking/install';
 import { setupQueueMicrotask } from '../runLoop/common/queueMicrotaskPolyfill';
 import { setupSetImmediate } from '../runLoop/common/setImmediatePolyfill';
@@ -80,20 +79,7 @@ export function getMemorySafeCapturableConsole(): typeof console {
   return consoleCopy as unknown as typeof console;
 }
 
-export function setupConsole(boundCapturableConsole: typeof console) {
-  'worklet';
-  // @ts-ignore TypeScript doesn't like that there are missing methods in console object, but we don't provide all the methods for the UI runtime console version
-  globalThis.console = {
-    assert: (...args) => scheduleOnRN(boundCapturableConsole.assert, ...args),
-    debug: (...args) => scheduleOnRN(boundCapturableConsole.debug, ...args),
-    log: (...args) => scheduleOnRN(boundCapturableConsole.log, ...args),
-    warn: (...args) => scheduleOnRN(boundCapturableConsole.warn, ...args),
-    error: (...args) => scheduleOnRN(boundCapturableConsole.error, ...args),
-    info: (...args) => scheduleOnRN(boundCapturableConsole.info, ...args),
-  };
-}
-
-// This is only used in DEV mode in Bunde Mode, it's necessary to see the logs in metro / devtools
+// This is only used in DEV mode, it's necessary to see the logs in metro / devtools
 export function setupConsoleForwarding(boundCapturableConsole: typeof console) {
   'worklet';
 
@@ -142,11 +128,7 @@ export function init() {
 
 /** A function that should be run on any kind of runtime. */
 function initializeRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
-  } else {
-    installValueUnpacker();
-  }
+  globalThis.__valueUnpacker = bundleValueUnpacker as ValueUnpacker;
   installSynchronizableUnpacker();
   installCustomSerializableUnpacker();
   installShareableHostUnpacker();
@@ -173,17 +155,12 @@ function initializeRNRuntime() {
 
 /** A function that should be run only on Worklet runtimes. */
 function initializeWorkletRuntime() {
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    if (__DEV__) {
-      silenceHMRWarnings();
-    }
-
-    installNetworking();
-
-    if (__DEV__) {
-      installLazyBundleLoader();
-    }
+  if (__DEV__) {
+    silenceHMRWarnings();
+    installLazyBundleLoader();
   }
+
+  installNetworking();
 }
 
 /**
@@ -197,18 +174,15 @@ function installRNBindingsOnUIRuntime() {
     );
   }
 
-  const runtimeBoundCapturableConsole =
-    globalThis._WORKLETS_BUNDLE_MODE_ENABLED && !__DEV__
-      ? null
-      : getMemorySafeCapturableConsole();
+  const runtimeBoundCapturableConsole = __DEV__
+    ? getMemorySafeCapturableConsole()
+    : null;
 
   const lazyBundleRegistrar = makeLazyBundleRegistrar();
 
   runOnUISync(() => {
     'worklet';
-    if (!globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      setupConsole(runtimeBoundCapturableConsole!);
-    } else if (__DEV__) {
+    if (__DEV__) {
       setupConsoleForwarding(runtimeBoundCapturableConsole!);
       installLazyBundleRegistrar(lazyBundleRegistrar);
     }
