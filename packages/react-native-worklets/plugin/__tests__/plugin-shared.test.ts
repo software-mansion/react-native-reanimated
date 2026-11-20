@@ -419,6 +419,70 @@ describe('babel plugin core', () => {
     });
   });
 
+  describe('class methods', () => {
+    test('workletizes an instance method with a worklet directive', () => {
+      const input = html`<script>
+        class Registry {
+          notify(name) {
+            'worklet';
+            return name;
+          }
+        }
+      </script>`;
+
+      const result = runPlugin(input);
+      expect(result.files).toHaveLength(1);
+      expect(result.code).toContain('notify =');
+      expect(workletText(result)).toContain('return name');
+    });
+
+    test('workletizes a static method with a worklet directive', () => {
+      const input = html`<script>
+        class Registry {
+          static notify(name) {
+            'worklet';
+            return name;
+          }
+        }
+      </script>`;
+
+      const result = runPlugin(input);
+      expect(result.files).toHaveLength(1);
+      expect(result.code).toContain('static notify =');
+    });
+
+    test('does not workletize a method without a worklet directive', () => {
+      const input = html`<script>
+        class Registry {
+          notify(name) {
+            return name;
+          }
+        }
+      </script>`;
+
+      expect(runPlugin(input).files).toHaveLength(0);
+    });
+
+    test('does not workletize accessors and constructors', () => {
+      const input = html`<script>
+        class Registry {
+          constructor() {
+            'worklet';
+          }
+          get name() {
+            'worklet';
+            return 'registry';
+          }
+          set name(value) {
+            'worklet';
+          }
+        }
+      </script>`;
+
+      expect(runPlugin(input).files).toHaveLength(0);
+    });
+  });
+
   describe('autoworkletization of shared transition callbacks', () => {
     function factoryCount(input: string): number {
       return runPlugin(input).files.length;
