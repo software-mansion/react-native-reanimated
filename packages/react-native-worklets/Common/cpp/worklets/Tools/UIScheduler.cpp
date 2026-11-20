@@ -12,6 +12,16 @@ void UIScheduler::scheduleOnUI(std::function<void()> job) {
 }
 
 void UIScheduler::triggerUI() {
+  if (drainingUI_) {
+    return;
+  }
+  drainingUI_ = true;
+  struct ResetDraining {
+    bool &draining;
+    ~ResetDraining() {
+      draining = false;
+    }
+  } reset{drainingUI_};
   scheduledOnUI_ = false;
   while (!uiJobs_.empty()) {
     const auto job = uiJobs_.pop();
