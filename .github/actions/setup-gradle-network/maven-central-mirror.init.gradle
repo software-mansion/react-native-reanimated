@@ -17,7 +17,7 @@ beforeSettings { settings ->
     content {
       excludeGroupByRegex 'com\\.android(\\..*)?'
       excludeGroupByRegex 'androidx(\\..*)?'
-      excludeGroupByRegex 'com\\.google\\.(android|gms|firebase)(\\..*)?'
+      excludeGroupByRegex 'com\\.google\\.(android|gms|firebase|testing)(\\..*)?'
     }
   }
   useMirror(pluginRepositories)
