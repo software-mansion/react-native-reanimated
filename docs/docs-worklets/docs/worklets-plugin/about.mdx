@@ -79,6 +79,19 @@ const obj = {
 };
 ```
 
+#### Class Methods
+
+```ts
+class Foo {
+  bar() {
+    'worklet';
+    console.log('Hello from ClassMethod');
+  }
+}
+```
+
+The plugin turns the method into a class property that holds the worklet. Getters, setters and constructors can't be worklets.
+
 ## Autoworkletization
 
 To reduce boilerplate code and provide a safer API, the Worklet Syntax plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
