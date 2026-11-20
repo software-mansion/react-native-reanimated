@@ -3,6 +3,7 @@
 import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
+import type { StyleLayoutAnimation } from '../animation';
 import { cancelAnimation, withStyleAnimation } from '../animation';
 import { isValidLayoutAnimationProp } from '../animation/util';
 import { logger } from '../common';
@@ -12,12 +13,63 @@ import type {
   LayoutAnimationValues,
   Mutable,
   SharedValue,
+  Timestamp,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
 
 const TAG_OFFSET = 1e9;
+const FRAME_DURATION = 1000 / 60;
+// Android moves the start of an animator whose first frame is two frames late.
+const MIN_BLOCKED_TIME = 2 * FRAME_DURATION;
+
+type LayoutAnimationStart = {
+  timestamp: Timestamp;
+  realTime: number;
+  blockedTime?: number;
+};
+
+// The first frame after a start can carry a timestamp from before the block,
+// so the block is measured on the clock. Real time caps it because the clock
+// can be scaled (slow animations) or frozen (tests).
+function measureBlockedTime(start: LayoutAnimationStart) {
+  'worklet';
+  const realBlockedTime = performance.now() - start.realTime;
+  if (realBlockedTime < MIN_BLOCKED_TIME) {
+    return 0;
+  }
+  const clockBlockedTime = global._getAnimationTimestamp() - start.timestamp;
+  return Math.max(
+    0,
+    Math.min(realBlockedTime, clockBlockedTime) - FRAME_DURATION
+  );
+}
+
+// The start can run in a mount that blocks the main thread for longer than
+// the animation. That time does not count, except for one frame. A retarget
+// keeps the time shift of the animation it continues, because it keeps that
+// animation's start times.
+function shiftFrames(
+  animation: StyleLayoutAnimation,
+  start: LayoutAnimationStart,
+  previousTimeShift: number,
+  timeShifts: WeakMap<object, number>
+) {
+  'worklet';
+  const onFrame = animation.onFrame;
+  const startTimestamp = start.timestamp - previousTimeShift;
+  timeShifts.set(animation, previousTimeShift);
+  let timeShift: number | undefined;
+  animation.onFrame = (self, timestamp) => {
+    if (timeShift === undefined) {
+      start.blockedTime ??= measureBlockedTime(start);
+      timeShift = previousTimeShift + start.blockedTime;
+      timeShifts.set(animation, timeShift);
+    }
+    return onFrame(self, Math.max(startTimestamp, timestamp - timeShift));
+  };
+}
 
 function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
   'worklet';
@@ -75,21 +127,24 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const timeShifts = new WeakMap<object, number>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
   // staggers animations which belong to the same frame. Cache the first start
-  // timestamp until the frame finalizers run so the whole batch shares one
-  // timeline.
-  let layoutAnimationStartTimestamp: number | undefined;
-  const getLayoutAnimationStartTimestamp = () => {
-    if (layoutAnimationStartTimestamp === undefined) {
-      layoutAnimationStartTimestamp = global._getAnimationTimestamp();
+  // until the frame finalizers run so the whole batch shares one timeline.
+  let layoutAnimationStart: LayoutAnimationStart | undefined;
+  const getLayoutAnimationStart = () => {
+    if (layoutAnimationStart === undefined) {
+      layoutAnimationStart = {
+        timestamp: global._getAnimationTimestamp(),
+        realTime: performance.now(),
+      };
       globalThis.requestAnimationFrameFinalizer(() => {
-        layoutAnimationStartTimestamp = undefined;
+        layoutAnimationStart = undefined;
       });
     }
-    return layoutAnimationStartTimestamp;
+    return layoutAnimationStart;
   };
 
   // Flush layout-animation progress once per frame via the frame finalizer
@@ -189,12 +244,24 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
 
         startObservingProgress(tag, value, scheduleFlush);
         const previousFrameTimestamp = global.__frameTimestamp;
-        global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
+        // A start inside a frame does not run in a mount.
+        const start =
+          previousFrameTimestamp === undefined
+            ? getLayoutAnimationStart()
+            : {
+                timestamp: previousFrameTimestamp,
+                realTime: 0,
+                blockedTime: 0,
+              };
+        const previousTimeShift =
+          (value._animation && timeShifts.get(value._animation)) ?? 0;
+        global.__frameTimestamp = start.timestamp - previousTimeShift;
         try {
           value.value = animation;
         } finally {
           global.__frameTimestamp = previousFrameTimestamp;
         }
+        shiftFrames(animation, start, previousTimeShift, timeShifts);
       } catch (error) {
         try {
           stop(tag);
