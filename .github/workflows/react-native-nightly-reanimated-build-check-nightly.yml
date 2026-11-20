@@ -51,6 +51,7 @@ jobs:
           java-version: '18'
 
       - name: Set up Gradle network access
+        if: ${{ matrix.platform == 'Android' }}
         uses: $/.github/actions/setup-gradle-network
       - name: Load "next" tag if available
         run: |
