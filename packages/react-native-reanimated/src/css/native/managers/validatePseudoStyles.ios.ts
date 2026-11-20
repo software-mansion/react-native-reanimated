@@ -2,7 +2,7 @@
 import type { UnknownRecord } from '../../../common';
 import { logger } from '../../../common';
 import { PRESS_PSEUDO_SELECTORS } from '../../constants';
-import type { PseudoStylesBySelector } from '../../utils';
+import type { PseudoStyleInput } from '../types';
 
 // UIKit skips views under this alpha when hit-testing, so a press selector on one never fires.
 const HIT_TEST_ALPHA_THRESHOLD = 0.01;
@@ -11,7 +11,7 @@ const HIT_TEST_ALPHA_THRESHOLD = 0.01;
 const REACHABLE_OPACITY = 0.02;
 
 export function validatePseudoStyles(
-  pseudoStylesBySelector: PseudoStylesBySelector,
+  selectors: readonly PseudoStyleInput[],
   defaultStyle: UnknownRecord,
   componentName: string
 ) {
@@ -22,8 +22,10 @@ export function validatePseudoStyles(
     Math.fround(opacity) >= HIT_TEST_ALPHA_THRESHOLD ||
     // SVG hit-tests through its own path, which ignores opacity.
     componentName.startsWith('RNSVG') ||
-    !PRESS_PSEUDO_SELECTORS.some(
-      (selector) => selector in pseudoStylesBySelector
+    // A group selector follows its host, which is the view the touch has to reach.
+    !selectors.some(
+      ({ selector, group }) =>
+        group === undefined && PRESS_PSEUDO_SELECTORS.includes(selector)
     )
   ) {
     return;
