@@ -7,6 +7,7 @@ import {
 import type { WorkletRuntime } from 'react-native-worklets';
 
 import {
+  afterEach,
   createTestValue,
   describe,
   expect,
@@ -38,6 +39,13 @@ function resolveWorkletOnCurrentRuntime(workletHash: number) {
     return 'resolved';
   } catch (error) {
     return (error as Error).message;
+  }
+}
+
+async function collectGarbage() {
+  for (let i = 0; i < 3; i++) {
+    globalThis.gc?.();
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
 }
 
@@ -73,6 +81,8 @@ const queuelessVariants: Record<
 const queuelessConfigs = Object.keys(queuelessVariants) as QueuelessConfig[];
 
 describe('worklets from a lazy chunk loaded on the RN Runtime', () => {
+  afterEach(collectGarbage);
+
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'runs the worklet on an existing runtime, runtime: **%s**',
     async (runtimeKind) => {
@@ -122,6 +132,8 @@ describe('worklets from a lazy chunk loaded on the RN Runtime', () => {
 });
 
 describe('lazy chunks on a Worker Runtime without a queue', () => {
+  afterEach(collectGarbage);
+
   test.each(queuelessConfigs)(
     'a runtime without a queue does not receive chunks loaded after it was created, config: **%s**',
     async (config) => {
@@ -162,6 +174,8 @@ describe('lazy chunks on a Worker Runtime without a queue', () => {
 });
 
 describe('lazy chunks on a Worker Runtime without locking', () => {
+  afterEach(collectGarbage);
+
   test('a runtime without locking does not receive chunks loaded after it was created', async () => {
     const workletRuntime = createWorkletRuntime({
       name: 'runtime without locking created before the chunk',
