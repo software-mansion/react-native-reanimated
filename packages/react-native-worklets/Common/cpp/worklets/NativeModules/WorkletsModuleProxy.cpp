@@ -36,10 +36,9 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       uiScheduler_(uiScheduler),
       jsLogger_(std::make_shared<JSLogger>(jsScheduler_)),
       runtimeBindings_(runtimeBindings),
-      bundleModeConfig_{.enabled = false},
+      bundleModeConfig_{},
       memoryManager_(std::make_shared<MemoryManager>()),
       runtimeManager_(std::make_shared<RuntimeManager>()),
-      unpackerLoader_(std::make_shared<UnpackerLoader>()),
       rnRuntimeStatus_(rnRuntimeStatus),
       networking_(
           runtimeBindings->networkingBackend ? std::make_shared<Networking>(runtimeBindings->networkingBackend)
@@ -48,9 +47,6 @@ WorkletsModuleProxy::WorkletsModuleProxy(
       uiRuntimeStarted_(false) {}
 
 void WorkletsModuleProxy::startUIRuntimeInBundleModeAOT(const BundleModeConfig &bundleModeConfig) {
-  if (!bundleModeConfig.enabled) [[unlikely]] {
-    throw std::runtime_error("[Worklets] startUIRuntimeInBundleModeAOT requires Bundle Mode.");
-  }
   if (rnRuntimeProxy_) [[unlikely]] {
     throw std::runtime_error("[Worklets] startUIRuntimeInBundleModeAOT must be called before attachToRNRuntime.");
   }
@@ -68,7 +64,6 @@ void WorkletsModuleProxy::startUIRuntimeInBundleModeAOT(const BundleModeConfig &
       runtimeBindings_,
       networking_,
       bundleModeConfig_,
-      unpackerLoader_,
       rnRuntimeStatus_,
       RuntimeData::uiRuntimeId));
 }
@@ -100,7 +95,6 @@ void WorkletsModuleProxy::attachToRNRuntime(
       runtimeBindings_,
       networking_,
       bundleModeConfig_,
-      unpackerLoader_,
       rnRuntimeStatus_,
       RuntimeData::rnRuntimeId);
 
