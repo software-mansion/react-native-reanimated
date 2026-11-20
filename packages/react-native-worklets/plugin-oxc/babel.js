@@ -94,16 +94,6 @@ function transform(sourceText, filename, state, inlineModules) {
   }
 }
 
-/** @returns {string} */
-function resolveWorkletsPkgDir() {
-  if (cachedWorkletsPkgDir === undefined) {
-    cachedWorkletsPkgDir = path.dirname(
-      require.resolve('react-native-worklets/package.json')
-    );
-  }
-  return cachedWorkletsPkgDir;
-}
-
 /**
  * @param {import('./index').PluginOptions} options
  * @returns {void}

@@ -602,6 +602,27 @@ var require_autoworkletization = __commonJS({
   }
 });
 
+// lib/classMethod.js
+var require_classMethod = __commonJS({
+  "lib/classMethod.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.processIfWorkletMethod = processIfWorkletMethod;
+    var types_12 = require("@babel/types");
+    var assert_1 = require("assert");
+    function processIfWorkletMethod(path) {
+      if (path.node.kind !== "method") {
+        return;
+      }
+      if (path.node.body.directives.some((d) => d.value.value === "worklet")) {
+        (0, assert_1.strict)((0, types_12.isIdentifier)(path.node.key), "ClassMethod key must be an Identifier");
+        const methodIdentifier = path.node.key;
+        path.replaceWith((0, types_12.classProperty)((0, types_12.cloneNode)(methodIdentifier, true), (0, types_12.functionExpression)((0, types_12.cloneNode)(methodIdentifier, true), path.node.params.filter((p) => (0, types_12.isFunctionParameter)(p)).map((p) => (0, types_12.cloneNode)(p, true)), (0, types_12.cloneNode)(path.node.body, true), path.node.generator, path.node.async), null, null, path.node.computed, path.node.static));
+      }
+    }
+  }
+});
+
 // lib/imports.js
 var require_imports = __commonJS({
   "lib/imports.js"(exports2) {
@@ -1320,6 +1341,7 @@ var require_workletSubstitution = __commonJS({
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAutoworkletizationMicroPlugin = getAutoworkletizationMicroPlugin;
 var autoworkletization_1 = require_autoworkletization();
+var classMethod_1 = require_classMethod();
 var directives_1 = require_directives();
 var globals_1 = require_globals();
 var types_1 = require_types();
@@ -1352,6 +1374,13 @@ module.exports = function WorkletsBabelPlugin(api) {
         enter(path, state) {
           runWithTaggedExceptions(state, () => {
             (0, workletSubstitution_1.processIfWithWorkletDirective)(path, state);
+          });
+        }
+      },
+      ClassMethod: {
+        enter(path, state) {
+          runWithTaggedExceptions(state, () => {
+            (0, classMethod_1.processIfWorkletMethod)(path);
           });
         }
       }

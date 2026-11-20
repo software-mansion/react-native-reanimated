@@ -2,6 +2,7 @@ use napi_derive::napi;
 
 mod ast;
 mod autoworkletization;
+mod class_method;
 mod closure;
 mod directives;
 mod factory_expression;
