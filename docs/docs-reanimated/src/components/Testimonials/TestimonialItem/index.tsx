@@ -2,7 +2,6 @@ import React, { PropsWithChildren } from 'react';
 import styles from './styles.module.css';
 import QuoteIcon from './QuoteIcon';
 import { useColorMode } from '@docusaurus/theme-common';
-import useBaseUrl from '@docusaurus/useBaseUrl';
 
 export interface TestimonialImageProps {
   alt: string;
@@ -32,7 +31,7 @@ const TestimonialItem = ({ author, company, image, link, children }: Props) => {
       />
       <div className={styles.testimonialAuthor}>
         <div className={styles.testimonialAuthorPhoto}>
-          <img alt={image.alt} src={useBaseUrl(image.src)} />
+          <img alt={image.alt} src={image.src} />
         </div>
         <div className={styles.testimonialAuthorInfo}>
           <h5 className={styles.testimonialAuthorName}>{author}</h5>
