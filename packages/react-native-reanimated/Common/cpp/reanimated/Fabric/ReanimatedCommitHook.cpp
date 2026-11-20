@@ -87,7 +87,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // the updates registry manager
     reaShadowNode->unsetReanimatedCommitTrait();
     reaShadowNode->setReanimatedMountTrait();
-    trackCommit(newRootShadowNode, false);
+    trackWillCommit(newRootShadowNode, false);
     return newRootShadowNode;
   }
 
@@ -100,7 +100,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // branching is enabled.
     if (commitOptions.source != ShadowTreeCommitSource::React &&
         commitOptions.source != ShadowTreeCommitSource::ReactRevisionMerge) {
-      trackCommit(newRootShadowNode, false);
+      trackWillCommit(newRootShadowNode, false);
       return newRootShadowNode;
     }
   }
@@ -140,11 +140,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   if constexpr (!cloneInsideRegistryLock) {
     rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
   }
-  trackDidCommit(rootNode);
   return rootNode;
 }
 
-#if REACT_NATIVE_VERSION_MINOR >= 88
 void ReanimatedCommitHook::shadowTreeDidCommit(
     const ShadowTree &,
     const RootShadowNode::Shared &rootShadowNode,
@@ -152,16 +150,6 @@ void ReanimatedCommitHook::shadowTreeDidCommit(
   if (synchronousWritesTracker_) {
     synchronousWritesTracker_->onDidCommit(rootShadowNode);
   }
-}
-#endif
-
-void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowNode, const bool carriesRegistryValues)
-    const {
-  if (!synchronousWritesTracker_) {
-    return;
-  }
-  trackWillCommit(rootShadowNode, carriesRegistryValues);
-  trackDidCommit(rootShadowNode);
 }
 
 void ReanimatedCommitHook::trackWillCommit(
@@ -171,16 +159,6 @@ void ReanimatedCommitHook::trackWillCommit(
     return;
   }
   synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
-}
-
-void ReanimatedCommitHook::trackDidCommit([[maybe_unused]] const RootShadowNode::Shared &rootShadowNode) const {
-  if (!synchronousWritesTracker_) {
-    return;
-  }
-#if REACT_NATIVE_VERSION_MINOR < 88
-  // Before 0.88 there is no `shadowTreeDidCommit`. The root that this hook returns is the only one available.
-  synchronousWritesTracker_->onDidCommit(rootShadowNode);
-#endif
 }
 
 } // namespace reanimated

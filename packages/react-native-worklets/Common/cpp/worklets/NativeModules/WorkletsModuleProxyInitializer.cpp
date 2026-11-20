@@ -1,6 +1,6 @@
 #include <worklets/NativeModules/WorkletsModuleProxyInitializer.h>
 
-#include <worklets/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <exception>
 #include <future>

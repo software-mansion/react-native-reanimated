@@ -7,7 +7,7 @@
 #include <reanimated/CSS/misc/ViewStylesRepository.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 
-#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <React/RendererCore.h>
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>

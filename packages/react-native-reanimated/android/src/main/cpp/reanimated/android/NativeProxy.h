@@ -1,12 +1,12 @@
 #pragma once
 
+#include <React/Debug.h>
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/android/CSS/CSSPlatformTransitions.h>

@@ -2,7 +2,7 @@
 
 #ifndef NDEBUG
 
-#include <worklets/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <cxxabi.h>
 

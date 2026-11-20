@@ -1,8 +1,8 @@
+#include <React/Debug.h>
 #include <react/renderer/mounting/Differentiator.h>
 #include <react/renderer/mounting/MountingCoordinator.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/Tools/FeatureFlags.h>
@@ -10,7 +10,7 @@
 #include <worklets/Compat/StableApi.h>
 
 #ifdef ANDROID
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#include <react/featureflags/ReactNativePublicFeatureFlags.h>
 #endif // ANDROID
 
 #include <algorithm>
@@ -1304,7 +1304,7 @@ void LayoutAnimationsProxy::addOngoingAnimations(TransactionMeta &transaction) c
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
-  if (!isMountingCoordinatorPullModelEnabled()) {
+  if (!facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableMountingCoordinatorPullModelAndroid()) {
     std::vector<int> tagsToUpdate;
     tagsToUpdate.reserve(updateMap_.size());
     for (const auto &[tag, _] : updateMap_) {
@@ -1537,7 +1537,8 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
 // for the lifetime of the surface.
 bool LayoutAnimationsProxy::shouldFlushStructuralMutations() const {
 #ifdef ANDROID
-  return isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
+  return facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableMountingCoordinatorPullModelAndroid() ||
+      !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -1663,7 +1664,8 @@ void LayoutAnimationsProxy::releaseViewTransitionsOfMovedCarriers(const ShadowVi
     return;
   }
   releaseViewTransitions_(movedToRoot, false);
-  if (isMountingCoordinatorPullModelEnabled() || worklets::isOnUIThread(uiScheduler_)) {
+  if (facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableMountingCoordinatorPullModelAndroid() ||
+      worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
   jsInvoker_->invokeAsync([this, weakThis = weak_from_this(), tags = std::move(movedToRoot)](jsi::Runtime &) mutable {
@@ -1696,7 +1698,9 @@ bool LayoutAnimationsProxy::isInRemovedScreen(
 // in between mounts before the batch, so the frames of its views wait for the next JS task.
 // https://github.com/facebook/react-native/blob/v0.88.0-rc.3/packages/react-native/ReactCommon/react/renderer/runtimescheduler/RuntimeScheduler_Modern.cpp#L315-L346
 void LayoutAnimationsProxy::holdFramesUntilBatchIsQueued(const ShadowViewMutationList &mutations) const {
-  if (mutations.empty() || isMountingCoordinatorPullModelEnabled() || worklets::isOnUIThread(uiScheduler_)) {
+  if (mutations.empty() ||
+      facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableMountingCoordinatorPullModelAndroid() ||
+      worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
   std::vector<Tag> tags;
@@ -1732,7 +1736,9 @@ void LayoutAnimationsProxy::keepCarriersDetachedUntilFramesAreQueued(const Shado
       !carrierPlacements_.atRoot().empty() || std::ranges::any_of(activeSharedTransitionRuns(), [](const auto &run) {
         return run.carrier->placement() == CarrierPlacement::NESTED;
       });
-  if (!hasCarriers || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_)) {
+  if (!hasCarriers ||
+      facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enableMountingCoordinatorPullModelAndroid() ||
+      !worklets::isOnUIThread(uiScheduler_)) {
     return;
   }
   for (const auto &mutation : mutations) {

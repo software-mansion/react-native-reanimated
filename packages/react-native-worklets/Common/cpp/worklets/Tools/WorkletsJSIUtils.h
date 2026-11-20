@@ -1,7 +1,7 @@
 #pragma once
 
+#include <React/Debug.h>
 #include <jsi/jsi.h>
-#include <worklets/Compat/ReactNativeDebug.h>
 #include <string>
 #include <tuple>
 #include <type_traits>

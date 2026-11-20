@@ -1,6 +1,6 @@
 #include <worklets/Tools/WorkletsJSIUtils.h>
 
-#include <worklets/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <memory>
 #include <sstream>

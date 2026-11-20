@@ -1,5 +1,5 @@
+#include <React/Debug.h>
 #include <jsi/jsi.h>
-#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Shareable.h>
 #include <worklets/WorkletRuntime/RuntimeIdentity.h>

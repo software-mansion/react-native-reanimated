@@ -2,8 +2,8 @@
 
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
+#include <React/RendererCore.h>
 #include <react/renderer/components/root/RootShadowNode.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <cstdint>
 #include <deque>

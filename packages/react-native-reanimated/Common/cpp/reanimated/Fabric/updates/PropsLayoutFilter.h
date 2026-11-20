@@ -2,7 +2,7 @@
 
 #include <jsi/jsi.h>
 
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#include <react/featureflags/ReactNativePublicFeatureFlags.h>
 #include <reanimated/Fabric/updates/propNameFromString.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
@@ -14,7 +14,7 @@ namespace reanimated {
 // On Android, non-layout props need to be packed into the rawProps unless props 2.0 are enabled.
 inline bool shouldFilterNonLayoutProps() {
 #ifdef ANDROID
-  return !ReactNativeFeatureFlags::enablePropsUpdateReconciliationAndroid();
+  return !facebook::react::ReactNativeFeatureFlags_DO_NOT_USE::enablePropsUpdateReconciliationAndroid();
 #else
   return false;
 #endif
