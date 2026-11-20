@@ -4,19 +4,22 @@
 
 static NSNumber *_nextSensorId = nil;
 
-@implementation ReanimatedSensorContainer
+@implementation ReanimatedSensorContainer {
+  ReanimatedSensorHub *_hub;
+}
 
 - (instancetype)init
 {
   self = [super init];
   _sensors = [[NSMutableDictionary alloc] init];
+  _hub = [[ReanimatedSensorHub alloc] init];
   _nextSensorId = @0;
   return self;
 }
 
 - (bool)isSensorAvailable:(ReanimatedSensorType)sensorType
 {
-  return [ReanimatedSensor isAvailable:sensorType];
+  return [_hub isAvailable:sensorType];
 }
 
 - (int)registerSensor:(ReanimatedSensorType)sensorType
@@ -28,7 +31,7 @@ static NSNumber *_nextSensorId = nil;
                                                    interval:interval
                                           iosReferenceFrame:iosReferenceFrame
                                                      setter:setter];
-  if ([sensor initialize]) {
+  if ([_hub addSensor:sensor]) {
     NSNumber *sensorId = [_nextSensorId copy];
     _nextSensorId = [NSNumber numberWithInt:[_nextSensorId intValue] + 1];
     [_sensors setObject:sensor forKey:sensorId];
@@ -44,7 +47,7 @@ static NSNumber *_nextSensorId = nil;
   if (_sensors[_sensorId] == nil) {
     return;
   }
-  [_sensors[_sensorId] cancel];
+  [_hub removeSensor:_sensors[_sensorId]];
   [_sensors removeObjectForKey:_sensorId];
 }
 
