@@ -1553,6 +1553,295 @@ To read a dynamic feature flag value in JavaScript, you can use `getDynamicFeatu
 
 ---
 
+# Good practices
+
+Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/good-practices
+
+# Good practices
+
+This page lists practices that minimize the multi-threading overhead when using
+Worklets APIs.
+
+## Re-use your runtimes
+
+Create [Worker Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worker-runtime) once, for
+example at app startup or in a module scope, and keep a reference to them.
+
+Every call to [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/createWorkletRuntime)
+creates a new JavaScript runtime. With the default queue, it also creates a new
+thread to run it on.
+
+While [Hermes](https://reactnative.dev/docs/hermes) is a light-weight JavaScript
+engine, the performance impact of frequent Runtime creation and destruction can
+be noticeable, especially in development builds.
+
+Make brand-new Runtimes when you need to be sure they come with a clean
+environment, without any previous work that could impact their state.
+
+```js title="❌ Bad: a new Runtime on every call"
+function processInBackground(data) {
+  // highlight-next-line
+  const workerRuntime = createWorkletRuntime({ name: 'worker' });
+  scheduleOnRuntime(workerRuntime, processData, data);
+}
+```
+
+```js title="✅ Good: one Runtime created in the module scope"
+// highlight-next-line
+const workerRuntime = createWorkletRuntime({ name: 'worker' });
+
+function processData(data) {
+  'worklet';
+  // ...
+}
+
+function processInBackground(data) {
+  scheduleOnRuntime(workerRuntime, processData, data);
+}
+```
+
+Don't call `createWorkletRuntime` inside a component body or inside a function
+that runs often.
+
+## Re-use your worklet functions
+
+Define [worklet
+functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions) once, at the
+module level or with
+[`useCallback`](https://react.dev/reference/react/useCallback), and pass the
+same function to the threading functions every time.
+
+The Worklets library caches the [serialized](https://docs.swmansion.com/react-native-worklets/docs/unreleased/memory/serializable) copy of
+a worklet function by the identity of the function object. On the target
+Runtime, a serialized worklet function is turned into a JavaScript function once
+and then retained. When you pass the same function object again, both steps are
+skipped.
+
+A new function object, for example an arrow function created on every call or
+every render, is serialized and turned into a function again. This is especially
+taxing when the function has a large [closure](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/closures).
+
+```js title="❌ Bad: a new worklet function on every call"
+function onPress(value) {
+  // highlight-start
+  scheduleOnUI((value) => {
+    'worklet';
+    console.log(value);
+  }, value);
+  // highlight-end
+}
+```
+
+```js title="✅ Good: the same worklet function on every call"
+function logValue(value) {
+  'worklet';
+  console.log(value);
+}
+
+function onPress(value) {
+  // highlight-next-line
+  scheduleOnUI(logValue, value);
+}
+```
+
+## Prefer arguments over closures
+
+Pass values as arguments instead of capturing them in a
+[closure](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/closures). This is related to [re-using your worklet
+functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/good-practices#re-use-your-worklet-functions): a worklet function whose closure
+changes has to be created anew, so it can't be re-used.
+
+```js title="❌ Bad: the value is captured in the closure"
+function Header({ title }) {
+  // A new worklet function with a new closure on every render.
+  // highlight-start
+  function logTitle() {
+    'worklet';
+    console.log(title);
+  }
+  // highlight-end
+
+  const onPress = () => scheduleOnUI(logTitle);
+  // ...
+}
+```
+
+```js title="✅ Good: the value is passed as an argument"
+function logTitle(title) {
+  'worklet';
+  console.log(title);
+}
+
+function Header({ title }) {
+  // highlight-next-line
+  const onPress = () => scheduleOnUI(logTitle, title);
+  // ...
+}
+```
+
+## Avoid wrapper worklet functions
+
+Don't create worklet functions that only forward their closure to another
+worklet function. Pass the arguments to the threading function directly. In
+both examples below, `foo` is a worklet function:
+
+```js
+function foo(arg1, arg2) {
+  'worklet';
+  // code...
+}
+```
+
+```js title="❌ Bad: a wrapper worklet function"
+function schedule(arg1, arg2) {
+  // A new worklet function with a new closure including `arg1` and `arg2`
+  // on every call.
+  // highlight-start
+  scheduleOnUI(() => {
+    'worklet';
+    foo(arg1, arg2);
+  });
+  // highlight-end
+}
+```
+
+```js title="✅ Good: the arguments passed directly"
+function schedule(arg1, arg2) {
+  // highlight-next-line
+  scheduleOnUI(foo, arg1, arg2);
+}
+```
+
+## Transfer granular objects
+
+Pass or capture only the values that a worklet function needs, not the whole
+object that contains them.
+
+When a worklet function uses a property of an object from its closure, the
+Worklets library copies the whole object, with all its nested values, and not
+only the property that you access. In development builds, it also makes the
+original object immutable after the copy. See [Tried to modify key of an object
+which has been converted to a
+serializable](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#tried-to-modify-key-of-an-object-which-has-been-converted-to-a-serializable)
+for details.
+
+```js title="❌ Bad: the whole object is copied"
+const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
+function worklet() {
+  'worklet';
+  // highlight-next-line
+  console.log(obj.propAccessedInWorklet);
+}
+
+scheduleOnUI(worklet);
+```
+
+```js title="✅ Good: only the needed value is copied"
+const obj = { propAccessedInWorklet: 1, propNotAccessedInWorklet: 2 };
+
+function worklet(propAccessedInWorklet) {
+  'worklet';
+  console.log(propAccessedInWorklet);
+}
+
+// highlight-next-line
+scheduleOnUI(worklet, obj.propAccessedInWorklet);
+```
+
+The property is read when you call `scheduleOnUI`, so the worklet function
+always gets its current value.
+
+## Use the target Runtime's event loop
+
+When a worklet function has to run repeatedly or after a delay, schedule it with
+the event loop of the runtime where it runs, not from the [React Native
+Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#rn-runtime).
+
+Worker Runtimes created with the default
+[`enableEventLoop`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/createWorkletRuntime#enableeventloop)
+option provide `setTimeout`, `setInterval`, `setImmediate`,
+`requestAnimationFrame` and `queueMicrotask`. The [UI
+Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#ui-runtime) provides timers too, driven by
+the frames of the native rendering layer. See [Using the event
+loop](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/using-event-loop).
+
+If you call [`scheduleOnRuntime`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/scheduleOnRuntime) from a
+timer on the React Native Runtime instead, every tick waits for the JavaScript
+thread and sends a new job to the target runtime.
+
+In both examples below, `tick` is a worklet function:
+
+```js
+function tick() {
+  'worklet';
+  // ...
+}
+```
+
+```js title="❌ Bad: a timer on the React Native Runtime"
+// highlight-next-line
+setInterval(() => {
+  scheduleOnRuntime(workerRuntime, tick);
+}, 100);
+```
+
+```js title="✅ Good: a timer on the Worker Runtime"
+scheduleOnRuntime(workerRuntime, () => {
+  'worklet';
+  // highlight-next-line
+  const intervalId = setInterval(tick, 100);
+  // Call clearInterval(intervalId) on the Worker Runtime
+  // when the work is complete.
+});
+```
+
+For repeating timers, keep the id that `setInterval` returns and call
+`clearInterval` with it on the same Runtime when the work is complete.
+
+## Prefer async invocations
+
+Whenever you need to return a value from a worklet function, prefer to do it
+with asynchronous APIs, such as [`runOnUIAsync`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/runOnUIAsync)
+and [`runOnRuntimeAsync`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/runOnRuntimeAsync), to avoid
+pre-emption costs. Synchronous APIs, such as
+[`runOnUISync`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/runOnUISync) and
+[`runOnRuntimeSync`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/runOnRuntimeSync), block the calling
+thread until the target Runtime finishes the worklet function. This is
+especially important when dealing with the UI Runtime. You can read more about
+it in the [Returning results](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/returning-results) tutorial and
+in [Running worklet functions on the UI
+Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/running-on-the-ui-runtime).
+
+In both examples below, `measureLayout` is a worklet function that returns a
+value:
+
+```js
+function measureLayout() {
+  'worklet';
+  // ...
+  return layout;
+}
+```
+
+```js title="❌ Bad: the JavaScript thread waits for the UI Runtime"
+function onPress() {
+  // highlight-next-line
+  const layout = runOnUISync(measureLayout);
+  console.log(layout);
+}
+```
+
+```js title="✅ Good: the JavaScript thread continues while the UI Runtime works"
+async function onPress() {
+  // highlight-next-line
+  const layout = await runOnUIAsync(measureLayout);
+  console.log(layout);
+}
+```
+
+---
+
 # Running worklet functions on the UI runtime
 
 Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/running-on-the-ui-runtime
