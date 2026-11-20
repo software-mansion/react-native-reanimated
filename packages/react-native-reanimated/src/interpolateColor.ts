@@ -337,6 +337,75 @@ function processColorRanges(
   return [processedInputRange, processedOutputRange];
 }
 
+// Binary search mirroring `interpolate`'s segment selection — returns the
+// bracket `k` such that `inputRange[k] <= value <= inputRange[k+1]`, falling
+// through to the final segment when `value` is past the last stop.
+function findBracketIndex(
+  value: number,
+  inputRange: readonly number[]
+): number {
+  'worklet';
+  let left = 1;
+  let right = inputRange.length - 1;
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (value <= inputRange[mid]) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+  return left - 1;
+}
+
+// Scan outward for the nearest non-transparent stop; return its AARRGGBB
+// integer with alpha cleared so it can serve as a (T, T)-bracket shadow stop.
+function findNonTransparentRgb(
+  outputRange: readonly (string | number)[],
+  startIndex: number,
+  step: -1 | 1
+): number | null {
+  'worklet';
+  for (
+    let index = startIndex;
+    index >= 0 && index < outputRange.length;
+    index += step
+  ) {
+    if (outputRange[index] !== 'transparent') {
+      return processColor(outputRange[index]) & TRANSPARENCY_MASK;
+    }
+  }
+  return null;
+}
+
+// 2-stop slice for the active bracket. Color-space-agnostic — downstream
+// `getInterpolate{RGB,HSV,LAB}` consume the same AARRGGBB ints for any space.
+function buildBracketSlice(
+  value: number,
+  inputRange: readonly number[],
+  outputRange: readonly (string | number)[]
+): [readonly number[], readonly number[]] {
+  'worklet';
+  const bracket = findBracketIndex(value, inputRange);
+  const leftInput = inputRange[bracket];
+  const rightInput = inputRange[bracket + 1];
+  const leftColor = outputRange[bracket];
+  const rightColor = outputRange[bracket + 1];
+
+  if (leftColor === 'transparent' && rightColor === 'transparent') {
+    // (T, T) can't go through `processColorRanges` (would collapse to [0, 0]);
+    // scan outward for non-transparent shadow stops instead.
+    const leftRgb = findNonTransparentRgb(outputRange, bracket - 1, -1);
+    const rightRgb = findNonTransparentRgb(outputRange, bracket + 2, 1);
+    return [
+      [leftInput, rightInput],
+      [leftRgb ?? rightRgb ?? 0, rightRgb ?? leftRgb ?? 0],
+    ];
+  }
+
+  return processColorRanges([leftInput, rightInput], [leftColor, rightColor]);
+}
+
 /**
  * Lets you map a value from a range of numbers to a range of colors using
  * linear interpolation.
@@ -379,7 +448,9 @@ export function interpolateColor(
   options: InterpolationOptions = {}
 ): string | number {
   'worklet';
-  const [processedInputRange, processedOutputRange] = processColorRanges(
+  // Lazy: process only the bracket's two endpoints, not all N stops (O(log N)).
+  const [processedInputRange, processedOutputRange] = buildBracketSlice(
+    value,
     inputRange,
     outputRange
   );
