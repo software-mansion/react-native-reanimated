@@ -7,6 +7,7 @@ use oxc_ast::ast::{Expression, Statement};
 use oxc_span::SPAN;
 
 use crate::imports::create_import_path;
+use crate::worklet_source_map::SOURCE_MAP_COMMENT_PREFIX;
 
 const GENERATED_WORKLETS_DIR: &str = ".worklets";
 
@@ -15,7 +16,9 @@ pub fn generate_worklet_file<'a>(
     mut factory: Expression<'a>,
     imports: &[crate::types::ImportInfo],
     filename: &str,
+    source_text: &'a str,
     worklets_package_dir: Option<&str>,
+    emit_source_map: bool,
 ) -> String {
     use oxc_ast::ast::ExportDefaultDeclarationKind;
 
@@ -50,20 +53,33 @@ pub fn generate_worklet_file<'a>(
     let program = builder.program(
         SPAN,
         oxc_span::SourceType::mjs(),
-        "",
+        source_text,
         builder.vec(),
         None,
         builder.vec(),
         body,
     );
     let printed = oxc_codegen::Codegen::new()
-        .with_options(oxc_codegen::CodegenOptions::default())
+        .with_options(oxc_codegen::CodegenOptions {
+            source_map_path: emit_source_map.then(|| std::path::PathBuf::from(filename)),
+            ..oxc_codegen::CodegenOptions::default()
+        })
         .build(&program);
 
-    if std::env::var("WORKLETS_WRITE_ORIGIN").is_ok() {
-        return format!("// __workletOrigin: {filename}\n{}", printed.code);
+    let mut code = printed.code;
+    if let Some(mut map) = printed.map {
+        map.set_source_contents(vec![None]);
+        let data_url = map.to_data_url();
+        let encoded = data_url
+            .split_once(',')
+            .map_or(data_url.as_str(), |(_, encoded)| encoded);
+        code.push_str(&format!("\n{SOURCE_MAP_COMMENT_PREFIX}{encoded}\n"));
     }
-    printed.code
+
+    if std::env::var("WORKLETS_WRITE_ORIGIN").is_ok() {
+        return format!("// __workletOrigin: {filename}\n{code}");
+    }
+    code
 }
 
 fn build_import_declaration<'a>(

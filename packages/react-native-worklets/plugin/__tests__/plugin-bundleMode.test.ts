@@ -173,7 +173,11 @@ describe('babel plugin in bundleMode', () => {
   describe('import forwarding by module name', () => {
     test.each([
       ['forwards an import of the module itself', 'some-library', true],
-      ['does not forward an import of a subpath', 'some-library/sub/file', false],
+      [
+        'does not forward an import of a subpath',
+        'some-library/sub/file',
+        false,
+      ],
       [
         'does not forward a module that only shares the prefix',
         'some-library-extra',
@@ -280,7 +284,9 @@ describe('babel plugin in bundleMode', () => {
         runPlugin(input, {}, pluginOpts);
         return warn.mock.calls
           .map(([message]) => String(message))
-          .filter((message) => message.includes('importForwarding.relativePaths'));
+          .filter((message) =>
+            message.includes('importForwarding.relativePaths')
+          );
       } finally {
         warn.mockRestore();
       }
@@ -371,6 +377,31 @@ describe('babel plugin in bundleMode', () => {
       const { files } = runPlugin(input);
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('written file carries a source map to the original lines', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+          return x;
+        }
+      </script>`;
+
+      const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+      expect(files).toHaveLength(1);
+      const encoded = files[0].content.match(
+        /^\/\/# workletSourceMap=(\S+)$/m
+      )?.[1];
+      assert(encoded);
+      const map = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
+      expect(map.sources).toEqual([expect.stringContaining(MOCK_LOCATION)]);
+      const writtenByBabel = capturedFiles.length > 0;
+      expect(map.mappings).toBe(
+        writtenByBabel
+          ? 'wBACuB;EAAA;;EAEb,IAAIA,CAAC,GAAG,CAAC;EACT,OAAOA,CAAC;AACV,CAAC;AAAAC,GAAA,CAAAC,aAAA;AAAAD,GAAA,CAAAE,eAAA;AAAA,eAAAF,GAAA'
+          : 'uBACuB;;CAEb,IAAI,IAAI;CACR,OAAO;AACT'
+      );
     });
 
     test('does not emit init data', () => {
@@ -596,9 +627,7 @@ describe('babel plugin in bundleMode', () => {
       );
       const { files } = runPlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(
-        `import("../../some-library/helper")`
-      );
+      expect(files[0].content).toContain(`import("../../some-library/helper")`);
       expect(files[0].content).toMatchSnapshot();
     });
 
