@@ -1,8 +1,9 @@
 {
   "extends": "../../../tsconfig.json",
   "compilerOptions": {
+    "lib": ["es6", "dom", "ES2022"],
     "types": ["node", "jest"]
   },
-  "include": ["."],
+  "include": [".", "../src/privateGlobals.d.ts"],
   "exclude": ["__snapshots__"]
 }

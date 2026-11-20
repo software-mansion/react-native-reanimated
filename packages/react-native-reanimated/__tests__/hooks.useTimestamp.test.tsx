@@ -37,7 +37,7 @@ describe('useTimestamp', () => {
 
   test('stops updating after isActive toggles to false', () => {
     const { result, rerender } = renderHook(
-      ({ active }) => useTimestamp(active),
+      ({ active }: { active: boolean }) => useTimestamp(active),
       { initialProps: { active: true } }
     );
     flushFrames(20);
@@ -52,7 +52,7 @@ describe('useTimestamp', () => {
 
   test('resumes updating after isActive toggles back to true', () => {
     const { result, rerender } = renderHook(
-      ({ active }) => useTimestamp(active),
+      ({ active }: { active: boolean }) => useTimestamp(active),
       { initialProps: { active: false } }
     );
     flushFrames(20);

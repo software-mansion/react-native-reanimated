@@ -1,5 +1,7 @@
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
+import type { ComponentType } from 'react';
+import type { ViewProps } from 'react-native';
 import { Pressable, Text } from 'react-native';
 import Animated, {
   useAnimatedProps,
@@ -7,13 +9,17 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import type { CircleProps } from 'react-native-svg';
 import { Circle, Svg } from 'react-native-svg';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 jest.mock('react-native-svg', () => require('../mock'));
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// `CircleProps` has no `style`, but the test animates one on the circle.
+const AnimatedCircle = Animated.createAnimatedComponent(
+  Circle as ComponentType<CircleProps & Pick<ViewProps, 'style'>>
+);
 
 function AnimatedSvgWrapper() {
   const opacity = useSharedValue(0.3);

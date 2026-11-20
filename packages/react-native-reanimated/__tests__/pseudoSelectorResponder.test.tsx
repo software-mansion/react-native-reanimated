@@ -1,9 +1,14 @@
 import { render } from '@testing-library/react-native';
+import type { ComponentType } from 'react';
+import type { ViewProps } from 'react-native';
 import { View } from 'react-native';
 
 import Animated from '../src';
 
-const AnimatedView = Animated.createAnimatedComponent(View);
+// View stands in for an SVG component, whose `fill` is styled through props.
+const AnimatedView = Animated.createAnimatedComponent(
+  View as ComponentType<ViewProps & { fill?: string }>
+);
 
 // SVG components are styled through props, so `animatedProps` is their CSS
 // channel and the only one that needs the handler.
