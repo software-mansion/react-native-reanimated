@@ -272,6 +272,7 @@ jobs:
 
           echo "using remote simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
+          echo "started_at=$(date +%s)" >> "$GITHUB_OUTPUT"
 
           node --experimental-strip-types scripts/runtime-tests-remote.mts install --udid "$UDID" \
             --app-path dist/unpacked/FabricExample.app
@@ -305,6 +306,21 @@ jobs:
         run: >
           node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library reanimated --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
+
+      - name: Fetch app logs from the remote simulator
+        if: failure() && steps.sim.outputs.udid != ''
+        continue-on-error: true
+        timeout-minutes: 10
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+          STARTED_AT: ${{ steps.sim.outputs.started_at }}
+        run: |
+          mkdir -p crash-reports
+          minutes=$(( ( $(date +%s) - ${STARTED_AT:-0} + 59 ) / 60 + 1 ))
+          if [ -z "$STARTED_AT" ] || [ "$minutes" -lt 5 ]; then minutes=5; fi
+          sim-remote logs "$UDID" --kind unified --kind crash --process FabricExample --last "${minutes}m" \
+            --archive crash-reports/ios-remote-logs-on-failure.tar.gz
 
       - name: Upload crash reports
         if: failure()

@@ -42,6 +42,9 @@ case "$*" in
     for entry in $FAKE_AVD_NAMES; do [ "\${entry%%=*}" = "$serial" ] && avd=\${entry#*=}; done
     echo "$avd"; echo OK ;;
   'shell getprop ro.product.cpu.abi') echo arm64-v8a ;;
+  'shell pidof com.fabricexample') [ -n "$FAKE_APP_PID" ] && echo "$FAKE_APP_PID" ;;
+  'logcat -d -b main,system,events -v threadtime') [ -n "$FAKE_LOGCAT" ] && cat "$FAKE_LOGCAT" ;;
+  'shell dumpsys meminfo com.fabricexample') echo 'App Summary' && echo '  TOTAL PSS: 123456' ;;
 esac
 `;
 
@@ -91,8 +94,71 @@ describe(
         `-s ${SELECTED} shell date +%s`,
         `-s ${SELECTED} shell rm -f /data/tombstones/*`,
         `-s ${SELECTED} shell getprop ro.product.cpu.abi`,
+        `-s ${SELECTED} shell pidof com.fabricexample`,
+        `-s ${SELECTED} logcat -d -b main,system,events -v threadtime`,
       ]);
       assert.match(result.stderr, /symbolized native stack trace/);
+      assert.match(
+        result.stderr,
+        /com\.fabricexample is not running, skipping dumpsys meminfo/
+      );
+    });
+
+    it('dumps the logcat lines of the app and of process kills', () => {
+      workDir = createWorkDir();
+      const logcat = path.join(workDir, 'logcat.txt');
+      fs.writeFileSync(
+        logcat,
+        [
+          '11-20 10:00:00.000  1500  1600 I ActivityManager: Start proc 4242:com.fabricexample/u0a190 for top-activity {com.fabricexample/com.fabricexample.MainActivity}',
+          '11-20 10:00:01.000  4242  4300 I ReactNativeJS: running suite',
+          '11-20 10:00:01.500  2000  2001 I SomeOtherApp: unrelated',
+          "11-20 10:00:02.000   300   300 I lowmemorykiller: Kill 'com.fabricexample' (4242), uid 10190, oom_score_adj 0 to free 512000kB",
+          '11-20 10:00:02.100  1500  1700 I am_proc_died: [0,4242,com.fabricexample,0,2]',
+          '',
+        ].join('\n')
+      );
+      const result = runDriver(workDir, {
+        devices: [SELECTED],
+        args: ['--platform', 'android', '--serial', SELECTED],
+        logcat,
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.match(result.stderr, /logcat lines of com\.fabricexample/);
+      assert.match(result.stderr, /ReactNativeJS: running suite/);
+      assert.match(result.stderr, /lowmemorykiller: Kill/);
+      assert.match(result.stderr, /am_proc_died/);
+      assert.doesNotMatch(result.stderr, /SomeOtherApp/);
+      assert.ok(
+        !result.adbCalls.includes(
+          `-s ${SELECTED} shell dumpsys meminfo com.fabricexample`
+        )
+      );
+      const saved = fs
+        .readdirSync(path.join(workDir, 'crash-reports'))
+        .filter((name) => name.startsWith('logcat-app-'));
+      assert.equal(saved.length, 1);
+    });
+
+    it('dumps meminfo when the app process is still alive', () => {
+      workDir = createWorkDir();
+      const result = runDriver(workDir, {
+        devices: [SELECTED],
+        args: ['--platform', 'android', '--serial', SELECTED],
+        appPid: '4242',
+      });
+
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(
+        result.adbCalls.at(-1),
+        `-s ${SELECTED} shell dumpsys meminfo com.fabricexample`
+      );
+      assert.match(
+        result.stderr,
+        /com\.fabricexample is still running \(pid 4242\), dumpsys meminfo/
+      );
+      assert.match(result.stderr, /TOTAL PSS: 123456/);
     });
 
     it('collects server-only crash diagnostics only from the --avd emulator', () => {
@@ -263,6 +329,7 @@ function createWorkDir() {
     'runtime-tests-server.mts',
     'android-device.mts',
     'runtime-tests-suites.mts',
+    'android-process-diagnostics.mts',
   ]) {
     fs.copyFileSync(
       path.join(SCRIPTS, script),
@@ -298,6 +365,8 @@ function runDriver(
     args: string[];
     emulatorExits?: boolean;
     avdNames?: Record<string, string>;
+    appPid?: string;
+    logcat?: string;
   }
 ) {
   const log = path.join(dir, 'calls.log');
@@ -334,6 +403,8 @@ function runDriver(
           .map(([serial, avd]) => `${serial}=${avd}`)
           .join(' '),
         FAKE_EMULATOR_PID: path.join(dir, 'emulator.pid'),
+        FAKE_APP_PID: options.appPid ?? '',
+        FAKE_LOGCAT: options.logcat ?? '',
       },
     }
   );
