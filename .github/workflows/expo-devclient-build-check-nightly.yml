@@ -43,6 +43,10 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 17
+
+      - name: Set up Gradle network access
+        if: ${{ matrix.platform == 'Android' }}
+        uses: $/.github/actions/setup-gradle-network
       - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:
