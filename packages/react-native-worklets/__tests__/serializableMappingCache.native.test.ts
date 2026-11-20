@@ -60,7 +60,6 @@ interface Harness {
   createSerializableWorklet(value: unknown): FakeRef;
   makeShareable(value: object): object;
   /** Stack details registered for each worklet hash, in call order. */
-  stackDetails: [number, unknown][];
   cache: {
     get(key: object): unknown;
     set(key: object, value?: object): void;
@@ -136,16 +135,10 @@ function setup(weakRef: 'fake' | 'real' | 'none' = 'fake'): Harness {
     globalThis as { __customSerializationRegistry?: unknown }
   ).__customSerializationRegistry = registry;
 
-  const stackDetails: [number, unknown][] = [];
   let harness!: Harness;
   jest.isolateModules(() => {
     jest.doMock('react-native-worklets/WorkletsModule/NativeWorklets', () => ({
       WorkletsModule: native,
-    }));
-    jest.doMock('react-native-worklets/debug/errors', () => ({
-      registerWorkletStackDetails: (hash: number, details: unknown) => {
-        stackDetails.push([hash, details]);
-      },
     }));
     const serializable = require('react-native-worklets/memory/serializable');
     const {
@@ -161,7 +154,6 @@ function setup(weakRef: 'fake' | 'real' | 'none' = 'fake'): Harness {
       makeShareable: serializable.makeShareable,
       cache: serializableMappingCache,
       registry,
-      stackDetails,
     };
   });
   return harness;
@@ -411,21 +403,6 @@ describe('serializableMappingCache and clones that hold a JS function', () => {
     // The new reference is known as a clone that holds a JS function.
     expect(createSerializable(second)).toBe(second);
     expect(native.createSerializableWorklet).toHaveBeenCalledTimes(1);
-  });
-
-  test('a worklet serialized again in dev keeps its first stack details', () => {
-    globalWithDev.__DEV__ = true;
-    const { release, createSerializable, stackDetails } = setup();
-    const details = { stack: 'at worklet (test.ts:1:1)' };
-    const worklet = Object.assign(fakeWorklet({ callback: () => 1 }), {
-      __stackDetails: details,
-    });
-
-    const first = createSerializable(worklet);
-    release(first);
-    createSerializable(worklet);
-
-    expect(stackDetails).toEqual([[worklet.__workletHash, details]]);
   });
 
   test('once the serializable was released, a hit misses and serializes again', () => {
@@ -746,12 +723,11 @@ describe('serializableMappingCache and clones that hold a JS function', () => {
       expect(h.createSerializable(library)).toBe(libraryClone);
       expect(get).toHaveBeenCalledTimes(4);
 
-      // A cold worklet whose `__initData` hits: one read each for the worklet
-      // and its closure, and two for `__initData`, which `cloneWorklet`
-      // serializes once with its other properties and once persisted.
+      // A cold worklet whose `__initData` hits: one read each for the worklet,
+      // its closure and `__initData`.
       get.mockClear();
       h.createSerializable(fakeWorklet({ offset: 1 }, initData));
-      expect(get).toHaveBeenCalledTimes(4);
+      expect(get).toHaveBeenCalledTimes(3);
 
       expect(has).not.toHaveBeenCalled();
       expect(h.native.makeWeakSerializableRef).not.toHaveBeenCalled();

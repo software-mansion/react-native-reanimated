@@ -1,6 +1,6 @@
 ## Patches for Bundle Mode
 
-To use Bundle Mode in `react-native-worklets` you need to apply several patches. Bundle Mode uses a bunch of APIs which aren't yet available in the React Native ecosystem.
+These patches are part of the standard `react-native-worklets` setup. Bundle Mode - the only mode of running worklets as of 1.0.0 - uses a bunch of APIs which aren't yet available in the React Native ecosystem, so you need to apply several patches.
 
 ## What to patch
 

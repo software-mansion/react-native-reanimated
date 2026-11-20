@@ -70,7 +70,7 @@ export function installLazyBundleLoader() {
  * chunk are propagated to all runtimes.
  */
 export function makeLazyBundleRegistrar(): LazyBundleRegistrar | undefined {
-  if (!__DEV__ || !globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
+  if (!__DEV__) {
     return undefined;
   }
   return registerLazyBundleOnRN;
