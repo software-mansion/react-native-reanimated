@@ -99,7 +99,7 @@ Hides the warning that the plugin prints when an `importForwarding.relativePaths
 
 ### extraPlugins
 
-Accepted but ignored. The Oxc plugin cannot run other Babel plugins on worklet functions, so it prints a warning when this list is not empty. Add these plugins next to the Oxc plugin in your `babel.config.js` instead. See [`extraPlugins`](./options.mdx#extraplugins) of the Babel plugin.
+Accepted but ignored. The Oxc plugin cannot run other Babel plugins on worklet functions, so it prints a warning when this list is not empty. Add these plugins next to the Oxc plugin in your `babel.config.js` instead. Note the difference in scope: `extraPlugins` ran only on the code of worklet functions, while a plugin in `babel.config.js` transforms your whole code. See [`extraPlugins`](./options.mdx#extraplugins) of the Babel plugin.
 
 ### extraPresets
 
