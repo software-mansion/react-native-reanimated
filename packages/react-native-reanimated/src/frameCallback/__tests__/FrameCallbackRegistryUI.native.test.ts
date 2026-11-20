@@ -20,8 +20,10 @@ describe('FrameCallbackRegistryUI (native)', () => {
   });
 
   test('activating an unknown callback is a no-op', () => {
-    expect(() => {
-      global._frameCallbackRegistry.manageStateFrameCallback(42, true);
-    }).not.toThrow();
+    global._frameCallbackRegistry.manageStateFrameCallback(42, true);
+
+    expect(global._frameCallbackRegistry.activeFrameCallbacks.has(42)).toBe(
+      false
+    );
   });
 });
