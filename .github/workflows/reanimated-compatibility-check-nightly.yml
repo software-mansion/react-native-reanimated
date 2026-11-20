@@ -62,6 +62,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '18'
+
+      - name: Set up Gradle network access
+        uses: $/.github/actions/setup-gradle-network
       - name: Setup Node
         uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:

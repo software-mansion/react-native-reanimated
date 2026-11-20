@@ -19,6 +19,9 @@ runs:
         distribution: 'zulu'
         java-version: 17
 
+    - name: Set up Gradle network access
+      uses: $/.github/actions/setup-gradle-network
+
     - name: Use Node.js
       id: setup-node
       uses: $/.github/actions/setup-node-yarn

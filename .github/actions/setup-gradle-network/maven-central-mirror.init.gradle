@@ -1,0 +1,20 @@
+def mirrorUrl = 'https://maven-central.storage-download.googleapis.com/maven2/'
+
+def useMirror = { RepositoryHandler repositories ->
+  repositories.withType(MavenArtifactRepository).configureEach { repository ->
+    if (repository.url.toString().startsWith('https://repo.maven.apache.org/maven2')) {
+      repository.url = mirrorUrl
+    }
+  }
+}
+
+beforeSettings { settings ->
+  useMirror(settings.pluginManagement.repositories)
+  useMirror(settings.buildscript.repositories)
+  useMirror(settings.dependencyResolutionManagement.repositories)
+}
+
+allprojects { project ->
+  useMirror(project.buildscript.repositories)
+  useMirror(project.repositories)
+}

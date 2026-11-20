@@ -49,6 +49,9 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '18'
+
+      - name: Set up Gradle network access
+        uses: $/.github/actions/setup-gradle-network
       - name: Load "next" tag if available
         run: |
           if npm view react-native dist-tags | grep -q 'next:' ; then
