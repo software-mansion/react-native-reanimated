@@ -68,18 +68,7 @@ function makeRemoteFunctionOnShortLivedRuntime(index: number) {
   const remoteFunction = runOnRuntimeSync(runtime, () => {
     'worklet';
     const hostedFunction = () => 1;
-    if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-      return hostedFunction;
-    }
-    const createSerializableNonWorkletFunction = globalThis
-      .__workletsModuleProxy.createSerializableNonWorkletFunction as (
-      fun: () => number,
-      name: string
-    ) => () => number;
-    return createSerializableNonWorkletFunction(
-      hostedFunction,
-      'hostedFunction'
-    );
+    return hostedFunction;
   });
   return { runtimeId: runtime.runtimeId, remoteFunction };
 }

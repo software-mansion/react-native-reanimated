@@ -25,10 +25,6 @@ const STARTED_NOTIFICATION = 'STARTED_NOTIFICATION';
 const ABORTED_MESSAGE =
   '[Worklets] The Worklet Runtime was aborted or destroyed before the worklet finished.';
 
-const bundleModeTest = globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-  ? test
-  : test.skip;
-
 const ABORTED_NOTIFICATION = 'ABORTED_NOTIFICATION';
 const ORDER_NOTIFICATION = 'ORDER_NOTIFICATION';
 
@@ -141,7 +137,7 @@ describe('abortWorkletRuntime', () => {
     expect(ran.getBlocking()).toBe(false);
   });
 
-  bundleModeTest(
+  test(
     'lets the running job run work synchronously on its own aborted runtime',
     async () => {
       // Arrange
@@ -344,7 +340,7 @@ describe('abortWorkletRuntime', () => {
     expect(results[1]).toBe(ABORTED_MESSAGE);
   });
 
-  bundleModeTest(
+  test(
     'does not crash when the aborted runtime queued a runOnRuntimeAsync call on itself',
     async () => {
       // Arrange
@@ -383,7 +379,7 @@ describe('abortWorkletRuntime', () => {
     }
   );
 
-  bundleModeTest(
+  test(
     'does not crash when a promise of the aborted runtime settles on another runtime',
     async () => {
       // Arrange
@@ -422,7 +418,7 @@ describe('abortWorkletRuntime', () => {
     }
   );
 
-  bundleModeTest(
+  test(
     'runs the UI microtasks after the UI worklet that aborted the runtime',
     async () => {
       // Arrange
