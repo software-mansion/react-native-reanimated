@@ -3,12 +3,15 @@ import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, processColorsInProps } from '../common';
 import type { InstanceOrElement, StyleProps } from '../commonTypes';
+import { getStaticFeatureFlag } from '../featureFlags';
 import type {
   AnimatedRef,
   AnimatedRefOnRN,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
 import { requestSettledPropsSync } from '../PropsRegistryGarbageCollector';
+
+const USE_ANIMATION_BACKEND = getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
 type SetNativeProps = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
@@ -52,6 +55,9 @@ function setNativePropsNative(
     { shadowNodeWrapper, updates, isAnimatedProps: false },
   ]);
   requestSettledPropsSync();
+  if (!USE_ANIMATION_BACKEND) {
+    global._maybeFlushUIUpdatesQueue();
+  }
 }
 
 function setNativePropsJest() {
