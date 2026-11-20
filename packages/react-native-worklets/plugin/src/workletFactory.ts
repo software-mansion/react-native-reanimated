@@ -148,7 +148,7 @@ export function makeWorkletFactory(
     state,
     mutatedClosureVariables,
     workletName,
-    transformed.map
+    codeObject.map
   );
   assert(funString, '`funString` is undefined.');
   const workletHash = hash(funString);
