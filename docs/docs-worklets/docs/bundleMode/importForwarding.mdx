@@ -67,7 +67,7 @@ Worklet Runtime.
 So what's the intent behind the `getValue` invocation inside the worklet function here?
 Did the author want to print the state of the RN Runtime or the Worklet Runtime?
 Both interpretations are valid, but during static analysis of the code — which
-the Worklets Babel plugin does — it's impossible to tell which one is correct.
+the Worklet Syntax plugin does — it's impossible to tell which one is correct.
 
 ## Disambiguating manually
 
@@ -148,13 +148,13 @@ forwarded into the worklet body automatically, so you can drop that boilerplate.
 
 You can configure it via the
 [`importForwarding`](../worklets-plugin/options.mdx#importforwarding)
-option of the Worklets Babel plugin.
+option of the Worklet Syntax Babel plugin.
 
 ### Dropping boilerplate
 
 You can rewrite the code from the [Printing Worklet Runtime
 state](#printing-worklet-runtime-state) example without boilerplate. First,
-configure the Worklets Babel plugin:
+configure the Worklet Syntax Babel plugin:
 
 ```javascript
 /** @type {import('react-native-worklets/plugin').PluginOptions} */

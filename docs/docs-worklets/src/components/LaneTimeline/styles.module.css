@@ -8,6 +8,7 @@
   --dg-ui: #e88789;
   --dg-worker: #6fcfa4;
   --dg-busy: #e8552f;
+  --dg-native: #5b6673;
   --dg-busy-fill: #fbeedb;
   --dg-press: #2f6fed;
   --dg-press-fill: #e4ecfd;
@@ -27,6 +28,7 @@
   --dg-fill: #22384a;
   --dg-muted: #a9c1d0;
   --dg-busy-fill: #5a3a2c;
+  --dg-native: #b4bec9;
   --dg-press-fill: #263a63;
   --dg-ui-runtime-fill: #244a3b;
   --dg-worker-runtime-fill: #5a4a2c;
@@ -106,17 +108,6 @@
   white-space: nowrap;
 }
 
-.tag {
-  position: absolute;
-  top: 4px;
-  right: 8px;
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--dg-muted);
-}
-
 .track {
   position: relative;
 }
@@ -178,6 +169,41 @@
 .block.worker {
   border-color: var(--dg-worker-runtime);
   background-color: var(--dg-worker-runtime-fill);
+}
+
+.block.frame,
+.block.rnFrame,
+.block.busyTask,
+.block.uiFrame {
+  min-width: 3px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  outline: 1px solid var(--dg-panel);
+}
+
+.block.frame,
+.swatch.frame {
+  border-color: var(--dg-native);
+  background-color: var(--dg-native);
+}
+
+.block.rnFrame,
+.swatch.rnFrame {
+  border-color: var(--dg-press);
+  background-color: var(--dg-press);
+}
+
+.block.busyTask,
+.swatch.busyTask {
+  border-color: var(--dg-busy);
+  background-color: var(--dg-busy);
+}
+
+.block.uiFrame,
+.swatch.uiFrame {
+  border-color: var(--dg-ui-runtime);
+  background-color: var(--dg-ui-runtime);
 }
 
 .legend {

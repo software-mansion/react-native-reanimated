@@ -4,6 +4,8 @@ import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
 import { cancelAnimation, withStyleAnimation } from '../animation';
+import { isValidLayoutAnimationProp } from '../animation/util';
+import { logger } from '../common';
 import type {
   LayoutAnimation,
   LayoutAnimationsManager,
@@ -58,6 +60,17 @@ function stopObservingProgress(
   scheduleFlush();
 }
 
+function warnAboutUnsupportedProps(animations: Record<string, unknown>) {
+  'worklet';
+  for (const propName in animations) {
+    if (!isValidLayoutAnimationProp(propName.trim())) {
+      logger.warn(
+        `'${propName}' property is not officially supported for layout animations. It may not work as expected.`
+      );
+    }
+  }
+}
+
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
@@ -82,11 +95,10 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   // Flush layout-animation progress once per frame via the frame finalizer
   // (after all `requestAnimationFrame` callbacks), reusing the same
   // `_maybeFlushUIUpdatesQueue` path as animated-prop updates.
-  // This finalizer runs after the mapper run (which re-queues itself a frame
-  // ahead, so it sits earlier in the finalizer queue). When a mapper-driven
-  // animation is also active, its flush runs first and already commits the
-  // layout-animation updates too, so our `_maybeFlushUIUpdatesQueue` here is a
-  // no-op; when only layout animations run, this is the single flush.
+  // The mapper run is requested on demand, so its finalizer can sit before or
+  // after this one. Running the mappers here first lets a mapper-driven
+  // animation in the same frame flush together with the layout-animation
+  // updates, so the mapper finalizer that follows is a no-op.
   // The backend drives its own flush from `runGrandCallback`, so this is non-backend only.
   let flushRequested = false;
   const scheduleFlush = () => {
@@ -96,8 +108,24 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     flushRequested = true;
     globalThis.requestAnimationFrameFinalizer(() => {
       flushRequested = false;
+      global.__mapperRun?.();
       global._maybeFlushUIUpdatesQueue();
     });
+  };
+
+  const stop = (tag: number) => {
+    const value = mutableValuesForTag.get(tag);
+    if (!value) {
+      return;
+    }
+    // native already made its cleanup, so we just do cleanup here on JS side
+    value.removeListener(tag + TAG_OFFSET);
+    try {
+      cancelAnimation(value);
+    } finally {
+      currentAnimationForTag.delete(tag);
+      mutableValuesForTag.delete(tag);
+    }
   };
 
   return {
@@ -111,55 +139,72 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
-      const style = config(yogaValues);
-      let currentAnimation = style.animations;
-
-      // When layout animation is requested, but a previous one is still running, we merge
-      // new layout animation targets into the ongoing animation
-      const previousAnimation = currentAnimationForTag.get(tag);
-      if (previousAnimation) {
-        currentAnimation = { ...previousAnimation, ...style.animations };
-      }
-      currentAnimationForTag.set(tag, currentAnimation);
-
-      let value = mutableValuesForTag.get(tag);
-      if (value === undefined) {
-        value = makeMutableUI(style.initialValues);
-        mutableValuesForTag.set(tag, value);
-      } else {
-        removeProgressListener(tag, value);
-        value._value = style.initialValues;
-      }
-
-      const animation = withStyleAnimation(currentAnimation, (finished) => {
-        if (finished) {
-          currentAnimationForTag.delete(tag);
-          mutableValuesForTag.delete(tag);
-          const shouldRemoveView = type === LayoutAnimationType.EXITING;
-          stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
+      try {
+        const style = config(yogaValues);
+        if (__DEV__ && type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION) {
+          warnAboutUnsupportedProps(style.animations);
         }
-        if (style.callback) {
-          style.callback(finished);
-        }
-      });
+        let currentAnimation = style.animations;
 
-      startObservingProgress(tag, value, scheduleFlush);
-      const previousFrameTimestamp = global.__frameTimestamp;
-      global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
-      value.value = animation;
-      global.__frameTimestamp = previousFrameTimestamp;
-    },
-    stop(tag: number) {
-      const value = mutableValuesForTag.get(tag);
-      if (!value) {
-        return;
+        // When layout animation is requested, but a previous one is still running, we merge
+        // new layout animation targets into the ongoing animation
+        const previousAnimation = currentAnimationForTag.get(tag);
+        if (
+          previousAnimation &&
+          type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+        ) {
+          currentAnimation = { ...previousAnimation, ...style.animations };
+        }
+        currentAnimationForTag.set(tag, currentAnimation);
+
+        let value = mutableValuesForTag.get(tag);
+        if (value === undefined) {
+          value = makeMutableUI(style.initialValues);
+          mutableValuesForTag.set(tag, value);
+        } else {
+          removeProgressListener(tag, value);
+          value._value = style.initialValues;
+        }
+
+        const animation = withStyleAnimation(
+          currentAnimation,
+          (finished) => {
+            if (finished) {
+              currentAnimationForTag.delete(tag);
+              mutableValuesForTag.delete(tag);
+              const shouldRemoveView = type === LayoutAnimationType.EXITING;
+              stopObservingProgress(
+                tag,
+                value,
+                scheduleFlush,
+                shouldRemoveView
+              );
+            }
+            if (style.callback) {
+              style.callback(finished);
+            }
+          },
+          type === LayoutAnimationType.EXITING
+        );
+
+        startObservingProgress(tag, value, scheduleFlush);
+        const previousFrameTimestamp = global.__frameTimestamp;
+        global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
+        try {
+          value.value = animation;
+        } finally {
+          global.__frameTimestamp = previousFrameTimestamp;
+        }
+      } catch (error) {
+        try {
+          stop(tag);
+        } catch {
+          throw error;
+        }
+        throw error;
       }
-      // native already made its cleanup, so we just do cleanup here on JS side
-      value.removeListener(tag + TAG_OFFSET);
-      cancelAnimation(value);
-      currentAnimationForTag.delete(tag);
-      mutableValuesForTag.delete(tag);
     },
+    stop,
   };
 }
 

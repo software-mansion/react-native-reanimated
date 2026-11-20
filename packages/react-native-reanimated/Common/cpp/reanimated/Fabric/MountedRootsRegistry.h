@@ -15,6 +15,7 @@ class MountedRootsRegistry {
   void set(const RootShadowNode::Shared &rootShadowNode);
   void remove(SurfaceId surfaceId);
   RootShadowNode::Shared get(SurfaceId surfaceId) const;
+  bool isRunning(SurfaceId surfaceId) const;
   bool isMounted(const ShadowNodeFamily &shadowNodeFamily) const;
 
  private:

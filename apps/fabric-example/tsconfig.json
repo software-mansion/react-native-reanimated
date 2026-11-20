@@ -6,5 +6,5 @@
     }
   },
   "include": [".", "../common-app/src/images.d.ts"],
-  "exclude": ["android", "ios", ".bundle", "vendor", "assets"]
+  "exclude": ["android", "ios", ".bundle", "vendor", "assets", "scripts"]
 }

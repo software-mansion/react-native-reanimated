@@ -1,4 +1,4 @@
-#if RUNTIME_TESTS
+#if DEBUG || RUNTIME_TESTS
 
 #import <React/RCTBackedTextInputViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
@@ -27,6 +27,85 @@ static void recordUnmountsOf(Class viewClass)
                              original(parent, selector, child, index);
                            }));
 }
+
+static BOOL isInContainerTransition(UIView *view)
+{
+  for (UIView *current = view; current; current = current.superview) {
+    UIResponder *responder = current.nextResponder;
+    if ([responder isKindOfClass:[UIViewController class]] && ((UIViewController *)responder).transitionCoordinator) {
+      return YES;
+    }
+  }
+  return NO;
+}
+
+static id presentedFrame(UIView *view)
+{
+  if (view.window == nil) {
+    return (id)kCFNull;
+  }
+  CALayer *presentationLayer = view.layer.presentationLayer;
+  CALayer *layer = presentationLayer ?: view.layer;
+  CALayer *windowLayer = presentationLayer ? view.window.layer.presentationLayer : view.window.layer;
+  const CGRect frame = [layer convertRect:layer.bounds toLayer:windowLayer];
+  float opacity = 1;
+  for (CALayer *current = layer; current; current = current.superlayer) {
+    opacity *= current.hidden ? 0 : current.opacity;
+  }
+  return @{
+    @"x" : @(frame.origin.x),
+    @"y" : @(frame.origin.y),
+    @"width" : @(frame.size.width),
+    @"height" : @(frame.size.height),
+    @"opacity" : @(opacity),
+    @"inContainerTransition" : @(isInContainerTransition(view)),
+  };
+}
+
+@interface FrameRecorder : NSObject
+- (instancetype)initWithTags:(NSArray<NSNumber *> *)tags registry:(RCTComponentViewRegistry *)registry;
+- (NSArray<NSArray *> *)stop;
+@end
+
+@implementation FrameRecorder {
+  NSArray<NSNumber *> *_tags;
+  __weak RCTComponentViewRegistry *_registry;
+  NSMutableArray<NSArray *> *_samples;
+  CADisplayLink *_displayLink;
+}
+
+- (instancetype)initWithTags:(NSArray<NSNumber *> *)tags registry:(RCTComponentViewRegistry *)registry
+{
+  if (self = [super init]) {
+    _tags = tags;
+    _registry = registry;
+    _samples = [NSMutableArray new];
+    _displayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(sample)];
+    [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
+  return self;
+}
+
+- (void)sample
+{
+  // A mount earlier in this frame shows in the presentation layers only after a Core Animation commit.
+  [CATransaction flush];
+  NSMutableArray *frames = [NSMutableArray arrayWithCapacity:_tags.count];
+  for (NSNumber *tag in _tags) {
+    [frames addObject:presentedFrame([_registry findComponentViewWithTag:tag.intValue])];
+  }
+  [_samples addObject:frames];
+}
+
+- (NSArray<NSArray *> *)stop
+{
+  [_displayLink invalidate];
+  return _samples;
+}
+
+@end
+
+static FrameRecorder *frameRecorder;
 
 @interface RuntimeTestObserver : NSObject <NativeRuntimeTestObserverSpec>
 @property (nonatomic, weak) RCTSurfacePresenter *surfacePresenter;
@@ -84,6 +163,24 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)observeLocationOnScreen:(NSInteger)tag
+                        resolve:(RCTPromiseResolveBlock)resolve
+                         reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+    if (view.window == nil) {
+      resolve((id)kCFNull);
+      return;
+    }
+    const CGPoint anchor = view.layer.anchorPoint;
+    const CGPoint untransformedOrigin = {
+        view.center.x - view.bounds.size.width * anchor.x, view.center.y - view.bounds.size.height * anchor.y};
+    const CGPoint origin = [view.superview convertPoint:untransformedOrigin toView:nil];
+    resolve(@{@"x" : @(origin.x), @"y" : @(origin.y)});
+  });
+}
+
 - (void)observeTransform:(NSInteger)tag resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -93,7 +190,15 @@ RCT_EXPORT_MODULE()
       return;
     }
     CALayer *layer = view.layer.presentationLayer ?: view.layer;
-    resolve(@{@"width" : @(layer.bounds.size.width), @"translateX" : @(layer.transform.m41)});
+    const CATransform3D t = layer.transform;
+    resolve(@{
+      @"width" : @(layer.bounds.size.width),
+      @"translateX" : @(t.m41),
+      @"matrix" : @[
+        @(t.m11), @(t.m12), @(t.m13), @(t.m14), @(t.m21), @(t.m22), @(t.m23), @(t.m24),
+        @(t.m31), @(t.m32), @(t.m33), @(t.m34), @(t.m41), @(t.m42), @(t.m43), @(t.m44)
+      ]
+    });
   });
 }
 
@@ -115,6 +220,51 @@ RCT_EXPORT_MODULE()
       @"placeholderTextColor" : (id)kCFNull,
       @"labelSetterCalls" : (id)kCFNull,
     });
+  });
+}
+
+- (void)translateNativeParent:(NSInteger)tag
+                            y:(double)y
+                   presentedY:(double)presentedY
+                      resolve:(RCTPromiseResolveBlock)resolve
+                       reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+    UIView *nativeParent = view.superview;
+    if (nativeParent == nil || nativeParent.tag > 0) {
+      reject(@"E_PARENT", @"The mounted view has no native parent", nil);
+      return;
+    }
+    NSString *key = @"presentedTranslation";
+    [nativeParent.layer removeAnimationForKey:key];
+    nativeParent.transform = CGAffineTransformMakeTranslation(0, y);
+    if (presentedY != y) {
+      CABasicAnimation *presented = [CABasicAnimation animationWithKeyPath:@"transform.translation.y"];
+      presented.fromValue = @(presentedY);
+      presented.toValue = @(presentedY);
+      presented.duration = 3600;
+      [nativeParent.layer addAnimation:presented forKey:key];
+    }
+    resolve(nil);
+  });
+}
+
+- (void)startFrameRecording:(NSArray *)tags resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [frameRecorder stop];
+    frameRecorder = [[FrameRecorder alloc] initWithTags:tags
+                                               registry:self.surfacePresenter.mountingManager.componentViewRegistry];
+    resolve(nil);
+  });
+}
+
+- (void)takeFrameRecording:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    resolve([frameRecorder stop] ?: @[]);
+    frameRecorder = nil;
   });
 }
 
@@ -140,6 +290,40 @@ RCT_EXPORT_MODULE()
   });
 }
 
+- (void)pauseHost:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Host pause tests require Android", nil);
+}
+
+- (void)resumeHost:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Host pause tests require Android", nil);
+}
+
+- (void)startHeadlessTask:(NSString *)taskKey
+                  resolve:(RCTPromiseResolveBlock)resolve
+                   reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Headless JS tasks require Android", nil);
+}
+
+- (void)waitForHeadlessTaskFinish:(NSInteger)taskId
+                          resolve:(RCTPromiseResolveBlock)resolve
+                           reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Headless JS tasks require Android", nil);
+}
+
+- (void)delay:(NSInteger)milliseconds resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Host pause tests require Android", nil);
+}
+
+- (void)hasCurrentActivity:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  reject(@"E_PLATFORM", @"Activity checks require Android", nil);
+}
+
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {
@@ -150,7 +334,7 @@ RCT_EXPORT_MODULE()
 {
   UIView *view = [self.surfacePresenter.mountingManager.componentViewRegistry findComponentViewWithTag:tag];
   RCTScheduler *scheduler = self.surfacePresenter.scheduler;
-  if (view.window == nil || scheduler == nil) {
+  if (view == nil || scheduler == nil) {
     return {};
   }
   auto uiManager = scheduler.uiManager;

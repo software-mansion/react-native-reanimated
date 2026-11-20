@@ -2,16 +2,13 @@
 import { RuntimeKind } from 'react-native-worklets';
 
 import { IS_JEST, logger, processColorsInProps } from '../common';
-import type {
-  InstanceOrElement,
-  ShadowNodeWrapper,
-  StyleProps,
-} from '../commonTypes';
+import type { InstanceOrElement, StyleProps } from '../commonTypes';
 import type {
   AnimatedRef,
   AnimatedRefOnRN,
   AnimatedRefOnUI,
 } from '../hook/commonTypes';
+import { requestSettledPropsSync } from '../PropsRegistryGarbageCollector';
 
 type SetNativeProps = <TRef extends InstanceOrElement>(
   animatedRef: AnimatedRef<TRef>,
@@ -42,12 +39,19 @@ function setNativePropsNative(
     logger.warn('setNativeProps() can only be used on the UI runtime.');
     return;
   }
-  const shadowNodeWrapper = (animatedRef as AnimatedRefOnUI)
-    .value as ShadowNodeWrapper;
+  const shadowNodeWrapper = (animatedRef as AnimatedRefOnUI).value;
+  // The ref is null before it attaches and after its view unmounts.
+  if (!shadowNodeWrapper) {
+    logger.warn(
+      'Tried to call setNativeProps() with an animated ref that is not attached to a view.'
+    );
+    return;
+  }
   processColorsInProps(updates);
   global._updateProps!([
     { shadowNodeWrapper, updates, isAnimatedProps: false },
   ]);
+  requestSettledPropsSync();
 }
 
 function setNativePropsJest() {

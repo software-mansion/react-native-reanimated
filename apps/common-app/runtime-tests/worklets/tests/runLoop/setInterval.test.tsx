@@ -316,7 +316,7 @@ describe('Test setInterval', () => {
         const handle3 = setInterval(() => {
           order(3, notification3);
           clearInterval(handle3);
-        }, 100);
+        }, 1000);
       }, runtimeKind);
 
       // Assert

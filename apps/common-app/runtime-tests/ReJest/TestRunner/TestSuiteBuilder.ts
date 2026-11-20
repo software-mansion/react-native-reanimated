@@ -8,6 +8,16 @@ export class TestSuiteBuilder {
   _testSuites: TestSuite[] = [];
   _currentTestSuite: TestSuite | null = null;
   _currentTestCase: TestCase | null = null;
+  _currentRuntimeTestSuiteName: string | null = null;
+
+  public importRuntimeTestSuite(name: string, importTest: () => void) {
+    this._currentRuntimeTestSuiteName = name;
+    try {
+      importTest();
+    } finally {
+      this._currentRuntimeTestSuiteName = null;
+    }
+  }
 
   public getTestSuites() {
     return this._testSuites;
@@ -48,6 +58,10 @@ export class TestSuiteBuilder {
       buildSuite,
       testCases: [],
       nestingLevel: (this._currentTestSuite?.nestingLevel || 0) + 1,
+      runtimeTestSuiteName:
+        this._currentTestSuite?.runtimeTestSuiteName ??
+        this._currentRuntimeTestSuiteName ??
+        undefined,
       decorator: testDecorator || null,
     });
   }

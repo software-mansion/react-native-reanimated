@@ -2,21 +2,16 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ApiScheduleOnRuntimeSnippet from './_examples/apiScheduleOnRuntime';
+import ApiScheduleOnRuntimeSource from '!!raw-loader!./_examples/apiScheduleOnRuntime';
+
 # scheduleOnRuntime
 
 `scheduleOnRuntime` lets you schedule a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) to be executed on a [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
 
 ## Reference
 
-```javascript
-import { scheduleOnRuntime, createWorkletRuntime } from 'react-native-worklets';
-
-const workletRuntime = createWorkletRuntime({ name: 'background' });
-
-scheduleOnRuntime(workletRuntime, (greeting: string) => {
-  console.log(`${greeting} from the background Worklet Runtime`);
-}, 'Hello');
-```
+<ThreadingSimulation module={ApiScheduleOnRuntimeSnippet} source={ApiScheduleOnRuntimeSource}/>
 
 <details>
   <summary>Type definitions</summary>

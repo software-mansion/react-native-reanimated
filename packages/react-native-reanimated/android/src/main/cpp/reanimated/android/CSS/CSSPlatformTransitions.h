@@ -5,7 +5,7 @@
 #include <reanimated/CSS/utils/platform.h>
 #include <reanimated/android/CSS/CSSPlatformEasings.h>
 
-#include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <functional>
 #include <memory>

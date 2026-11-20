@@ -9,7 +9,10 @@ import type {
 import { configureLayoutAnimationBatch } from './core';
 import type { ReanimatedKeyframe } from './layoutReanimation/animationBuilder/Keyframe';
 import { initializeLayoutAnimationsManager } from './layoutReanimation/animationsManager';
-import type { SharedTransitionContentFade } from './layoutReanimation/SharedTransition';
+import type {
+  ProgressSharedTransitionAnimation,
+  SharedTransitionContentFade,
+} from './layoutReanimation/SharedTransition';
 
 function createUpdateManager() {
   const animations: LayoutAnimationBatchItem[] = [];
@@ -31,9 +34,10 @@ function createUpdateManager() {
       }
     },
     flush(this: void) {
-      configureLayoutAnimationBatch(animations.concat(deferredAnimations));
+      const batch = animations.concat(deferredAnimations);
       animations.length = 0;
       deferredAnimations.length = 0;
+      configureLayoutAnimationBatch(batch);
     },
   };
 }
@@ -55,23 +59,33 @@ function createUpdateManager() {
  *   of shared elements. Defaults to `false`.
  * @param sharedTransitionTag - The shared tag that pairs the views.
  * @param sharedTransitionContentFade - The content fade settings of the run.
+ * @param sharedTransitionCallback - The callback of the run.
+ * @param sharedTransitionFollowsTarget - Whether the animation aims at the
+ *   current geometry of the target in each frame.
  */
 const updateLayoutAnimationsManager = createUpdateManager();
 
 export const updateLayoutAnimations: (
   viewTag: number,
   type: LayoutAnimationType,
-  config?: ReanimatedKeyframe | LayoutAnimationFunction,
+  config?:
+    | ReanimatedKeyframe
+    | LayoutAnimationFunction
+    | ProgressSharedTransitionAnimation,
   isUnmounting?: boolean,
   sharedTransitionTag?: string,
-  sharedTransitionContentFade?: SharedTransitionContentFade
+  sharedTransitionContentFade?: SharedTransitionContentFade,
+  sharedTransitionCallback?: (finished: boolean) => void,
+  sharedTransitionFollowsTarget?: boolean
 ) => void = (
   viewTag,
   type,
   config,
   isUnmounting,
   sharedTransitionTag,
-  sharedTransitionContentFade
+  sharedTransitionContentFade,
+  sharedTransitionCallback,
+  sharedTransitionFollowsTarget
 ) =>
   updateLayoutAnimationsManager.update(
     {
@@ -79,12 +93,16 @@ export const updateLayoutAnimations: (
       type,
       config: config ? createSerializable(config) : undefined,
       sharedTransitionTag,
+      sharedTransitionCallback: sharedTransitionCallback
+        ? createSerializable(sharedTransitionCallback)
+        : undefined,
       sharedTransitionContentFade: sharedTransitionContentFade
         ? {
             fadeIn: createSerializable(sharedTransitionContentFade.fadeIn),
             fadeOutEnd: sharedTransitionContentFade.fadeOutEnd,
           }
         : undefined,
+      sharedTransitionFollowsTarget,
     },
     isUnmounting
   );

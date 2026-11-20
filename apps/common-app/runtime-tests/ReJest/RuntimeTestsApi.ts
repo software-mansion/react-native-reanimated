@@ -17,6 +17,7 @@ import {
 } from './utils/waitForFrames';
 
 export { Presets } from './Presets';
+export { isFullRun } from './utils/fullRun';
 export { isViewMountedNatively } from './utils/nativeViewHierarchy';
 
 const testRunner = new TestRunner();
@@ -168,6 +169,14 @@ export function getTestComponent(name: string): TestComponent {
 
 export async function runTests() {
   return testRunner.runTests();
+}
+
+export function importRuntimeTestSuite(name: string, importTest: () => void) {
+  testSuiteBuilder.importRuntimeTestSuite(name, importTest);
+}
+
+export function reloadAndResume(resumeFromSuite: string) {
+  return testRunner.reloadAndResume(resumeFromSuite);
 }
 
 export async function waitForFrames(count?: number, timeout?: number) {

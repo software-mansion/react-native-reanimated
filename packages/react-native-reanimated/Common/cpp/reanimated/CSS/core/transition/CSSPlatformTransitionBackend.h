@@ -3,7 +3,7 @@
 #include <reanimated/CSS/easing/EasingConfigs.h>
 #include <reanimated/CSS/utils/platform.h>
 
-#include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <string>
 

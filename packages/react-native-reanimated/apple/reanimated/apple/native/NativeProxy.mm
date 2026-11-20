@@ -1,3 +1,4 @@
+#import <reanimated/Tools/FeatureFlags.h>
 #import <reanimated/Tools/PlatformDepMethodsHolder.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAReducedMotion.h>
@@ -16,6 +17,7 @@ using namespace worklets;
 
 std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
     REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver,
     RCTModuleRegistry *moduleRegistry,
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<CallInvoker> &jsInvoker,
@@ -24,18 +26,21 @@ std::shared_ptr<ReanimatedModuleProxy> createReanimatedModuleProxy(
 {
   REAAssertJavaScriptQueue();
 
-  PlatformDepMethodsHolder platformDepMethodsHolder = makePlatformDepMethodsHolder(moduleRegistry, nodesManager);
+  PlatformDepMethodsHolder platformDepMethodsHolder =
+      makePlatformDepMethodsHolder(moduleRegistry, nodesManager, keyboardObserver);
 
   auto reanimatedModuleProxy = std::make_shared<ReanimatedModuleProxy>(
       uiWorkletRuntime, uiScheduler, rnRuntime, jsInvoker, platformDepMethodsHolder, getIsReducedMotion());
   reanimatedModuleProxy->init(platformDepMethodsHolder);
 
-  std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy; // to avoid retain cycle
-  [nodesManager registerPerformOperations:^() {
-    if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
-      reanimatedModuleProxy->performOperations();
-    }
-  }];
+  if constexpr (!StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    std::weak_ptr<ReanimatedModuleProxy> weakReanimatedModuleProxy = reanimatedModuleProxy;
+    [nodesManager registerPerformOperations:^() {
+      if (auto reanimatedModuleProxy = weakReanimatedModuleProxy.lock()) {
+        reanimatedModuleProxy->performOperations();
+      }
+    }];
+  }
 
   return reanimatedModuleProxy;
 }

@@ -12,6 +12,8 @@ import type {
 } from 'react-native-reanimated';
 import type { ShadowNodeWrapper } from 'react-native-reanimated/lib/typescript/commonTypes';
 
+import type { TestFailure } from './utils/remoteProtocol';
+
 export type CallTracker = {
   UICallsCount: number;
   JSCallsCount: number;
@@ -60,6 +62,7 @@ export type TestSuite = {
   buildSuite: MaybeAsync<void>;
   testCases: TestCase[];
   nestingLevel: number;
+  runtimeTestSuiteName?: string;
   beforeAll?: MaybeAsync<void>;
   afterAll?: MaybeAsync<void>;
   beforeEach?: MaybeAsync<void>;
@@ -156,6 +159,21 @@ export type TestConfiguration = {
   render: Dispatch<SetStateAction<ReactNode | null>>;
   onProgress?: (progress: TestProgress) => void;
   onSuiteFinished?: (suiteName: string) => void;
+  onReloadRequested?: (
+    resumeFromSuite: string,
+    summarySoFar: TestRunSummary
+  ) => void;
+};
+
+export type { TestFailure };
+
+export type TestRunSummary = {
+  passed: number;
+  failed: number;
+  skipped: number;
+  failedTests: string[];
+  failures: TestFailure[];
+  durationMs: number;
 };
 
 export type Mismatch = {
@@ -197,6 +215,9 @@ declare global {
     value: Record<string, unknown>
   ) => void;
   var _obtainProp: (shadowNodeWrapper: unknown, propName: string) => string;
+  var __stashSerializableForReload: (value: unknown) => void;
+  var __takeSerializablesStashedForReload: () => object[];
+  var __countLiveSerializablesTakenAfterReload: () => number;
   var _obtainMountedViewProps: (
     tag: number,
     presented: boolean

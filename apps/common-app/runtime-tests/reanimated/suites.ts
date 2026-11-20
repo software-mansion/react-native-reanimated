@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+
 import type { RuntimeTestSuite } from '../types';
 
 type Describe = (name: string, buildSuite: () => void) => void;
 
-export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
+const SUITES: RuntimeTestSuite[] = [
+  {
+    testSuiteName: 'matrixInterpolation',
+    importTest: () =>
+      require('./tests/animations/withTiming/transformMatrices.test'),
+  },
   {
     testSuiteName: 'animations',
     importTest: () => {
@@ -18,8 +24,6 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
         // TODO: Fix this test - tag is not passed to _updateProps, so the recordAnimationUpdates function always receives tag as undefined
         // Uncomment test when fixed
         // require('./tests/animations/withTiming/easing.test');
-        // TODO: snapshots are stale - the test records 63 updates, the snapshot has 64
-        // require('./tests/animations/withTiming/transformMatrices.test');
       });
       describe('*****withSpring*****', () => {
         require('./tests/animations/withSpring/variousConfig.test');
@@ -46,6 +50,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'core',
     importTest: () => {
       require('./tests/core/useAnimatedRef.test');
+      require('./tests/core/useAnimatedRefRetention.test');
       require('./tests/core/getAnimatableRef.test');
       // TODO: update expected values
       // require('./tests/core/cancelAnimation.test');
@@ -65,6 +70,9 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
       require('./tests/core/useSharedValue/animationsCompilerApi.test');
+      require('./tests/core/updatesWithoutAnimation.test');
+      require('./tests/core/idleFrames.test');
+      require('./tests/core/mapperErrors.test');
       // TODO: onLayout event isn't working on Android
       // require('./tests/core/onLayout.test');
     },
@@ -73,6 +81,9 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'event handlers',
     importTest: () => {
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
+      require('./tests/events/hostReplacement.test');
+      require('./tests/events/microtasksInEventHandler.test');
+      require('./tests/events/scrollDrivenStyle.test');
     },
   },
   {
@@ -80,6 +91,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
+      require('./tests/props/settledPropsSyncInterval.test');
       require('./tests/props/boxShadow.test');
       require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');
@@ -165,6 +177,8 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations entering',
     importTest: () => {
       require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+      require('./tests/layoutAnimations/entering/userNativeID.test');
+      require('./tests/layoutAnimations/startError.test');
     },
   },
   {
@@ -192,7 +206,10 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrier.test');
       require('./tests/layoutAnimations/sharedTransitionAnimatedStyle.test');
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
+      require('./tests/layoutAnimations/sharedTransitionCarrierReactProps.test');
+      require('./tests/layoutAnimations/sharedTransitionMovingTarget.test');
       require('./tests/layoutAnimations/sharedTransitionGesture.test');
+      require('./tests/layoutAnimations/sharedTransitionWindow.test');
       require('./tests/layoutAnimations/sharedTransitionFadeContent.test');
       require('./tests/layoutAnimations/sharedTransitionFadeProgress.test');
       require('./tests/layoutAnimations/sharedTransitionNested.test');
@@ -200,6 +217,15 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionTransform.test');
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
+      require('./tests/layoutAnimations/sharedTransitionStart.test');
+      require('./tests/layoutAnimations/sharedTransitionScreenSlide.test');
+      require('./tests/layoutAnimations/sharedTransitionCallback.test');
+    },
+  },
+  {
+    testSuiteName: 'screen transition events',
+    importTest: () => {
+      require('./tests/layoutAnimations/screenTransitionEvents.test');
     },
   },
   {
@@ -224,6 +250,12 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations with React Native LayoutAnimation',
     importTest: () => {
       require('./tests/layoutAnimations/reactNativeLayoutAnimation.test');
+    },
+  },
+  {
+    testSuiteName: 'layout animations with a deferred LayoutAnimation removal',
+    importTest: () => {
+      require('./tests/layoutAnimations/reactNativeLayoutAnimationRemoveOrder.test');
     },
   },
   {
@@ -261,3 +293,5 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
 ];
+
+export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES;

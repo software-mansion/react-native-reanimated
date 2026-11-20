@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import path from 'path';
 
+import { warnAboutDangerousRelativePaths } from './imports';
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
 export function initializeState(state: WorkletsPluginPass) {
@@ -11,6 +12,11 @@ export function initializeState(state: WorkletsPluginPass) {
   state.workletNumber = 1;
 
   const userImportForwarding = state.opts.importForwarding;
+
+  warnAboutDangerousRelativePaths(
+    userImportForwarding?.relativePaths,
+    state.opts.silenceDangerousPathsWarning
+  );
 
   assert(
     state.importForwarding === undefined,

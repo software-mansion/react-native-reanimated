@@ -8,15 +8,20 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   render,
   test,
   useTestRef,
+  waitForFrames,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
+
+const DELAY = 400;
 
 const COMPONENT_REF = {
   first: 'firstComponent',
@@ -51,7 +56,7 @@ const IndependentComponents = ({
 
   useEffect(() => {
     widths.value = withDelay(
-      400,
+      DELAY,
       withTiming(finalWidths, {
         duration,
       })
@@ -122,6 +127,7 @@ describe('withTiming animation of ARRAY', () => {
     'Animate independent components ${speed}ms FROM ${startWidths} TO ${finalWidths}',
     async ({ startWidths, finalWidths, scalars: passedScalars, speed }) => {
       const scalars: [number, number, number] = passedScalars || [1, 1, 1];
+      await mockAnimationTimer({ autoAdvance: false });
       await render(
         <IndependentComponents
           startWidths={startWidths}
@@ -133,8 +139,10 @@ describe('withTiming animation of ARRAY', () => {
       const components = Object.values(COMPONENT_REF).map((refName) =>
         getTestComponent(refName)
       );
+      // The effect starts the animation on the UI thread, before the clock moves.
+      await waitForFrames(3);
+      await advanceAnimationTimer(DELAY / 2);
       let index = 0;
-      index = 0;
       for (const component of components) {
         expect(await component.getAnimatedStyle('width')).toBe(
           startWidths[index] * scalars[index],
@@ -142,6 +150,8 @@ describe('withTiming animation of ARRAY', () => {
         );
         index += 1;
       }
+      await advanceAnimationTimer(DELAY / 2);
+      await advanceAnimationTimer(speed);
       index = 0;
       for (const component of components) {
         await expectEventually(() => component.getAnimatedStyle('width')).toBe(

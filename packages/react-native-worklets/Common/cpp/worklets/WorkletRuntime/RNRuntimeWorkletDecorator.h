@@ -19,8 +19,10 @@ class RNRuntimeWorkletDecorator {
       const std::shared_ptr<JSLogger> &jsLogger,
       const std::shared_ptr<RNRuntimeStatus> &rnRuntimeStatus);
 
-#ifdef IS_REANIMATED_EXAMPLE_APP
  private:
+  static void installReloadTestBindings(jsi::Runtime &rnRuntime);
+
+#ifdef IS_REANIMATED_EXAMPLE_APP
   static void installDebugBindings(jsi::Runtime &rnRuntime);
 #endif // IS_REANIMATED_EXAMPLE_APP
 };

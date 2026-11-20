@@ -346,10 +346,14 @@ describe('Shared transition keeps the moving view props', () => {
     const moving = sample.value;
     expect(moving).not.toBe(null);
     expect(moving?.width).toBe(60, ComparisonMode.PIXEL);
-    expect(moving?.backgroundColor).toBe(
-      original?.backgroundColor,
-      ComparisonMode.COLOR
-    );
+    if (sourceColor) {
+      expect(moving?.backgroundColor).toBe(
+        original?.backgroundColor,
+        ComparisonMode.COLOR
+      );
+    } else {
+      expect(moving?.backgroundColor.slice(-2)).toBe('00');
+    }
     await waitForNotification('style-copy-finished');
     await expectEventually(
       async () =>

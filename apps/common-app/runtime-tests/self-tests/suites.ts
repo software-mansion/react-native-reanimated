@@ -8,6 +8,12 @@ export const SELF_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'failure summary',
+    importTest: () => {
+      require('./tests/FailureSummary.test');
+    },
+  },
+  {
     testSuiteName: 'intentional failures',
     skipByDefault: true,
     importTest: () => {

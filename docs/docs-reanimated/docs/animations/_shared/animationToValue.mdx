@@ -11,6 +11,6 @@ The value on which the animation will come at rest. Supported categories:
   - Named colors - e.g. `"dodgerblue"`.
 - **objects** - object with properties that will be animated separately,
 - **array** - array of numbers, each value will be animated separately.
-- **transformation matrix** - an array consisting of exactly 16 numerical values is by default animated as a transformation matrix. The numbers in the matrix aren't animated separately. Instead, the array gets decomposed into 3 basic transformations - rotation, scale, and translation – which are then animated separately.
+- **transformation matrix** - an array consisting of exactly 16 numerical values is by default animated as a transformation matrix. The matrix is decomposed into rotation, scale, skew, translation, and perspective, which are animated separately. Singular matrices, such as a transform with zero scale, use interpolation of individual matrix entries instead.
 
 Please mind, that `toValue` and the animated shared value have to share the same category (e.g. you can't animate `width` from `100px` to `50%`).
