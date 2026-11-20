@@ -73,6 +73,11 @@ jobs:
       - name: Install Worklets
         working-directory: ${{ env.APP_NAME }}
         run: yarn add "react-native-worklets@https://github.com/software-mansion/react-native-reanimated.git#workspace=react-native-worklets&commit=${{ github.sha }}"
+      - name: Install Android NDK
+        if: ${{ matrix.platform == 'Android' }}
+        uses: $/.github/actions/install-android-ndk
+        with:
+          gradle-file: ${{ env.APP_NAME }}/android/build.gradle
       - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         if: ${{ matrix.platform == 'iOS' }}
         with:

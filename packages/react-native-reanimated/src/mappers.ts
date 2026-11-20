@@ -1,7 +1,5 @@
 'use strict';
 
-import { scheduleOnUI } from 'react-native-worklets';
-
 import { IS_JEST } from './common';
 import type {
   Mapper,
@@ -88,6 +86,7 @@ function createMapperRegistry() {
     if (processingMappers) {
       return;
     }
+    let wasInterrupted = false;
     try {
       processingMappers = true;
       if (mappers.size !== sortedMappers.length) {
@@ -95,12 +94,14 @@ function createMapperRegistry() {
       }
       if (isAnyMapperDirty) {
         isAnyMapperDirty = false;
+        wasInterrupted = true;
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
             mapper.dirty = false;
             mapper.worklet();
           }
         }
+        wasInterrupted = false;
       }
     } finally {
       processingMappers = false;
@@ -109,6 +110,19 @@ function createMapperRegistry() {
       for (const finalizer of finalizers) {
         finalizer();
       }
+      if (wasInterrupted && sortedMappers.some((mapper) => mapper.dirty)) {
+        isAnyMapperDirty = true;
+        requestRunAfterInterruption();
+      }
+    }
+  }
+
+  function requestRunAfterInterruption() {
+    if (IS_JEST) {
+      mapperRun();
+    } else if (!runRequested) {
+      schedulingFunction(scheduledMapperRun);
+      runRequested = true;
     }
   }
 
@@ -225,7 +239,7 @@ export function startMapper(
 ): number {
   const mapperID = (MAPPER_ID += 1);
 
-  scheduleOnUI(() => {
+  requestAnimationFrame(() => {
     let mapperRegistry = global.__mapperRegistry;
     if (mapperRegistry === undefined) {
       mapperRegistry = global.__mapperRegistry = createMapperRegistry();
@@ -237,8 +251,7 @@ export function startMapper(
 }
 
 export function stopMapper(mapperID: number): void {
-  scheduleOnUI(() => {
-    const mapperRegistry = global.__mapperRegistry;
-    mapperRegistry?.stop(mapperID);
+  requestAnimationFrame(() => {
+    global.__mapperRegistry?.stop(mapperID);
   });
 }

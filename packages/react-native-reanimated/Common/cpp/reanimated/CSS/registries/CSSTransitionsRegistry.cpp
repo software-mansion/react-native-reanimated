@@ -1,7 +1,7 @@
 #include <reanimated/CSS/registries/CSSTransitionsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <string>
@@ -127,9 +127,9 @@ void CSSTransitionsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
     }
 
     auto &transition = it->second;
-    const auto updates = transition->takeUpdates();
+    auto updates = transition->takeUpdates();
     if (!updates.empty()) {
-      addUpdatesToBatch(transition->getShadowNodeFamily(), updates);
+      addUpdatesToBatch(transition->getShadowNodeFamily(), std::move(updates));
     }
   }
 

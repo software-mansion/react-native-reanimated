@@ -1,0 +1,64 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+import * as ApiScheduleOnRuntimeSnippet from './_examples/apiScheduleOnRuntime';
+import ApiScheduleOnRuntimeSource from '!!raw-loader!./_examples/apiScheduleOnRuntime';
+
+# scheduleOnRuntime
+
+`scheduleOnRuntime` lets you schedule a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) to be executed on a [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+## Reference
+
+<ThreadingSimulation module={ApiScheduleOnRuntimeSnippet} source={ApiScheduleOnRuntimeSource}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
+    workletRuntime: WorkletRuntime,
+    worklet: (...args: Args) => ReturnValue,
+    ...args: Args
+  ): void;
+  ```
+</details>
+
+## Arguments
+
+### workletRuntime
+
+The worklet runtime to schedule the worklet function on.
+
+### worklet
+
+A reference to a function you want to execute on the [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+### args
+
+Arguments to the function you want to execute on the [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime).
+
+## Remarks
+
+- The worklet function is scheduled on the Worker Runtime's [Async
+  Queue](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/Common/cpp/worklets/RunLoop/AsyncQueue.h)
+
+## Call table
+
+<CallTable
+  bundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: true,
+workerRuntime: true,
+}}
+/>
+
+## Platform compatibility
+
+<PlatformTable native={true} web={false}/>

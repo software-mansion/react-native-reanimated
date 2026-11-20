@@ -2,6 +2,9 @@
 sidebar_position: 3
 ---
 
+import * as ApiGetRuntimeKindSnippet from '../utility/_examples/apiGetRuntimeKind';
+import ApiGetRuntimeKindSource from '!!raw-loader!../utility/_examples/apiGetRuntimeKind';
+
 # Runtime kinds
 
 The Worklets library differentiates between two types of runtimes - **React Native Runtime** and **Worklet Runtimes**. **Worklet Runtimes** are further divided into **UI Runtime** and **Worker Runtimes**.
@@ -43,3 +46,5 @@ A Worklet Runtime spawned by [createWorkletRuntime](../threading/createWorkletRu
 You can customize its behavior and the thread it runs on.
 
 There can be multiple Worker Runtimes in your app running at the same time.
+
+<ThreadingSimulation module={ApiGetRuntimeKindSnippet} source={ApiGetRuntimeKindSource}/>

@@ -4,7 +4,16 @@ import clsx from 'clsx';
 import RecordingPhone from '@site/src/components/RecordingPhone';
 import styles from './styles.module.css';
 
-export type BlockKind = 'tap' | 'handler' | 'busy' | 'ui' | 'worker';
+export type BlockKind =
+  | 'tap'
+  | 'handler'
+  | 'busy'
+  | 'ui'
+  | 'worker'
+  | 'frame'
+  | 'rnFrame'
+  | 'busyTask'
+  | 'uiFrame';
 
 export interface TimelineBlock {
   from: number;
@@ -16,13 +25,13 @@ export interface TimelineBlock {
 
 export interface TimelineLane {
   title: string;
-  tag?: string;
   accent: 'ui' | 'js' | 'worker';
   rows?: number;
   blocks: TimelineBlock[];
 }
 
 interface LaneTimelineProps {
+  name: string;
   label: string;
   duration: number;
   lanes: TimelineLane[];
@@ -33,6 +42,7 @@ interface LaneTimelineProps {
 const ROW_HEIGHT = 46;
 
 export default function LaneTimeline({
+  name,
   label,
   duration,
   lanes,
@@ -66,7 +76,7 @@ export default function LaneTimeline({
   }, [duration]);
 
   return (
-    <figure className={styles.figure} aria-label={label}>
+    <figure data-figure={name} className={styles.figure} aria-label={label}>
       <div className={styles.layout}>
         <div className={styles.scene}>
           <div className={styles.lanes} ref={lanesRef}>
@@ -75,9 +85,6 @@ export default function LaneTimeline({
                 key={lane.title}
                 className={clsx(styles.lane, styles[lane.accent])}>
                 <span className={styles.title}>{lane.title}</span>
-                {lane.tag !== undefined && (
-                  <span className={styles.tag}>{lane.tag}</span>
-                )}
                 <div
                   className={styles.track}
                   style={{ height: ROW_HEIGHT * (lane.rows ?? 1) }}>

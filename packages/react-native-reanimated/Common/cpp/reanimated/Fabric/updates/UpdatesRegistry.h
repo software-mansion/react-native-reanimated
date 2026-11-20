@@ -1,7 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Fabric/ShadowTreeCloner.h>
 
 #include <react/renderer/animationbackend/AnimatedProps.h>
@@ -9,6 +9,7 @@
 #include <react/renderer/animationbackend/AnimationBackend.h>
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -50,6 +51,7 @@ class UpdatesRegistry {
   virtual bool isEmpty() const;
   folly::dynamic get(Tag tag) const;
   void mergeInto(Tag tag, folly::dynamic &target) const;
+  std::optional<folly::dynamic> getProp(Tag tag, const char *propName) const;
 #ifdef ANDROID
   void mergeInto(Tag tag, folly::dynamic &target, PropNamePredicate isIncluded) const;
 #endif
@@ -98,6 +100,7 @@ class UpdatesRegistry {
 
   /// Assumes the caller already locked the registry.
   void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, const folly::dynamic &props);
+  void addUpdatesToBatch(const ShadowNodeFamily::Shared &shadowNodeFamily, folly::dynamic &&props);
 
   /// Assumes the caller already locked the registry.
   std::unordered_set<Tag> getPendingTags() const;

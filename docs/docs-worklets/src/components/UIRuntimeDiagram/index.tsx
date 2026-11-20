@@ -28,19 +28,18 @@ const handlers: TimelineBlock[] = TAPS.map((time) => ({
 export default function UIRuntimeDiagram() {
   return (
     <LaneTimeline
+      name="UIRuntimeDiagram"
       label="The tap handler running on the UI Runtime on the UI thread"
       duration={DURATION}
       lanes={[
         {
           title: 'UI thread',
-          tag: 'UI Runtime',
           accent: 'ui',
           rows: 2,
           blocks: [...taps, ...handlers],
         },
         {
           title: 'JS thread',
-          tag: 'RN Runtime',
           accent: 'js',
           blocks: [
             {

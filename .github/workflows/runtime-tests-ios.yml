@@ -18,11 +18,15 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
       sanitizer:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -32,11 +36,15 @@ on:
       configuration:
         required: false
         type: string
-        default: DebugRuntimeTests
+        default: Debug
       sanitizer:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -54,12 +62,13 @@ jobs:
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
-      CONFIGURATION: ${{ inputs.configuration || 'DebugRuntimeTests' }}
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
       SANITIZER_FLAG: ${{ inputs.sanitizer && format('--sanitizer {0}', inputs.sanitizer) || '' }}
+      FULL_FLAG: ${{ inputs.full && '--full' || '' }}
       SANITIZER_SKIP_BUILD_FLAG: ${{ inputs.sanitizer && '--skip-build' || '' }}
       USE_CCACHE_LAUNCHER: 1
     concurrency:
-      group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ inputs.sanitizer }}
+      group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.sanitizer }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -123,13 +132,13 @@ jobs:
       - name: Build app (sanitizer)
         if: ${{ inputs.sanitizer }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION" $SANITIZER_FLAG
+        run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION" $SANITIZER_FLAG
 
       - name: Run ReJest self-tests (builds the app)
         id: self-tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          node scripts/runtime-tests-server.js --launch --library self-tests
+          node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library self-tests
           --configuration "$CONFIGURATION" $SANITIZER_SKIP_BUILD_FLAG --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
 
       - name: Report ccache statistics
@@ -139,7 +148,7 @@ jobs:
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          if node scripts/runtime-tests-server.js --launch --library self-tests
+          if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library self-tests
           --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
           --only "intentional failures";
           then echo "A failing suite did not fail the runner" && exit 1;
@@ -148,40 +157,28 @@ jobs:
       - name: Run Worklets runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          node scripts/runtime-tests-server.js --launch --library worklets
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+          node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library worklets
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG $FULL_FLAG
 
       - name: Run Reanimated runtime tests (reuses the build)
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >-
-          node scripts/runtime-tests-server.js --launch --library reanimated
-          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG
+          node --experimental-strip-types scripts/runtime-tests-server.mts --launch --library reanimated
+          --configuration "$CONFIGURATION" --skip-build --connect-timeout 900 --idle-timeout 900 $SANITIZER_FLAG $FULL_FLAG
 
       - name: Upload crash reports
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-crash-reports-${{ inputs.configuration || 'DebugRuntimeTests' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
+          name: ios-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14
 
       # With halt_on_error=0 a detected race does not fail the tests that
       # triggered it, so the collected reports have to fail the job here.
+      # Reports listed in sanitizer-known-issues.json are warnings only.
       - name: Fail on sanitizer reports
         if: ${{ always() && inputs.sanitizer != '' }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          shopt -s nullglob
-          reports=(sanitizer-reports/*)
-          if [ ${#reports[@]} -eq 0 ]; then
-            echo "No sanitizer reports."
-            exit 0
-          fi
-          for report in "${reports[@]}"; do
-            echo "::group::$report"
-            cat "$report"
-            echo "::endgroup::"
-          done
-          echo "::error::The ${{ inputs.sanitizer }} sanitizer produced ${#reports[@]} report file(s), printed above."
-          exit 1
+        run: node --experimental-strip-types scripts/sanitizer-reports.mts --sanitizer "${{ inputs.sanitizer }}"

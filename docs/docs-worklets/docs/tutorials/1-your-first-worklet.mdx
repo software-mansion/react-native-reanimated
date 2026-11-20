@@ -2,6 +2,9 @@
 sidebar_position: 10
 ---
 
+import * as CreateWorkerSnippet from './_your-first-worklet/createWorker';
+import CreateWorkerSource from '!!raw-loader!./_your-first-worklet/createWorker';
+
 import * as FirstWorkletAsyncSnippet from './_your-first-worklet/firstWorkletAsync';
 import FirstWorkletAsyncSource from '!!raw-loader!./_your-first-worklet/firstWorkletAsync';
 import * as FirstWorkletSyncSnippet from './_your-first-worklet/firstWorkletSync';
@@ -14,29 +17,22 @@ import FirstWorkletArgsSource from '!!raw-loader!./_your-first-worklet/firstWork
 In this chapter we'll learn the basics of dispatching your JavaScript code to
 [Worklet Runtimes](../concepts/runtimeKinds.mdx#worklet-runtime) to execute in parallel, using
 worklet
-functions. We strongly recommend you to become acknowledged with the
-[concurrency model](./0-concurrency-model.mdx) before continuing.
+functions. We strongly recommend reading about the [concurrency model](./0-concurrency-model.mdx) before continuing.
 
 ## Creating a Worklet Runtime
 
 To actually dispatch some multithreading work, we need another Worklet Runtime as a target. We can
 either use the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime) which is always available,
-or create our own [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime) with
-[`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) function.
+or create our own [Worker Runtime](../concepts/runtimeKinds.mdx#worker-runtime) with the [`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) function.
 
-```js
-import {createWorkletRuntime} from 'react-native-worklets';
-const worker = createWorkletRuntime();
-```
+<ThreadingSimulation autoplay={false} module={CreateWorkerSnippet} source={CreateWorkerSource}/>
 
 In the next steps we'll dispatch some work to our new Worker Runtime and the UI Runtime.
 
 ## Asynchronous execution
 
-Let's start small with dispatching functions that perform only a `console.log` on different
-runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show
-that they indeed are dispatched to different thread, with
-[`getCurrentThreadId`](../utility/getCurrentThreadId.mdx) function. This function prints the result
+Let's start small by dispatching functions that perform only a `console.log` on different Runtimes. We'll print the TID (platform-specific thread id) of the executing thread too, to show
+that they are indeed dispatched to different threads, with the [`getCurrentThreadId`](../utility/getCurrentThreadId.mdx) function. This function returns the result
 of [`std::this_thread::get_id`](https://en.cppreference.com/w/cpp/thread/get_id).
 
 We'll use [`scheduleOnUI`](../threading/scheduleOnUI.mdx) to dispatch to the UI Runtime and
@@ -44,42 +40,57 @@ We'll use [`scheduleOnUI`](../threading/scheduleOnUI.mdx) to dispatch to the UI 
 functions are fire-and-forget style — they return immediately after dispatching the worklet
 function, without waiting for it to complete, and do not yield any result.
 
-<ThreadingSimulation module={FirstWorkletAsyncSnippet} source={FirstWorkletAsyncSource}/>
+<ThreadingSimulation autoplay={false} module={FirstWorkletAsyncSnippet} source={FirstWorkletAsyncSource}/>
 
-The log invocations returned different TID for each call, as we actually dispatched the
-worklet function to different threads.
+The logs show a different TID for each call, because we dispatched the worklet function to different threads.
 
 ## Synchronous execution
 
-Sometimes you might want to execute a worklet function synchronously, from the same thread, but on
-the other Runtime. For that purpose the Worklets library exposes
+Sometimes you might want to execute a worklet function synchronously, from the same thread, but on another Runtime. For that purpose, the Worklets library exposes
 [`runOnUISync`](../threading/runOnUISync.mdx) and
-[`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) methods. These methods are blocking — they
-return only after the worklet function has completed. If a different thread is currently using the Runtime, these methods will wait for the targeted Runtime to be released before executing the worklet function.
+[`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) functions. These functions are blocking — they
+return only after the worklet function has completed. If a different thread is currently using the Runtime, these functions wait for the target Runtime to be released before executing the worklet function.
 
-<ThreadingSimulation module={FirstWorkletSyncSnippet} source={FirstWorkletSyncSource}/>
+<ThreadingSimulation autoplay={false} module={FirstWorkletSyncSnippet} source={FirstWorkletSyncSource}/>
 
-All three logs gave us the same result, there was no thread hopping involved.
+All three logs show the same TID, because no thread hopping was involved.
 
 Knowing when to delegate something asynchronously and when to do it synchronously is the difference
-between smooth user experience and a bad one. Rule of thumb is that **if the operation is not
+between a smooth user experience and a bad one. The rule of thumb is that **if the operation is not
 critical for the UI, it should be dispatched asynchronously.**
 
 ## Passing arguments
 
-If the worklet function you want to call takes arguments, you have to pass them as extra parameters
-for a given method invocation.
+If the worklet function you want to call takes arguments, you have to pass them as extra arguments to the scheduling function.
 
-<ThreadingSimulation module={FirstWorkletArgsSnippet} source={FirstWorkletArgsSource}/>
+<ThreadingSimulation autoplay={false} module={FirstWorkletArgsSnippet} source={FirstWorkletArgsSource}/>
 
 ## Autoworkletization
 
 In previous code snippets we always marked worklet functions with the `'worklet'` directive.
-However, in most cases you can omit the directive. Worklets Babel plugin
+However, in most cases you can omit the directive. The Worklets plugin
 [automatically detects](../worklets-plugin/about.mdx#autoworkletization) which functions should
-be
-treated as worklet functions and applies the transformation regardless. In the future examples we
-will omit the directive whenever applicable.
+be treated as worklet functions and applies the transformation regardless. Both versions below work
+the same:
 
-And talking about the future examples, in the next chapter we'll learn how to return results from
+```js title="With the directive"
+function logTid() {
+  'worklet';
+  console.log(getCurrentThreadId());
+}
+
+scheduleOnUI(logTid);
+```
+
+```js title="Without the directive"
+function logTid() {
+  console.log(getCurrentThreadId());
+}
+
+scheduleOnUI(logTid);
+```
+
+In future examples, we will omit the directive whenever possible.
+
+In the next chapter, we'll learn how to return results from
 worklet functions.

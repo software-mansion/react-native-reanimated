@@ -4,11 +4,28 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { displaySource } from '../display';
-import { unindent } from './helpers';
+import { snippetSource, unindent } from './helpers';
 
 const SNIPPETS_DIR = join(__dirname, '..', 'snippets');
 
 describe('displaySource', () => {
+  it('shows React imports and maps the failing callback to its visible line', () => {
+    const source = snippetSource('returningCallbackCrash');
+    const { text, rawToDisplayLine } = displaySource(source, {
+      boilerplate: true,
+    });
+    assert.match(text, /import \{ useState \} from 'react';/);
+    assert.doesNotMatch(text, /@site|resetHooks|yield|function\*/);
+    const rawLine =
+      source
+        .split('\n')
+        .findIndex((line) => line.includes('yield setState(result)')) + 1;
+    assert.match(
+      text.split('\n')[rawToDisplayLine[rawLine] - 1],
+      /setState\(result\)/
+    );
+  });
+
   it('shows only the imports the displayed code uses when boilerplate is on', () => {
     const source = unindent(`
       import { scheduleOnUI, updateScreen } from '../worklets';
@@ -68,12 +85,10 @@ describe('displaySource', () => {
       unindent(`
         function Counter() {
           const [count, setCount] = useState(0);
-
           useEffect(() => {
             const interval = setInterval(() => increment(setCount), 1000);
             return () => clearInterval(interval);
           }, []);
-
           return (
             <View>
               <Text>{count}</Text>
@@ -87,15 +102,15 @@ describe('displaySource', () => {
       `)
     );
     assert.equal(rawToDisplayLine[19], 2);
-    assert.equal(rawToDisplayLine[21], 4);
-    assert.equal(rawToDisplayLine[26], 9);
-    assert.equal(rawToDisplayLine[34], 17);
+    assert.equal(rawToDisplayLine[21], 3);
+    assert.equal(rawToDisplayLine[26], 7);
+    assert.equal(rawToDisplayLine[34], 15);
     assert.equal(rawToDisplayLine[37], -1);
     assert.deepEqual(
       [...blockEnds],
       [
-        [4, 7],
-        [9, 13],
+        [3, 6],
+        [7, 11],
       ]
     );
   });

@@ -104,6 +104,7 @@ const LayoutTransitions = new Set([
 const LayoutAnimations = new Set([
   ...EntryExitAnimations,
   ...LayoutTransitions,
+  'SharedTransition',
 ]);
 
 const BaseAnimationsChainableMethods = new Set([
@@ -114,12 +115,15 @@ const BaseAnimationsChainableMethods = new Set([
   'randomDelay',
   'getDelay',
   'getDelayFunction',
+  'reduceMotion',
+  'withCallback',
 ]);
 
 const ComplexAnimationsChainableMethods = new Set([
   'easing',
   'rotate',
   'springify',
+  'dampingRatio',
   'damping',
   'mass',
   'stiffness',
@@ -128,6 +132,7 @@ const ComplexAnimationsChainableMethods = new Set([
   'restDisplacementThreshold',
   'restSpeedThreshold',
   'withInitialValues',
+  'withTargetValues',
   'getAnimationAndConfig',
 ]);
 
@@ -141,13 +146,25 @@ const DefaultTransitionChainableMethods = new Set([
   'reverse',
 ]);
 
+const SharedTransitionChainableMethods = new Set([
+  'fadeContent',
+  'custom',
+  'progressAnimation',
+  'defaultTransitionType',
+]);
+
 const LayoutAnimationsChainableMethods = new Set([
   ...BaseAnimationsChainableMethods,
   ...ComplexAnimationsChainableMethods,
   ...DefaultTransitionChainableMethods,
+  ...SharedTransitionChainableMethods,
 ]);
 
-const LayoutAnimationsCallbacks = new Set(['withCallback']);
+const LayoutAnimationsCallbacks = new Set([
+  'withCallback',
+  'custom',
+  'progressAnimation',
+]);
 
 export function isLayoutAnimationCallback(
   path: NodePath<WorkletizableFunction>

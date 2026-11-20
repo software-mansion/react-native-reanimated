@@ -20,13 +20,13 @@ const taps: TimelineBlock[] = [...TAPS, BUSY_TAP].map((time) => ({
 export default function SameThreadRuntimeDiagram() {
   return (
     <LaneTimeline
+      name="SameThreadRuntimeDiagram"
       label="The tap handler moved to a second runtime that still runs on the JS thread"
       duration={DURATION}
       lanes={[
         { title: 'UI thread', accent: 'ui', blocks: taps },
         {
           title: 'JS thread',
-          tag: 'RN Runtime + new Runtime',
           accent: 'js',
           blocks: [
             { from: 1.5, to: 1.5 + HANDLER, label: 'onTap', kind: 'ui' },

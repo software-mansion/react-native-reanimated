@@ -16,6 +16,26 @@ runs:
     - name: Check docs packages share dependency versions
       shell: bash
       run: node ./scripts/validate-docs-versions.js
+    - name: Check released versions have docs versions
+      shell: bash
+      env:
+        TARGET_BRANCH: ${{ github.base_ref || github.event.merge_group.base_ref || github.ref_name }}
+      run: |
+        if [ "${TARGET_BRANCH#refs/heads/}" != main ]; then
+          echo "Skipped: the docs are published from main, and $TARGET_BRANCH is not main."
+          exit 0
+        fi
+        node --experimental-strip-types ./scripts/validate-docs-released-versions.mts
+    - name: Check old docs URLs keep working after the next docs version
+      shell: bash
+      env:
+        TARGET_BRANCH: ${{ github.base_ref || github.event.merge_group.base_ref || github.ref_name }}
+      run: |
+        if [ "${TARGET_BRANCH#refs/heads/}" != main ]; then
+          echo "Skipped: the docs are published from main, and $TARGET_BRANCH is not main."
+          exit 0
+        fi
+        node --experimental-strip-types ./scripts/validate-docs-redirects.mts
 
     - name: Lint check Reanimated docs
       shell: bash
