@@ -93,13 +93,15 @@ function removeWebAnimation(
     CUSTOM_WEB_ANIMATIONS_ID
   ) as HTMLStyleElement;
 
+  // The callback can insert another animation, which shifts the indices, so it has to run
+  // before the index is read.
+  animationRemoveCallback();
+
   const currentAnimationIndex = animationNameToIndex.get(animationName);
 
   if (currentAnimationIndex === undefined) {
     throw new Error('[Reanimated] Failed to obtain animation index.');
   }
-
-  animationRemoveCallback();
 
   styleTag.sheet?.deleteRule(currentAnimationIndex);
 
@@ -115,6 +117,48 @@ function removeWebAnimation(
     }
 
     animationNameToIndex.set(animationNameList[i], nextAnimationIndex - 1);
+  }
+}
+
+/**
+ * Copies the last frame of a custom animation into the inline style of the
+ * element. An animation that fills forwards keeps showing its last frame only
+ * while its keyframes exist, and it overrides inline styles for that time.
+ * Inline styles keep the frame after the keyframes are removed, and later
+ * updates can change them.
+ */
+export function applyLastAnimationFrame(
+  element: HTMLElement,
+  animationName: string
+) {
+  const styleTag = document.getElementById(
+    CUSTOM_WEB_ANIMATIONS_ID
+  ) as HTMLStyleElement | null;
+  const animationIndex = animationNameToIndex.get(animationName);
+
+  if (!styleTag?.sheet || animationIndex === undefined) {
+    return;
+  }
+
+  const keyframes = styleTag.sheet.cssRules[animationIndex] as
+    | CSSKeyframesRule
+    | undefined;
+  const lastFrame = Array.from(keyframes?.cssRules ?? []).find(
+    (rule) => (rule as CSSKeyframeRule).keyText === '100%'
+  ) as CSSKeyframeRule | undefined;
+
+  if (!lastFrame) {
+    return;
+  }
+
+  for (const property of Array.from(lastFrame.style)) {
+    // The easing of a frame is not a part of its style.
+    if (property !== 'animation-timing-function') {
+      element.style.setProperty(
+        property,
+        lastFrame.style.getPropertyValue(property)
+      );
+    }
   }
 }
 
