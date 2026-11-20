@@ -62,20 +62,8 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Set up the requested bundle mode
-        run: |
-          if grep -q 'bundleMode: true' "${APP_DIR}/babel.config.js"; then
-            committed=true
-          else
-            committed=false
-          fi
-          echo "committed bundle mode: ${committed}, this job measures: ${{ matrix.bundleMode }}"
-          if [ "${committed}" = "${{ matrix.bundleMode }}" ]; then
-            yarn install --immutable
-          else
-            # Toggling runs its own install, so no separate one is needed.
-            bash scripts/toggle-bundle-mode.sh
-          fi
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
 
       - name: Resolve Reanimated and Worklets from the app
         if: matrix.reanimatedRange != 'main'
@@ -89,8 +77,14 @@ jobs:
             "react-native-worklets@${{ matrix.workletsVersion }}"
 
       - name: Make the released Worklets plugin write worklet origins
-        if: matrix.reanimatedRange != 'main' && matrix.bundleMode
+        if: matrix.reanimatedRange != 'main'
         run: node --experimental-strip-types .github/workflows/helper/patch-worklets-attribution.ts
+
+      - name: Enable Bundle Mode in the released Worklets plugin
+        if: matrix.reanimatedRange != 'main'
+        run: |
+          sed -i 's/^const workletsPluginOptions = {$/&\n  bundleMode: true,/' "${APP_DIR}/babel.config.js"
+          grep -q '^  bundleMode: true,$' "${APP_DIR}/babel.config.js"
 
       - name: Report what is actually installed
         id: installed
@@ -115,10 +109,11 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Measure bundle cost
+        env:
+          WORKLETS_PLUGIN: ${{ matrix.reanimatedRange != 'main' && 'babel' || '' }}
         run: |
           node scripts/measure-bundle-cost.mts \
             --platform=ios,android \
-            --bundle-mode=${{ matrix.bundleMode }} \
             --json > /tmp/raw.json
           cat /tmp/raw.json
 
@@ -127,26 +122,23 @@ jobs:
           REANIMATED_VERSION: ${{ matrix.reanimatedVersion }}
           WORKLETS_VERSION: ${{ matrix.workletsVersion }}
           REACT_NATIVE_VERSION: ${{ steps.installed.outputs.react-native }}
-          BUNDLE_MODE: ${{ matrix.bundleMode }}
         run: |
           mkdir -p /tmp/bundle-cost-results
           jq \
             --arg reanimated "$REANIMATED_VERSION" \
             --arg worklets "$WORKLETS_VERSION" \
             --arg reactNative "$REACT_NATIVE_VERSION" \
-            --argjson bundleMode "$BUNDLE_MODE" \
-            'del(.mode) as $results | {
+            '. as $results | {
                reanimatedVersion: $reanimated,
                workletsVersion: $worklets,
                reactNativeVersion: $reactNative,
-               bundleMode: $bundleMode,
                results: $results
-             }' /tmp/raw.json > "/tmp/bundle-cost-results/${REANIMATED_VERSION}-bundle-mode-${BUNDLE_MODE}.json"
+             }' /tmp/raw.json > "/tmp/bundle-cost-results/${REANIMATED_VERSION}.json"
 
       - name: Upload result
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: bundle-cost-${{ matrix.reanimatedVersion }}-bundle-mode-${{ matrix.bundleMode }}
+          name: bundle-cost-${{ matrix.reanimatedVersion }}
           path: /tmp/bundle-cost-results/*.json
 
   daily-status-report:
