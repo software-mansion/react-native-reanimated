@@ -32,3 +32,13 @@ export function transform(
   filename: string,
   options?: TransformOptions
 ): TransformResult;
+
+export interface RestoredPositions {
+  source?: string;
+  positions: number[];
+}
+
+export function restoreWorkletPositions(
+  code: string,
+  positions: number[]
+): RestoredPositions | null;

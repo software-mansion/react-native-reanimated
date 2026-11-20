@@ -1421,6 +1421,67 @@ var require_webOptimization = __commonJS({
   }
 });
 
+// lib/workletFileSourceMap.js
+var require_workletFileSourceMap = __commonJS({
+  "lib/workletFileSourceMap.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.appendWorkletSourceMap = appendWorkletSourceMap;
+    exports2.restoreWorkletFileLocations = restoreWorkletFileLocations;
+    var core_1 = require("@babel/core");
+    var trace_mapping_1 = require("@jridgewell/trace-mapping");
+    var SOURCE_MAP_COMMENT_PREFIX = "# workletSourceMap=";
+    var ORIGIN_COMMENT_PREFIX = " __workletOrigin:";
+    function appendWorkletSourceMap(code, map) {
+      const encoded = Buffer.from(JSON.stringify(map)).toString("base64");
+      return `${code}
+//${SOURCE_MAP_COMMENT_PREFIX}${encoded}
+`;
+    }
+    function restoreWorkletFileLocations(file) {
+      var _a, _b, _c;
+      const comments = (_a = file.ast.comments) !== null && _a !== void 0 ? _a : [];
+      const sourceMapComment = comments.find((comment) => comment.value.startsWith(SOURCE_MAP_COMMENT_PREFIX));
+      if (!sourceMapComment) {
+        return;
+      }
+      const map = new trace_mapping_1.TraceMap(Buffer.from(sourceMapComment.value.slice(SOURCE_MAP_COMMENT_PREFIX.length), "base64").toString("utf8"));
+      const lineOffset = ((_b = comments[0]) === null || _b === void 0 ? void 0 : _b.value.startsWith(ORIGIN_COMMENT_PREFIX)) && ((_c = comments[0].loc) === null || _c === void 0 ? void 0 : _c.start.line) === 1 ? 1 : 0;
+      const toOriginal = (position) => {
+        const needle = {
+          line: position.line - lineOffset,
+          column: position.column
+        };
+        const lower = (0, trace_mapping_1.originalPositionFor)(map, Object.assign(Object.assign({}, needle), { bias: trace_mapping_1.GREATEST_LOWER_BOUND }));
+        const original = lower.line !== null ? lower : (0, trace_mapping_1.originalPositionFor)(map, Object.assign(Object.assign({}, needle), { bias: trace_mapping_1.LEAST_UPPER_BOUND }));
+        if (original.line === null) {
+          return null;
+        }
+        return {
+          position: { line: original.line, column: original.column, index: 0 },
+          source: original.source
+        };
+      };
+      let lastStart = null;
+      (0, core_1.traverse)(file.ast, {
+        enter(path) {
+          var _a2, _b2, _c2, _d;
+          const { loc } = path.node;
+          if (!loc || path.isProgram()) {
+            return;
+          }
+          const start = (_a2 = toOriginal(loc.start)) !== null && _a2 !== void 0 ? _a2 : lastStart;
+          if (!start) {
+            return;
+          }
+          lastStart = start;
+          path.node.loc = Object.assign(Object.assign({}, loc), { filename: (_b2 = start.source) !== null && _b2 !== void 0 ? _b2 : loc.filename, start: start.position, end: (_d = (_c2 = toOriginal(loc.end)) === null || _c2 === void 0 ? void 0 : _c2.position) !== null && _d !== void 0 ? _d : start.position });
+        }
+      });
+    }
+  }
+});
+
 // lib/closure.js
 var require_closure = __commonJS({
   "lib/closure.js"(exports2) {
@@ -1520,6 +1581,7 @@ var require_generate = __commonJS({
     var path_1 = require("path");
     var imports_1 = require_imports();
     var types_2 = require_types();
+    var workletFileSourceMap_12 = require_workletFileSourceMap();
     function generateWorkletFile(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a, _b;
       const libraryImports = Array.from(moduleBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
@@ -1533,19 +1595,23 @@ var require_generate = __commonJS({
         ...imports,
         ...factory.params.length === 0 ? [...statements, (0, types_12.exportDefaultDeclaration)(returnedWorklet.argument)] : [(0, types_12.exportDefaultDeclaration)(factory)]
       ]);
-      const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
+      const transformed = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: [resolvePresetTypescript()],
         plugins: [stripJsxDevAttributesPlugin],
         ast: false,
         babelrc: false,
         configFile: false,
-        comments: false
-      })) === null || _a === void 0 ? void 0 : _a.code;
+        comments: false,
+        sourceMaps: !state.opts.disableSourceMaps,
+        sourceFileName: (_a = state.file.opts.filename) !== null && _a !== void 0 ? _a : void 0
+      });
+      const transformedProg = transformed === null || transformed === void 0 ? void 0 : transformed.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      const withSourceMap = (transformed === null || transformed === void 0 ? void 0 : transformed.map) ? (0, workletFileSourceMap_12.appendWorkletSourceMap)(transformedProg, transformed.map) : transformedProg;
       const output = process.env.WORKLETS_WRITE_ORIGIN ? `// __workletOrigin: ${(_b = state.file.opts.filename) !== null && _b !== void 0 ? _b : "unknown"}
-${transformedProg}` : transformedProg;
+${withSourceMap}` : withSourceMap;
       (0, fs_1.writeFileSync)(dedicatedFilePath, output);
     }
     function resolvePresetTypescript() {
@@ -2209,6 +2275,7 @@ var globals_1 = require_globals();
 var inlineStylesWarning_1 = require_inlineStylesWarning();
 var types_1 = require_types();
 var webOptimization_1 = require_webOptimization();
+var workletFileSourceMap_1 = require_workletFileSourceMap();
 var workletSubstitution_1 = require_workletSubstitution();
 module.exports = function WorkletsBabelPlugin() {
   function runWithTaggedExceptions(state, fun) {
@@ -2229,6 +2296,9 @@ module.exports = function WorkletsBabelPlugin() {
     pre() {
       runWithTaggedExceptions(this, () => {
         (0, globals_1.initializeState)(this);
+        if (this.skipFile) {
+          (0, workletFileSourceMap_1.restoreWorkletFileLocations)(this.file);
+        }
         this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },

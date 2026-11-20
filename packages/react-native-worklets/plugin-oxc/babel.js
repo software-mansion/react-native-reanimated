@@ -9,6 +9,8 @@ const oxc = require('./index.js');
 // to preserve correct mappings
 const remapping = require('@jridgewell/remapping');
 
+const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
+
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
 
@@ -24,6 +26,12 @@ let cachedSyntaxTypescript;
 function workletsPluginOxcBabelShim(babelApi) {
   return {
     name: 'worklets-oxc-plugin',
+    pre(file) {
+      const filename = file.opts.filename?.replace(/\\/g, '/');
+      if (filename?.includes(GENERATED_WORKLETS_DIR)) {
+        restoreWorkletFileLocations(file);
+      }
+    },
     visitor: {
       Program: {
         enter(programPath, state) {
@@ -53,6 +61,54 @@ function workletsPluginOxcBabelShim(babelApi) {
       },
     },
   };
+}
+
+/** @param {import('@babel/core').BabelFile} file */
+function restoreWorkletFileLocations(file) {
+  /** @type {import('@babel/core').NodePath[]} */
+  const paths = [];
+  /** @type {number[]} */
+  const positions = [];
+  file.path.traverse({
+    enter(path) {
+      const { loc } = path.node;
+      if (loc) {
+        paths.push(path);
+        positions.push(
+          loc.start.line,
+          loc.start.column,
+          loc.end.line,
+          loc.end.column
+        );
+      }
+    },
+  });
+
+  const restored = oxc.restoreWorkletPositions(file.code, positions);
+  if (!restored) {
+    return;
+  }
+
+  let lastStart = null;
+  paths.forEach((path, index) => {
+    const [startLine, startColumn, endLine, endColumn] =
+      restored.positions.slice(index * 4, index * 4 + 4);
+    const start =
+      startLine >= 0
+        ? { line: startLine, column: startColumn, index: 0 }
+        : lastStart;
+    if (!start) {
+      return;
+    }
+    lastStart = start;
+    path.node.loc = {
+      ...path.node.loc,
+      filename: restored.source ?? path.node.loc.filename,
+      start,
+      end:
+        endLine >= 0 ? { line: endLine, column: endColumn, index: 0 } : start,
+    };
+  });
 }
 
 /**

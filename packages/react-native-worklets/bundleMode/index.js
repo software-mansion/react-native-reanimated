@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 
 const workletsPackageParentDir = path.resolve(__dirname, '../..');
@@ -38,11 +39,35 @@ function bundleModeResolveRequest(
   );
 }
 
+const workletSourceMapCommentRegex = /^\/\/# workletSourceMap=(\S+)$/m;
+
+function bundleModeCustomizeFrame(/** @type {any} */ frame) {
+  const file = frame.file?.replace(/\\/g, '/');
+  if (!file || !file.includes(workletsDirPath)) {
+    return undefined;
+  }
+  try {
+    const match = fs
+      .readFileSync(frame.file, 'utf8')
+      .match(workletSourceMapCommentRegex);
+    if (!match) {
+      return undefined;
+    }
+    const map = JSON.parse(Buffer.from(match[1], 'base64').toString('utf8'));
+    return map.sources?.[0] ? { file: map.sources[0] } : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Use in React Native Community projects. */
 const bundleModeMetroConfig = {
   serializer: {
     createModuleIdFactory: bundleModeCreateModuleIdFactory,
     polyfillModuleNames: [prepareBundleModePolyfillPath],
+  },
+  symbolicator: {
+    customizeFrame: bundleModeCustomizeFrame,
   },
   resolver: {
     resolveRequest: (
@@ -67,6 +92,15 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
     ...(config.serializer.polyfillModuleNames ?? []),
     prepareBundleModePolyfillPath,
   ];
+
+  const currentCustomizeFrame = config.symbolicator?.customizeFrame;
+  config.symbolicator = {
+    ...config.symbolicator,
+    customizeFrame: async (/** @type {any} */ frame) => ({
+      ...(await currentCustomizeFrame?.(frame)),
+      ...bundleModeCustomizeFrame(frame),
+    }),
+  };
 
   const currentResolveRequest = config?.resolver?.resolveRequest;
   config.resolver.resolveRequest = (

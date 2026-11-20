@@ -21,6 +21,7 @@ import { dirname, resolve } from 'path';
 import { createImportPathLiteral } from './imports';
 import type { WorkletsPluginPass } from './types';
 import { generatedWorkletsDir } from './types';
+import { appendWorkletSourceMap } from './workletFileSourceMap';
 
 export function generateWorkletFile(
   moduleBindingsToImport: Set<Binding>,
@@ -79,7 +80,7 @@ export function generateWorkletFile(
       : [exportDefaultDeclaration(factory)]),
   ]);
 
-  const transformedProg = transformFromAstSync(newProg, undefined, {
+  const transformed = transformFromAstSync(newProg, undefined, {
     filename: state.file.opts.filename,
     presets: [resolvePresetTypescript()],
     plugins: [stripJsxDevAttributesPlugin],
@@ -87,15 +88,22 @@ export function generateWorkletFile(
     babelrc: false,
     configFile: false,
     comments: false,
-  })?.code;
+    sourceMaps: !state.opts.disableSourceMaps,
+    sourceFileName: state.file.opts.filename ?? undefined,
+  });
+  const transformedProg = transformed?.code;
 
   assert(transformedProg, '[Worklets] `transformedProg` is undefined.');
 
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
 
-  const output = process.env.WORKLETS_WRITE_ORIGIN
-    ? `// __workletOrigin: ${state.file.opts.filename ?? 'unknown'}\n${transformedProg}`
+  const withSourceMap = transformed?.map
+    ? appendWorkletSourceMap(transformedProg, transformed.map)
     : transformedProg;
+
+  const output = process.env.WORKLETS_WRITE_ORIGIN
+    ? `// __workletOrigin: ${state.file.opts.filename ?? 'unknown'}\n${withSourceMap}`
+    : withSourceMap;
 
   writeFileSync(dedicatedFilePath, output);
 }
