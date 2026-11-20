@@ -1782,9 +1782,12 @@ var require_workletStringCode = __commonJS({
           path.remove();
         }
       });
-      const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
+      const { code, map } = (0, generator_1.default)(workletFunction, {
+        sourceMaps: includeSourceMap,
+        inputSourceMap: inputMap
+      });
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
@@ -1794,7 +1797,7 @@ var require_workletStringCode = __commonJS({
         extraPresets: state.opts.extraPresets,
         compact: true,
         sourceMaps: includeSourceMap,
-        inputSourceMap: inputMap,
+        inputSourceMap: map !== null && map !== void 0 ? map : void 0,
         ast: false,
         babelrc: false,
         configFile: false,
@@ -1930,7 +1933,7 @@ var require_workletFactory = __commonJS({
       } else {
         mutatedClosureVariables = closureVariables;
       }
-      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, transformed.map);
+      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, codeObject.map);
       (0, assert_1.strict)(funString, "`funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
