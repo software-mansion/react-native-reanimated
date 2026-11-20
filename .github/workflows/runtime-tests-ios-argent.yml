@@ -306,6 +306,18 @@ jobs:
           node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library reanimated --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
 
+      - name: Fetch app logs from the remote simulator
+        if: failure() && steps.sim.outputs.udid != ''
+        continue-on-error: true
+        timeout-minutes: 10
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          UDID: ${{ steps.sim.outputs.udid }}
+        run: |
+          mkdir -p crash-reports
+          sim-remote logs "$UDID" --kind unified --kind crash --process FabricExample --last 5m \
+            --archive crash-reports/ios-remote-logs-on-failure.tar.gz
+
       - name: Upload crash reports
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
