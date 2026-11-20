@@ -56,7 +56,6 @@ void WorkletsModuleProxyInitializer::prepareBundleModeAOT(const BundleModeConfig
 
 std::shared_ptr<WorkletsModuleProxy> WorkletsModuleProxyInitializer::finalize(
     jsi::Runtime &rnRuntime,
-    const bool bundleModeEnabled,
     const BundleModeConfigLoader &loadBundleModeConfig) {
   react_native_assert(jsScheduler_->canInvokeSyncOnJS() && "finalize must be called on the JS thread");
   bool startedAOT = false;
@@ -72,8 +71,7 @@ std::shared_ptr<WorkletsModuleProxy> WorkletsModuleProxyInitializer::finalize(
   if (startedAOT) {
     proxy->attachToRNRuntime(rnRuntime, std::nullopt);
   } else {
-    proxy->attachToRNRuntime(
-        rnRuntime, bundleModeEnabled ? loadBundleModeConfig() : BundleModeConfig{.enabled = false});
+    proxy->attachToRNRuntime(rnRuntime, loadBundleModeConfig());
   }
   return proxy;
 }
