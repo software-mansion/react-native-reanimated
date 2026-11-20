@@ -9,27 +9,15 @@ sidebar_label: 'Babel plugin options'
 
 import CodeBlock from '@theme/CodeBlock';
 
-Our plugin offers several optional functionalities that you may need to employ advanced APIs:
+The plugin needs no options to work. The ones it offers let you run third party code inside worklet functions and extend the transform it applies to them:
 
 <details>
   <summary>Type definitions</summary>
 
   ```typescript
   interface PluginOptions {
-    bundleMode?: boolean;
-    disableInlineStylesWarning?: boolean;
-    disableSourceMaps?: boolean;
-    disableWorkletClasses?: boolean;
     extraPlugins?: string[];
     extraPresets?: string[];
-    getHBCBinary?: () => string;
-    globals?: string[];
-    hermesBytecode?: boolean;
-    omitNativeOnlyData?: boolean;
-    relativeSourceLocation?: boolean;
-    silenceDangerousPathsWarning?: boolean;
-    strictGlobal?: boolean;
-    substituteWebPlatformChecks?: boolean;
     importForwarding?: {
       moduleNames?: string[];
       relativePaths?: string[];
@@ -44,13 +32,10 @@ Using this is straightforward for Babel plugins; you just need to pass an object
 
 Here's an example:
 
-```js {13-16}
+```js {10-13}
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
-  bundleMode: true,
-  disableInlineStylesWarning: true,
-  globals: ['myObjectOnUI'],
-  substituteWebPlatformChecks: true,
+  importForwarding: { moduleNames: ['my-library'] },
 }
 
 module.exports = {
@@ -80,6 +65,19 @@ This is a list of Babel plugins that will be used when transforming worklet func
 Defaults to an empty array.
 
 This is a list of Babel presets that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
+
+<Badges version="0.14.0">
+  ### silenceDangerousPathsWarning
+</Badges>
+
+Defaults to `false`.
+
+The plugin prints a warning when an
+[`importForwarding.relativePaths`](#importforwardingrelativepaths) entry has only
+common folder names, such as `src`, `lib`, `app` or `app/src`. Such a path also
+matches folders inside packages in `node_modules`. Set this option to `true` to
+hide the warning, for example when you have checked that the path matches only
+your code.
 
 ### importForwarding
 
@@ -295,7 +293,7 @@ Use a sequence of segments that only your code has, for example
 the sequence does not also occur in the paths of your dependencies. For example,
 `my-library` also matches `node_modules/other-lib/my-library/index.js`.
 
-In Bundle Mode, the plugin prints a warning when a path has only common folder names. You can
+The plugin prints a warning when a path has only common folder names. You can
 hide it with [`silenceDangerousPathsWarning`](#silencedangerouspathswarning).
 :::
 
