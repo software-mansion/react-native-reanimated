@@ -243,11 +243,11 @@ const config = {
           },
           {
             from: '/docs/getting-started',
-            to: '/docs/getting-started/installation',
+            to: '/docs/',
           },
           {
             from: '/docs/unreleased/getting-started',
-            to: '/docs/unreleased/getting-started/installation',
+            to: '/docs/unreleased/',
           },
           {
             from: '/docs/worklets-babel-plugin/about',
