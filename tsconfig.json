@@ -28,6 +28,5 @@
       ""
     ]
   },
-  "include": [".", "**/.*", ".github/**/*"],
-  "exclude": ["**/.worklets"]
+  "include": [".", "**/.*", ".github/**/*"]
 }

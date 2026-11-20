@@ -8,11 +8,19 @@ module.exports = {
       preset: '@react-native/jest-preset',
       testEnvironment: 'node',
       modulePathIgnorePatterns: ['lib'],
+      transform: {
+        ...rnJestPreset.transform,
+        '^.+\\.(js|ts|tsx)$': [
+          'babel-jest',
+          { caller: { supportsInlineModules: true } },
+        ],
+      },
       moduleNameMapper: {
         ...rnJestPreset.moduleNameMapper,
         '^react-native-worklets$': '<rootDir>/src/index',
         '^react-native-worklets/(.*)$': ['<rootDir>/src/$1', '<rootDir>/$1'],
       },
+      resolver: '<rootDir>/jest/inlineModuleResolver.js',
       transformIgnorePatterns: [],
       testMatch: ['<rootDir>/__tests__/**/*.native.test.ts'],
     },
@@ -28,8 +36,12 @@ module.exports = {
         '^react-native-worklets/(.*)$': ['<rootDir>/src/$1', '<rootDir>/$1'],
       },
       transform: {
-        '^.+\\.(js|ts|tsx)$': 'babel-jest',
+        '^.+\\.(js|ts|tsx)$': [
+          'babel-jest',
+          { caller: { supportsInlineModules: true } },
+        ],
       },
+      resolver: '<rootDir>/jest/inlineModuleResolver.js',
       transformIgnorePatterns: [],
       testMatch: ['<rootDir>/__tests__/**/*.test.ts'],
       testPathIgnorePatterns: ['\\.native\\.test\\.ts$'],

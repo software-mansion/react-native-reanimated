@@ -51,11 +51,19 @@ const GROUPS: { label: string; test: RegExp }[] = [
   },
 ];
 
-const WORKLETS_GEN = /[/\\]react-native-worklets[/\\]\.worklets[/\\]/;
+const WORKLETS_GEN_MODULE = /^(?:virtual:)?(.*)\.inline-[0-9a-f]+(\.[^./\\]+)$/;
+const WORKLETS_GEN_FILE = /[/\\]react-native-worklets[/\\]\.worklets[/\\]/;
 const ORIGIN_RE = /^\/\/ __workletOrigin: (.*)$/m;
 const originCache = new Map<string, string>();
 
 function resolveWorkletOrigin(file: string, seen?: Set<string>): string {
+  const inlineModule = file.match(WORKLETS_GEN_MODULE);
+  if (inlineModule) {
+    return resolveWorkletOrigin(inlineModule[1] + inlineModule[2], seen);
+  }
+  if (!WORKLETS_GEN_FILE.test(file)) {
+    return file;
+  }
   const cached = originCache.get(file);
   if (cached !== undefined) return cached;
   let origin = file;
@@ -67,7 +75,7 @@ function resolveWorkletOrigin(file: string, seen?: Set<string>): string {
       'worklet file was cleaned up while running the bundle analysis'
     );
   }
-  if (origin !== file && WORKLETS_GEN.test(origin)) {
+  if (origin !== file) {
     seen = seen || new Set();
     if (!seen.has(origin)) {
       seen.add(origin);
@@ -80,9 +88,7 @@ function resolveWorkletOrigin(file: string, seen?: Set<string>): string {
 
 function classify(source: string | null): string {
   if (!source) return 'other';
-  const resolved = WORKLETS_GEN.test(source)
-    ? resolveWorkletOrigin(source)
-    : source;
+  const resolved = resolveWorkletOrigin(source);
   const group = GROUPS.find((g) => g.test.test(resolved));
   return group ? group.label : 'other';
 }

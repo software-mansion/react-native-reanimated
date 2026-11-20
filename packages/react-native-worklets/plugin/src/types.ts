@@ -26,6 +26,7 @@ export interface WorkletsPluginPass {
   workletNumber: number;
   skipFile: boolean;
   importForwarding: InitializedImportForwarding;
+  inlineModules: boolean;
 }
 
 export type WorkletizableFunction =
@@ -76,6 +77,19 @@ export function isWorkletizableObjectNode(
 }
 
 export const generatedWorkletsDir = '.worklets';
+
+export const workletModuleDirective = 'worklet-module';
+
+export const inlineModuleSpecifierPrefix = 'metro:inline;base64,';
+
+export const workletModuleIdBinding = '__workletModuleId';
+
+export const moduleScopeReservedNames = new Set([
+  'module',
+  'exports',
+  'require',
+  'global',
+]);
 
 type InitializedImportForwarding = Required<
   NonNullable<PluginOptions['importForwarding']>

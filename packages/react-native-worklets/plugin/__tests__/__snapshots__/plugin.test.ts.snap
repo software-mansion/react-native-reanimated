@@ -15,7 +15,10 @@ exports[`babel plugin for DirectiveLiterals doesn't transform functions without 
 `;
 
 exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
-"const foo = function (x) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (x) {
   "use no memo";
 
   const bar = "worklet";
@@ -23,12 +26,13 @@ exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
-exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoeCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIHJldHVybiB4ICsgMjsKfTsKZm9vLl9fd29ya2xldEhhc2ggPSAxMjA0NjQ1MjE0MDU2ODsKZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IGZvbzs=").default;"`;
 
-exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoeCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIHJldHVybiB4ICsgMjsKfTsKZm9vLl9fd29ya2xldEhhc2ggPSAxMjA0NjQ1MjE0MDU2ODsKZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IGZvbzs=").default;"`;
 
 exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before 1`] = `
 "FadeIn.AmogusIn().withCallback(() => {
@@ -90,34 +94,38 @@ exports[`babel plugin for Layout Animations doesn't workletize callback function
 });"
 `;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/1.js").default).build();"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDE1ODk0Mjg1MTAxMzExOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default).build();"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/1.js").default).build();"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDE1ODk0Mjg1MTAxMzExOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default).build();"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `"FadeIn.build().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `"FadeIn.build().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYmVmb3JlJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjA3ODY5MDA1MzM0NjsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `"new FadeIn().build().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `"new FadeIn().build().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYmVmb3JlJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjA3ODY5MDA1MzM0NjsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `"FadeIn.build().duration().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `"FadeIn.build().duration().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQnKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDUxMTA5NDgzODQ5MTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `"new FadeIn().build().duration().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `"new FadeIn().build().duration().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQnKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDUxMTA5NDgzODQ5MTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/1.js").default).AmogusIn();"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggQW1vZ3VzSW4gYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEyNTkwNzE5MzkyNzQ4OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default).AmogusIn();"`;
 
-exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/1.js").default).AmogusIn();"`;
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggQW1vZ3VzSW4gYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEyNTkwNzE5MzkyNzQ4OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default).AmogusIn();"`;
 
-exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `"FadeIn.withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSA4NjU4MTA1NjMwMzsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
-exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `"new FadeIn().withCallback(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSA4NjU4MTA1NjMwMzsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
 exports[`babel plugin for async functions makes an async worklet factory 1`] = `
-"const foo = async function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = async function () {
   "use no memo";
 
   await Promise.resolve();
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
@@ -126,11 +134,14 @@ exports[`babel plugin for closure capturing captures worklets environment 1`] = 
 const objX = {
   x
 };
-const f = require("react-native-worklets/.worklets/1.js").default([x, objX]);"
+const f = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZl9udWxsMUZhY3RvcnkoW3gsIG9ialhdKSB7CiAgY29uc3QgZiA9IGZ1bmN0aW9uICgpIHsKICAgICJ1c2Ugbm8gbWVtbyI7CgogICAgcmV0dXJuIHsKICAgICAgcmVzOiB4ICsgb2JqWC54CiAgICB9OwogIH07CiAgZi5fX2Nsb3N1cmUgPSBbeCwgb2JqWF07CiAgZi5fX3dvcmtsZXRIYXNoID0gOTk2Mjg4MDgxMjEwODsKICBmLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CiAgZi5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGY7Cn0pOw==").default([x, objX]);"
 `;
 
 exports[`babel plugin for closure capturing captures worklets environment 2`] = `
-"export default (function f_null1Factory([x, objX]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function f_null1Factory([x, objX]) {
   const f = function () {
     "use no memo";
 
@@ -141,33 +152,41 @@ exports[`babel plugin for closure capturing captures worklets environment 2`] = 
   f.__closure = [x, objX];
   f.__workletHash = 1;
   f.__pluginVersion = "x.y.z";
+  f.__moduleId = __workletModuleId;
   return f;
 });"
 `;
 
-exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `"const f = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `"const f = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmID0gZnVuY3Rpb24gKGEsIGIsIGMpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZyhhcmd1bWVudHMpOwp9OwpmLl9fd29ya2xldEhhc2ggPSAxNzU0NjI4MjYzNTczNTsKZi5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpmLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgZjs=").default;"`;
 
 exports[`babel plugin for closure capturing doesn't capture objects' properties 1`] = `
 "const foo = {
   bar: 42
 };
-const f = require("react-native-worklets/.worklets/1.js").default([foo]);"
+const f = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZl9udWxsMUZhY3RvcnkoW2Zvb10pIHsKICBjb25zdCBmID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICBjb25zb2xlLmxvZyhmb28uYmFyKTsKICB9OwogIGYuX19jbG9zdXJlID0gW2Zvb107CiAgZi5fX3dvcmtsZXRIYXNoID0gNzM4NzAyNzkzMzg2ODsKICBmLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CiAgZi5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGY7Cn0pOw==").default([foo]);"
 `;
 
 exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
-"const null1 = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
   "use no memo";
 
   const x = 1;
 };
 null1.__workletHash = 1;
+null1.__moduleId = __workletModuleId;
 export default null1;"
 `;
 
-exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgcmV0dXJuIHsKICAgIHdpZHRoOiA1MAogIH07Cn07CmZvby5fX3dvcmtsZXRIYXNoID0gMTc1NzM2NDE4MzA5MTA7CmZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpmb28uX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBmb287").default);"`;
 
 exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 2`] = `
-"const foo = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
   "use no memo";
 
   return {
@@ -176,13 +195,17 @@ exports[`babel plugin for function hooks workletizes hook wrapped named Function
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
-exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gewogICAgd2lkdGg6IDUwCiAgfTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEyMzQ0MDc3Mjg1NTc1OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default);"`;
 
 exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 2`] = `
-"const null1 = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
   "use no memo";
 
   return {
@@ -191,16 +214,20 @@ exports[`babel plugin for function hooks workletizes hook wrapped unnamed Functi
 };
 null1.__workletHash = 1;
 null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
 export default null1;"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
-"const style = require("react-native-worklets/.worklets/1.js").default;
+"const style = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gewogICAgY29sb3I6ICdyZWQnLAogICAgYmFja2dyb3VuZENvbG9yOiAnYmx1ZScKICB9Owp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTYyODkzNjU5MzkyNDk7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
 const animatedStyle = useAnimatedStyle(style);"
 `;
 
 exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 2`] = `
-"const null1 = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
   "use no memo";
 
   return {
@@ -210,11 +237,15 @@ exports[`babel plugin for function hooks workletizes hook wrapped worklet refere
 };
 null1.__workletHash = 1;
 null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
 export default null1;"
 `;
 
 exports[`babel plugin for generators makes a generator worklet factory 1`] = `
-"const foo = function* () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function* () {
   "use no memo";
 
   yield "hello";
@@ -222,48 +253,49 @@ exports[`babel plugin for generators makes a generator worklet factory 1`] = `
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
 exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
 
-exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEzMzk4NjE2MTgwNDk0OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default);"`;
 
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
 "useAnimatedScrollHandler({
-  onScroll: require("react-native-worklets/.worklets/1.js").default,
-  onBeginDrag: require("react-native-worklets/.worklets/2.js").default,
-  onEndDrag: require("react-native-worklets/.worklets/3.js").default,
-  onMomentumBegin: require("react-native-worklets/.worklets/4.js").default,
-  onMomentumEnd: require("react-native-worklets/.worklets/5.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTU2OTUyODU1ODY2MDE7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default,
+  onBeginDrag: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gMTU3OTM3ODE5MDUxOTQ7Cm51bGwyLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwyLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDI7").default,
+  onEndDrag: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMy5fX3dvcmtsZXRIYXNoID0gNjY0NTE3ODcwMDcxNTsKbnVsbDMuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDMuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMzs=").default,
+  onMomentumBegin: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsNCA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsNC5fX3dvcmtsZXRIYXNoID0gMTU4MzM0MDY4MjQ3NDg7Cm51bGw0Ll9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGw0Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDQ7").default,
+  onMomentumEnd: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsNSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsNS5fX3dvcmtsZXRIYXNoID0gNjY4Nzg5OTYwNTkzMzsKbnVsbDUuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDUuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsNTs=").default
 });"
 `;
 
-exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoZXZlbnQpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZyhldmVudCk7Cn07CmZvby5fX3dvcmtsZXRIYXNoID0gMzIzNzMyODMxNzMwMzsKZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IGZvbzs=").default);"`;
 
-exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("react-native-worklets/.worklets/1.js").default);"`;
+exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEzMzk4NjE2MTgwNDk0OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default);"`;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
 "useAnimatedScrollHandler({
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEzMzk4NjE2MTgwNDk0OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
 "useAnimatedScrollHandler({
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblNjcm9sbCA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKb25TY3JvbGwuX193b3JrbGV0SGFzaCA9IDE2Mjg5MzAzOTg3Mzg5OwpvblNjcm9sbC5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpvblNjcm9sbC5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG9uU2Nyb2xsOw==").default
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
 "useAnimatedScrollHandler({
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblNjcm9sbCA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKb25TY3JvbGwuX193b3JrbGV0SGFzaCA9IDE2Mjg5MzAzOTg3Mzg5OwpvblNjcm9sbC5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpvblNjcm9sbC5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG9uU2Nyb2xsOw==").default
 });"
 `;
 
 exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
 "useAnimatedScrollHandler({
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEzMzk4NjE2MTgwNDk0OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default
 });"
 `;
 
@@ -291,7 +323,10 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for arrays 1`] = `
-"const foo = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
   "use no memo";
 
   const bar = [4, 5];
@@ -299,33 +334,45 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function arguments 1`] = `
-"const foo = function (...args) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (...args) {
   "use no memo";
 
   console.log(args);
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for function calls 1`] = `
-"const foo = function (arg) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (arg) {
   "use no memo";
 
   console.log(...arg);
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
 exports[`babel plugin for react-native-gesture-handler transforms spread operator in worklets for objects 1`] = `
-"const foo = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
   "use no memo";
 
   const bar = {
@@ -343,27 +390,28 @@ exports[`babel plugin for react-native-gesture-handler transforms spread operato
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
 "const foo = useTapGesture({
   numberOfTaps: 2,
-  onBegin: require("react-native-worklets/.worklets/1.js").default,
-  onStart: require("react-native-worklets/.worklets/2.js").default,
-  onEnd: require("react-native-worklets/.worklets/3.js").default
+  onBegin: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNzkxOTUxMDYwMjgyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default,
+  onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uIChfZXZlbnQpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25TdGFydCcpOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gMjYxODY1MDU0OTM0MzsKbnVsbDIuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDIuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMjs=").default,
+  onEnd: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uIChfZXZlbnQsIF9zdWNjZXNzKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgY29uc29sZS5sb2coJ29uRW5kJyk7Cn07Cm51bGwzLl9fd29ya2xldEhhc2ggPSAxMjkxMjY3MDY3MjI4OTsKbnVsbDMuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDMuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMzs=").default
 });"
 `;
 
-exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `"const foo = Gesture.Tap().numberOfTaps(2).onBegin(require("react-native-worklets/.worklets/1.js").default).onStart(require("react-native-worklets/.worklets/2.js").default).onEnd(require("react-native-worklets/.worklets/3.js").default);"`;
+exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `"const foo = Gesture.Tap().numberOfTaps(2).onBegin(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNzkxOTUxMDYwMjgyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default).onStart(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uIChfZXZlbnQpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25TdGFydCcpOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gMjYxODY1MDU0OTM0MzsKbnVsbDIuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDIuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMjs=").default).onEnd(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uIChfZXZlbnQsIF9zdWNjZXNzKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgY29uc29sZS5sb2coJ29uRW5kJyk7Cn07Cm51bGwzLl9fd29ya2xldEhhc2ggPSAxMjkxMjY3MDY3MjI4OTsKbnVsbDMuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDMuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMzs=").default);"`;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
-"const onStart = require("react-native-worklets/.worklets/1.js").default;
+"const onStart = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTU2OTUyODU1ODY2MDE7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
 const foo = Gesture.Tap().onStart(onStart);"
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
-"const onBegin = require("react-native-worklets/.worklets/1.js").default;
+"const onBegin = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNzkxOTUxMDYwMjgyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 const foo = useTapGesture({
   numberOfTaps: 2,
   onBegin: onBegin
@@ -371,7 +419,7 @@ const foo = useTapGesture({
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
-"const onBegin = require("react-native-worklets/.worklets/1.js").default;
+"const onBegin = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNzkxOTUxMDYwMjgyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 const foo = useTapGesture({
   numberOfTaps: 2,
   onBegin
@@ -380,47 +428,47 @@ const foo = useTapGesture({
 
 exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
 "let styleFactory = () => 1;
-styleFactory = require("react-native-worklets/.worklets/1.js").default;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDgyODA5OTgxMjI0NTc7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
-"const styleFactory = require("react-native-worklets/.worklets/1.js").default;
+"const styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBzdHlsZUZhY3RvcnkgPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgcmV0dXJuICdGdW5jdGlvbkRlY2xhcmF0aW9uJzsKfTsKc3R5bGVGYWN0b3J5Ll9fd29ya2xldEhhc2ggPSAzNzAxMjEwMTI0MTk4OwpzdHlsZUZhY3RvcnkuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKc3R5bGVGYWN0b3J5Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgc3R5bGVGYWN0b3J5Ow==").default;
 styleFactory = () => "AssignmentExpression";
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
 "let styleFactory;
-styleFactory = require("react-native-worklets/.worklets/1.js").default;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
-"let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+"let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 const animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression only on last AssignmentExpression 1`] = `
 "let styleFactory;
 styleFactory = () => 1;
-styleFactory = require("react-native-worklets/.worklets/1.js").default;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDgyODA5OTgxMjI0NTc7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
-"const styleFactory = require("react-native-worklets/.worklets/1.js").default;
+"const styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBzdHlsZUZhY3RvcnkgPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgcmV0dXJuIHt9Owp9OwpzdHlsZUZhY3RvcnkuX193b3JrbGV0SGFzaCA9IDkwNzYzNjU5OTUwNzQ7CnN0eWxlRmFjdG9yeS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpzdHlsZUZhY3RvcnkuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBzdHlsZUZhY3Rvcnk7").default;
 const animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
 "let styleFactory;
-styleFactory = require("react-native-worklets/.worklets/1.js").default;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
-"let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+"let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 const animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
@@ -429,21 +477,21 @@ exports[`babel plugin for referenced worklets workletizes FunctionExpression onl
 styleFactory = function () {
   return 1;
 };
-styleFactory = require("react-native-worklets/.worklets/1.js").default;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDgyODA5OTgxMjI0NTc7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
 "let handler;
 handler = {
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTU2OTUyODU1ODY2MDE7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
 };
 const scrollHandler = useAnimatedScrollHandler(handler);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
 "let handler = {
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTU2OTUyODU1ODY2MDE7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
 };
 const scrollHandler = useAnimatedScrollHandler(handler);"
 `;
@@ -454,7 +502,7 @@ handler = {
   onScroll: () => 1
 };
 handler = {
-  onScroll: require("react-native-worklets/.worklets/1.js").default
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDgyODA5OTgxMjI0NTc7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
 };
 const scrollHandler = useAnimatedScrollHandler(handler);"
 `;
@@ -462,17 +510,17 @@ const scrollHandler = useAnimatedScrollHandler(handler);"
 exports[`babel plugin for referenced worklets workletizes assignments that appear after the worklet is used 1`] = `
 "let styleFactory = () => ({});
 animatedStyle = useAnimatedStyle(styleFactory);
-styleFactory = require("react-native-worklets/.worklets/1.js").default;"
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRBZnRlclVzZSc7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzE1NDYyNzQ5ODM0ODsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;"
 `;
 
 exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
-"let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+"let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 animatedStyle = useAnimatedStyle(styleFactory);"
 `;
 
 exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
 "function outerScope() {
-  let styleFactory = require("react-native-worklets/.worklets/1.js").default;
+  let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
   function innerScope() {
     animatedStyle = useAnimatedStyle(styleFactory);
   }
@@ -480,12 +528,12 @@ exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = 
 `;
 
 exports[`babel plugin for referenced worklets workletizes multiple referencing 1`] = `
-"const secondReference = require("react-native-worklets/.worklets/1.js").default;
+"const secondReference = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQwNDg4NzcyMDY3MDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 const firstReference = secondReference;
 const animatedStyle = useAnimatedStyle(firstReference);"
 `;
 
-exports[`babel plugin for referenced worklets workletizes recursion 1`] = `"const recursiveWorklet = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for referenced worklets workletizes recursion 1`] = `"const recursiveWorklet = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCByZWN1cnNpdmVXb3JrbGV0ID0gZnVuY3Rpb24gKCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGlmICghZ2xvYmFsVGhpcy5fV09SS0xFVCkgewogICAgcnVuT25VSShyZWN1cnNpdmVXb3JrbGV0KSgpOwogIH0KfTsKcmVjdXJzaXZlV29ya2xldC5fX3dvcmtsZXRIYXNoID0gMTM4NzYxODMxNzkwNTsKcmVjdXJzaXZlV29ya2xldC5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpyZWN1cnNpdmVXb3JrbGV0Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgcmVjdXJzaXZlV29ya2xldDs=").default;"`;
 
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
 "function App() {
@@ -498,7 +546,7 @@ exports[`babel plugin for sequence expressions supports SequenceExpression 1`] =
 exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
 "function App() {
   (0, 3, fun)({
-    onStart: require("react-native-worklets/.worklets/1.js").default
+    onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblN0YXJ0ID0gZnVuY3Rpb24gKCkgewogICJ1c2Ugbm8gbWVtbyI7Cn07Cm9uU3RhcnQuX193b3JrbGV0SGFzaCA9IDEyNDQ3OTkzMDE5NDE1OwpvblN0YXJ0Ll9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU3RhcnQuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBvblN0YXJ0Ow==").default
   }, []);
 }"
 `;
@@ -506,7 +554,7 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, many
 exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
 "function App() {
   (0, useAnimatedScrollHandler)({
-    onScroll: require("react-native-worklets/.worklets/1.js").default
+    onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblNjcm9sbCA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpvblNjcm9sbC5fX3dvcmtsZXRIYXNoID0gMTUxMDE1Nzc4MDc2NzQ7Cm9uU2Nyb2xsLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU2Nyb2xsLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgb25TY3JvbGw7").default
   }, []);
 }"
 `;
@@ -514,7 +562,7 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, with
 exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
 "function App() {
   (0, fun)({
-    onStart: require("react-native-worklets/.worklets/1.js").default
+    onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblN0YXJ0ID0gZnVuY3Rpb24gKCkgewogICJ1c2Ugbm8gbWVtbyI7Cn07Cm9uU3RhcnQuX193b3JrbGV0SGFzaCA9IDEyNDQ3OTkzMDE5NDE1OwpvblN0YXJ0Ll9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU3RhcnQuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBvblN0YXJ0Ow==").default
   }, []);
 }"
 `;
@@ -526,18 +574,21 @@ exports[`babel plugin for sequence expressions supports SequenceExpression, with
     b: 2
   };
   (0, fun)({
-    onStart: require("react-native-worklets/.worklets/1.js").default([obj])
+    onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gb25TdGFydF9udWxsMUZhY3RvcnkoW29ial0pIHsKICBjb25zdCBvblN0YXJ0ID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICBjb25zdCBhID0gb2JqLmE7CiAgfTsKICBvblN0YXJ0Ll9fY2xvc3VyZSA9IFtvYmpdOwogIG9uU3RhcnQuX193b3JrbGV0SGFzaCA9IDEzMjI0NjI0ODcyMzA7CiAgb25TdGFydC5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIG9uU3RhcnQuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwogIHJldHVybiBvblN0YXJ0Owp9KTs=").default([obj])
   }, []);
 }"
 `;
 
 exports[`babel plugin for worklet names appends file name to function name 1`] = `
 "const x = 1;
-const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX3NvdXJjZUpzMUZhY3RvcnkoW3hdKSB7CiAgY29uc3QgZm9vID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIGZvby5fX2Nsb3N1cmUgPSBbeF07CiAgZm9vLl9fd29ya2xldEhhc2ggPSAxMTE2NjY5MTE2NzAwMjsKICBmb28uX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKICBmb28uX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwogIHJldHVybiBmb287Cn0pOw==").default([x]);"
 `;
 
 exports[`babel plugin for worklet names appends file name to function name 2`] = `
-"export default (function foo_sourceJs1Factory([x]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_sourceJs1Factory([x]) {
   const foo = function () {
     "use no memo";
 
@@ -546,17 +597,21 @@ exports[`babel plugin for worklet names appends file name to function name 2`] =
   foo.__closure = [x];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
   return foo;
 });"
 `;
 
 exports[`babel plugin for worklet names appends library name to function name 1`] = `
 "const x = 1;
-const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX2xpYnJhcnlfc291cmNlSnMxRmFjdG9yeShbeF0pIHsKICBjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgICAidXNlIG5vIG1lbW8iOwoKICAgIHJldHVybiB4OwogIH07CiAgZm9vLl9fY2xvc3VyZSA9IFt4XTsKICBmb28uX193b3JrbGV0SGFzaCA9IDc5NjEyODUzNjM5NjI7CiAgZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CiAgZm9vLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKICByZXR1cm4gZm9vOwp9KTs=").default([x]);"
 `;
 
 exports[`babel plugin for worklet names appends library name to function name 2`] = `
-"export default (function foo_library_sourceJs1Factory([x]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_library_sourceJs1Factory([x]) {
   const foo = function () {
     "use no memo";
 
@@ -565,17 +620,21 @@ exports[`babel plugin for worklet names appends library name to function name 2`
   foo.__closure = [x];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
   return foo;
 });"
 `;
 
 exports[`babel plugin for worklet names handles names with illegal characters 1`] = `
 "const x = 1;
-const foo = require("react-native-worklets/.worklets/1.js").default([x]);"
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX1NvdXJjZUpzMUZhY3RvcnkoW3hdKSB7CiAgY29uc3QgZm9vID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIGZvby5fX2Nsb3N1cmUgPSBbeF07CiAgZm9vLl9fd29ya2xldEhhc2ggPSAzOTEyNTcwNDM4OTA2OwogIGZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIGZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGZvbzsKfSk7").default([x]);"
 `;
 
 exports[`babel plugin for worklet names handles names with illegal characters 2`] = `
-"export default (function foo_SourceJs1Factory([x]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_SourceJs1Factory([x]) {
   const foo = function () {
     "use no memo";
 
@@ -584,30 +643,38 @@ exports[`babel plugin for worklet names handles names with illegal characters 2`
   foo.__closure = [x];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
   return foo;
 });"
 `;
 
-exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgZm9vKDEpOwp9Owpmb28uX193b3JrbGV0SGFzaCA9IDg1OTI3ODk4NzAzNjQ7CmZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpmb28uX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBmb287").default;"`;
 
 exports[`babel plugin for worklet names preserves recursion 2`] = `
-"const foo = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
   "use no memo";
 
   foo(1);
 };
 foo.__workletHash = 1;
 foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
 exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
 "const x = 1;
-require("react-native-worklets/.worklets/1.js").default([x]);"
+require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gbnVsbDFGYWN0b3J5KFt4XSkgewogIGNvbnN0IG51bGwxID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIG51bGwxLl9fY2xvc3VyZSA9IFt4XTsKICBudWxsMS5fX3dvcmtsZXRIYXNoID0gMTQ4ODg5NTQwNDcxOTY7CiAgbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKICBudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIG51bGwxOwp9KTs=").default([x]);"
 `;
 
 exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 2`] = `
-"export default (function null1Factory([x]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
   const null1 = function () {
     "use no memo";
 
@@ -616,17 +683,21 @@ exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 2`] = `
   null1.__closure = [x];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
   return null1;
 });"
 `;
 
 exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
 "const x = 1;
-[require("react-native-worklets/.worklets/1.js").default([x])]();"
+[require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gbnVsbDFGYWN0b3J5KFt4XSkgewogIGNvbnN0IG51bGwxID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIG51bGwxLl9fY2xvc3VyZSA9IFt4XTsKICBudWxsMS5fX3dvcmtsZXRIYXNoID0gMTQ4ODg5NTQwNDcxOTY7CiAgbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKICBudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIG51bGwxOwp9KTs=").default([x])]();"
 `;
 
 exports[`babel plugin for worklet names unnamed FunctionExpression 2`] = `
-"export default (function null1Factory([x]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
   const null1 = function () {
     "use no memo";
 
@@ -635,38 +706,46 @@ exports[`babel plugin for worklet names unnamed FunctionExpression 2`] = `
   null1.__closure = [x];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
   return null1;
 });"
 `;
 
-exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zdCBiYXIgPSByZXF1aXJlKCJtZXRybzppbmxpbmU7YmFzZTY0LEluZHZjbXRzWlhRdGJXOWtkV3hsSWpzS0NtTnZibk4wSUY5ZmQyOXlhMnhsZEUxdlpIVnNaVWxrSUQwZ2JXOWtkV3hsTG1sa093cGpiMjV6ZENCdWRXeHNNU0E5SUdaMWJtTjBhVzl1SUNncElIc0tJQ0FpZFhObElHNXZJRzFsYlc4aU93b0tJQ0JqYjI1emIyeGxMbXh2WnlnblltRnlKeWs3Q24wN0NtNTFiR3d4TGw5ZmQyOXlhMnhsZEVoaGMyZ2dQU0F4TlRVME56TXdOVEF4TmpVeE1Uc0tiblZzYkRFdVgxOXdiSFZuYVc1V1pYSnphVzl1SUQwZ0luZ3VlUzU2SWpzS2JuVnNiREV1WDE5dGIyUjFiR1ZKWkNBOUlGOWZkMjl5YTJ4bGRFMXZaSFZzWlVsa093cGxlSEJ2Y25RZ1pHVm1ZWFZzZENCdWRXeHNNVHM9IikuZGVmYXVsdDsKICBiYXIoKTsKfTsKbnVsbDIuX193b3JrbGV0SGFzaCA9IDExNTU5Mjg2MDcwNjU5OwpudWxsMi5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMi5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwyOw==").default;"`;
 
-exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `"runOnUI(require("react-native-worklets/.worklets/1.js").default)();"`;
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `"runOnUI(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnSGVsbG8gZnJvbSBVSSB0aHJlYWQnKTsKICBydW5PbkpTKHJlcXVpcmUoIm1ldHJvOmlubGluZTtiYXNlNjQsSW5kdmNtdHNaWFF0Ylc5a2RXeGxJanNLQ21OdmJuTjBJRjlmZDI5eWEyeGxkRTF2WkhWc1pVbGtJRDBnYlc5a2RXeGxMbWxrT3dwamIyNXpkQ0J1ZFd4c01TQTlJR1oxYm1OMGFXOXVJQ2dwSUhzS0lDQWlkWE5sSUc1dklHMWxiVzhpT3dvS0lDQmpiMjV6YjJ4bExteHZaeWduU0dWc2JHOGdabkp2YlNCS1V5QjBhSEpsWVdRbktUc0tmVHNLYm5Wc2JERXVYMTkzYjNKcmJHVjBTR0Z6YUNBOUlERXhNak01TnpRMk56Z3hPREExT3dwdWRXeHNNUzVmWDNCc2RXZHBibFpsY25OcGIyNGdQU0FpZUM1NUxub2lPd3B1ZFd4c01TNWZYMjF2WkhWc1pVbGtJRDBnWDE5M2IzSnJiR1YwVFc5a2RXeGxTV1E3Q21WNGNHOXlkQ0JrWldaaGRXeDBJRzUxYkd3eE93PT0iKS5kZWZhdWx0KSgpOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gNDg1MjI1NzI1MTk0ODsKbnVsbDIuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDIuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMjs=").default)();"`;
 
-exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `"runOnUI(require("react-native-worklets/.worklets/1.js").default)();"`;
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `"runOnUI(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnSGVsbG8gZnJvbSBVSSB0aHJlYWQnKTsKICBydW5PbkpTKHJlcXVpcmUoIm1ldHJvOmlubGluZTtiYXNlNjQsSW5kdmNtdHNaWFF0Ylc5a2RXeGxJanNLQ21OdmJuTjBJRjlmZDI5eWEyeGxkRTF2WkhWc1pVbGtJRDBnYlc5a2RXeGxMbWxrT3dwamIyNXpkQ0J1ZFd4c01pQTlJR1oxYm1OMGFXOXVJQ2dwSUhzS0lDQWlkWE5sSUc1dklHMWxiVzhpT3dvS0lDQmpiMjV6YjJ4bExteHZaeWduU0dWc2JHOGdabkp2YlNCS1V5QjBhSEpsWVdRbktUc0tJQ0J5ZFc1UGJsVkpLSEpsY1hWcGNtVW9JbTFsZEhKdk9tbHViR2x1WlR0aVlYTmxOalFzU1c1a2RtTnRkSE5hV0ZGMFlsYzVhMlJYZUd4SmFuTkxRMjFPZG1KdVRqQkpSamxtWkRJNWVXRXllR3hrUlRGMldraFdjMXBWYkd0SlJEQm5ZbGM1YTJSWGVHeE1iV3hyVDNkd2FtSXlOWHBrUTBKMVpGZDRjMDFUUVRsSlIxb3hZbTFPTUdGWE9YVkpRMmR3U1VoelMwbERRV2xrV0U1c1NVYzFka2xITVd4aVZ6aHBUM2R2UzBsRFFtcGlNalY2WWpKNGJFeHRlSFphZVdkdVUwZFdjMkpIT0dkYWJrcDJZbE5DVmxOVFFqQmhTRXBzV1ZkUloxbFhaR2hoVnpSdVMxUnpTMlpVYzB0aWJsWnpZa1JGZFZneE9UTmlNMHB5WWtkV01GTkhSbnBoUTBFNVNVUmpNVTVFWnpOT1ZFMTNUbFJWTWs1VVdUZERiVFV4WWtkM2VFeHNPV1pqUjNneFdqSnNkVlp0Vm5sak1teDJZbWxCT1VsRFNqUk1ibXQxWldsSk4wTnROVEZpUjNkNFRHdzVabUpYT1d0a1YzaHNVMWRSWjFCVFFtWllNMlIyWTIxMGMxcFlVazVpTWxJeFlrZFdTbHBFYzB0YVdHaDNZak5LTUVsSFVteGFiVVl4WWtoUloySnVWbk5pUkVVM0lpa3VaR1ZtWVhWc2RDa29LVHNLZlRzS2JuVnNiREl1WDE5M2IzSnJiR1YwU0dGemFDQTlJRE14TVRBMU5UQTROamcyT1RFN0NtNTFiR3d5TGw5ZmNHeDFaMmx1Vm1WeWMybHZiaUE5SUNKNExua3VlaUk3Q201MWJHd3lMbDlmYlc5a2RXeGxTV1FnUFNCZlgzZHZjbXRzWlhSTmIyUjFiR1ZKWkRzS1pYaHdiM0owSUdSbFptRjFiSFFnYm5Wc2JESTciKS5kZWZhdWx0KSgpOwp9OwpudWxsMy5fX3dvcmtsZXRIYXNoID0gMTY1NTMyMDA1NjM3ODE7Cm51bGwzLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwzLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDM7").default)();"`;
 
-exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
+exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zdCBiYXIgPSByZXF1aXJlKCJtZXRybzppbmxpbmU7YmFzZTY0LEluZHZjbXRzWlhRdGJXOWtkV3hsSWpzS0NtTnZibk4wSUY5ZmQyOXlhMnhsZEUxdlpIVnNaVWxrSUQwZ2JXOWtkV3hsTG1sa093cGpiMjV6ZENCdWRXeHNNaUE5SUdaMWJtTjBhVzl1SUNncElIc0tJQ0FpZFhObElHNXZJRzFsYlc4aU93b0tJQ0JqYjI1emRDQm1iMjlpWVhJZ1BTQnlaWEYxYVhKbEtDSnRaWFJ5YnpwcGJteHBibVU3WW1GelpUWTBMRWx1WkhaamJYUnpXbGhSZEdKWE9XdGtWM2hzU1dwelMwTnRUblppYms0d1NVWTVabVF5T1hsaE1uaHNaRVV4ZGxwSVZuTmFWV3hyU1VRd1oySlhPV3RrVjNoc1RHMXNhMDkzY0dwaU1qVjZaRU5DZFdSWGVITk5VMEU1U1VkYU1XSnRUakJoVnpsMVNVTm5jRWxJYzB0SlEwRnBaRmhPYkVsSE5YWkpSekZzWWxjNGFVOTNiMHRKUTBKcVlqSTFlbUl5ZUd4TWJYaDJXbmxuYmxwdE9YWlpiVVo1U25sck4wTnVNRGREYlRVeFlrZDNlRXhzT1daa01qbDVZVEo0YkdSRmFHaGpNbWRuVUZOQk0wMTZhekJPVkZFeVRsUkJORTFFVlROUGQzQjFaRmQ0YzAxVE5XWllNMEp6WkZka2NHSnNXbXhqYms1d1lqSTBaMUJUUVdsbFF6VTFURzV2YVU5M2NIVmtWM2h6VFZNMVpsZ3lNWFphU0ZaeldsVnNhMGxFTUdkWU1Ua3pZak5LY21KSFZqQlVWemxyWkZkNGJGTlhVVGREYlZZMFkwYzVlV1JEUW10YVYxcG9aRmQ0TUVsSE5URmlSM2Q0VDNjOVBTSXBMbVJsWm1GMWJIUTdDbjA3Q201MWJHd3lMbDlmZDI5eWEyeGxkRWhoYzJnZ1BTQTRORFV5TmpBeU5UTTRNekE1T3dwdWRXeHNNaTVmWDNCc2RXZHBibFpsY25OcGIyNGdQU0FpZUM1NUxub2lPd3B1ZFd4c01pNWZYMjF2WkhWc1pVbGtJRDBnWDE5M2IzSnJiR1YwVFc5a2RXeGxTV1E3Q21WNGNHOXlkQ0JrWldaaGRXeDBJRzUxYkd3eU93PT0iKS5kZWZhdWx0OwogIGJhcigpOwp9OwpudWxsMy5fX3dvcmtsZXRIYXNoID0gMTE0MzkyMjYzNjMzMDg7Cm51bGwzLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwzLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDM7").default;"`;
 
-exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `"runOnUI(require("react-native-worklets/.worklets/1.js").default)();"`;
+exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `"runOnUI(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zdCBhID0gcmVxdWlyZSgibWV0cm86aW5saW5lO2Jhc2U2NCxJbmR2Y210c1pYUXRiVzlrZFd4bElqc0tDbU52Ym5OMElGOWZkMjl5YTJ4bGRFMXZaSFZzWlVsa0lEMGdiVzlrZFd4bExtbGtPd3BqYjI1emRDQnVkV3hzTVNBOUlHWjFibU4wYVc5dUlDZ3BJSHNLSUNBaWRYTmxJRzV2SUcxbGJXOGlPd29LSUNCamIyNXpiMnhsTG14dlp5Z25SMjl2WkNCdGIzSnVhVzVuSUdaeWIyMGdTbE1nZEdoeVpXRmtJU2NwT3dwOU93cHVkV3hzTVM1ZlgzZHZjbXRzWlhSSVlYTm9JRDBnTVRBM09UZzNOekEwTnpZMk9URTdDbTUxYkd3eExsOWZjR3gxWjJsdVZtVnljMmx2YmlBOUlDSjRMbmt1ZWlJN0NtNTFiR3d4TGw5ZmJXOWtkV3hsU1dRZ1BTQmZYM2R2Y210c1pYUk5iMlIxYkdWSlpEc0taWGh3YjNKMElHUmxabUYxYkhRZ2JuVnNiREU3IikuZGVmYXVsdDsKICBjb25zdCBiID0gcmVxdWlyZSgibWV0cm86aW5saW5lO2Jhc2U2NCxJbmR2Y210c1pYUXRiVzlrZFd4bElqc0tDbU52Ym5OMElGOWZkMjl5YTJ4bGRFMXZaSFZzWlVsa0lEMGdiVzlrZFd4bExtbGtPd3BqYjI1emRDQnVkV3hzTWlBOUlHWjFibU4wYVc5dUlDZ3BJSHNLSUNBaWRYTmxJRzV2SUcxbGJXOGlPd29LSUNCamIyNXpiMnhsTG14dlp5Z25SMjl2WkNCaFpuUmxjbTV2YjI0Z1puSnZiU0JLVXlCMGFISmxZV1FuS1RzS2ZUc0tiblZzYkRJdVgxOTNiM0pyYkdWMFNHRnphQ0E5SURrd01UWTVNRE00T1RFMk5UazdDbTUxYkd3eUxsOWZjR3gxWjJsdVZtVnljMmx2YmlBOUlDSjRMbmt1ZWlJN0NtNTFiR3d5TGw5ZmJXOWtkV3hsU1dRZ1BTQmZYM2R2Y210c1pYUk5iMlIxYkdWSlpEc0taWGh3YjNKMElHUmxabUYxYkhRZ2JuVnNiREk3IikuZGVmYXVsdDsKICBjb25zdCBmdW5jID0gTWF0aC5yYW5kb20oKSA8IDAuNSA/IGEgOiBiOwogIHJ1bk9uSlMoZnVuYykoKTsKfTsKbnVsbDMuX193b3JrbGV0SGFzaCA9IDM4MDUzNTM4NTU1NjM7Cm51bGwzLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwzLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDM7").default)();"`;
 
 exports[`babel plugin generally removes comments from worklets 1`] = `
-"const null1 = function () {
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
   "use no memo";
 
   return true;
 };
 null1.__workletHash = 1;
 null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
 export default null1;"
 `;
 
 exports[`babel plugin generally supports recursive calls 1`] = `
 "const a = 1;
-const foo = require("react-native-worklets/.worklets/1.js").default([a]);"
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX251bGwxRmFjdG9yeShbYV0pIHsKICBjb25zdCBmb28gPSBmdW5jdGlvbiAodCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICBpZiAodCA+IDApIHsKICAgICAgcmV0dXJuIGEgKyBmb28odCAtIDEpOwogICAgfQogIH07CiAgZm9vLl9fY2xvc3VyZSA9IFthXTsKICBmb28uX193b3JrbGV0SGFzaCA9IDEyNzg2MTQ2MzIwOTk4OwogIGZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIGZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGZvbzsKfSk7").default([a]);"
 `;
 
 exports[`babel plugin generally supports recursive calls 2`] = `
-"export default (function foo_null1Factory([a]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_null1Factory([a]) {
   const foo = function (t) {
     "use no memo";
 
@@ -677,6 +756,7 @@ exports[`babel plugin generally supports recursive calls 2`] = `
   foo.__closure = [a];
   foo.__workletHash = 1;
   foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
   return foo;
 });"
 `;
@@ -685,7 +765,7 @@ exports[`babel plugin generally transforms 1`] = `
 "import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 function Box() {
   const offset = useSharedValue(0);
-  const animatedStyles = useAnimatedStyle(require("react-native-worklets/.worklets/1.js").default([offset]));
+  const animatedStyles = useAnimatedStyle(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gbnVsbDFGYWN0b3J5KFtvZmZzZXRdKSB7CiAgY29uc3QgbnVsbDEgPSBmdW5jdGlvbiAoKSB7CiAgICAidXNlIG5vIG1lbW8iOwoKICAgIHJldHVybiB7CiAgICAgIHRyYW5zZm9ybTogW3sKICAgICAgICB0cmFuc2xhdGVYOiBvZmZzZXQudmFsdWUgKiAyNTUKICAgICAgfV0KICAgIH07CiAgfTsKICBudWxsMS5fX2Nsb3N1cmUgPSBbb2Zmc2V0XTsKICBudWxsMS5fX3dvcmtsZXRIYXNoID0gMjEzNzQ4NzU4OTE3MzsKICBudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIG51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKICByZXR1cm4gbnVsbDE7Cn0pOw==").default([offset]));
   return <>
               <Animated.View style={[styles.box, animatedStyles]} />
               <Button onPress={() => offset.value = Math.random()} title="Move" />
@@ -694,7 +774,10 @@ function Box() {
 `;
 
 exports[`babel plugin generally transforms 2`] = `
-"export default (function null1Factory([offset]) {
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([offset]) {
   const null1 = function () {
     "use no memo";
 
@@ -707,6 +790,7 @@ exports[`babel plugin generally transforms 2`] = `
   null1.__closure = [offset];
   null1.__workletHash = 1;
   null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
   return null1;
 });"
 `;

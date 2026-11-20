@@ -4,9 +4,9 @@ import { logger } from '../debug/logger';
 import type { WorkletFactory, WorkletFunction } from '../types';
 
 export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
-  const workletHash = objectToUnpack.__workletHash;
-  if (workletHash !== undefined) {
-    return getWorklet(workletHash, objectToUnpack.__closure);
+  const moduleId = objectToUnpack.__moduleId;
+  if (moduleId !== undefined) {
+    return getWorklet(moduleId, objectToUnpack.__closure);
   } else {
     throw new Error(
       `[Worklets] Data type not recognized by value unpacker: "${globalThis._toString(
@@ -17,20 +17,20 @@ export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
 }
 
 function getWorklet(
-  workletHash: number,
+  moduleId: number | string,
   closureVariables: unknown[] | undefined
 ): WorkletFunction | undefined {
   let worklet;
   if (__DEV__) {
     try {
-      worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
+      worklet = getWorkletFromMetroRequire(moduleId, closureVariables);
     } catch (e) {
       logger.error(
-        `Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${(e as Error).message}`
+        `Unable to resolve worklet from module ${moduleId}. Try reloading the app. Original error: ${(e as Error).message}`
       );
     }
   } else {
-    worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
+    worklet = getWorkletFromMetroRequire(moduleId, closureVariables);
   }
   return worklet;
 }
@@ -38,10 +38,10 @@ function getWorklet(
 const metroRequire = globalThis.__r;
 
 function getWorkletFromMetroRequire(
-  workletHash: number,
+  moduleId: number | string,
   closureVariables: unknown[] | undefined
 ): WorkletFunction {
-  const exportedWorklet = metroRequire(workletHash).default;
+  const exportedWorklet = metroRequire(moduleId).default;
   return closureVariables === undefined
     ? (exportedWorklet as WorkletFunction)
     : (exportedWorklet as WorkletFactory)(closureVariables);
