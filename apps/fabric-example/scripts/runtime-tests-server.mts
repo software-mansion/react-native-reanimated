@@ -34,6 +34,12 @@ import {
   resolveAndroidDevice as resolveAndroidTarget,
 } from './android-device.mts';
 import type { AdbDevice, AndroidTools } from './android-device.mts';
+import {
+  APP_LOGCAT_LINE_LIMIT,
+  filterAppLogcat,
+  parsePidof,
+  PROCESS_DEATH_LINE_LIMIT,
+} from './android-process-diagnostics.mts';
 import { reloadRepeatsSuites, selectSuites } from './runtime-tests-suites.mts';
 
 interface Sanitizer {
@@ -1576,6 +1582,84 @@ async function dumpAndroidCrashDiagnostics() {
   if (nativeReport) {
     await symbolizeNativeCrash(serial, nativeReport, stamp);
   }
+
+  await dumpAndroidProcessDiagnostics(serial, stamp);
+}
+
+async function dumpAndroidProcessDiagnostics(serial: string, stamp: string) {
+  const pids = await adbDiag(serial, ['shell', 'pidof', ANDROID_APP_ID]).then(
+    ({ stdout }) => parsePidof(stdout),
+    () => []
+  );
+  await dumpAppLogcat(serial, stamp, pids);
+  if (pids.length === 0) {
+    console.error(
+      `[runtime-tests] ${ANDROID_APP_ID} is not running, skipping dumpsys meminfo`
+    );
+    return;
+  }
+  await dumpAppMeminfo(serial, stamp, pids);
+}
+
+async function dumpAppLogcat(serial: string, stamp: string, pids: string[]) {
+  const logcat = await adbDiag(serial, [
+    'logcat',
+    '-d',
+    '-b',
+    'main,system,events',
+    '-v',
+    'threadtime',
+  ]).then(
+    ({ stdout }) => stdout,
+    (error) => {
+      console.error(
+        `[runtime-tests] failed to read logcat: ${errorMessage(error)}`
+      );
+      return null;
+    }
+  );
+  if (logcat === null) {
+    return;
+  }
+  const lines = filterAppLogcat(logcat, ANDROID_APP_ID, pids);
+  if (lines.length === 0) {
+    console.error(
+      `[runtime-tests] logcat has no lines of ${ANDROID_APP_ID} or of the low memory killer`
+    );
+    return;
+  }
+  const file = path.join(CRASH_REPORT_DIR, `logcat-app-${stamp}.txt`);
+  fs.writeFileSync(file, `${lines.join('\n')}\n`);
+  console.error(
+    `[runtime-tests] logcat lines of ${ANDROID_APP_ID} and of process kills (last ${APP_LOGCAT_LINE_LIMIT} app lines and ${PROCESS_DEATH_LINE_LIMIT} kill lines of other processes at most, saved to ${file}):`
+  );
+  console.error(lines.join('\n'));
+}
+
+async function dumpAppMeminfo(serial: string, stamp: string, pids: string[]) {
+  const meminfo = await adbDiag(serial, [
+    'shell',
+    'dumpsys',
+    'meminfo',
+    ANDROID_APP_ID,
+  ]).then(
+    ({ stdout }) => stdout,
+    (error) => {
+      console.error(
+        `[runtime-tests] dumpsys meminfo failed: ${errorMessage(error)}`
+      );
+      return null;
+    }
+  );
+  if (!meminfo?.trim()) {
+    return;
+  }
+  const file = path.join(CRASH_REPORT_DIR, `meminfo-${stamp}.txt`);
+  fs.writeFileSync(file, meminfo);
+  console.error(
+    `[runtime-tests] ${ANDROID_APP_ID} is still running (pid ${pids.join(', ')}), dumpsys meminfo (saved to ${file}):`
+  );
+  console.error(headLines(meminfo, 80));
 }
 
 async function readCrashBuffer(serial: string): Promise<string> {
