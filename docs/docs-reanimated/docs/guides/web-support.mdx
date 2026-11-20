@@ -72,15 +72,15 @@ module.exports = {
 
 :::caution
 
-We strongly recommend not opting out of the Worklets Babel plugin, as it is the only configuration we actively test.
+We strongly recommend not opting out of the Worklet Syntax Babel plugin, as it is the only configuration we actively test.
 
 :::
 
 It is possible to use Reanimated without the [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) (`react-native-worklets/plugin`) on the Web, with some additional configuration.
 
-Reanimated hooks all accept optional dependency arrays. Under the hood, Reanimated uses extra data provided by the Worklets Babel plugin to automatically infer these dependencies for you.
+Reanimated hooks all accept optional dependency arrays. Under the hood, Reanimated uses extra data provided by the Worklet Syntax Babel plugin to automatically infer these dependencies for you.
 
-In order to use Reanimated without the Worklets Babel plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
+In order to use Reanimated without the Worklet Syntax Babel plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
 
 Passing a dependency array is valid on both Web and native. Adding them will not negatively impact iOS or Android.
 
