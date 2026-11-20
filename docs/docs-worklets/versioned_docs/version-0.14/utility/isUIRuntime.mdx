@@ -1,0 +1,33 @@
+---
+sidebar_position: 42 # Use alphabetical order
+title: isUIRuntime
+---
+
+import * as ApiIsUIRuntimeSnippet from './_examples/apiIsUIRuntime';
+import ApiIsUIRuntimeSource from '!!raw-loader!./_examples/apiIsUIRuntime';
+
+<Badges version="0.8.0">
+  # isUIRuntime
+</Badges>
+
+Checks if the current runtime is the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
+
+## Reference
+
+<ThreadingSimulation module={ApiIsUIRuntimeSnippet} source={ApiIsUIRuntimeSource}/>
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function isUIRuntime(): boolean;
+  ```
+</details>
+
+### Returns
+
+`true` if the current runtime is the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime), `false` otherwise.
+
+## Remarks
+
+- The function checks the value of `globalThis.__RUNTIME_KIND` to determine the kind of the current runtime. See [getRuntimeKind](./getRuntimeKind.mdx) for more details.

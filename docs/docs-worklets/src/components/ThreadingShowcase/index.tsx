@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import clsx from 'clsx';
 
+import { APP_MS_PER_TICK } from '@site/src/simulation';
 import type { SnippetModule } from '@site/src/simulation';
 import ThreadingSimulation from '@site/src/components/ThreadingSimulation';
 
@@ -95,6 +96,7 @@ export default function ThreadingShowcase({
         onFullscreenChange={setFullscreen}
         durationTicks={durationTicks}
         tickMs={tickMs}
+        timeScale={tickMs / APP_MS_PER_TICK}
       />
     </div>
   );

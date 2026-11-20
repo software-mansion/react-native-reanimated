@@ -1181,6 +1181,41 @@ describe('Endpoint visibility after a cancelled Screen gesture', () => {
       expect(await observer().observeParent(target)).toBe(originalParent);
     }
   );
+
+  gestureTest(
+    'follows its own slot when a reverse gesture interrupts its forward carrier',
+    async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      await render(<Screens sourceActive={false} />);
+      await waitForNotification('gesture-source-appeared');
+      await waitForNotification('gesture-target-appeared');
+      const target = getTestComponent('gestureTarget').getTag();
+      await render(<Screens />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(15000);
+      await expectCarrier(target, 105);
+      const targetScreen = getTestComponent('gestureTargetScreen').getTag();
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0.25,
+        false,
+        false
+      );
+      await waitForFrames(3);
+      const before = (await observer().observeLocationOnScreen(target))!.y;
+      await render(<Screens targetOffset={100} />);
+      await waitForFrames(3);
+      await observer().emitScreenTransitionProgress(
+        targetScreen,
+        0.25,
+        false,
+        false
+      );
+      await waitForFrames(3);
+      const after = (await observer().observeLocationOnScreen(target))!.y;
+      expect(after - before).toBe(25, ComparisonMode.PIXEL);
+    }
+  );
 });
 
 describe('Target style change during native Screen progress', () => {
