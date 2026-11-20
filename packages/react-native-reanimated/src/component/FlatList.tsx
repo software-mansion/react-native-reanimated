@@ -146,12 +146,10 @@ const FlatListRender = function <Item = any>(
     />
   );
 
-  if (skipEnteringExitingAnimations === undefined) {
-    return animatedFlatList;
-  }
-
   return (
-    <LayoutAnimationConfig skipEntering skipExiting>
+    <LayoutAnimationConfig
+      skipEntering={skipEnteringExitingAnimations}
+      skipExiting={skipEnteringExitingAnimations}>
       {animatedFlatList}
     </LayoutAnimationConfig>
   );

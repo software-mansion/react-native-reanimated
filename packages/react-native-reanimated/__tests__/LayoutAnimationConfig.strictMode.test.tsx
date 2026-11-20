@@ -21,7 +21,8 @@ const strictModeWarnings = () =>
     (call) =>
       String(call[0]).includes('is deprecated in StrictMode') &&
       String(call).includes('findNodeHandle') &&
-      call.includes('LayoutAnimationConfig')
+      (call.includes('LayoutAnimationConfig') ||
+        call.includes('LayoutAnimationConfigChild'))
   );
 
 const renderInStrictMode = (children: ReactNode) =>
@@ -44,6 +45,16 @@ describe('LayoutAnimationConfig findNodeHandle deprecation', () => {
 
   test('does not warn when the child forwards its ref', () => {
     const { unmount } = renderInStrictMode(<ForwardsHostInstance />);
+
+    unmount();
+
+    expect(strictModeWarnings()).toHaveLength(0);
+  });
+
+  test('does not warn when the only child of a list forwards its ref', () => {
+    const { unmount } = renderInStrictMode([
+      <ForwardsHostInstance key="child" />,
+    ]);
 
     unmount();
 
