@@ -177,24 +177,22 @@ export const withSpring = ((
 
       animation.startValue = x0;
 
-      if (previousAnimation) {
-        animation.velocity =
-          (triggeredTwice
-            ? previousAnimation?.velocity
-            : previousAnimation?.velocity + config.velocity) || 0;
-      } else {
-        animation.velocity = config.velocity || 0;
-      }
+      let inheritedVelocity = previousAnimation?.velocity || 0;
 
-      // Clip velocity that would drive the first frame away from the new target.
-      // Inertia is only preserved when it already points toward toValue.
+      // Clip inherited velocity that would drive the first frame away from the
+      // new target. Inertia is only preserved when it already points toward
+      // toValue. Velocity passed in the config is applied as given.
       const toValueNum = Number(animation.toValue);
       if (
-        (toValueNum > value && animation.velocity < 0) ||
-        (toValueNum < value && animation.velocity > 0)
+        (toValueNum > value && inheritedVelocity < 0) ||
+        (toValueNum < value && inheritedVelocity > 0)
       ) {
-        animation.velocity = 0;
+        inheritedVelocity = 0;
       }
+
+      animation.velocity = triggeredTwice
+        ? inheritedVelocity
+        : inheritedVelocity + (config.velocity || 0);
 
       if (triggeredTwice) {
         animation.zeta = previousAnimation?.zeta || 0;
