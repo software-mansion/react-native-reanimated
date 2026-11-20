@@ -7,5 +7,9 @@ export default function SVGDiagram({
 }: {
   children: React.ReactNode;
 }) {
-  return <div className={styles.svg}>{children}</div>;
+  return (
+    <div data-figure="SVGDiagram" className={styles.svg}>
+      {children}
+    </div>
+  );
 }

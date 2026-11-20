@@ -2,6 +2,12 @@
 sidebar_position: 3
 ---
 
+import * as AssignRuntimeGlobalSnippet from './_closures/assignRuntimeGlobal';
+import AssignRuntimeGlobalSource from '!!raw-loader!./_closures/assignRuntimeGlobal';
+
+import * as RuntimeGlobalsSnippet from './_closures/runtimeGlobals';
+import RuntimeGlobalsSource from '!!raw-loader!./_closures/runtimeGlobals';
+
 # Understanding closures
 
 ## What are closures in worklet functions?
@@ -127,38 +133,12 @@ In JavaScript, when you use a variable (an [identifier](https://developer.mozill
 
 When you use a global variable inside a worklet function, and invoke it on a runtime - it will access the global scope of that runtime, not the global scope of the original JavaScript Runtime. If the variable doesn't exist in the target runtime's global scope, it will be `undefined`.
 
-```tsx
-global.someValue = 42;
+<ThreadingSimulation module={RuntimeGlobalsSnippet} source={RuntimeGlobalsSource}/>
 
-function logSomeValue() {
-  'worklet';
-  console.log(global.someValue);
-}
+Step through the example and watch **Globals** in each runtime. `someValue` appears on RN, while UI has no value for it. The same function reads `42` on RN and `undefined` on UI because it accesses the global scope of the runtime it runs in.
 
-logSomeValue(); // Prints 42
-// `global` on the UI Runtime doesn't have `someValue`.
-runOnUISync(logSomeValue); // Prints undefined
-```
+To have access to a (copy of a) global variable inside a worklet function on a different runtime, you must explicitly assign it to the `globalThis` object on the target runtime. This can be done with a local reference in the closure:
 
-To have access to a (copy of a) global variable inside a worklet function on a different runtime, you must explicitly assign it to the `global` object on the original runtime. This can be done with a local reference in the closure:
+<ThreadingSimulation module={AssignRuntimeGlobalSnippet} source={AssignRuntimeGlobalSource}/>
 
-```tsx
-global.someValue = 42;
-// Assign to a local variable to capture it in the closure.
-const localSomeValue = global.someValue;
-
-function assignGlobal() {
-  'worklet';
-  // Assign to the worklet's global scope.
-  global.someValue = localSomeValue;
-}
-
-runOnUISync(assignGlobal);
-
-function logSomeValue() {
-  'worklet';
-  console.log(global.someValue);
-}
-
-runOnUISync(logSomeValue); // Prints 42
-```
+Here, `localSomeValue` is captured by `assignGlobal`. UI still reads `undefined` before the assignment. After the assignment, its own **Globals** panel contains `someValue: 42`, and the next read returns `42`. The two runtimes still have separate global scopes.

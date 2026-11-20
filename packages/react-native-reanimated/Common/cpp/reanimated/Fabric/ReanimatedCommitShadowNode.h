@@ -1,6 +1,6 @@
 #pragma once
 
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 using namespace facebook::react;
 

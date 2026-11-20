@@ -61,6 +61,7 @@ export interface AnimationConfig {
   easing: string;
   callback: AnimationCallback;
   reversed: boolean;
+  startsFromCurrentValues?: boolean;
 }
 
 export interface EasingType {

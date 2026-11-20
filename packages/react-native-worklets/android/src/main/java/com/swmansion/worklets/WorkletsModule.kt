@@ -6,6 +6,8 @@ import com.facebook.react.bridge.LifecycleEventListener
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.common.annotations.FrameworkAPI
+import com.facebook.react.jstasks.HeadlessJsTaskContext
+import com.facebook.react.jstasks.HeadlessJsTaskEventListener
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl
 import com.facebook.soloader.SoLoader
@@ -18,7 +20,8 @@ import com.swmansion.worklets.runloop.AnimationFrameQueue
 class WorkletsModule(
     reactContext: ReactApplicationContext,
 ) : NativeWorkletsModuleSpec(reactContext),
-    LifecycleEventListener {
+    LifecycleEventListener,
+    HeadlessJsTaskEventListener {
     companion object {
         const val NAME = "WorkletsModule"
 
@@ -38,6 +41,7 @@ class WorkletsModule(
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
     private val mNetworking = Networking()
     private var mSlowAnimationsEnabled = false
+    private var mHostResumed = false
 
     /**
      * Invalidating concurrently could be fatal. It shouldn't happen in a normal flow, but it doesn't
@@ -115,6 +119,7 @@ class WorkletsModule(
 
     override fun initialize() {
         reactApplicationContext.addLifecycleEventListener(this)
+        HeadlessJsTaskContext.getInstance(reactApplicationContext).addTaskEventListener(this)
         createHybrid()
         Thread({ prepareProxyCpp() }, "WorkletsProxyPrepare").start()
     }
@@ -126,6 +131,9 @@ class WorkletsModule(
             }
             mInvalidated = true
             reactApplicationContext.removeLifecycleEventListener(this)
+            HeadlessJsTaskContext
+                .getInstance(reactApplicationContext)
+                .removeTaskEventListener(this)
         }
         mAnimationFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
@@ -139,24 +147,39 @@ class WorkletsModule(
     private external fun startCpp()
 
     override fun onHostResume() {
-        synchronized(mInvalidationLock) {
-            if (mInvalidated) {
-                return
-            }
-            mAnimationFrameQueue.resume()
-        }
+        mHostResumed = true
+        updateAnimationFrameQueue()
     }
 
     override fun onHostPause() {
+        mHostResumed = false
+        updateAnimationFrameQueue()
+    }
+
+    override fun onHostDestroy() {}
+
+    override fun onHeadlessJsTaskStart(taskId: Int) {
+        updateAnimationFrameQueue()
+    }
+
+    override fun onHeadlessJsTaskFinish(taskId: Int) {
+        updateAnimationFrameQueue()
+    }
+
+    private fun updateAnimationFrameQueue() {
         synchronized(mInvalidationLock) {
             if (mInvalidated) {
                 return
             }
-            mAnimationFrameQueue.pause()
+            val hasActiveHeadlessTasks =
+                HeadlessJsTaskContext.getInstance(reactApplicationContext).hasActiveTasks()
+            if (mHostResumed || hasActiveHeadlessTasks) {
+                mAnimationFrameQueue.resume()
+            } else {
+                mAnimationFrameQueue.pause()
+            }
         }
     }
-
-    override fun onHostDestroy() {}
 
     @OptIn(FrameworkAPI::class)
     private fun createHybrid() {

@@ -2,12 +2,16 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Compat/StableApi.h>
-#include <worklets/Registries/WorkletRuntimeRegistry.h>
+#include <worklets/Tools/RNRuntimeStatus.h>
+#include <worklets/WorkletRuntime/RuntimeIdentity.h>
+#include <worklets/WorkletRuntime/RuntimeManager.h>
 
+#include <concepts>
 #include <memory>
 #include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace worklets {
 
@@ -23,11 +27,31 @@ inline void freeWithoutCallingDestructor(std::unique_ptr<facebook::jsi::Value> &
   ::operator delete(value.release());
 }
 
-inline void cleanupRuntimeAware(facebook::jsi::Runtime *rt, std::unique_ptr<facebook::jsi::Value> &value) {
-  if (value == nullptr || rt == nullptr) {
+template <std::invocable<bool> TFn>
+void runWhileOwnerLocked(const RuntimeIdentity &owner, TFn &&fn) {
+  if (owner.isRNRuntime()) {
+    const auto rnRuntimeStatus = owner.lockRNRuntimeStatus();
+    if (rnRuntimeStatus == nullptr) {
+      std::forward<TFn>(fn)(false);
+      return;
+    }
+    rnRuntimeStatus->runWhileLocked([&fn](bool isDead) { std::forward<TFn>(fn)(!isDead); });
     return;
   }
-  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+
+  const auto runtimeManager = owner.lockRuntimeManager();
+  if (runtimeManager == nullptr) {
+    std::forward<TFn>(fn)(false);
+    return;
+  }
+  runtimeManager->runWhileRuntimeLocked(owner.getRuntimeId(), std::forward<TFn>(fn));
+}
+
+inline void cleanupRuntimeAware(const RuntimeIdentity &owner, std::unique_ptr<facebook::jsi::Value> &value) {
+  if (value == nullptr) {
+    return;
+  }
+  runWhileOwnerLocked(owner, [&value](bool isAlive) {
     if (isAlive) {
       value.reset();
     } else {
@@ -36,11 +60,11 @@ inline void cleanupRuntimeAware(facebook::jsi::Runtime *rt, std::unique_ptr<face
   });
 }
 
-inline void cleanupRuntimeAware(facebook::jsi::Runtime *rt, facebook::jsi::Value &value) {
-  if (rt == nullptr || value.isUndefined()) {
+inline void cleanupRuntimeAware(const RuntimeIdentity &owner, facebook::jsi::Value &value) {
+  if (value.isUndefined()) {
     return;
   }
-  WorkletRuntimeRegistry::runWhileLocked(rt, [&value](bool isAlive) {
+  runWhileOwnerLocked(owner, [&value](bool isAlive) {
     if (isAlive) {
       value.~Value();
     }
@@ -68,6 +92,26 @@ class SerializableJSRef : public facebook::jsi::NativeState {
     object.setNativeState(rt, std::make_shared<SerializableJSRef>(value));
     object.setProperty(rt, "__serializableRef", true);
     return object;
+  }
+};
+
+// Non-owning serializableMappingCache entry for a clone whose subtree holds a JS function.
+// Such a clone owns a SerializableRemoteFunction, which holds the function with a strong jsi::Value
+// that the GC treats as a root. If the cache owned the clone, a function whose closure reaches the
+// cache key would close a cycle that no GC can collect, even within one runtime:
+// key -> clone -> NativeState -> remote function -> function -> key.
+// The marker hands back the same Serializable while some other owner keeps it alive. Its
+// destructor only drops a weak count, so it is safe on any thread, during GC and after either
+// runtime is gone.
+class WeakSerializableJSRef : public facebook::jsi::NativeState {
+ private:
+  const std::weak_ptr<Serializable> value_;
+
+ public:
+  explicit WeakSerializableJSRef(const std::shared_ptr<Serializable> &value) : value_(value) {}
+
+  std::shared_ptr<Serializable> lock() const {
+    return value_.lock();
   }
 };
 

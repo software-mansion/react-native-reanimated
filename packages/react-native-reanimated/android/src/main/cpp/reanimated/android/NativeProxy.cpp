@@ -207,6 +207,13 @@ std::optional<std::unique_ptr<int[]>> NativeProxy::preserveMountedTags(std::vect
   return region;
 }
 
+void NativeProxy::releaseViewTransitions(std::vector<int> &tags, bool isBatchQueued) {
+  static const auto method = getJniMethod<void(jni::alias_ref<jni::JArrayInt>, jboolean)>("releaseViewTransitions");
+  auto jArrayInt = jni::JArrayInt::newArray(tags.size());
+  jArrayInt->setRegion(0, tags.size(), tags.data());
+  method(javaPart_.get(), jArrayInt, isBatchQueued);
+}
+
 // Android animators write the view on every frame, so the view's props are the presented ones.
 std::optional<MountedViewProps> NativeProxy::obtainMountedViewProps(Tag tag, bool /*presented*/) {
   static const auto method = getJniMethod<jni::local_ref<jni::JArrayDouble>(int)>("obtainMountedViewProps");
@@ -395,6 +402,8 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
 
   auto preserveMountedTags = bindThis(&NativeProxy::preserveMountedTags);
 
+  auto releaseViewTransitionsFunction = bindThis(&NativeProxy::releaseViewTransitions);
+
   auto synchronouslyUpdateUIPropsFunction = bindThis(&NativeProxy::synchronouslyUpdateUIProps);
 
   auto isSensorAvailableFunction = bindThis(&NativeProxy::isSensorAvailable);
@@ -422,6 +431,7 @@ PlatformDepMethodsHolder NativeProxy::getPlatformDependentMethods() {
   return {
       requestRender,
       preserveMountedTags,
+      releaseViewTransitionsFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
       isSensorAvailableFunction,

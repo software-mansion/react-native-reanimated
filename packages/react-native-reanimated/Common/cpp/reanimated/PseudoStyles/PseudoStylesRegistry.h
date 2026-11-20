@@ -6,7 +6,7 @@
 #include <reanimated/PseudoStyles/PseudoSelector.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <folly/dynamic.h>
 #include <array>

@@ -43,6 +43,7 @@ describe('scanSource', () => {
           yieldEnds: [4],
           isNative: false,
           isHidden: false,
+          isWorklet: false,
           hasLoop: false,
         },
         {
@@ -53,6 +54,7 @@ describe('scanSource', () => {
           yieldEnds: [9, 10, 11],
           isNative: false,
           isHidden: false,
+          isWorklet: true,
           hasLoop: false,
         },
         {
@@ -63,6 +65,7 @@ describe('scanSource', () => {
           yieldEnds: [15, 16],
           isNative: false,
           isHidden: false,
+          isWorklet: false,
           hasLoop: false,
         },
         {
@@ -73,6 +76,7 @@ describe('scanSource', () => {
           yieldEnds: [20, 21, 22],
           isNative: false,
           isHidden: false,
+          isWorklet: false,
           hasLoop: false,
         },
       ]
@@ -90,6 +94,27 @@ describe('scanSource', () => {
     );
     assert.deepEqual(fns.get('main')?.yieldLines, [2, 3]);
     assert.equal(fns.get('main')?.endLine, 4);
+  });
+
+  it('keeps worklet markers local to the function and before its steps', () => {
+    const fns = scanSource(
+      unindent(`
+        export default function* main() {
+          function* worklet() {
+            "worklet";
+            yield 1;
+          }
+          function* ordinary() {
+            yield 'worklet';
+            'worklet';
+          }
+          yield worklet;
+        }
+      `)
+    );
+    assert.equal(fns.get('main')?.isWorklet, false);
+    assert.equal(fns.get('worklet')?.isWorklet, true);
+    assert.equal(fns.get('ordinary')?.isWorklet, false);
   });
 
   it('counts yield expressions assigned to a variable', () => {

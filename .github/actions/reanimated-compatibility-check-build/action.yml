@@ -79,6 +79,11 @@ runs:
       working-directory: ${{ inputs.app-name }}/ios
       shell: bash
       run: xcodebuild -project ${{inputs.app-name}}.xcodeproj -configuration ${{inputs.mode}} -scheme ${{inputs.app-name}} -destination "generic/platform=iOS Simulator" -quiet
+    - name: Install Android NDK
+      if: ${{ inputs.platform == 'Android' }}
+      uses: $/.github/actions/install-android-ndk
+      with:
+        gradle-file: ${{ inputs.app-name }}/android/build.gradle
     - name: Build app (Android)
       if: ${{ inputs.platform == 'Android' }}
       working-directory: ${{ inputs.app-name }}/android

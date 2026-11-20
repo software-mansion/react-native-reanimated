@@ -10,11 +10,11 @@ export function setupSetTimeout() {
     delay: number = 0,
     ...args: unknown[]
   ) => {
-    const start = performance.now();
+    const start = globalThis._getTimerTimestamp();
     let timeoutHandle = 0;
 
     const rafCallback = () => {
-      const now = performance.now();
+      const now = globalThis._getTimerTimestamp();
       if (now - start >= delay) {
         callback(...args);
         timeoutHandleToRafHandle.delete(timeoutHandle);

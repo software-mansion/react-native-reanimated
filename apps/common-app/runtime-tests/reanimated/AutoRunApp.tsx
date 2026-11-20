@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import type { AutoRunRootProps } from '../AutoRunRuntimeTestsApp';
 import AutoRunRuntimeTestsApp from '../AutoRunRuntimeTestsApp';
 import { REANIMATED_TEST_SUITES } from './suites';
 
@@ -43,7 +44,7 @@ function WarmUpView() {
   return <Animated.View style={[styles.warmUpView, style]} />;
 }
 
-export default function ReanimatedAutoRunApp() {
+export default function ReanimatedAutoRunApp({ wsUrl }: AutoRunRootProps) {
   return (
     <GestureHandlerRootView style={styles.container}>
       <WarmUpView />
@@ -51,6 +52,7 @@ export default function ReanimatedAutoRunApp() {
         tests={REANIMATED_TEST_SUITES}
         library="Reanimated"
         warmUp={warmUp}
+        wsUrl={wsUrl}
       />
     </GestureHandlerRootView>
   );

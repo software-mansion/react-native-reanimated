@@ -3,10 +3,10 @@
 #include <ReactCommon/CallInvokerHolder.h>
 #include <fbjni/fbjni.h>
 #include <jsi/jsi.h>
-#include <react/debug/react_native_assert.h>
 #include <react/fabric/JFabricUIManager.h>
 #include <react/jni/WritableNativeMap.h>
 #include <react/renderer/scheduler/Scheduler.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/NativeModules/ReanimatedModuleProxy.h>
 #include <reanimated/android/CSS/CSSPlatformTransitions.h>
@@ -56,6 +56,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
   // std::shared_ptr<EventListener> eventListener_;
   void installJSIBindings();
   std::optional<std::unique_ptr<int[]>> preserveMountedTags(std::vector<int> &tags);
+  void releaseViewTransitions(std::vector<int> &tags, bool isBatchQueued);
   std::optional<MountedViewProps> obtainMountedViewProps(Tag tag, bool presented);
   void synchronouslyUpdateUIProps(const std::vector<int> &intBuffer, const std::vector<double> &doubleBuffer);
   PlatformDepMethodsHolder getPlatformDependentMethods();

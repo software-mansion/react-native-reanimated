@@ -50,6 +50,7 @@ import {
   ScreenTransition as ScreenTransitionPresets,
   SensorType,
   setUpTests,
+  SharedTransitionType,
   SnappySpringConfig,
   SnappySpringConfigWithDuration,
   steps,
@@ -332,6 +333,10 @@ class BaseAnimationMock {
     return this;
   }
 
+  withTargetValues() {
+    return this;
+  }
+
   easing(_: (t: number) => number) {
     return this;
   }
@@ -352,7 +357,7 @@ class BaseAnimationMock {
     return this;
   }
 
-  overshootClamping(_: number) {
+  overshootClamping(_: boolean) {
     return this;
   }
 
@@ -387,6 +392,47 @@ class BaseAnimationMock {
   reduceMotion() {
     return this;
   }
+}
+
+class SharedTransitionMock extends BaseAnimationMock {
+  fadeContent() {
+    return this;
+  }
+
+  custom() {
+    return this;
+  }
+
+  progressAnimation() {
+    return this;
+  }
+
+  defaultTransitionType() {
+    return this;
+  }
+}
+
+const SharedTransition = withStaticModifiers(SharedTransitionMock);
+
+type Methods = Record<string, (...args: unknown[]) => unknown>;
+
+function withStaticModifiers<Builder extends new () => object>(
+  BuilderClass: Builder
+) {
+  const statics = BuilderClass as unknown as Methods;
+  for (
+    let prototype = BuilderClass.prototype;
+    prototype !== Object.prototype;
+    prototype = Object.getPrototypeOf(prototype)
+  ) {
+    for (const name of Object.getOwnPropertyNames(prototype)) {
+      if (name !== 'constructor' && !(name in BuilderClass)) {
+        statics[name] = (...args) =>
+          (new BuilderClass() as Methods)[name](...args);
+      }
+    }
+  }
+  return BuilderClass;
 }
 
 class NativeEventsManagerMock {
@@ -479,7 +525,8 @@ const layoutReanimation = {
   RotateOutUpLeft: new BaseAnimationMock(),
   RotateOutUpRight: new BaseAnimationMock(),
   SequencedTransition: new BaseAnimationMock(),
-  SharedTransition: new BaseAnimationMock(),
+  SharedTransition,
+  SharedTransitionType,
   SlideInDown: new BaseAnimationMock(),
   SlideInLeft: new BaseAnimationMock(),
   SlideInRight: new BaseAnimationMock(),

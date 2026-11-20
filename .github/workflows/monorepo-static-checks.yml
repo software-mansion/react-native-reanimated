@@ -52,6 +52,8 @@ jobs:
         run: yarn lint:root
       - name: Test scripts
         run: yarn test:scripts
+      - name: Type check scripts
+        run: yarn type:check:scripts
       - name: Check markdown formatting
         id: md-format
         run: yarn format:md && git update-index --refresh && git diff-index --quiet HEAD --

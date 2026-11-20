@@ -1,5 +1,5 @@
 #include <jsi/jsi.h>
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/SharedItems/Serializable/RetainingSerializable.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
@@ -13,8 +13,10 @@
 #include <worklets/SharedItems/Serializable/SerializableWorklet.h>
 
 #include <memory>
+#include <new>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 using namespace facebook;
 
@@ -112,7 +114,11 @@ std::shared_ptr<Serializable> extractSerializableOrThrow(
     const std::string &errorMessage) {
   if (maybeSerializableValue.hasNativeState(rt)) {
     auto nativeState = maybeSerializableValue.getNativeState(rt);
-    return std::dynamic_pointer_cast<SerializableJSRef>(nativeState)->value();
+    // Other native state, such as a `WeakSerializableJSRef` marker, is not a serializable.
+    auto serializableRef = std::dynamic_pointer_cast<SerializableJSRef>(nativeState);
+    if (serializableRef) {
+      return serializableRef->value();
+    }
   }
   throw std::runtime_error(errorMessage);
 }

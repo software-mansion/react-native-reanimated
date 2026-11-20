@@ -3,6 +3,9 @@ sidebar_position: 42 # Use alphabetical order
 title: isWorkletFunction
 ---
 
+import * as ApiIsWorkletFunctionSnippet from './_examples/apiIsWorkletFunction';
+import ApiIsWorkletFunctionSource from '!!raw-loader!./_examples/apiIsWorkletFunction';
+
 <Badges version="0.1.0">
   # isWorkletFunction
 </Badges>
@@ -11,26 +14,9 @@ title: isWorkletFunction
 
 ## Reference
 
-```javascript
-import { isWorkletFunction } from 'react-native-worklets';
+Both checks run on the RN Runtime. Checking a function doesn't execute it or schedule it on another thread.
 
-const workletFunction = () => {
-  'worklet';
-  return 1;
-};
-
-const isWorklet = isWorkletFunction(workletFunction);
-
-console.log(isWorklet); // true
-
-const nonWorkletFunction = () => {
-  return 1;
-};
-
-const isNonWorkletFunction = isWorkletFunction(nonWorkletFunction);
-
-console.log(isNonWorkletFunction); // false
-```
+<ThreadingSimulation module={ApiIsWorkletFunctionSnippet} source={ApiIsWorkletFunctionSource} uiRuntime={false}/>
 
 <details>
   <summary>Type definitions</summary>

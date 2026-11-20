@@ -1,0 +1,5 @@
+# The last reference to a React Native scheduler Task is released inside the
+# prebuilt, uninstrumented hermesvm framework, so ThreadSanitizer misses the
+# happens-before edge to the Task destructor on the Hermes GC thread.
+# https://github.com/react/react-native/issues/60130
+race:__shared_ptr_emplace<facebook::react::Task
