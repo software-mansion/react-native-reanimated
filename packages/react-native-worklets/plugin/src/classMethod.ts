@@ -31,7 +31,11 @@ export function processIfWorkletMethod(path: NodePath<ClassMethod>) {
           cloneNode(path.node.body, true),
           path.node.generator,
           path.node.async
-        )
+        ),
+        null,
+        null,
+        path.node.computed,
+        path.node.static
       )
     );
   }
