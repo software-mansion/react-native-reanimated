@@ -1,10 +1,10 @@
-# Worklets plugin
+# Worklet Syntax plugin
 
-## What is the Worklets plugin?
+## What is the Worklet Syntax plugin? \{#what-is-the-worklets-plugin}
 
-The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization).
+The Worklet Syntax plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization).
 
-The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) only. Everything on this page applies to both.
+The Worklet Syntax plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/bundleMode) only. Everything on this page applies to both.
 
 * A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -32,7 +32,7 @@ useAnimatedStyle(() => {
 
 ### JavaScript terms
 
-The Worklets plugin supports the following terms as worklets:
+The Worklet Syntax plugin supports the following terms as worklets:
 
 #### Function Declarations
 
@@ -108,7 +108,7 @@ In a [workletizable file](https://docs.swmansion.com/react-native-worklets/docs/
 
 ## Autoworkletization
 
-To reduce boilerplate code and provide a safer API, the Worklets plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
+To reduce boilerplate code and provide a safer API, the Worklet Syntax plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
 
 ```ts
 import { scheduleOnUI } from 'react-native-worklets';
@@ -120,7 +120,7 @@ scheduleOnUI((greetings: string) => {
 }, 'Hello');
 ```
 
-This isn't limited to `scheduleOnUI` - the Worklets plugin autoworkletizes the callbacks that its APIs require to be worklet functions. This also covers callbacks in config objects, for example the `initializer` of [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime). The plugin only checks specific argument positions and config keys, and a config object must be written inline in the call. The plugin also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `scheduleOnUI` - the Worklet Syntax plugin autoworkletizes the callbacks that its APIs require to be worklet functions. This also covers callbacks in config objects, for example the `initializer` of [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/threading/createWorkletRuntime). The plugin only checks specific argument positions and config keys, and a config object must be written inline in the call. The plugin also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet function.
 
@@ -251,4 +251,4 @@ function foo() {
 
 ## Notes
 
-If you feel like the Worklets plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
+If you feel like the Worklet Syntax plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!

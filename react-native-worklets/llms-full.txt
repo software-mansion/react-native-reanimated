@@ -186,7 +186,7 @@ Worklet Runtime.
 So what's the intent behind the `getValue` invocation inside the worklet function here?
 Did the author want to print the state of the RN Runtime or the Worklet Runtime?
 Both interpretations are valid, but during static analysis of the code — which
-the Worklets Babel plugin does — it's impossible to tell which one is correct.
+the Worklet Syntax plugin does — it's impossible to tell which one is correct.
 
 ## Disambiguating manually
 
@@ -267,13 +267,13 @@ forwarded into the worklet body automatically, so you can drop that boilerplate.
 
 You can configure it via the
 [`importForwarding`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#importforwarding)
-option of the Worklets Babel plugin.
+option of the Worklet Syntax Babel plugin.
 
 ### Dropping boilerplate
 
 You can rewrite the code from the [Printing Worklet Runtime
 state](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode/importForwarding#printing-worklet-runtime-state) example without boilerplate. First,
-configure the Worklets Babel plugin:
+configure the Worklet Syntax Babel plugin:
 
 ```javascript
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -363,9 +363,9 @@ Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleM
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-## Configure Worklets plugin
+## Configure Worklet Syntax plugin \{#configure-worklets-plugin}
 
-1. **Modify your Babel configuration**. [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
 Babel plugin
 
@@ -528,7 +528,7 @@ Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleM
 
 Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
 
-To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklets Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
+To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklet Syntax Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
 
 ```javascript
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -1242,11 +1242,11 @@ yarn expo prebuild
 
 And that's it! The Worklets library is now configured in your Expo project.
 
-Don't I need the Worklets babel plugin?
+Don't I need the Worklet Syntax Babel plugin?
 
-Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
+Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklet Syntax Babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
 
-To learn more about the plugin go to [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
+To learn more about the plugin go to [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
 
 ### Clear Metro bundler cache (recommended)
 
@@ -1278,13 +1278,13 @@ module.exports = {
 };
 ```
 
-Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options) section.
+The Worklet Syntax Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklet Syntax Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
-In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime)
+In short, the Worklet Syntax plugin automatically converts special JavaScript functions (called [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime)
 
-To learn more about the plugin go to [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
+To learn more about the plugin go to [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
 
 ### iOS
 
@@ -1979,7 +1979,7 @@ Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/
 
 ### Failed to create a worklet
 
-**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklet Syntax Babel plugin in `babel.config.js`.
 
 **Solution:** See [installation docs](https://docs.swmansion.com/react-native-worklets/docs/unreleased/getting-started/installation) for more information.
 
@@ -1999,19 +1999,19 @@ Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/
    * Web
 3. If you are using the Worklets library in a brownfield app, make sure to initialize the native library manually.
 
-### Unknown version of Worklets babel plugin
+### Unknown version of Worklet Syntax plugin \{#unknown-version-of-worklets-babel-plugin}
 
-**Problem:** This happens when JavaScript side of the Worklets library fails to get Worklets Babel plugin version.
+**Problem:** This happens when JavaScript side of the Worklets library fails to get the Worklet Syntax plugin version.
 
-**Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+**Solution:** Part of your code might be transpiled with an outdated version of the Worklet Syntax plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
-### Mismatch between JavaScript code version and Worklets Babel plugin version
+### Mismatch between JavaScript code version and Worklets Babel plugin version \{#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version}
 
-**Problem:** This can happen when you use code that was transpiled with an outdated version of Worklets Babel plugin.
+**Problem:** This can happen when you use code that was transpiled with an outdated version of the Worklet Syntax plugin.
 
 **Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
-If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
+If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklet Syntax plugin. You can find the offending code that was given alongside the error to find that dependency.
 
 ### Couldn't determine the version of the native part of Worklets
 
@@ -2027,7 +2027,7 @@ If this didn't help, you probably have a dependency that contains already transf
 
 ### C++ side failed to resolve JavaScript code version
 
-See [Couldn't determine the version of the native part of Worklets](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#unknown-version-of-worklets-babel-plugin).
+See [Couldn't determine the version of the native part of Worklets](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/troubleshooting#unknown-version-of-worklets-babel-plugin).
 
 ### Mismatch between C++ code version and JavaScript code version
 
@@ -3081,7 +3081,7 @@ flowchart TD
 
 ## Remarks
 
-* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
+* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#disableworkletclasses) option in the Worklet Syntax Babel plugin configuration.
 * Custom Serializables are global and shared between all [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 * You can use `registerCustomSerializable` only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#rn-runtime).
 
@@ -5005,7 +5005,7 @@ function myWorklet() {
 ```
 
 Functions marked with the directive are transformed with the
-[Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about), in a process we call **workletization**,
+[Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about), in a process we call **workletization**,
 into special entities
 that are safe to be juggled between JavaScript Runtimes.
 
@@ -5791,7 +5791,7 @@ scheduleOnRuntime(worker, logMessage, 'Hi');
 ## Autoworkletization
 
 In previous code snippets we always marked worklet functions with the `'worklet'` directive.
-However, in most cases you can omit the directive. The Worklets plugin
+However, in most cases you can omit the directive. The Worklet Syntax plugin
 [automatically detects](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#autoworkletization) which functions should
 be treated as worklet functions and applies the transformation regardless. Both versions below work
 the same:
@@ -6167,7 +6167,7 @@ Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/utility
 
 # isWorkletFunction
 
-`isWorkletFunction` checks if a function is a worklet function. It only works with Worklets Babel plugin enabled. Unless you are doing something with internals of the Worklets library you shouldn't need to use this function.
+`isWorkletFunction` checks if a function is a worklet function. It only works with the Worklet Syntax plugin enabled. Unless you are doing something with internals of the Worklets library you shouldn't need to use this function.
 
 ## Reference
 
@@ -6310,17 +6310,17 @@ function isWorkletRuntime(): boolean;
 
 ---
 
-# Worklets plugin
+# Worklet Syntax plugin
 
 Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about
 
-# Worklets plugin
+# Worklet Syntax plugin
 
-## What is the Worklets plugin?
+## What is the Worklet Syntax plugin? \{#what-is-the-worklets-plugin}
 
-The Worklets plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#autoworkletization).
+The Worklet Syntax plugin transforms your code so that it can run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime). It looks for functions marked with a `'worklet';` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about#autoworkletization).
 
-The Worklets plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode) only. Everything on this page applies to both.
+The Worklet Syntax plugin ships in two implementations. The Babel plugin (`react-native-worklets/plugin`) is the default. Starting from Worklets 0.13 you can also use the [Oxc plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/oxc), a faster Rust port that supports [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode) only. Everything on this page applies to both.
 
 * A function that contains a `'worklet'` directive at its very top, i.e.:
 
@@ -6348,7 +6348,7 @@ useAnimatedStyle(() => {
 
 ### JavaScript terms
 
-The Worklets plugin supports the following terms as worklets:
+The Worklet Syntax plugin supports the following terms as worklets:
 
 #### Function Declarations
 
@@ -6424,7 +6424,7 @@ In a [workletizable file](https://docs.swmansion.com/react-native-worklets/docs/
 
 ## Autoworkletization
 
-To reduce boilerplate code and provide a safer API, the Worklets plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
+To reduce boilerplate code and provide a safer API, the Worklet Syntax plugin detects automatically whether a function should be workletized. Thanks to that, you don't need to add the `'worklet'` directive to your callbacks:
 
 ```ts
 import { scheduleOnUI } from 'react-native-worklets';
@@ -6436,7 +6436,7 @@ scheduleOnUI((greetings: string) => {
 }, 'Hello');
 ```
 
-This isn't limited to `scheduleOnUI` - the Worklets plugin autoworkletizes the callbacks that its APIs require to be worklet functions. This also covers callbacks in config objects, for example the `initializer` of [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/createWorkletRuntime). The plugin only checks specific argument positions and config keys, and a config object must be written inline in the call. The plugin also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
+This isn't limited to `scheduleOnUI` - the Worklet Syntax plugin autoworkletizes the callbacks that its APIs require to be worklet functions. This also covers callbacks in config objects, for example the `initializer` of [`createWorkletRuntime`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/createWorkletRuntime). The plugin only checks specific argument positions and config keys, and a config object must be written inline in the call. The plugin also autoworkletizes some callbacks in [React Native Reanimated](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/layoutAnimationAutoworkletization.ts) and [React Native Gesture Handler](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/gestureHandlerAutoworkletization.ts). The whole list can be found in the [plugin source code](https://github.com/software-mansion/react-native-reanimated/blob/main/packages/react-native-worklets/plugin/src/autoworkletization.ts).
 
 Keep in mind that in more advanced use cases, you might still need to manually mark a function as a worklet function.
 
@@ -6567,7 +6567,7 @@ function foo() {
 
 ## Notes
 
-If you feel like the Worklets plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
+If you feel like the Worklet Syntax plugin could make use of some new functionality or that its pitfalls are too severe, feel free to let us know on [GitHub](https://github.com/software-mansion/react-native-reanimated/), via an issue or a discussion thread - and as always, PRs are welcome!
 
 ---
 
@@ -6579,7 +6579,7 @@ Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklet
 
 > NOTE
 >
-> The Oxc plugin is a port of the [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) to Rust, built on top of [Oxc](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode) is supported.
+> The Oxc plugin is a Rust port of the Babel implementation of the [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about), built on top of [Oxc](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode) is supported.
 
 Type definitions
 
@@ -6687,7 +6687,7 @@ Being a port, the Oxc plugin might not cover every edge case that the Babel plug
 
 Source: https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options
 
-# Options for Worklets Babel Plugin
+# Options for Worklet Syntax Babel plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
@@ -6806,13 +6806,13 @@ Serializables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/
 
 Defaults to an empty array.
 
-This is a list of Babel plugins that will be used when transforming worklet functions' code with Worklets Babel Plugin.
+This is a list of Babel plugins that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
 ### extraPresets
 
 Defaults to an empty array.
 
-This is a list of Babel presets that will be used when transforming worklet functions' code with Worklets Babel Plugin.
+This is a list of Babel presets that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
 ### getHBCBinary
 

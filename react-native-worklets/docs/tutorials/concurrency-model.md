@@ -88,7 +88,7 @@ function myWorklet() {
 ```
 
 Functions marked with the directive are transformed with the
-[Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about), in a process we call **workletization**,
+[Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about), in a process we call **workletization**,
 into special entities
 that are safe to be juggled between JavaScript Runtimes.
 

@@ -1,4 +1,4 @@
-# Options for Worklets Babel Plugin
+# Options for Worklet Syntax Babel plugin
 
 Our plugin offers several optional functionalities that you may need to employ advanced APIs:
 
@@ -117,13 +117,13 @@ Serializables](https://docs.swmansion.com/react-native-worklets/docs/memory/regi
 
 Defaults to an empty array.
 
-This is a list of Babel plugins that will be used when transforming worklet functions' code with Worklets Babel Plugin.
+This is a list of Babel plugins that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
 ### extraPresets
 
 Defaults to an empty array.
 
-This is a list of Babel presets that will be used when transforming worklet functions' code with Worklets Babel Plugin.
+This is a list of Babel presets that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
 ### getHBCBinary
 

@@ -4984,15 +4984,15 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 >
 > `react-native-worklets/plugin` has to be listed last.
 
-Worklets Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options) section.
+The Worklet Syntax Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
-In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Worklet Syntax Babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
-Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets Babel plugin by default.
+Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklet Syntax Babel plugin by default.
 
-To learn more about the plugin head onto to [Worklets Babel plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
+To learn more about the plugin head onto to [Worklet Syntax plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
 
 #### Clear Metro bundler cache (recommended)
 
@@ -5199,7 +5199,7 @@ function onPress() {
 
 To convert a JavaScript function into a serializable object which can be copied and run over on [UI thread](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#ui-thread).
 
-Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklets Babel plugin.
+Functions marked with `"worklet"` directive are automatically picked up and workletized by the Worklet Syntax Babel plugin.
 
 ## JavaScript thread
 
@@ -5213,7 +5213,7 @@ UI thread is responsible for handling user interface updates. Also known as Main
 
 You can learn more about it by reading the [Threading model](https://reactnative.dev/architecture/threading-model) article in the official React Native docs.
 
-## Worklets Babel plugin
+## Worklet Syntax Babel plugin \{#worklets-babel-plugin}
 
 The plugin performs automatic [workletization](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize) of certain functions used with Reanimated to reduce the amount of boilerplate code.
 
@@ -6524,7 +6524,7 @@ You can read more about `react-native-worklets` library in its [documentation](h
 
 ### Renamed `react-native-reanimated/plugin`
 
-Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
+Reanimated Babel plugin was moved to `react-native-worklets` and renamed to [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about/). Please make sure to import the plugin from `react-native-worklets/plugin` in your `babel.config.js`.
 
 ```diff
 plugins: [
@@ -7327,15 +7327,15 @@ Reanimated has three core components that compose its code:
 * Java,
 * JavaScript.
 
-It also depends on React Native Worklets and its Worklets Babel plugin.
+It also depends on React Native Worklets and its Worklet Syntax Babel plugin.
 
 All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned plugin will result in undefined behavior and errors.
 
 ### Failed to create a worklet
 
-**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklet Syntax Babel plugin in `babel.config.js`.
 
-**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information. If the Worklets Babel plugin is already set up correctly, your Metro bundler cache may be stale - reset it with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information. If the Worklet Syntax Babel plugin is already set up correctly, your Metro bundler cache may be stale - reset it with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
 ### Native part of Reanimated doesn't seem to be initialized
 
@@ -7542,13 +7542,13 @@ module.exports = {
 
 > **Caution**
 >
-> We strongly recommend not opting out of the Worklets Babel plugin, as it is the only configuration we actively test.
+> We strongly recommend not opting out of the Worklet Syntax Babel plugin, as it is the only configuration we actively test.
 
-It is possible to use Reanimated without the [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) (`react-native-worklets/plugin`) on the Web, with some additional configuration.
+It is possible to use Reanimated without the [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) (`react-native-worklets/plugin`) on the Web, with some additional configuration.
 
-Reanimated hooks all accept optional dependency arrays. Under the hood, Reanimated uses extra data provided by the Worklets Babel plugin to automatically infer these dependencies for you.
+Reanimated hooks all accept optional dependency arrays. Under the hood, Reanimated uses extra data provided by the Worklet Syntax Babel plugin to automatically infer these dependencies for you.
 
-In order to use Reanimated without the Worklets Babel plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
+In order to use Reanimated without the Worklet Syntax Babel plugin, you need to explicitly pass the dependency array whenever you use a Reanimated hook.
 
 Passing a dependency array is valid on both Web and native. Adding them will not negatively impact iOS or Android.
 
@@ -7644,7 +7644,7 @@ function myWorklet() {
 
 ## Workletization
 
-The [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
+The [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about) looks for functions marked with the `'worklet'` directive and converts them into serializable objects. We call this process [workletization](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#to-workletize). These objects can then be copied and run over on the UI thread.
 
 Most of the time when working with Reanimated and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) the code is automatically workletized and run on the UI thread by default.
 
@@ -7796,7 +7796,7 @@ function App() {
 
 There's no separate UI thread available on the Web. Because of that, when Reanimated runs in the browser, worklets are resolved to plain JavaScript functions.
 
-However, the `'worklet'` directive is still necessary on the Web, because Reanimated relies on the Worklets Babel plugin to capture dependencies inside worklet functions.
+However, the `'worklet'` directive is still necessary on the Web, because Reanimated relies on the Worklet Syntax Babel plugin to capture dependencies inside worklet functions.
 
 ## Other worklet runtimes
 

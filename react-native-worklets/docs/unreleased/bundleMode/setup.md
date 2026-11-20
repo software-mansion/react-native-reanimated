@@ -2,9 +2,9 @@
 
 To use `react-native-worklets`'s Bundle Mode feature, you need to make the following changes in your repository:
 
-## Configure Worklets plugin
+## Configure Worklet Syntax plugin \{#configure-worklets-plugin}
 
-1. **Modify your Babel configuration**. [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
+1. **Modify your Babel configuration**. [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) needs to know that it has to prepare your code for the Bundle Mode. This is also the source of truth for your app to know if the Bundle Mode is enabled. In your `babel.config.js` file, add the following:
 
 Babel plugin
 

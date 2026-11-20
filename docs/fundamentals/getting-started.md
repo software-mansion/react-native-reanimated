@@ -82,15 +82,15 @@ When using [React Native Community CLI](https://github.com/react-native-communit
 >
 > `react-native-worklets/plugin` has to be listed last.
 
-Worklets Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options) section.
+The Worklet Syntax Babel plugin comes with several customization options, you can explore what they are and how to use them in the [Worklets docs](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
-In short, the Worklets Babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
+In short, the Worklet Syntax Babel plugin automatically converts special JavaScript functions (called [worklets](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#worklet)) to allow them to be passed and run on the UI thread.
 
-Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklets Babel plugin by default.
+Since [Expo SDK 50](https://expo.dev/changelog/2024/01-18-sdk-50), the Expo starter template includes the Worklet Syntax Babel plugin by default.
 
-To learn more about the plugin head onto to [Worklets Babel plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
+To learn more about the plugin head onto to [Worklet Syntax plugin docs page](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about).
 
 #### Clear Metro bundler cache (recommended)
 

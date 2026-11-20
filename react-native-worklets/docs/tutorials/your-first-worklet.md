@@ -108,7 +108,7 @@ scheduleOnRuntime(worker, logMessage, 'Hi');
 ## Autoworkletization
 
 In previous code snippets we always marked worklet functions with the `'worklet'` directive.
-However, in most cases you can omit the directive. The Worklets plugin
+However, in most cases you can omit the directive. The Worklet Syntax plugin
 [automatically detects](https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/about#autoworkletization) which functions should
 be treated as worklet functions and applies the transformation regardless. Both versions below work
 the same:

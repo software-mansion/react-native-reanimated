@@ -68,6 +68,6 @@
 - [isWorkerRuntime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/utility/isWorkerRuntime)
 - [isWorkletFunction](https://docs.swmansion.com/react-native-worklets/docs/unreleased/utility/isWorkletFunction)
 - [isWorkletRuntime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/utility/isWorkletRuntime)
-- [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about)
+- [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about)
 - [Oxc plugin options](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/oxc)
 - [Options](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options)

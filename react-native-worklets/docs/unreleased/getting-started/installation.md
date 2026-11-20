@@ -40,11 +40,11 @@ yarn expo prebuild
 
 And that's it! The Worklets library is now configured in your Expo project.
 
-Don't I need the Worklets babel plugin?
+Don't I need the Worklet Syntax Babel plugin?
 
-Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklets babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
+Since [Expo SDK 54](https://expo.dev/changelog/sdk-54-beta#notable-breaking-changes), the Expo starter template includes the Worklet Syntax Babel plugin by default, so there's nothing to add. On older SDKs, add `react-native-worklets/plugin` to your `babel.config.js` as described in the React Native Community CLI tab.
 
-To learn more about the plugin go to [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
+To learn more about the plugin go to [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
 
 ### Clear Metro bundler cache (recommended)
 
@@ -76,13 +76,13 @@ module.exports = {
 };
 ```
 
-Worklets Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklets Babel Plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options) section.
+The Worklet Syntax Babel plugin comes with several options, you can explore what they are and how to use them in the [Options for Worklet Syntax Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options) section.
 
 Why do I need this?
 
-In short, the Worklets babel plugin automatically converts special JavaScript functions (called [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime)
+In short, the Worklet Syntax plugin automatically converts special JavaScript functions (called [worklet functions](https://docs.swmansion.com/react-native-worklets/docs/unreleased/tutorials/concurrency-model#worklet-functions)) to allow them to be passed and run on the [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime)
 
-To learn more about the plugin go to [Worklets plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
+To learn more about the plugin go to [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) section.
 
 ### iOS
 

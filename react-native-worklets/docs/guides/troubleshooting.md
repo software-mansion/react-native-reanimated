@@ -2,7 +2,7 @@
 
 ### Failed to create a worklet
 
-**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when the Worklets library is not properly installed, e.g. forgetting to include the Worklet Syntax Babel plugin in `babel.config.js`.
 
 **Solution:** See [installation docs](https://docs.swmansion.com/react-native-worklets/docs/getting-started/installation) for more information.
 
@@ -22,19 +22,19 @@
    * Web
 3. If you are using the Worklets library in a brownfield app, make sure to initialize the native library manually.
 
-### Unknown version of Worklets babel plugin
+### Unknown version of Worklet Syntax plugin \{#unknown-version-of-worklets-babel-plugin}
 
-**Problem:** This happens when JavaScript side of the Worklets library fails to get Worklets Babel plugin version.
+**Problem:** This happens when JavaScript side of the Worklets library fails to get the Worklet Syntax plugin version.
 
-**Solution:** Part of your code might be transpiled with an outdated version of Worklets Babel plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
+**Solution:** Part of your code might be transpiled with an outdated version of the Worklet Syntax plugin. See [Mismatch between JavaScript code version and Worklets Babel plugin version](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version).
 
-### Mismatch between JavaScript code version and Worklets Babel plugin version
+### Mismatch between JavaScript code version and Worklets Babel plugin version \{#mismatch-between-javascript-code-version-and-worklets-babel-plugin-version}
 
-**Problem:** This can happen when you use code that was transpiled with an outdated version of Worklets Babel plugin.
+**Problem:** This can happen when you use code that was transpiled with an outdated version of the Worklet Syntax plugin.
 
 **Solution:** Try resetting your Metro bundler cache with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
-If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklets Babel plugin. You can find the offending code that was given alongside the error to find that dependency.
+If this didn't help, you probably have a dependency that contains already transformed worklet functions bundled with an outdated version of the Worklet Syntax plugin. You can find the offending code that was given alongside the error to find that dependency.
 
 ### Couldn't determine the version of the native part of Worklets
 
@@ -50,7 +50,7 @@ If this didn't help, you probably have a dependency that contains already transf
 
 ### C++ side failed to resolve JavaScript code version
 
-See [Couldn't determine the version of the native part of Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#unknown-version-of-worklets-babel-plugin).
+See [Couldn't determine the version of the native part of Worklets](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#couldnt-determine-the-version-of-the-native-part-of-worklets) and [Unknown version of Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting#unknown-version-of-worklets-babel-plugin).
 
 ### Mismatch between C++ code version and JavaScript code version
 

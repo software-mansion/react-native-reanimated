@@ -183,6 +183,6 @@ flowchart TD
 
 ## Remarks
 
-* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#disableworkletclasses) option in Worklets Babel plugin configuration.
+* To use Custom Serializables which require `new` keyword for instantiation, you need to [disable Worklet Classes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#disableworkletclasses) option in the Worklet Syntax Babel plugin configuration.
 * Custom Serializables are global and shared between all [Worklet Runtimes](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#worklet-runtime). Once you register a Custom Serializable, it will be available in all Runtimes.
 * You can use `registerCustomSerializable` only on the [RN Runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/concepts/runtimeKinds#rn-runtime).

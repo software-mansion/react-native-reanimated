@@ -2,7 +2,7 @@
 
 > NOTE
 >
-> The Oxc plugin is a port of the [Worklets Babel plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about) to Rust, built on top of [Oxc](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode) is supported.
+> The Oxc plugin is a Rust port of the Babel implementation of the [Worklet Syntax plugin](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/about), built on top of [Oxc](https://oxc.rs/). It's an opt-in alternative to the Babel plugin, which remains the default for the time being. Only [Bundle Mode](https://docs.swmansion.com/react-native-worklets/docs/unreleased/bundleMode) is supported.
 
 Type definitions
 

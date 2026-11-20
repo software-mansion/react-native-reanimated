@@ -8,15 +8,15 @@ Reanimated has three core components that compose its code:
 * Java,
 * JavaScript.
 
-It also depends on React Native Worklets and its Worklets Babel plugin.
+It also depends on React Native Worklets and its Worklet Syntax Babel plugin.
 
 All of them are supposed to work correctly only within the same minor version. Therefore, having any of those pieces in your code - directly or indirectly - separate from `react-native-reanimated`, especially having any code transpiled with a different version of the aforementioned plugin will result in undefined behavior and errors.
 
 ### Failed to create a worklet
 
-**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklets Babel plugin in `babel.config.js`.
+**Problem:** This usually happens when Reanimated is not properly installed, e.g. forgetting to include the Worklet Syntax Babel plugin in `babel.config.js`.
 
-**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information. If the Worklets Babel plugin is already set up correctly, your Metro bundler cache may be stale - reset it with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
+**Solution:** See installation docs at https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/getting-started/#react-native-community-cli for more information. If the Worklet Syntax Babel plugin is already set up correctly, your Metro bundler cache may be stale - reset it with `yarn start --reset-cache`, `npm start -- --reset-cache` or `expo start -c` and run the app again.
 
 ### Native part of Reanimated doesn't seem to be initialized
 
