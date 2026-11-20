@@ -1,0 +1,25 @@
+IsStatusOverride: false
+ThermalEventListeners:
+	callbacks: 5
+	killed: false
+	broadcasts count: -1
+ThermalStatusListeners:
+	callbacks: 2
+	killed: false
+	broadcasts count: -1
+Thermal Status: 0
+Cached temperatures:
+	Temperature{mValue=30.2, mType=2, mName=battery, mStatus=0}
+	Temperature{mValue=30.1, mType=3, mName=skin, mStatus=0}
+HAL Ready: true
+HAL connection:
+	ThermalHAL AIDL 3  connected: yes
+Current temperatures from HAL:
+	Temperature{mValue=30.1, mType=3, mName=skin, mStatus=0}
+	Temperature{mValue=30.2, mType=2, mName=battery, mStatus=0}
+Current cooling devices from HAL:
+Temperature static thresholds from HAL:
+	TemperatureThreshold{mType=3, mName=skin, mHotThrottlingThresholds=[30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0], mColdThrottlingThresholds=[]}
+	TemperatureThreshold{mType=2, mName=battery, mHotThrottlingThresholds=[30.0, 31.0, 32.0, 33.0, 34.0, 35.0, 36.0], mColdThrottlingThresholds=[]}
+Temperature headroom thresholds:
+[NaN, 0.93333334, 0.96666664, 1.0, 1.0333333, 1.0666667, 1.1]

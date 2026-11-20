@@ -20,6 +20,7 @@ Facts that are true on `main` and that agents otherwise re-discover in every ses
 - `apps/fabric-example` - primary iOS/Android app and the runtime-tests host. No local `node_modules`, everything hoists to the root.
 - `apps/macos-example`, `apps/tvos-example` - own `node_modules` (`hoistingLimits: workspaces`). macOS cannot run Bundle Mode, so its `build` script runs `toggle-bundle-mode --off`.
 - `apps/web-example` (Expo web, Playwright), `apps/next-example` (Next.js, Cypress).
+- `apps/benchmark-app` - performance benchmark app and its driver (`scripts/`). Not a workspace member: it has its own `yarn.lock`, and the driver adds Reanimated and Worklets to a build copy under `.tmp/benchmarks/builds/`. See its two READMEs.
 - `docs/docs-reanimated`, `docs/docs-worklets` - Docusaurus. Worklets docs are nested into the Reanimated build on publish.
 
 Both packages share one internal layout:
