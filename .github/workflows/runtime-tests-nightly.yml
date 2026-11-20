@@ -18,10 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
+        configuration: [Debug, ReleaseRuntimeTests]
     uses: $/.github/workflows/runtime-tests-ios-argent.yml
     with:
       configuration: ${{ matrix.configuration }}
+      full: true
     secrets:
       SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
@@ -31,7 +32,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        configuration: [DebugRuntimeTests, ReleaseRuntimeTests]
+        configuration: [Debug, ReleaseRuntimeTests]
     uses: $/.github/workflows/runtime-tests-android.yml
     with:
       configuration: ${{ matrix.configuration }}
+      full: true

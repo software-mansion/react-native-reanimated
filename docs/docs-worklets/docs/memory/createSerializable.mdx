@@ -2,6 +2,9 @@
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as SerializableCopySnippet from './_examples/serializableCopy';
+import SerializableCopySource from '!!raw-loader!./_examples/serializableCopy';
+
 # createSerializable
 
 Recursively converts JavaScript values into [Serializable](./serializable.mdx) references that can be passed to different JavaScript Runtimes.
@@ -10,19 +13,13 @@ The returned reference cannot be manipulated as it doesn't represent any standar
 
 **Functions like `scheduleOnUI`, `runOnUISync`, `scheduleOnRuntime` etc. automatically convert values to Serializable references.**
 
+See the [passing a copy simulation](./serializable.mdx#passing-a-copy) to follow an object from RN to UI and see why changing the received copy leaves the original unchanged.
+
 ## Reference
 
-```typescript
-import { createSerializable, scheduleOnUI } from 'react-native-worklets';
+<ThreadingSimulation module={SerializableCopySnippet} source={SerializableCopySource}/>
 
-const object = {
-  a: 1,
-  b: 2,
-  c: 3,
-};
-
-const serializableRef = createSerializable(object);
-```
+The `createSerializable` call creates the immutable value shown in **Shared native memory**. The reference is then passed to UI, where it is deserialized into a separate JavaScript object. Changing UI's copy leaves both the Serializable and RN's original unchanged.
 
 <details>
   <summary>Type definitions</summary>

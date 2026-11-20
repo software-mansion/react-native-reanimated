@@ -8,7 +8,8 @@ import {
 
 export default function* main() {
   const worker = yield createWorkletRuntime();
-  const result = yield createShareable(worker.runtimeId, -1);
+  const initialValue = yield -1;
+  const result = yield createShareable(worker.runtimeId, initialValue);
 
   function* taskDispatch() {
     function* task() {
@@ -20,13 +21,13 @@ export default function* main() {
 
   yield scheduleOnRuntime(worker, taskDispatch);
 
-  // Only once in a while
-  function* poll() {
+  function* synchronize() {
     const syncResult = yield result.getSync();
     const asyncResult = yield result.getAsync();
     yield console.log('sync:', syncResult);
     const value = yield awaitPromise(asyncResult);
     yield console.log('async:', value);
   }
-  yield setInterval(poll, 80);
+
+  yield setInterval(synchronize, 80); // Only once in a while
 }

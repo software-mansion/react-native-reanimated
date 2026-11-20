@@ -11,6 +11,10 @@ const CopySerializablePerformanceTest: React.FC = () =>
   React.createElement(
     require('./CopySerializablePerformanceTest').default as React.FC
   );
+const SerializableCachePerformanceTest: React.FC = () =>
+  React.createElement(
+    require('./SerializableCachePerformanceTest').default as React.FC
+  );
 const HermesSamplingProfilerExample: React.FC = () =>
   React.createElement(
     require('./HermesSamplingProfilerExample').default as React.FC
@@ -31,6 +35,12 @@ export const EXAMPLES: Record<string, Example> = {
     icon: '🔄',
     title: 'Serializable performance',
     screen: CopySerializablePerformanceTest,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  SerializableCachePerformanceTest: {
+    icon: '⏱️',
+    title: 'Serializable cache performance',
+    screen: SerializableCachePerformanceTest,
     disabledPlatforms: [REAPlatform.WEB],
   },
   HermesSamplingProfilerExample: {

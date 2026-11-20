@@ -1,7 +1,10 @@
-import { View } from 'react-native';
+import type { ComponentRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { ScrollView, View } from 'react-native';
 import Animated, {
   SharedTransition,
   SharedTransitionBoundary,
+  withTiming,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
@@ -31,6 +34,9 @@ function TransformScreens({
   targetX,
   ancestor,
   targetWidth = 150,
+  targetRotates = false,
+  ancestorScale = 1,
+  nested = false,
 }: {
   active: boolean;
   transition: SharedTransition;
@@ -38,37 +44,69 @@ function TransformScreens({
   targetX: number | null;
   ancestor: boolean;
   targetWidth?: number;
+  targetRotates?: boolean;
+  ancestorScale?: number;
+  nested?: boolean;
 }) {
   const source = useTestRef('transform-source');
   return (
-    <View style={ancestor ? { transform: [{ translateX: 0 }] } : undefined}>
+    <View
+      style={
+        ancestor
+          ? {
+              transform: [{ scale: ancestorScale }],
+              transformOrigin: [0, 0, 0],
+            }
+          : undefined
+      }>
       <SharedTransitionBoundary isActive={!active}>
-        <View style={{ height: 170 }}>
-          <Animated.View
-            ref={source}
-            sharedTransitionTag="transform-box"
-            sharedTransitionStyle={transition}
-            style={{
-              width: 60,
-              height: 60,
-              backgroundColor: 'red',
-              ...(sourceX === null
-                ? {}
-                : { transform: [{ translateX: sourceX }] }),
-            }}
-          />
-        </View>
+        <Animated.View
+          sharedTransitionTag={nested ? 'transform-outer' : undefined}
+          sharedTransitionStyle={transition}
+          style={{ height: 170, width: nested ? 200 : undefined }}>
+          <View
+            style={
+              nested
+                ? { transform: [{ scale: 1.5 }], transformOrigin: [0, 0, 0] }
+                : undefined
+            }>
+            <Animated.View
+              ref={source}
+              sharedTransitionTag="transform-box"
+              sharedTransitionStyle={transition}
+              style={{
+                width: 60,
+                height: 60,
+                backgroundColor: 'red',
+                ...(sourceX === null
+                  ? {}
+                  : { transform: [{ translateX: sourceX }] }),
+              }}
+            />
+          </View>
+        </Animated.View>
       </SharedTransitionBoundary>
       <SharedTransitionBoundary isActive={active}>
-        <View style={{ height: 170 }}>
-          {active && (
-            <TransformTarget
-              transition={transition}
-              targetX={targetX}
-              width={targetWidth}
-            />
-          )}
-        </View>
+        <Animated.View
+          sharedTransitionTag={nested ? 'transform-outer' : undefined}
+          sharedTransitionStyle={transition}
+          style={{ height: 170, width: nested ? 300 : undefined }}>
+          <View
+            style={
+              nested
+                ? { transform: [{ scale: 1.5 }], transformOrigin: [0, 0, 0] }
+                : undefined
+            }>
+            {active && (
+              <TransformTarget
+                transition={transition}
+                targetX={targetX}
+                width={targetWidth}
+                rotates={targetRotates}
+              />
+            )}
+          </View>
+        </Animated.View>
       </SharedTransitionBoundary>
     </View>
   );
@@ -78,10 +116,12 @@ function TransformTarget({
   transition,
   targetX,
   width,
+  rotates,
 }: {
   transition: SharedTransition;
   targetX: number | null;
   width: number;
+  rotates: boolean;
 }) {
   const target = useTestRef('transform-target');
   return (
@@ -95,6 +135,12 @@ function TransformTarget({
         height: 150,
         backgroundColor: 'red',
         ...(targetX === null ? {} : { transform: [{ translateX: targetX }] }),
+        ...(rotates
+          ? {
+              transform: [{ rotate: '90deg' }],
+              transformOrigin: [0, 0, 0] as const,
+            }
+          : {}),
       }}
     />
   );
@@ -132,6 +178,140 @@ function layoutOnlyTransition() {
   return transition;
 }
 
+// The source is 150 points down the content of a flipped scroll view, which shows it 150 points up from its bottom.
+function FlippedScrollScreens({
+  active,
+  offset,
+  transition,
+}: {
+  active: boolean;
+  offset: number;
+  transition: SharedTransition;
+}) {
+  const list = useRef<ComponentRef<typeof ScrollView>>(null);
+  useEffect(() => {
+    list.current?.scrollTo({ y: offset, animated: false });
+  }, [offset]);
+  const tag = `flipped-box-${offset}`;
+  return (
+    <View>
+      <SharedTransitionBoundary isActive={!active}>
+        <ScrollView
+          ref={list}
+          style={{ height: 200, transform: [{ scaleY: -1 }] }}>
+          <View style={{ height: 600, paddingTop: 150 }}>
+            <Animated.View
+              sharedTransitionTag={tag}
+              sharedTransitionStyle={transition}
+              style={{ width: 40, height: 40, backgroundColor: 'red' }}
+            />
+          </View>
+        </ScrollView>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.View
+            sharedTransitionTag={tag}
+            sharedTransitionStyle={transition}
+            style={{ width: 40, height: 40, backgroundColor: 'red' }}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+// The source and the target are scroll views. The offset of the source moves its content, not the source.
+function ScrollViewSourceScreens({
+  active,
+  offset,
+  transition,
+}: {
+  active: boolean;
+  offset: number;
+  transition: SharedTransition;
+}) {
+  const list = useRef<ComponentRef<typeof Animated.ScrollView>>(null);
+  useEffect(() => {
+    list.current?.scrollTo({ y: offset, animated: false });
+  }, [offset]);
+  const tag = `scroll-view-source-${offset}`;
+  return (
+    <View>
+      <SharedTransitionBoundary isActive={!active}>
+        <Animated.ScrollView
+          ref={list}
+          sharedTransitionTag={tag}
+          sharedTransitionStyle={transition}
+          style={{ height: 200 }}>
+          <View style={{ height: 600 }} />
+        </Animated.ScrollView>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.ScrollView
+            sharedTransitionTag={tag}
+            sharedTransitionStyle={transition}
+            style={{ height: 100 }}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+// The source has no size. Its parent moves it 50 points to the right.
+function ZeroSizeSourceScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  return (
+    <View>
+      <SharedTransitionBoundary isActive={!active}>
+        <View
+          style={{ width: 100, height: 100, transform: [{ translateX: 50 }] }}>
+          <Animated.View
+            sharedTransitionTag="zero-size-source"
+            sharedTransitionStyle={transition}
+            style={{ width: 0, height: 0 }}
+          />
+        </View>
+      </SharedTransitionBoundary>
+      <SharedTransitionBoundary isActive={active}>
+        {active && (
+          <Animated.View
+            sharedTransitionTag="zero-size-source"
+            sharedTransitionStyle={transition}
+            style={{ width: 40, height: 40, backgroundColor: 'red' }}
+          />
+        )}
+      </SharedTransitionBoundary>
+    </View>
+  );
+}
+
+// The transform of the source applies around its center.
+function sourceCenterYTransition(centers: number[], notification: string) {
+  const record = (center: number) => centers.push(center);
+  const finish = () => notify(notification);
+  return SharedTransition.custom((values) => {
+    'worklet';
+    scheduleOnRN(
+      record,
+      values.currentOriginY +
+        values.currentHeight / 2 +
+        values.currentTransform.matrix[13]
+    );
+    return { width: withTiming(values.targetWidth, { duration: 100 }) };
+  }).withCallback(() => {
+    'worklet';
+    scheduleOnRN(finish);
+  });
+}
+
 async function expectTranslation(name: string, translateX: number) {
   const observation = await getTestComponent(name).getTransformObservation();
   expect(observation).not.toBe(null);
@@ -140,6 +320,46 @@ async function expectTranslation(name: string, translateX: number) {
 
 describe('Shared transition transform copying', () => {
   const nativeTest = RuntimeTestObserver ? test : test.skip;
+  nativeTest.each([
+    [1, false],
+    [0.9, false],
+    [1, true],
+    [0.9, true],
+  ] as const)(
+    'applies a top-left origin once under scale ${0} (nested: ${1})',
+    async ([ancestorScale, nested]) => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const props = {
+        transition: heldTransition(),
+        sourceX: null,
+        targetX: null,
+        ancestor: true,
+        ancestorScale,
+        nested,
+        targetRotates: true,
+      };
+      await render(<TransformScreens {...props} active={false} />);
+      await waitForFrames();
+      await render(<TransformScreens {...props} active />);
+      await waitForFrames(3);
+      await advanceAnimationTimer(2800);
+      const carrier =
+        await getTestComponent('transform-source').getTransformObservation();
+      expect(carrier?.width).toBe(150, ComparisonMode.PIXEL);
+      await advanceAnimationTimer(1200);
+      await waitForNotification('transform-finished');
+      await waitForFrames(3);
+      const target =
+        await getTestComponent('transform-target').getTransformObservation();
+      expect(carrier?.translateX).toBe(
+        nested
+          ? target!.translateX
+          : target!.translateX * ancestorScale +
+              (ancestorScale - 1) * (120 + 150 / 2),
+        ComparisonMode.PIXEL
+      );
+    }
+  );
   nativeTest.each([
     ['source translation', 40, null, false],
     ['target translation', null, 30, false],
@@ -206,6 +426,59 @@ describe('Shared transition transform copying', () => {
       await expectTranslation('transform-target', 40);
     }
   );
+
+  test('starts from a scroll view at its frame for any offset', async () => {
+    const centers: number[] = [];
+    for (const offset of [0, 100]) {
+      const notification = `scroll-view-finished-${offset}`;
+      const transition = sourceCenterYTransition(centers, notification);
+      const props = { offset, transition };
+      await render(null);
+      await render(<ScrollViewSourceScreens {...props} active={false} />);
+      await waitForFrames(3);
+      await render(<ScrollViewSourceScreens {...props} active />);
+      await waitForNotification(notification);
+    }
+    expect(centers.length).toBe(2);
+    expect(centers[1] - centers[0]).toBe(0, ComparisonMode.PIXEL);
+  });
+
+  test('starts from a source without size at the place of its moved parent', async () => {
+    const translations: number[] = [];
+    const record = (translation: number) => translations.push(translation);
+    const finish = () => notify('zero-size-finished');
+    const transition = SharedTransition.custom((values) => {
+      'worklet';
+      scheduleOnRN(record, values.currentTransform.matrix[12]);
+      return { width: withTiming(values.targetWidth, { duration: 100 }) };
+    }).withCallback(() => {
+      'worklet';
+      scheduleOnRN(finish);
+    });
+    await render(
+      <ZeroSizeSourceScreens active={false} transition={transition} />
+    );
+    await waitForFrames(3);
+    await render(<ZeroSizeSourceScreens active transition={transition} />);
+    await waitForNotification('zero-size-finished');
+    expect(translations[0]).toBe(50, ComparisonMode.PIXEL);
+  });
+
+  test('starts from a source in a scrolled flipped scroll view', async () => {
+    const centers: number[] = [];
+    for (const offset of [0, 100]) {
+      const notification = `flipped-finished-${offset}`;
+      const transition = sourceCenterYTransition(centers, notification);
+      const props = { offset, transition };
+      await render(null);
+      await render(<FlippedScrollScreens {...props} active={false} />);
+      await waitForFrames(3);
+      await render(<FlippedScrollScreens {...props} active />);
+      await waitForNotification(notification);
+    }
+    expect(centers.length).toBe(2);
+    expect(centers[1] - centers[0]).toBe(100, ComparisonMode.PIXEL);
+  });
 
   nativeTest(
     'keeps the held transform when the target width changes',

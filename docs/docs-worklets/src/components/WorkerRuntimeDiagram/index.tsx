@@ -27,19 +27,18 @@ const handlers: TimelineBlock[] = TAPS.map((time) => ({
 export default function WorkerRuntimeDiagram() {
   return (
     <LaneTimeline
+      name="WorkerRuntimeDiagram"
       label="The busy task moved to a Worker Runtime on its own thread"
       duration={DURATION}
       lanes={[
         { title: 'UI thread', accent: 'ui', blocks: taps },
         {
           title: 'JS thread',
-          tag: 'RN Runtime',
           accent: 'js',
           blocks: handlers,
         },
         {
           title: 'Worker thread',
-          tag: 'Worker Runtime',
           accent: 'worker',
           blocks: [
             {

@@ -1,0 +1,47 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # getSerializableMapping
+</Badges>
+
+Returns the [SerializableRef](./isSerializableRef.mdx) that Worklets sends to other Runtimes in place of an object. An object has one after [setSerializableMapping](./setSerializableMapping.mdx), or after Worklets [serialized](./serializable.mdx) it.
+
+## Reference
+
+```typescript
+import {
+  getSerializableMapping,
+  setSerializableMapping,
+} from 'react-native-worklets';
+
+const flag = { current: false };
+console.log(getSerializableMapping(flag)); // logs `undefined`
+
+setSerializableMapping(flag, { current: true });
+// the SerializableRef of `{ current: true }`
+const mapping = getSerializableMapping(flag);
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function getSerializableMapping(value: object): SerializableRef | undefined;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object to get the mapping of. It's compared by reference.
+
+## Returns
+
+The [SerializableRef](./isSerializableRef.mdx) mapped to `value`, or `undefined` if `value` has no mapping.
+
+## Remarks
+
+- On the Web `getSerializableMapping` always returns `undefined`.

@@ -3,6 +3,9 @@ id: call-tables
 sidebar_label: Call tables
 ---
 
+import * as CallTableBundleModeSnippet from './_call-tables/callTableBundleMode';
+import CallTableBundleModeSource from '!!raw-loader!./_call-tables/callTableBundleMode';
+
 # Call tables
 
 Call tables are quick references that show **from which runtimes a given scheduling function can be called**. Since worklets run in [Bundle Mode](/docs/bundleMode), every runtime has access to the full JavaScript bundle and most threading APIs are available on all runtimes - however, some functions can still be called only from specific runtimes.
@@ -19,33 +22,11 @@ workerRuntime: true,
 }}
 />
 
-A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime:
+A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime.
 
-```tsx {9-11,14-16,20-22}
-import {
-  scheduleOnUI,
-  scheduleOnRuntime,
-  createWorkletRuntime,
-} from 'react-native-worklets';
+In the following example, the RN Runtime schedules a worker, and that worker schedules a function on the UI Runtime. The UI Runtime receives the task and logs the result.
 
-const workerRuntime = createWorkletRuntime();
-
-// We are on the RN Runtime -
-// calling scheduleOnUI is fine
-scheduleOnUI(/*...*/);
-
-scheduleOnUI(() => {
-  // We are on the UI Runtime -
-  // calling scheduleOnUI is fine
-  scheduleOnUI(/*...*/);
-});
-
-scheduleOnRuntime(workerRuntime, () => {
-  // We are on the Worker Runtime -
-  // calling scheduleOnUI is fine
-  scheduleOnUI(/*...*/);
-});
-```
+<ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource} bundleMode/>
 
 Compare it with [runOnUIAsync](/docs/threading/runOnUIAsync), which can be called only from the RN Runtime:
 

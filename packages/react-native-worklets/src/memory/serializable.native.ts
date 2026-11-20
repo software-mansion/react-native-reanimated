@@ -8,7 +8,12 @@ import { isWorkletFunction } from '../workletFunction';
 import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
 import { isSynchronizable } from './isSynchronizable';
 import {
+  RemoteFunctionBearingEntry,
+  remoteFunctionBearingFlag,
+} from './remoteFunctionBearingEntry';
+import {
   serializableMappingCache,
+  serializableMappingEntries,
   serializableMappingFlag,
 } from './serializableMappingCache';
 import type {
@@ -58,13 +63,106 @@ function isTurboModuleLike(object: object): object is Record<string, unknown> {
   return proto !== null && isHostObject(proto);
 }
 
-function getFromCache(value: object) {
-  const cached = serializableMappingCache.get(value);
+/**
+ * How many times `createSerializable` has returned a clone that holds a JS
+ * function: a remote function, new or cached, or a cache hit whose entry is
+ * tagged as one (`remoteFunctionBearingFlag` or a
+ * `RemoteFunctionBearingEntry`). A container holds a JS function exactly when
+ * this changed while its children were cloned, so a subtree without one costs a
+ * read before and a comparison after, and nothing per child. It only grows,
+ * apart from the resets around the user's `determine` and `pack`, so a throw
+ * caught in the middle of a traversal cannot hide a function seen before it.
+ */
+let functionsSeen = 0;
+
+function markRemoteFunctionBearing(clone: object): void {
+  serializableMappingEntries.set(clone, remoteFunctionBearingFlag);
+}
+
+function markIfRemoteFunctionBearing<TClone extends object>(
+  clone: TClone,
+  holdsFunction: boolean
+): TClone {
+  if (holdsFunction) {
+    markRemoteFunctionBearing(clone);
+  }
+  return clone;
+}
+
+/**
+ * Caches `value -> clone`. A clone that holds a JS function and is not
+ * persisted is cached through a non-owning marker, so the cache never keeps it
+ * alive on its own. While something else owns the clone, a cache hit returns
+ * the same native serializable (and so the same copy on the other runtime),
+ * through the clone itself while it is alive. Once it was released, `value` is
+ * serialized again.
+ */
+function cacheClone(
+  value: object,
+  clone: SerializableRef<unknown>,
+  holdsFunction: boolean,
+  shouldPersistRemote: boolean
+) {
+  if (holdsFunction) {
+    serializableMappingEntries.set(
+      value,
+      RemoteFunctionBearingEntry.forClone(clone, shouldPersistRemote)
+    );
+    markRemoteFunctionBearing(clone);
+    return;
+  }
+  serializableMappingEntries.set(value, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
+}
+
+/**
+ * Returns the clone cached for `value`, or `undefined` when there is none or it
+ * was released. Counts a hit on a clone that holds a JS function in
+ * `functionsSeen` unless `countHit` is false. A hit on any other clone costs no
+ * lookup beyond the entry.
+ */
+function getFromCache(value: object, countHit = true) {
+  const cached = serializableMappingEntries.get(value);
+  if (cached === undefined) {
+    return undefined;
+  }
   if (cached === serializableMappingFlag) {
     // This means that `value` was already a clone and we should return it as is.
     return value;
   }
+  const tag = (cached as { __serializableRef?: unknown }).__serializableRef;
+  if (tag === true) {
+    // A serializable stored as is holds no JS function, because one that does
+    // is stored in a `RemoteFunctionBearingEntry`.
+    return cached;
+  }
+  if (tag === false) {
+    const clone = (cached as RemoteFunctionBearingEntry).deref(
+      markRemoteFunctionBearing
+    );
+    if (clone !== undefined && countHit) {
+      functionsSeen++;
+    }
+    return clone;
+  }
+  if (cached === remoteFunctionBearingFlag) {
+    if (countHit) {
+      functionsSeen++;
+    }
+    return value;
+  }
   return cached;
+}
+
+/**
+ * The serializable cached for `value`, or `undefined` when there is none or it
+ * was released. Unlike a raw cache read, it never returns the non-owning marker
+ * or `WeakRef` that stands in for a clone holding a JS function.
+ */
+export function getCachedSerializable(
+  value: object
+): SerializableRef | undefined {
+  return getFromCache(value, false) as SerializableRef | undefined;
 }
 
 const VALID_ARRAY_VIEWS_NAMES = [
@@ -141,15 +239,7 @@ export function createSerializable<TValue>(
 
   const cached = getFromCache(value);
   if (cached !== undefined) {
-    if (globalThis.WeakRef && cached instanceof WeakRef) {
-      // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
-      const deref = cached.deref();
-      if (deref !== undefined) {
-        return deref as SerializableRef<TValue>;
-      }
-    } else {
-      return cached as SerializableRef<TValue>;
-    }
+    return cached as SerializableRef<TValue>;
   }
 
   if (Array.isArray(value)) {
@@ -163,6 +253,7 @@ export function createSerializable<TValue>(
     }
     if ((value as unknown as RemoteFunction).__remoteFunction) {
       // Remote functions are already serialized.
+      functionsSeen++;
       return value as unknown as SerializableRef<TValue>;
     }
     if (!isWorkletFunction(value)) {
@@ -205,9 +296,13 @@ export function createSerializable<TValue>(
     // typed array (e.g. Int32Array, Uint8ClampedArray) or DataView
     return cloneArrayBufferView(value);
   }
+  const seen = functionsSeen;
   for (let i = 0; i < customSerializationRegistry.length; i++) {
     const { determine, pack } = customSerializationRegistry[i];
-    if (determine(value)) {
+    const matches = determine(value);
+    // `determine` is user code. Whatever it serializes is not part of `value`.
+    functionsSeen = seen;
+    if (matches) {
       return cloneCustom(value, pack, i) as SerializableRef<TValue>;
     }
   }
@@ -361,7 +456,7 @@ export function createSerializableString(
     throw new Error('[Worklets] `createSerializableString` expects a string.');
   }
   const clone = cloneString(value);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -372,7 +467,7 @@ export function createSerializableNumber(
     throw new Error('[Worklets] `createSerializableNumber` expects a number.');
   }
   const clone = cloneNumber(value);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -385,7 +480,7 @@ export function createSerializableBoolean(
     );
   }
   const clone = cloneBoolean(value);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -396,7 +491,7 @@ export function createSerializableBigInt(
     throw new Error('[Worklets] `createSerializableBigInt` expects a bigint.');
   }
   const clone = cloneBigInt(value);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -405,7 +500,7 @@ export function createSerializableNull(value: null): SerializableRef<null> {
     throw new Error('[Worklets] `createSerializableNull` expects null.');
   }
   const clone = cloneNull();
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -418,7 +513,7 @@ export function createSerializableUndefined(
     );
   }
   const clone = cloneUndefined();
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -448,11 +543,8 @@ export function createSerializableRemoteFunction<
       '[Worklets] `createSerializableRemoteFunction` expects a function that is not a worklet.'
     );
   }
-  const cached = getFromCache(value);
-  const serializable =
-    globalThis.WeakRef && cached instanceof WeakRef ? cached.deref() : cached;
   return (
-    (serializable as SerializableRef<TValue> | undefined) ??
+    (getFromCache(value) as SerializableRef<TValue> | undefined) ??
     (cloneNonWorkletFunction(
       value as unknown as () => unknown
     ) as unknown as SerializableRef<TValue>)
@@ -607,6 +699,7 @@ function cloneArray<T extends unknown[]>(
   shouldPersistRemote: boolean,
   depth: number
 ): SerializableRef<T> {
+  const seen = functionsSeen;
   const clonedElements = value.map((element, index) =>
     __DEV__
       ? withPathSegment(`[${index}]`, () =>
@@ -618,8 +711,7 @@ function cloneArray<T extends unknown[]>(
     clonedElements,
     shouldPersistRemote
   ) as SerializableRef<T>;
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  cacheClone(value, clone, functionsSeen !== seen, shouldPersistRemote);
 
   freezeObjectInDev(value);
   return clone;
@@ -632,12 +724,16 @@ function cloneNonWorkletFunction<TArgs extends unknown[], TReturn>(
     fun,
     __DEV__ ? fun.name : undefined
   ) as SerializableRef<(...args: TArgs) => TReturn>;
+  functionsSeen++;
 
   if (globalThis.WeakRef) {
     // WeakRef is installed on runtimes only with Hermes microtaskQueue enabled.
-    serializableMappingCache.set(fun, new WeakRef(clone));
+    serializableMappingEntries.set(
+      fun,
+      RemoteFunctionBearingEntry.forRemoteFunction(clone)
+    );
   }
-  serializableMappingCache.set(clone);
+  markRemoteFunctionBearing(clone);
   freezeObjectInDev(fun);
 
   return clone;
@@ -648,8 +744,8 @@ function cloneHostObject<T extends object>(value: T): SerializableRef<T> {
   // then recreate new host object wrapping the same instance on the UI thread.
   // there is no point of iterating over keys as we do for regular objects.
   const clone = WorkletsModule.createSerializableHostObject(value);
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(value, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
 
   return clone;
 }
@@ -669,6 +765,7 @@ function cloneWorklet<TValue extends WorkletFunction>(
     }
   }
   const buildClone = (): SerializableRef<TValue> => {
+    const seen = functionsSeen;
     const clonedProps: Record<string, unknown> = cloneObjectProperties(
       value,
       shouldPersistRemote,
@@ -681,8 +778,7 @@ function cloneWorklet<TValue extends WorkletFunction>(
       // retain all worklets
       true
     ) as SerializableRef<TValue>;
-    serializableMappingCache.set(value, clone);
-    serializableMappingCache.set(clone);
+    cacheClone(value, clone, functionsSeen !== seen, shouldPersistRemote);
 
     freezeObjectInDev(value);
     return clone;
@@ -703,12 +799,13 @@ function cloneTurboModuleLike<TValue extends object>(
   depth: number
 ): SerializableRef<TValue> {
   const proto = Object.getPrototypeOf(value);
+  const seen = functionsSeen;
   const clonedProps = cloneObjectProperties(value, shouldPersistRemote, depth);
   const clone = WorkletsModule.createSerializableTurboModuleLike(
     clonedProps,
     proto
   ) as SerializableRef<TValue>;
-  return clone;
+  return markIfRemoteFunctionBearing(clone, functionsSeen !== seen);
 }
 
 function clonePlainJSObject<TValue extends object>(
@@ -716,6 +813,7 @@ function clonePlainJSObject<TValue extends object>(
   shouldPersistRemote: boolean,
   depth: number
 ): SerializableRef<TValue> {
+  const seen = functionsSeen;
   const clonedProps: Record<string, unknown> = cloneObjectProperties(
     value,
     shouldPersistRemote,
@@ -726,8 +824,7 @@ function clonePlainJSObject<TValue extends object>(
     shouldPersistRemote,
     value
   ) as SerializableRef<TValue>;
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  cacheClone(value, clone, functionsSeen !== seen, shouldPersistRemote);
 
   freezeObjectInDev(value);
   return clone;
@@ -738,6 +835,7 @@ function cloneMap(
 ): SerializableRef<Map<unknown, unknown>> {
   const clonedKeys: unknown[] = [];
   const clonedValues: unknown[] = [];
+  const seen = functionsSeen;
   let index = 0;
   for (const [key, element] of value.entries()) {
     if (__DEV__) {
@@ -756,8 +854,7 @@ function cloneMap(
     }
   }
   const clone = WorkletsModule.createSerializableMap(clonedKeys, clonedValues);
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  cacheClone(value, clone, functionsSeen !== seen, false);
 
   freezeObjectInDev(value);
   return clone;
@@ -765,6 +862,7 @@ function cloneMap(
 
 function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
   const clonedElements: unknown[] = [];
+  const seen = functionsSeen;
   let index = 0;
   for (const element of value) {
     if (__DEV__) {
@@ -779,8 +877,7 @@ function cloneSet(value: Set<unknown>): SerializableRef<Set<unknown>> {
     }
   }
   const clone = WorkletsModule.createSerializableSet(clonedElements);
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  cacheClone(value, clone, functionsSeen !== seen, false);
 
   freezeObjectInDev(value);
   return clone;
@@ -791,16 +888,16 @@ function cloneRegExp(value: RegExp): SerializableRef<RegExp> {
     value.source,
     value.flags
   );
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(value, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
 function cloneError(value: Error): SerializableRef<Error> {
   const { name, message, stack } = value;
   const clone = WorkletsModule.createSerializableError(name, message, stack);
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(value, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
@@ -808,8 +905,8 @@ function cloneArrayBuffer(
   arrayBuffer: ArrayBuffer
 ): SerializableRef<ArrayBuffer> {
   const clone = WorkletsModule.createSerializableArrayBuffer(arrayBuffer);
-  serializableMappingCache.set(arrayBuffer, clone);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(arrayBuffer, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
 
   return clone;
 }
@@ -831,15 +928,15 @@ function cloneArrayBufferView<TValue extends ArrayBufferView>(
     value.byteOffset,
     length
   );
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(value, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
   return clone;
 }
 
 function cloneSynchronizable<TValue>(
   value: Synchronizable<TValue>
 ): SerializableRef<TValue> {
-  serializableMappingCache.set(value);
+  serializableMappingEntries.set(value, serializableMappingFlag);
   return value;
 }
 
@@ -849,8 +946,8 @@ function cloneImport<TValue extends WorkletImport>(
   const { source, imported } = value.__bundleData;
   const clone = WorkletsModule.createSerializableImport(source, imported);
 
-  serializableMappingCache.set(value, clone);
-  serializableMappingCache.set(clone);
+  serializableMappingEntries.set(value, clone);
+  serializableMappingEntries.set(clone, serializableMappingFlag);
 
   return clone as SerializableRef<TValue>;
 }
@@ -860,15 +957,21 @@ function cloneCustom<TValue extends object, TPacked = unknown>(
   pack: (data: TValue) => TPacked,
   typeId: number
 ): SerializableRef<TValue> {
+  const seen = functionsSeen;
   const packedData = pack(data);
+  // `pack` is user code. Whatever it serializes is not part of `data`.
+  functionsSeen = seen;
   const serialized = __DEV__
     ? withPathSegment('.pack()', () => createSerializable(packedData))
     : createSerializable(packedData);
 
-  return WorkletsModule.createCustomSerializable(
-    serialized,
-    typeId
-  ) as SerializableRef<TValue>;
+  return markIfRemoteFunctionBearing(
+    WorkletsModule.createCustomSerializable(
+      serialized,
+      typeId
+    ) as SerializableRef<TValue>,
+    functionsSeen !== seen
+  );
 }
 
 /**

@@ -71,15 +71,15 @@ export default class AnimatedComponent
     ChildComponent: AnyComponent,
     props: AnimatedComponentProps<InitialComponentProps>,
     displayName: string,
-    options?: Options<InitialComponentProps>
+    options?: Options<InitialComponentProps>,
+    context?: React.ContextType<typeof SkipEnteringContext>
   ) {
     super(ChildComponent, props);
     this._options = options;
     this._displayName = displayName;
 
     const entering = this.props.entering;
-    const skipEntering = this.context?.current;
-    if (!skipEntering) {
+    if (!context?.current) {
       this._configureLayoutAnimation(LayoutAnimationType.ENTERING, entering);
     }
   }
@@ -295,7 +295,7 @@ export default class AnimatedComponent
       prevProps.exiting
     );
 
-    this._NativeEventsManager?.updateEvents(prevProps);
+    this._NativeEventsManager?.updateEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
 

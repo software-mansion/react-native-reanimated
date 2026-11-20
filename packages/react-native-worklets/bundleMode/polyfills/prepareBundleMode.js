@@ -9,12 +9,10 @@ if (
   /** @type {typeof globalThis} */ (globalThis).__RUNTIME_KIND =
     reactNativeRuntimeKind;
 
-  if (globalThis._WORKLETS_BUNDLE_MODE_ENABLED) {
-    const workletsModule = globalThis.__turboModuleProxy
-      ? globalThis.__turboModuleProxy('WorkletsModule')
-      : globalThis.nativeModuleProxy?.WorkletsModule;
-    workletsModule?.prepareBundleMode?.();
-  }
+  const workletsModule = globalThis.__turboModuleProxy
+    ? globalThis.__turboModuleProxy('WorkletsModule')
+    : globalThis.nativeModuleProxy?.WorkletsModule;
+  workletsModule?.prepareBundleMode?.();
 } else if (__DEV__) {
   globalThis.__fbBatchedBridgeConfig = new Proxy(
     {},

@@ -3,8 +3,16 @@
 #include <jsi/jsi.h>
 #include <react/renderer/components/rnreanimated/EventEmitters.h>
 #include <react/renderer/components/rnreanimated/Props.h>
+#if __has_include(<React/View.h>)
+#include <React/View.h>
+#else
 #include <react/renderer/components/view/ConcreteViewShadowNode.h>
+#endif
+#if __has_include(<React/RendererCore.h>)
+#include <React/RendererCore.h>
+#else
 #include <react/renderer/core/LayoutContext.h>
+#endif
 
 #include "REASharedTransitionBoundaryState.h"
 

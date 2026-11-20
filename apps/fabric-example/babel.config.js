@@ -2,6 +2,9 @@
 const workletsPluginOptions = {
   importForwarding: {
     moduleNames: ['axios'],
+    relativePaths: [
+      'runtime-tests/worklets/tests/runtimes/reentrantModuleLoad.test.tsx',
+    ],
   },
 };
 

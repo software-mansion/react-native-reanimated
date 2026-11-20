@@ -174,8 +174,11 @@ export {
   withReanimatedTimer,
 } from './jestUtils';
 export type {
+  CustomSharedTransitionAnimation,
   FadeContentConfig,
+  ProgressSharedTransitionAnimation,
   ReanimatedKeyframe,
+  SharedTransitionAnimationsValues,
 } from './layoutReanimation';
 export {
   BaseAnimationBuilder,
@@ -247,6 +250,7 @@ export {
   RotateOutUpRight,
   SequencedTransition,
   SharedTransition,
+  SharedTransitionType,
   SlideInDown,
   SlideInLeft,
   // Slide

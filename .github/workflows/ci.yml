@@ -76,6 +76,9 @@ jobs:
               - '.github/actions/save-yarn-cache/**'
               - 'scripts/llvm-tools/**'
               - 'scripts/validate-android.sh'
+              - 'scripts/validate-compat-includes.sh'
+              - 'packages/react-native-reanimated/package.json'
+              - 'packages/react-native-worklets/package.json'
               - 'packages/react-native-reanimated/android/src/**'
               - 'packages/react-native-reanimated/android/build.gradle.kts'
               - 'packages/react-native-reanimated/Common/cpp/**'
@@ -89,6 +92,7 @@ jobs:
               - 'packages/react-native-reanimated/apple/**'
               - 'packages/react-native-reanimated/package.json'
               - 'packages/react-native-reanimated/scripts/validate-apple.sh'
+              - 'scripts/validate-compat-includes.sh'
               - 'scripts/llvm-tools/**'
               - 'packages/react-native-reanimated/Common/cpp/**'
               - 'packages/react-native-worklets/apple/**'
@@ -106,6 +110,8 @@ jobs:
               - '.github/workflows/docs-publish.yml'
               - '.github/actions/docs-build/**'
               - 'scripts/validate-docs-versions.js'
+              - 'scripts/validate-docs-released-versions.mts'
+              - 'scripts/validate-docs-redirects.mts'
               - 'docs/docs-reanimated/**'
               - 'packages/react-native-reanimated/compatibility.json'
               - 'docs/docs-worklets/**'
@@ -186,13 +192,19 @@ jobs:
             runtime-tests-android:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-android.yml'
+              - '.github/actions/install-android-emulator/**'
               - '.github/actions/install-android-ndk/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
+              - '.nvmrc'
               - 'apps/common-app/runtime-tests/**'
               - 'apps/fabric-example/babel.config.js'
               - 'apps/fabric-example/metro.config.js'
               - 'apps/fabric-example/package.json'
               - 'apps/common-app/package.json'
-              - 'apps/fabric-example/scripts/runtime-tests-server.js'
+              - 'apps/fabric-example/scripts/runtime-tests-server.mts'
+              - 'apps/fabric-example/scripts/android-device.mts'
+              - 'apps/fabric-example/scripts/runtime-tests-suites.mts'
               - 'apps/fabric-example/android/**'
               - 'packages/react-native-reanimated/Common/**'
               - 'packages/react-native-reanimated/android/**'
@@ -205,7 +217,6 @@ jobs:
               - 'packages/react-native-worklets/plugin-oxc/**'
               - 'packages/react-native-worklets/src/**'
               - 'scripts/patches/**'
-              - 'scripts/toggle-bundle-mode.sh'
               - '.yarn/patches/metro-*.patch'
             runtime-tests-ios-argent:
               - '.github/workflows/ci.yml'
@@ -215,14 +226,20 @@ jobs:
               - '.github/actions/save-pods/**'
               - '.github/actions/setup-ccache/**'
               - '.github/actions/save-ccache/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
+              - '.nvmrc'
               - 'apps/common-app/runtime-tests/**'
               - 'apps/fabric-example/babel.config.js'
               - 'apps/fabric-example/metro.config.js'
               - 'apps/fabric-example/package.json'
               - 'apps/common-app/package.json'
-              - 'apps/fabric-example/scripts/runtime-tests-server.js'
-              - 'apps/fabric-example/scripts/runtime-tests-remote.mjs'
-              - 'apps/fabric-example/scripts/export-runtime-tests-app.js'
+              - 'apps/fabric-example/scripts/runtime-tests-server.mts'
+              - 'apps/fabric-example/scripts/android-device.mts'
+              - 'apps/fabric-example/scripts/runtime-tests-suites.mts'
+              - 'apps/fabric-example/scripts/runtime-tests-remote.mts'
+              - 'apps/fabric-example/scripts/runtime-tests-tunnel.mts'
+              - 'apps/fabric-example/scripts/export-runtime-tests-app.mts'
               - 'apps/fabric-example/ios/**'
               - 'packages/react-native-reanimated/RNReanimated.podspec'
               - 'packages/react-native-reanimated/scripts/reanimated_utils.rb'
@@ -239,7 +256,6 @@ jobs:
               - 'packages/react-native-worklets/plugin-oxc/**'
               - 'packages/react-native-worklets/src/**'
               - 'scripts/patches/**'
-              - 'scripts/toggle-bundle-mode.sh'
               - '.yarn/patches/metro-*.patch'
             worklets-plugin-static-check:
               - '.github/workflows/ci.yml'
@@ -340,7 +356,7 @@ jobs:
     if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result == 'failure' || needs.changes.outputs.runtime-tests-android == 'true') }}
     uses: $/.github/workflows/runtime-tests-android.yml
     with:
-      configuration: DebugRuntimeTests
+      configuration: Debug
 
   runtime-tests-ios:
     name: Runtime tests iOS

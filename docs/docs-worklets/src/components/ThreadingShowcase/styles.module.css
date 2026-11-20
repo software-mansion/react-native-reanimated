@@ -1,17 +1,16 @@
 .showcase {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  min-width: 0;
   margin-bottom: 1.5rem;
 }
-
 .bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 10px 16px;
 }
-
 .toggle {
   --glow: #782aeb;
   --glow-2: #38acdd;
@@ -19,6 +18,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 44px;
   padding: 10px 22px 10px 12px;
   border: none;
   border-radius: 999px;
@@ -39,17 +39,18 @@
     transform 150ms ease,
     box-shadow 150ms ease;
 }
-
 .toggle:hover {
   transform: scale(1.04);
 }
-
+.toggle:focus-visible {
+  outline: 2px solid var(--ifm-color-primary);
+  outline-offset: 3px;
+}
 .toggleOn {
   background: var(--swm-green-light-100, #57b495);
   animation: none;
   box-shadow: none;
 }
-
 .spark {
   position: absolute;
   top: 0;
@@ -64,16 +65,15 @@
   );
   animation: sweep 2.2s ease-in-out infinite;
 }
-
 .switch {
   position: relative;
+  flex-shrink: 0;
   width: 34px;
   height: 18px;
   border-radius: 999px;
   background-color: rgba(255, 255, 255, 0.35);
   transition: background-color 150ms ease;
 }
-
 .switch::after {
   content: '';
   position: absolute;
@@ -85,30 +85,24 @@
   background-color: #fff;
   transition: transform 150ms ease;
 }
-
 .toggleOn .switch::after {
   transform: translateX(16px);
 }
-
 .label {
   position: relative;
   display: grid;
   text-align: left;
 }
-
 .label > span {
   grid-area: 1 / 1;
 }
-
 .labelGhost {
   visibility: hidden;
 }
-
 .hint {
-  font-size: 0.9rem;
   color: var(--ifm-color-emphasis-700);
+  font-size: 13px;
 }
-
 @keyframes shimmer {
   0% {
     background-position: 0% 50%;
@@ -117,7 +111,6 @@
     background-position: 200% 50%;
   }
 }
-
 @keyframes glow {
   0%,
   100% {
@@ -127,7 +120,6 @@
     box-shadow: 0 0 0 10px rgba(120, 42, 235, 0);
   }
 }
-
 @keyframes sweep {
   0% {
     left: -60%;
@@ -137,10 +129,17 @@
     left: 130%;
   }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .toggle,
   .spark {
     animation: none;
+  }
+  .toggle,
+  .switch,
+  .switch::after {
+    transition: none;
+  }
+  .toggle:hover {
+    transform: none;
   }
 }

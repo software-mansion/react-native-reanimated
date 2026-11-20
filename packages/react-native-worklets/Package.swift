@@ -117,8 +117,10 @@ let package = Package(
             dependencies: reactHeaders,
             path: ".",
             sources: ["Common/cpp/worklets", "apple/worklets"],
+            resources: [.copy("apple/PrivacyInfo.xcprivacy")],
             publicHeadersPath: "Common/cpp",
             cSettings: [
+                .define("RN_ALLOW_FRAMEWORKS"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("apple"),
@@ -127,6 +129,7 @@ let package = Package(
                 .define("HERMES_ENABLE_DEBUGGER", to: "1", .when(configuration: .debug)),
             ],
             cxxSettings: [
+                .define("RN_ALLOW_FRAMEWORKS"),
                 .headerSearchPath("."),
                 .headerSearchPath("Common/cpp"),
                 .headerSearchPath("apple"),

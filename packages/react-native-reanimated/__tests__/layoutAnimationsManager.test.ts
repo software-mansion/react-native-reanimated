@@ -1,3 +1,4 @@
+import { logger } from '../src/common';
 import type {
   AnimatableValue,
   AnimationObject,
@@ -6,6 +7,10 @@ import type {
 } from '../src/commonTypes';
 import { LayoutAnimationType } from '../src/commonTypes';
 import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
+import {
+  SharedTransition,
+  SharedTransitionType,
+} from '../src/layoutReanimation/SharedTransition';
 
 jest.mock('react-native-worklets', () =>
   jest.requireActual('../../react-native-worklets/src/mock')
@@ -193,5 +198,292 @@ describe('LayoutAnimationsManager', () => {
     expect(globalThis._notifyAboutEnd).toHaveBeenCalledTimes(2);
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(1, 9, false);
     expect(globalThis._notifyAboutEnd).toHaveBeenNthCalledWith(2, 9, false);
+  });
+
+  describe('when an animation interrupts a running one', () => {
+    const ANIMATION_DURATION = 100;
+    const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
+    let frames: FrameRequestCallback[];
+
+    // Animates linearly from the value it starts at to `toValue`
+    function makeLinearAnimation(
+      toValue: number,
+      duration = ANIMATION_DURATION
+    ) {
+      let startValue = 0;
+      let startTimestamp = 0;
+      const animation: AnimationObject = {
+        current: toValue,
+        onStart(_animation, value, timestamp) {
+          startValue = value as number;
+          startTimestamp = timestamp;
+          animation.current = startValue;
+        },
+        onFrame(_animation, timestamp) {
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          animation.current = startValue + (toValue - startValue) * progress;
+          return progress === 1;
+        },
+      };
+      // LayoutAnimation's public type describes resolved style values
+      return animation as unknown as number;
+    }
+
+    // Starts an entering animation at 100 ms, and runs it until it's 40% done. The next
+    // animation then starts at 140 ms.
+    function startAndRunTo40Percent(
+      tag: number,
+      enteringAnimation: LayoutAnimation,
+      type = LayoutAnimationType.ENTERING
+    ) {
+      getAnimationTimestamp.mockReturnValueOnce(100).mockReturnValueOnce(140);
+      manager.start(tag, type, {}, () => enteringAnimation);
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      frames.splice(0).forEach((frame) => frame(140));
+    }
+
+    beforeEach(() => {
+      frames = [];
+      globalThis.requestAnimationFrame = (callback) => {
+        frames.push(callback);
+        return frames.length;
+      };
+    });
+
+    afterEach(() => {
+      globalThis.requestAnimationFrame = originalRequestAnimationFrame;
+    });
+
+    test('drops the old shared clock and passes retained property state to a replacement', () => {
+      const previousWidth = makeLinearAnimation(100);
+      startAndRunTo40Percent(
+        15,
+        {
+          initialValues: { width: 0, sharedTransitionGeometryProgress: 0 },
+          animations: {
+            width: previousWidth,
+            sharedTransitionGeometryProgress: makeLinearAnimation(1, 1000),
+          },
+        },
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+      );
+      const onStart = jest.fn(
+        (
+          animation: AnimationObject,
+          value: AnimatableValue,
+          _timestamp: Timestamp,
+          _previous: AnimationObject
+        ) => {
+          animation.current = value;
+        }
+      );
+      manager.start(
+        15,
+        LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+        {},
+        () => ({
+          initialValues: { width: 40 },
+          animations: {
+            width: {
+              current: 40,
+              onStart,
+              onFrame: () => true,
+            } as unknown as number,
+          },
+        })
+      );
+      expect(onStart.mock.calls[0][3]).toBe(previousWidth);
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(15, {
+        width: 40,
+      });
+      frames.splice(0).forEach((frame) => frame(240));
+      expect(globalThis._notifyAboutEnd).toHaveBeenCalledTimes(1);
+      expect(globalThis._notifyAboutEnd).toHaveBeenCalledWith(15, false);
+    });
+
+    test('replaces the active properties when a shared transition changes mode', () => {
+      const values = { currentWidth: 30, targetWidth: 90 };
+      const builtIn = SharedTransition.duration(600);
+      const custom = SharedTransition.custom(() => {
+        'worklet';
+        return {
+          width: makeLinearAnimation(90),
+          opacity: makeLinearAnimation(0.5),
+        };
+      });
+      const progress = SharedTransition.duration(600).defaultTransitionType(
+        SharedTransitionType.PROGRESS_ANIMATION
+      );
+      for (const [transition, keys] of [
+        [builtIn, ['sharedTransitionGeometryProgress']],
+        [custom, ['opacity', 'width']],
+        [progress, ['width']],
+        [builtIn, ['sharedTransitionGeometryProgress']],
+      ] as const) {
+        manager.start(
+          17,
+          LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+          values,
+          transition.build()
+        );
+        const updates = jest.mocked(globalThis._notifyAboutProgress).mock
+          .lastCall?.[1];
+        expect(Object.keys(updates ?? {}).sort()).toEqual(keys);
+      }
+      manager.stop(17);
+    });
+
+    test('starts an exiting animation from the current values', () => {
+      startAndRunTo40Percent(10, {
+        initialValues: { opacity: 0 },
+        animations: { opacity: makeLinearAnimation(1) },
+      });
+
+      manager.start(10, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(10, {
+        opacity: 0.4,
+      });
+      manager.stop(10);
+    });
+
+    test('keeps the initial values that the interrupted animation does not drive', () => {
+      startAndRunTo40Percent(11, {
+        initialValues: { transform: [{ scale: 0 }] },
+        animations: { transform: [{ scale: makeLinearAnimation(1) }] },
+      });
+
+      manager.start(11, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: {
+          opacity: 1,
+          transform: [{ scale: 1 }, { translateX: 0 }],
+        },
+        animations: {
+          opacity: makeLinearAnimation(0),
+          transform: [
+            { scale: makeLinearAnimation(0) },
+            { translateX: makeLinearAnimation(100) },
+          ],
+        },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(11, {
+        opacity: 1,
+        transform: [{ scale: 0.4 }, { translateX: 0 }],
+      });
+      manager.stop(11);
+    });
+
+    test('starts from a static value of the interrupted animation', () => {
+      // `withStyleAnimation` turns a static value into an animation when it starts
+      startAndRunTo40Percent(13, {
+        initialValues: { opacity: 0, transform: [{ scale: 0 }] },
+        animations: {
+          opacity: 0.5,
+          transform: [{ scale: makeLinearAnimation(1) }],
+        },
+      });
+
+      manager.start(13, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(13, {
+        opacity: 0.5,
+        transform: [{ scale: 0.4 }],
+      });
+      manager.stop(13);
+    });
+
+    test('keeps an initial value whose parts the interrupted animation drives', () => {
+      startAndRunTo40Percent(14, {
+        initialValues: { transform: [{ matrix: [0, 0] }] },
+        animations: {
+          transform: [
+            { matrix: [makeLinearAnimation(1), makeLinearAnimation(1)] },
+          ],
+        },
+      });
+      const keepStartValue: AnimationObject = {
+        current: undefined,
+        onStart(animation, value) {
+          animation.current = value;
+        },
+        onFrame: () => false,
+      };
+
+      manager.start(14, LayoutAnimationType.EXITING, {}, () => ({
+        initialValues: { transform: [{ matrix: [1, 1] }] },
+        animations: {
+          transform: [{ matrix: keepStartValue as unknown as number[] }],
+        },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(14, {
+        transform: [{ matrix: [1, 1] }],
+      });
+      manager.stop(14);
+    });
+
+    test('starts other animations from their initial values', () => {
+      startAndRunTo40Percent(12, {
+        initialValues: { opacity: 0 },
+        animations: { opacity: makeLinearAnimation(1) },
+      });
+
+      manager.start(12, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { opacity: 1 },
+        animations: { opacity: makeLinearAnimation(0) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(12, {
+        opacity: 1,
+      });
+      manager.stop(12);
+    });
+  });
+
+  describe('unsupported props warning', () => {
+    function startTransformOrigin(tag: number, type: LayoutAnimationType) {
+      manager.start(tag, type, {}, () => ({
+        initialValues: { transformOrigin: [0, 0, 0] },
+        animations: {
+          transformOrigin: [0, 0, 0].map(
+            () =>
+              ({
+                current: 0,
+                onStart: jest.fn(),
+                onFrame: () => false,
+              }) as unknown as number
+          ),
+        },
+      }));
+      manager.stop(tag);
+    }
+
+    test('warns once per layout animation prop', () => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation();
+
+      startTransformOrigin(20, LayoutAnimationType.LAYOUT);
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("'transformOrigin' property is not officially")
+      );
+      warn.mockRestore();
+    });
+
+    test('does not warn about the props of a shared transition', () => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation();
+
+      startTransformOrigin(21, LayoutAnimationType.SHARED_ELEMENT_TRANSITION);
+
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
   });
 });

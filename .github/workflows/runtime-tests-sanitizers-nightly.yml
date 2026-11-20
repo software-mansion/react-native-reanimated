@@ -19,6 +19,7 @@ jobs:
     with:
       configuration: ReleaseRuntimeTests
       sanitizer: thread
+      full: true
 
   ios-asan:
     if: github.repository == 'software-mansion/react-native-reanimated'
@@ -26,3 +27,4 @@ jobs:
     with:
       configuration: ReleaseRuntimeTests
       sanitizer: address
+      full: true

@@ -11,9 +11,9 @@ import ThemedImage from '@theme/ThemedImage';
 
 Bundle Mode is the only mode of running worklets, so every native app using `react-native-worklets` has to be configured as follows:
 
-## Configure Worklets plugin
+## Configure Worklet Syntax plugin \{#configure-worklets-plugin}
 
-1. **Add the Worklets plugin to your Babel configuration**. The [Worklets plugin](../worklets-plugin/about.mdx) extracts each worklet function into a module that Worklet Runtimes load from your bundle.
+1. **Add the Worklet Syntax plugin to your Babel configuration**. The [Worklet Syntax plugin](../worklets-plugin/about.mdx) extracts each worklet function into a module that Worklet Runtimes load from your bundle.
 
 <Tabs groupId="worklets-plugin" queryString>
   <TabItem value="babel" label="Babel plugin">
@@ -120,11 +120,11 @@ The plugin emits each worklet module in one of two ways, depending on the Metro 
 
 A Metro that supports `metro:inline` specifiers and virtual modules ([react/metro#2037](https://github.com/react/metro/pull/2037)) receives each worklet module inline, as a `require("metro:inline;base64,<module>")` dependency of the file that defines the worklet, and resolves it to a virtual module beside that file. Nothing is written to disk and Metro caches each worklet module like any other file. `bundleModeMetroConfig` and `getBundleModeMetroConfig` enable `resolver.unstable_allowVirtualModules` for you when they detect such a Metro.
 
-No released Metro includes this support yet. Until one does, apply the `metro`, `metro-config`, `metro-babel-transformer`, `metro-transform-worker` and `@react-native/metro-babel-transformer` patches for Metro 0.87.2 and React Native 0.88 from the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches).
+Metro 0.88.0 and newer resolves `metro:inline` specifiers, and React Native 0.89 and newer passes the `supportsInlineModules` flag to Babel plugins. With them, no `metro` patch is needed.
 
 ### Other Metro versions
 
-With any other Metro, the plugin writes each worklet module into `react-native-worklets/.worklets/<hash>.js` while it transforms your code. Metro does not index files created mid-build in time, so without a patch you will see "Failed to get the SHA-1 for ..." errors:
+With an older Metro, or an older React Native whose `@react-native/metro-babel-transformer` does not pass the flag, the plugin writes each worklet module into `react-native-worklets/.worklets/<hash>.js` while it transforms your code. Metro does not index files created mid-build in time, so without a patch you will see "Failed to get the SHA-1 for ..." errors:
 
 <ThemedImage
   sources={{
