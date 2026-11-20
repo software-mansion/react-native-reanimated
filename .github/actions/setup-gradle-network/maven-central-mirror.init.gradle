@@ -13,7 +13,13 @@ def useMirror = { RepositoryHandler repositories ->
 beforeSettings { settings ->
   def pluginRepositories = settings.pluginManagement.repositories
   pluginRepositories.maven { url = mirrorUrl }
-  pluginRepositories.gradlePluginPortal()
+  pluginRepositories.gradlePluginPortal {
+    content {
+      excludeGroupByRegex 'com\\.android(\\..*)?'
+      excludeGroupByRegex 'androidx(\\..*)?'
+      excludeGroupByRegex 'com\\.google\\.(android|gms|firebase)(\\..*)?'
+    }
+  }
   useMirror(pluginRepositories)
   useMirror(settings.buildscript.repositories)
   useMirror(settings.dependencyResolutionManagement.repositories)
