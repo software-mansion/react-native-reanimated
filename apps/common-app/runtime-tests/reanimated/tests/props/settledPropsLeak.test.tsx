@@ -1,3 +1,18 @@
+// Covers the SettledPropsLeakExample screen, a manual check for two bugs of
+// a wrapped component (`createAnimatedComponent` over a `TextInput`) whose
+// background color animates from red to lime and whose text counts to 100:
+// - #10140: the settled props sync spread animated style values into the
+//   component's top-level props. Checked on the props React passes to the
+//   wrapped component (`onProps`), after settle, after a re-render and after a
+//   quiet period.
+// - #10339: the color stayed red while the text counted up. Checked frame by
+//   frame on the JS updates and native snapshots of the recorder, and on the
+//   mounted view (`getMountedViewProps`). The runtime-tests app builds with
+//   IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS off, so the synchronous path of that bug
+//   stays a manual check on the screen.
+// The last group runs two boxes side by side, as the screen did, because
+// bugs in the shared settle sync often need several views.
+
 import type { ComponentRef } from 'react';
 import { forwardRef, useEffect } from 'react';
 import type { TextInputProps, ViewStyle } from 'react-native';
@@ -25,6 +40,7 @@ import {
   unmockAnimationTimer,
   useTestRef,
   wait,
+  waitForFrames,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
@@ -32,14 +48,37 @@ import { ComparisonMode } from '../../../ReJest/types';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const BOX_REF = 'SETTLED_PROPS_LEAK_BOX';
+const FAST_REF = 'SETTLED_PROPS_LEAK_FAST';
+const SLOW_REF = 'SETTLED_PROPS_LEAK_SLOW';
 const FRAMES_DONE = 'SETTLED_PROPS_LEAK_FRAMES_DONE';
 const SETTLE_DONE = 'SETTLED_PROPS_LEAK_SETTLE_DONE';
+const FAST_DONE = 'SETTLED_PROPS_LEAK_FAST_DONE';
+const SLOW_DONE = 'SETTLED_PROPS_LEAK_SLOW_DONE';
 
 const FROM_COLOR = '#ff0000';
 const TO_COLOR = '#00ff00';
 const FRAME_INTERVAL_MS = 16;
 
-const SYNC_BACK_DELAY_MS = 2000;
+// Native code treats a view as settled once it has had no animated write for
+// SETTLED_ANIMATION_THRESHOLD_MS (ReanimatedModuleProxy::getSettledUpdates),
+// and JS collects settled views every FLUSH_INTERVAL_MS
+// (PropsRegistryGarbageCollector.native.ts).
+const SETTLE_THRESHOLD_MS = 1000;
+const FLUSH_INTERVAL_MS = 500;
+// The sync render comes at most SETTLE_THRESHOLD_MS + FLUSH_INTERVAL_MS after
+// the last frame. Doubled for a slow emulator.
+const SYNC_TIMEOUT_MS = 2 * (SETTLE_THRESHOLD_MS + FLUSH_INTERVAL_MS);
+// A second sync or a revert after a render would show up within one settle
+// threshold and one more flush, so nothing may change during this time.
+const QUIET_PERIOD_MS = SETTLE_THRESHOLD_MS + 2 * FLUSH_INTERVAL_MS;
+
+// The fast box settles FAST_DURATION_MS + SETTLE_THRESHOLD_MS = 1.3 s after
+// the start and gets its sync render by 1.8 s, so the slow box must still
+// animate well past that. The 1000 ms box of the screen has already stopped
+// writing by then. That state, where only hasPendingSettledUpdates keeps the
+// sync interval alive, is covered by the single-box 1000 ms cases above.
+const FAST_DURATION_MS = 300;
+const SLOW_DURATION_MS = 4000;
 
 type Mode = 'hooks' | 'inline' | 'styleOnly';
 type ReceivedProps = Record<string, unknown> & { style?: unknown };
@@ -57,20 +96,26 @@ const Box = forwardRef<ComponentRef<typeof TextInput>, BoxProps>(
 
 const AnimatedBox = Animated.createAnimatedComponent(Box);
 
-function SettledBox({
-  durationMs,
-  generation,
-  mode,
-  notification,
-  onProps,
-}: {
+type TestBoxProps = {
+  refName: string;
   durationMs: number;
   generation: number;
   mode: Mode;
   notification: string;
   onProps: (props: ReceivedProps) => void;
-}) {
-  const ref = useTestRef(BOX_REF);
+};
+
+// One box of the screen: its own progress animates the background color from
+// red to lime and the text from 0 to 100.
+function TestBox({
+  refName,
+  durationMs,
+  generation,
+  mode,
+  notification,
+  onProps,
+}: TestBoxProps) {
+  const ref = useTestRef(refName);
   const progress = useSharedValue(0);
 
   const text = useDerivedValue(() => `${Math.round(progress.value * 100)}`);
@@ -100,38 +145,68 @@ function SettledBox({
   }, [durationMs, notification, progress]);
 
   // `generation` changes a native prop, so a new render always commits.
-  const testID = `settled-box-${generation}`;
+  const testID = `${refName}-${generation}`;
 
+  if (mode === 'inline') {
+    return (
+      <AnimatedBox
+        ref={ref}
+        testID={testID}
+        style={[styles.box, { backgroundColor }]}
+        // @ts-expect-error `text` is the native prop backing TextInput's value
+        text={text}
+        defaultValue={text}
+        onProps={onProps}
+      />
+    );
+  }
+  return (
+    <AnimatedBox
+      ref={ref}
+      testID={testID}
+      style={[styles.box, animatedStyle]}
+      animatedProps={mode === 'hooks' ? animatedProps : undefined}
+      onProps={onProps}
+    />
+  );
+}
+
+function SettledBox(props: Omit<TestBoxProps, 'refName'>) {
   return (
     <View style={styles.container}>
-      {mode === 'hooks' && (
-        <AnimatedBox
-          ref={ref}
-          testID={testID}
-          style={[styles.box, animatedStyle]}
-          animatedProps={animatedProps}
-          onProps={onProps}
-        />
-      )}
-      {mode === 'inline' && (
-        <AnimatedBox
-          ref={ref}
-          testID={testID}
-          style={[styles.box, { backgroundColor }]}
-          // @ts-expect-error `text` is the native prop backing TextInput's value
-          text={text}
-          defaultValue={text}
-          onProps={onProps}
-        />
-      )}
-      {mode === 'styleOnly' && (
-        <AnimatedBox
-          ref={ref}
-          testID={testID}
-          style={[styles.box, animatedStyle]}
-          onProps={onProps}
-        />
-      )}
+      <TestBox refName={BOX_REF} {...props} />
+    </View>
+  );
+}
+
+// The two boxes of one row of the screen, with durations that make them overlap.
+function FastAndSlowBoxes({
+  mode,
+  onFastProps,
+  onSlowProps,
+}: {
+  mode: Mode;
+  onFastProps: (props: ReceivedProps) => void;
+  onSlowProps: (props: ReceivedProps) => void;
+}) {
+  return (
+    <View style={[styles.container, styles.row]}>
+      <TestBox
+        refName={FAST_REF}
+        durationMs={FAST_DURATION_MS}
+        generation={0}
+        mode={mode}
+        notification={FAST_DONE}
+        onProps={onFastProps}
+      />
+      <TestBox
+        refName={SLOW_REF}
+        durationMs={SLOW_DURATION_MS}
+        generation={0}
+        mode={mode}
+        notification={SLOW_DONE}
+        onProps={onSlowProps}
+      />
     </View>
   );
 }
@@ -158,6 +233,43 @@ function expectNonDecreasing(values: number[], what: string) {
   expect(backSteps.length).toBe(0, ComparisonMode.NUMBER);
 }
 
+async function mountedColor(refName = BOX_REF): Promise<string | undefined> {
+  return (await getTestComponent(refName).getMountedViewProps())
+    ?.backgroundColor;
+}
+
+// Reads the mounted view once per frame until `finished` settles. #10339
+// showed only there: the color stayed red while the text counted up. A read is
+// a JS -> UI -> JS round trip that does not wait for a frame, so the loop waits
+// for one between reads instead of flooding the UI thread under test. A 300 ms
+// animation (about 19 mocked frames) gets about 19 samples. The loop also ends
+// when `finished` rejects, for example on a timeout, and the rejection is
+// passed on.
+async function sampleMountedColors(
+  finished: Promise<unknown>,
+  refName = BOX_REF
+) {
+  let done = false;
+  const ended = finished.finally(() => {
+    done = true;
+  });
+  const samples: string[] = [];
+  while (!done) {
+    const color = await mountedColor(refName);
+    if (color !== undefined) {
+      samples.push(color);
+    }
+    await waitForFrames(1);
+  }
+  await ended;
+  return samples;
+}
+
+function isBetween(color: string) {
+  const green = greenOf(color);
+  return green > 0 && green < 255;
+}
+
 async function recordFrames(mode: Mode, durationMs: number) {
   await mockAnimationTimer();
   const updatesContainer = await recordAnimationUpdates();
@@ -171,17 +283,20 @@ async function recordFrames(mode: Mode, durationMs: number) {
       onProps={() => {}}
     />
   );
-  await waitForNotification(FRAMES_DONE);
+  const mountedColors = await sampleMountedColors(
+    waitForNotification(FRAMES_DONE)
+  );
 
-  // Only the box animates, so read the updates without a component: the
-  // recorder files them under a tag that does not match `findNodeHandle` of a
-  // ref forwarded by createAnimatedComponent.
+  // Read the updates without a component. Operations sent to `_updateProps`
+  // carry no view tag, so the recorder files every update under -1 (see the
+  // TODO in TestsOfTestingFramework.test.tsx) and a lookup by the box's tag
+  // finds nothing. Only the box animates, so all updates are its own.
   const jsUpdates = await updatesContainer.getUpdates();
   const nativeSnapshots = await updatesContainer.getNativeSnapshots();
   await stopRecordingAnimationUpdates();
   await unmockAnimationTimer();
 
-  return { jsUpdates, nativeSnapshots };
+  return { jsUpdates, nativeSnapshots, mountedColors };
 }
 
 function colorFrames(
@@ -229,9 +344,17 @@ function expectSettledProps(props: ReceivedProps, mode: Mode) {
   expect(keysIn(style, PROP_KEYS)).toBe('');
 }
 
-async function mountedColor(): Promise<string | undefined> {
-  return (await getTestComponent(BOX_REF).getMountedViewProps())
-    ?.backgroundColor;
+function leakingRenders(received: ReceivedProps[]) {
+  return received.filter((props) => keysIn(props, STYLE_KEYS) !== '').length;
+}
+
+// Waits for the render that the settled props sync sends after `before`
+// renders, instead of a fixed delay.
+async function expectSyncRender(received: ReceivedProps[], before: number) {
+  await expectEventually(
+    () => received.length,
+    SYNC_TIMEOUT_MS
+  ).toBeWithinRange(before + 1, Number.MAX_SAFE_INTEGER);
 }
 
 const cases = [
@@ -271,7 +394,7 @@ describe('settled animated style and props of a wrapped component', () => {
   test.each(cases)(
     '${description} - the color and the text animate frame by frame and settle',
     async ({ mode, durationMs }) => {
-      const { jsUpdates, nativeSnapshots } = await recordFrames(
+      const { jsUpdates, nativeSnapshots, mountedColors } = await recordFrames(
         mode,
         durationMs
       );
@@ -285,12 +408,13 @@ describe('settled animated style and props of a wrapped component', () => {
       }
       expectNonDecreasing(colors.js.map(greenOf), 'JS color progress');
       expectNonDecreasing(colors.native.map(greenOf), 'native color progress');
-      expect(
-        colors.native.some((color) => {
-          const green = greenOf(color);
-          return green > 0 && green < 255;
-        })
-      ).toBe(true);
+      expect(colors.native.some(isBetween)).toBe(true);
+      // The mounted view also passes through in-between colors and never goes
+      // back. The runtime-tests app builds with
+      // IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS off, so this does not cover the
+      // synchronous path of #10339, only the mount layer.
+      expectNonDecreasing(mountedColors.map(greenOf), 'mounted color progress');
+      expect(mountedColors.some(isBetween)).toBe(true);
       expect(colors.js[colors.js.length - 1]).toBe(
         TO_COLOR,
         ComparisonMode.COLOR
@@ -331,10 +455,7 @@ describe('settled animated style and props of a wrapped component', () => {
 
       await renderBox(0);
       await waitForNotification(SETTLE_DONE);
-      const rendersBeforeSync = received.length;
-      await wait(SYNC_BACK_DELAY_MS);
-
-      expect(received.length > rendersBeforeSync).toBe(true);
+      await expectSyncRender(received, received.length);
       expectSettledProps(received[received.length - 1], mode);
       expect(await mountedColor()).toBe(TO_COLOR, ComparisonMode.COLOR);
 
@@ -342,18 +463,71 @@ describe('settled animated style and props of a wrapped component', () => {
       await renderBox(1);
       expect(received.length > rendersBeforeRerender).toBe(true);
       expectSettledProps(received[received.length - 1], mode);
-      await expectEventually(mountedColor).toBe(TO_COLOR, ComparisonMode.COLOR);
-      await wait(SYNC_BACK_DELAY_MS);
+      await expectEventually(() => mountedColor()).toBe(
+        TO_COLOR,
+        ComparisonMode.COLOR
+      );
+      // The only fixed wait: nothing may change after the render.
+      await wait(QUIET_PERIOD_MS);
       expectSettledProps(received[received.length - 1], mode);
       expect(
         await getTestComponent(BOX_REF).getAnimatedStyle('backgroundColor')
       ).toBe(TO_COLOR, ComparisonMode.COLOR);
       expect(await mountedColor()).toBe(TO_COLOR, ComparisonMode.COLOR);
 
-      const leakingRenders = received.filter(
-        (props) => keysIn(props, STYLE_KEYS) !== ''
+      expect(leakingRenders(received)).toBe(0, ComparisonMode.NUMBER);
+    }
+  );
+
+  // The screen showed a 300 ms and a 1000 ms box side by side in each row.
+  // Settle-sync bugs often need several views, so one box settles and gets
+  // its sync render while the other still animates.
+  test.each([
+    { description: 'useAnimatedStyle and useAnimatedProps', mode: 'hooks' },
+    { description: 'inline shared values in style and props', mode: 'inline' },
+  ] as const)(
+    '${description} - a box that settles while another still animates gets its own sync render',
+    async ({ mode }) => {
+      const fastReceived: ReceivedProps[] = [];
+      const slowReceived: ReceivedProps[] = [];
+      await render(
+        <FastAndSlowBoxes
+          mode={mode}
+          onFastProps={(props) => fastReceived.push(props)}
+          onSlowProps={(props) => slowReceived.push(props)}
+        />
       );
-      expect(leakingRenders.length).toBe(0, ComparisonMode.NUMBER);
+
+      await waitForNotification(FAST_DONE);
+      await expectSyncRender(fastReceived, fastReceived.length);
+      // Without this the test could pass with no overlap at all.
+      const slowAtFastSync = await mountedColor(SLOW_REF);
+      expect(isBetween(colorOf(slowAtFastSync))).toBe(true);
+      expectSettledProps(fastReceived[fastReceived.length - 1], mode);
+      expect(await mountedColor(FAST_REF)).toBe(TO_COLOR, ComparisonMode.COLOR);
+
+      // The fast box's render neither resets nor freezes the slow box.
+      const slowColors = await sampleMountedColors(
+        waitForNotification(SLOW_DONE),
+        SLOW_REF
+      );
+      expectNonDecreasing(
+        [colorOf(slowAtFastSync), ...slowColors].map(greenOf),
+        'slow box color after the fast box synced'
+      );
+      expect(slowColors.some(isBetween)).toBe(true);
+
+      await expectSyncRender(slowReceived, slowReceived.length);
+      expectSettledProps(slowReceived[slowReceived.length - 1], mode);
+      await expectEventually(() => mountedColor(SLOW_REF)).toBe(
+        TO_COLOR,
+        ComparisonMode.COLOR
+      );
+      expectSettledProps(fastReceived[fastReceived.length - 1], mode);
+      expect(await mountedColor(FAST_REF)).toBe(TO_COLOR, ComparisonMode.COLOR);
+
+      expect(leakingRenders(fastReceived)).toBe(0, ComparisonMode.NUMBER);
+      expect(leakingRenders(slowReceived)).toBe(0, ComparisonMode.NUMBER);
     }
   );
 });
@@ -363,6 +537,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
   },
   box: {
     height: 100,
