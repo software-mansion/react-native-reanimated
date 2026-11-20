@@ -1,5 +1,7 @@
 def mirrorUrl = 'https://maven-central.storage-download.googleapis.com/maven2/'
 
+logger.lifecycle("Maven Central resolves from ${mirrorUrl}")
+
 def useMirror = { RepositoryHandler repositories ->
   repositories.withType(MavenArtifactRepository).configureEach { repository ->
     if (repository.url.toString().startsWith('https://repo.maven.apache.org/maven2')) {
