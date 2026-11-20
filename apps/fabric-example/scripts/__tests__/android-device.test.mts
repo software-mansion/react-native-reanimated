@@ -1,9 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import androidDevice from '../android-device.js';
-
-const { resolveAndroidDevice, parseAvdName } = androidDevice;
+import { parseAvdName, resolveAndroidDevice } from '../android-device.mts';
 
 type FakeDevice = {
   serial: string;

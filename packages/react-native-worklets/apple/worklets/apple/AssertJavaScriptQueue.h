@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import <react/debug/react_native_assert.h>
+#import <worklets/Compat/ReactNativeDebug.h>
 
 // Copied from RCTJSThreadManager.mm
 static NSString *const RCTJSThreadName = @"com.facebook.react.runtime.JavaScript";

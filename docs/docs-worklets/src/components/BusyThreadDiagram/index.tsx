@@ -43,6 +43,7 @@ export default function BusyThreadDiagram() {
 
   return (
     <figure
+      data-figure="BusyThreadDiagram"
       className={styles.figure}
       aria-label="A touch event waiting for a busy JS thread">
       <div className={styles.layout}>

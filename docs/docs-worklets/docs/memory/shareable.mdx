@@ -4,6 +4,15 @@ title: Shareable
 sidebar_position: 42 # Use alphabetical order
 ---
 
+import * as ShareableAsyncSnippet from './_examples/shareableAsync';
+import ShareableAsyncSource from '!!raw-loader!./_examples/shareableAsync';
+
+import * as ShareableHostSnippet from './_examples/shareableHost';
+import ShareableHostSource from '!!raw-loader!./_examples/shareableHost';
+
+import * as ApiShareableSnippet from './_examples/apiShareable';
+import ApiShareableSource from '!!raw-loader!./_examples/apiShareable';
+
 <Badges version="0.8.0">
   # Shareable
 </Badges>
@@ -89,13 +98,7 @@ A Shareable is useful in scenarios where it's mostly read and updated on the Hos
 
 ## Reference
 
-```tsx
-import { createShareable, UIRuntimeId } from 'react-native-worklets';
-
-const shareable = createShareable(UIRuntimeId, 42);
-
-console.log(shareable.getSync()); // 42
-```
+<ThreadingSimulation module={ApiShareableSnippet} source={ApiShareableSource}/>
 
 ## Shareable Host
 
@@ -104,6 +107,8 @@ console.log(shareable.getSync()); // 42
 ### value
 
 A property holding the current value of the Shareable.
+
+<ThreadingSimulation module={ShareableHostSnippet} source={ShareableHostSource}/>
 
 ### isHost
 
@@ -120,6 +125,8 @@ A boolean property indicating whether the Shareable is being accessed from the H
 ### getAsync
 
 An asynchronous method that returns a Promise that resolves to the current value of the Shareable Host. The value is obtained by scheduling a callback on the Host Runtime, which reads the `value` of the Shareable Host and serializes it as the result of the callback.
+
+<ThreadingSimulation module={ShareableAsyncSnippet} source={ShareableAsyncSource}/>
 
 ### getSync
 

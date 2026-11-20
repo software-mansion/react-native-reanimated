@@ -1,6 +1,7 @@
 import type { BabelFile } from '@babel/core';
 import { strict as assert } from 'assert';
 
+import { warnAboutDangerousRelativePaths } from './imports';
 import { type WorkletsPluginPass, workletModuleDirective } from './types';
 
 export function initializeState(
@@ -15,6 +16,11 @@ export function initializeState(
   state.workletNumber = 1;
 
   const userImportForwarding = state.opts.importForwarding;
+
+  warnAboutDangerousRelativePaths(
+    userImportForwarding?.relativePaths,
+    state.opts.silenceDangerousPathsWarning
+  );
 
   assert(
     state.importForwarding === undefined,

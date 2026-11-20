@@ -137,12 +137,13 @@ function getReversedFromConfig(config: CustomConfig) {
 export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
-  config: CustomConfig
+  config: CustomConfig,
+  presetName = animationName
 ): AnimationConfig {
   return {
     animationName,
     animationType,
-    duration: getDurationFromConfig(config, animationName),
+    duration: getDurationFromConfig(config, presetName),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
     callback: getCallbackFromConfig(config),
@@ -201,7 +202,8 @@ export function setElementAnimation(
     element.style.animationTimingFunction = easing;
 
     if (
-      animationConfig.animationType === LayoutAnimationType.ENTERING &&
+      (animationConfig.animationType === LayoutAnimationType.ENTERING ||
+        animationConfig.startsFromCurrentValues) &&
       delay > 0
     ) {
       element.style.animationFillMode = 'backwards';

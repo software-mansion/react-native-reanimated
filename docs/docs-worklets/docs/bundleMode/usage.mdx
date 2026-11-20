@@ -8,7 +8,7 @@ sidebar_position: 3
 
 Third party libraries have to be on an allow-list to use them in worklets. This is because libraries can come with side-effects that would break a Worklet Runtime. For instance, a library that imports something from React Native can't be used on a Worklet Runtime. This would load a second instance of React Native and break your app.
 
-To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklets Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
+To add a library to the allow-list you only need to set `importForwarding.moduleNames` in the Worklet Syntax Babel plugin options. It's an array of library names. For instance, if you want to use `my-library` on a Worklet Runtime.
 
 ```javascript
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
@@ -42,9 +42,13 @@ scheduleOnRuntime(runtime, async () => {
 | `AbortController`, `AbortSignal` | ✅ |
 | `FormData` | String fields only, encoded as `multipart/form-data`. |
 | Response streaming | ❌ |
-| `WebSocket` | coming soon |
+| `WebSocket` | ✅ |
 
-Requests are made by the platform's own networking stack, they share the app's cookie storage and its TLS configuration.
+Requests share the app's cookie storage and TLS configuration. On Android, `WebSocket` also respects the system proxy settings and the app's cleartext traffic policy. React Native networking customizations, such as certificate pinning or interceptors, do not apply to `WebSocket`.
+
+<Badges version="0.14.0">
+  `WebSocket` follows the [WHATWG interface](https://websockets.spec.whatwg.org/) and supports text, binary data, event listeners and subprotocols. Host names must be plain ASCII: internationalized host names, in Unicode or in their `xn--` form, throw a `SyntaxError`.
+</Badges>
 
 ## Reference
 

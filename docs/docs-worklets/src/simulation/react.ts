@@ -1,3 +1,5 @@
+import { assertRNRuntime } from './worklets';
+
 export const View = 'View';
 export const Text = 'Text';
 export const Button = 'Button';
@@ -56,6 +58,7 @@ export function useState<T>(initial: T): [T, (value: Updater<T>) => void] {
   return [
     states[index] as T,
     (value: Updater<T>) => {
+      assertRNRuntime('setState');
       states[index] =
         typeof value === 'function'
           ? (value as (previous: T) => T)(states[index] as T)

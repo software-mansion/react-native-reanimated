@@ -6,8 +6,8 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
-#include <react/renderer/core/Props.h>
-#include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/Compat/ReactNativeGraphics.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <optional>
@@ -53,6 +53,31 @@ using MaybeFlushUIUpdatesQueueFunction = std::function<void()>;
 using ForceScreenSnapshotFunction = std::function<bool(Tag tag)>;
 using ReleaseViewTransitionsFunction = std::function<void(std::vector<int> &tags, bool isBatchQueued)>;
 using ReadMountedViewPropsFunction = std::function<Props::Shared(Tag tag)>;
+// Shows the view with the given tag above everything in the window of the surface, or hides it for nullopt.
+using SetSharedTransitionOverlayFunction = std::function<void(SurfaceId surfaceId, std::optional<Tag> tag)>;
+// The platform can show a view outside the view of its React parent (e.g. in a presented view controller), so its
+// origin relative to the root view of the surface comes from the platform. If settled, the origin and the transform
+// are at the end of a running presentation, without the transforms of the presented view and its ancestors.
+// A native view between a view and its React parent can move the view (e.g. the sheet of a bottom sheet). Then the
+// origin and the transform are relative to the React parent, with the current values also if settled.
+// A view out of the window is outside its React parent when the platform detached it from there, e.g. a hidden tab.
+struct NativeViewPlacement {
+  enum class Kind {
+    InsideReactParent,
+    MovedInsideReactParent,
+    OffWindow,
+    OffWindowOutsideReactParent,
+    OutsideReactParent,
+    DifferentWindow,
+  };
+  Kind kind;
+  react::Point origin;
+  react::Transform transform;
+};
+using NativeViewPlacementFunction =
+    std::function<NativeViewPlacement(SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled)>;
+// True while a container view controller moves the view in a transition that the user does not drive.
+using IsMovedByContainerTransitionFunction = std::function<bool(Tag tag)>;
 
 // A view is mounted while it is attached to the window. The frame is in points, relative to the parent and without
 // transforms. The background color is ARGB.
@@ -79,6 +104,9 @@ struct PlatformDepMethodsHolder {
 #ifdef __APPLE__
   ForceScreenSnapshotFunction forceScreenSnapshotFunction;
   ReadMountedViewPropsFunction readMountedViewPropsFunction;
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
+  NativeViewPlacementFunction nativeViewPlacementFunction;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransitionFunction;
 #endif
   SynchronouslyUpdateUIPropsFunction synchronouslyUpdateUIPropsFunction;
   GetAnimationTimestampFunction getAnimationTimestamp;

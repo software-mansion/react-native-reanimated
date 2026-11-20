@@ -17,6 +17,10 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       configuration:
@@ -29,6 +33,11 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        description: Run the long variants and every suite, as the nightly does
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -93,8 +102,21 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       - name: Build Reanimated package
         working-directory: packages/react-native-reanimated
@@ -115,7 +137,7 @@ jobs:
 
       - name: Build runtime-tests app
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION"
+        run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION"
 
       - name: Save ccache
         if: steps.appcache.outputs.cache-hit != 'true'
@@ -126,7 +148,7 @@ jobs:
       # Pods do not depend on the configuration; one leg of the nightly
       # fan-out saves.
       - name: Save Pods cache
-        if: steps.appcache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'DebugRuntimeTests'
+        if: steps.appcache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
         uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -143,7 +165,7 @@ jobs:
           case "$CONFIGURATION" in
             Debug*) EXPORT_FLAGS="--allow-debug" ;;
           esac
-          node scripts/export-runtime-tests-app.js --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
+          node --experimental-strip-types scripts/export-runtime-tests-app.mts --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
 
       - name: Upload app artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -178,8 +200,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       - name: Install sim-remote CLI
         uses: $/.github/actions/install-sim-remote
@@ -217,27 +252,27 @@ jobs:
           # Device-pick logic lives in the driver (`pick` subcommand) so it
           # is testable and reusable outside CI.
           if [ -n "$INPUT_UDID" ]; then
-            UDID=$(node scripts/runtime-tests-remote.mjs pick --udid "$INPUT_UDID")
+            UDID=$(node --experimental-strip-types scripts/runtime-tests-remote.mts pick --udid "$INPUT_UDID")
           else
-            UDID=$(node scripts/runtime-tests-remote.mjs pick)
+            UDID=$(node --experimental-strip-types scripts/runtime-tests-remote.mts pick)
           fi
 
           echo "using remote simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-          node scripts/runtime-tests-remote.mjs install --udid "$UDID" \
+          node --experimental-strip-types scripts/runtime-tests-remote.mts install --udid "$UDID" \
             --app-path dist/unpacked/FabricExample.app
 
       - name: Run ReJest self-tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library self-tests --configuration "$CONFIGURATION"
 
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          if node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}" \
+          if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}" \
             --library self-tests --configuration "$CONFIGURATION" \
             --only "intentional failures";
           then
@@ -249,14 +284,14 @@ jobs:
       - name: Run Worklets runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
-          --library worklets --configuration "$CONFIGURATION"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
+          --library worklets --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
 
       - name: Run Reanimated runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
-          --library reanimated --configuration "$CONFIGURATION"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
+          --library reanimated --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
 
       - name: Upload crash reports
         if: failure()
@@ -275,8 +310,8 @@ jobs:
 
           if command -v sim-remote >/dev/null; then
             if [ -n "$UDID" ]; then
-              sim-remote proxy stop "$UDID" 8082 || true
-              sim-remote proxy stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
+              sim-remote reverse stop "$UDID" 8082 || true
+              sim-remote reverse stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
               sim-remote simctl shutdown "$UDID" || true
             fi
 

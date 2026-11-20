@@ -8,18 +8,24 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   expectEventually,
   getTestComponent,
+  mockAnimationTimer,
   render,
   test,
   useTestRef,
+  waitForFrames,
   waitUntilSettled,
 } from '../../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../../ReJest/types';
 
-const COMPONENT_REF_ACTIVE = 'ColorComponentPassive';
+const DELAY = 100;
+const DURATION = 400;
+
+const COMPONENT_REF_ACTIVE = 'ColorComponentActive';
 const COMPONENT_REF_PASSIVE = 'ColorComponentPassive';
 
 const ColorComponent = ({
@@ -39,8 +45,8 @@ const ColorComponent = ({
   const styleActive = useAnimatedStyle(() => {
     return {
       backgroundColor: withDelay(
-        100,
-        withTiming(colorActiveSV.value, { duration: 400 })
+        DELAY,
+        withTiming(colorActiveSV.value, { duration: DURATION })
       ),
     };
   });
@@ -58,8 +64,8 @@ const ColorComponent = ({
 
   useEffect(() => {
     colorPassiveSV.value = withDelay(
-      100,
-      withTiming(color2, { duration: 400 })
+      DELAY,
+      withTiming(color2, { duration: DURATION })
     );
   }, [colorPassiveSV, color2]);
 
@@ -77,6 +83,16 @@ const ColorComponent = ({
   );
 };
 
+// The effects start the animations on the UI thread, before the clock moves.
+async function renderWithHeldClock(
+  color1: string | number,
+  color2: string | number
+) {
+  await mockAnimationTimer({ autoAdvance: false });
+  await render(<ColorComponent color1={color1} color2={color2} />);
+  await waitForFrames(3);
+}
+
 describe('withTiming animation of COLOR 🎨', () => {
   const OPAQUE_COLORS = [
     'rgb(100,149,237)',
@@ -89,9 +105,10 @@ describe('withTiming animation of COLOR 🎨', () => {
   ];
 
   test.each(OPAQUE_COLORS)('Animate FROM color as %s', async (color) => {
-    await render(<ColorComponent color1={color} color2="coral" />);
+    await renderWithHeldClock(color, 'coral');
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
+    await advanceAnimationTimer(DELAY / 2);
 
     expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
       '#6495ed',
@@ -101,6 +118,8 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#6495ed',
       ComparisonMode.COLOR
     );
+    await advanceAnimationTimer(DELAY / 2);
+    await advanceAnimationTimer(DURATION);
     await expectEventually(() =>
       componentActive.getAnimatedStyle('backgroundColor')
     ).toBe('#ff7f50', ComparisonMode.COLOR);
@@ -111,9 +130,10 @@ describe('withTiming animation of COLOR 🎨', () => {
   });
 
   test.each(OPAQUE_COLORS)('Animate TO color as %s', async (color) => {
-    await render(<ColorComponent color1="coral" color2={color} />);
+    await renderWithHeldClock('coral', color);
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
+    await advanceAnimationTimer(DELAY / 2);
 
     expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
       '#ff7f50',
@@ -123,6 +143,8 @@ describe('withTiming animation of COLOR 🎨', () => {
       '#ff7f50',
       ComparisonMode.COLOR
     );
+    await advanceAnimationTimer(DELAY / 2);
+    await advanceAnimationTimer(DURATION);
     await expectEventually(() =>
       componentActive.getAnimatedStyle('backgroundColor')
     ).toBe('#6495ed', ComparisonMode.COLOR);
@@ -165,9 +187,10 @@ describe('withTiming animation of COLOR 🎨', () => {
     { from: '#5bc', to: '#ff7f50' },
     { from: '#5bc', to: '#1b1' },
   ])('Animate from ${from} to ${to}', async ({ from, to }) => {
-    await render(<ColorComponent color1={from} color2={to} />);
+    await renderWithHeldClock(from, to);
     const componentActive = getTestComponent(COMPONENT_REF_ACTIVE);
     const componentPassive = getTestComponent(COMPONENT_REF_PASSIVE);
+    await advanceAnimationTimer(DELAY / 2);
 
     expect(await componentActive.getAnimatedStyle('backgroundColor')).toBe(
       from,
@@ -177,6 +200,8 @@ describe('withTiming animation of COLOR 🎨', () => {
       from,
       ComparisonMode.COLOR
     );
+    await advanceAnimationTimer(DELAY / 2);
+    await advanceAnimationTimer(DURATION);
     await expectEventually(() =>
       componentActive.getAnimatedStyle('backgroundColor')
     ).toBe(to, ComparisonMode.COLOR);

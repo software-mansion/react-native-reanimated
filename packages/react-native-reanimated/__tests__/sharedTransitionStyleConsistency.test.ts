@@ -2,7 +2,10 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const directory = join(__dirname, '../Common/cpp/reanimated/LayoutAnimations');
-const differ = readFileSync(join(directory, 'PropsDiffer.cpp'), 'utf8');
+const factory = readFileSync(
+  join(directory, 'SharedTransitionValuesFactory.cpp'),
+  'utf8'
+);
 const transitions = readFileSync(
   join(directory, 'SharedTransitions.cpp'),
   'utf8'
@@ -11,51 +14,44 @@ const copy = transitions
   .split('ShadowView LayoutAnimationsProxy::carrierViewWithStyleOf(')[1]
   .split('\nvoid LayoutAnimationsProxy::detachCarrier(')[0];
 const methods = [
-  ...differ.matchAll(
-    /void PropsDiffer::(\w+)\([^]*?(?=\n(?:void|std::vector|inline|jsi::Object|bool) |\n} \/\/ namespace)/g
+  ...factory.matchAll(
+    /void SharedTransitionValuesFactory::(\w+)\([^]*?(?=\n(?:void|std::vector|inline|jsi::Object|bool) |\n} \/\/ namespace)/g
   ),
 ]
   .filter(
     ([, name]) =>
-      !['diffFrame', 'diffTransform'].includes(name) &&
-      differ
-        .split('jsi::Object PropsDiffer::computeDiff')[1]
+      !['writeFrame', 'writeTransform'].includes(name) &&
+      factory
+        .split('jsi::Object SharedTransitionValuesFactory::create(')[1]
         .split('\n}')[0]
-        .includes(`${name}(runtime);`)
+        .includes(`${name}(values,`)
   )
   .map(([body]) => body)
   .join('\n');
 
-test('the Android carrier copies exactly the style keys that PropsDiffer animates', () => {
+test('the Android carrier copies exactly the style keys that SharedTransitionValuesFactory animates', () => {
   const keys = transitions
     .split('constexpr std::array kAnimatedStyleProps{')[1]
     .split('};')[0];
   const copied = [...keys.matchAll(/"(\w+)"/g)].map(([, name]) => name);
-  const transformOriginHelper = differ
-    .split('void PropsDiffer::addTransformOriginToDiff(')[1]
-    .split('\n}')[0];
-  const animatesTransformOrigin =
-    /\baddTransformOriginToDiff\(rt,/.test(methods) &&
-    /jsiValues\.setProperty\(rt, "transformOrigin"/.test(transformOriginHelper);
-  const animated = [
-    ...[
-      ...methods.matchAll(
-        /(?:sourceValues_\.setProperty\(rt,|diffBorder\w+\([^;]*?)\s*"(\w+)"/g
-      ),
-    ].map(([, name]) => name),
-    ...(animatesTransformOrigin ? ['transformOrigin'] : []),
-  ];
-  expect(sorted(copied)).toEqual(sorted(animated));
+  const animated = [...methods.matchAll(/"current(\w)(\w*)"/g)].map(
+    ([, first, rest]) => first.toLowerCase() + rest
+  );
+  expect(sorted(copied)).toEqual(
+    sorted(animated.filter((name) => name !== 'opacity'))
+  );
 });
 
-test('the iOS carrier copies the typed fields and border edges that PropsDiffer animates', () => {
-  const fields = [...methods.matchAll(/sourceViewProps_\.(\w+)/g)]
+test('the iOS carrier copies the typed fields and border edges that SharedTransitionValuesFactory animates', () => {
+  const fields = [...methods.matchAll(/sourceViewProps\.(\w+)/g)]
     .map(([, name]) => name)
     .filter((name) => !['getBorderWidths', 'elevation'].includes(name));
-  const copied = [...copy.matchAll(/viewProps\.(\w+) = sourceProps\./g)].map(
+  const copied = [...copy.matchAll(/copy\(&ViewProps::(\w+)\)/g)].map(
     ([, name]) => name
   );
-  expect(sorted(copied)).toEqual(sorted([...fields, 'boxShadow']));
+  expect(sorted(copied)).toEqual(
+    sorted([...fields.filter((name) => name !== 'opacity'), 'boxShadow'])
+  );
   const widths = [...methods.matchAll(/sourceBorderWidths\.(\w+)/g)].map(
     ([, name]) => name.toLowerCase()
   );
@@ -65,11 +61,11 @@ test('the iOS carrier copies the typed fields and border edges that PropsDiffer 
   expect(sorted(edges)).toEqual(sorted(widths));
 });
 
-test('the restart check covers the typed fields and border edges that PropsDiffer animates', () => {
-  const check = differ
-    .split('bool PropsDiffer::hasAnimatedChanges(')[1]
-    .split('\nvoid PropsDiffer::diffFrame')[0];
-  const animatedFields = [...methods.matchAll(/sourceViewProps_\.(\w+)/g)].map(
+test('the restart check covers the typed fields and border edges that SharedTransitionValuesFactory animates', () => {
+  const check = factory
+    .split('bool SharedTransitionValuesFactory::hasAnimatedChanges(')[1]
+    .split('\njsi::Object SharedTransitionValuesFactory::create(')[0];
+  const animatedFields = [...methods.matchAll(/sourceViewProps\.(\w+)/g)].map(
     ([, name]) => name
   );
   const checkedFields = [...check.matchAll(/sourceProps\.(\w+)/g)].map(

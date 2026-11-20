@@ -5,6 +5,7 @@ export interface PluginOptions {
     moduleNames?: string[];
     relativePaths?: string[];
   };
+  silenceDangerousPathsWarning?: boolean;
 }
 
 export interface TransformOptions extends PluginOptions {

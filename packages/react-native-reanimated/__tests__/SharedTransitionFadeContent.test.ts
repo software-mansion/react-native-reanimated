@@ -192,12 +192,14 @@ describe('SharedTransition content fade builder', () => {
       .fadeContent()
       .build();
     build({
-      source: { width: 60, contentOpacity: 1 },
-      target: { width: 150, contentOpacity: 0 },
+      currentWidth: 60,
+      currentContentOpacity: 1,
+      targetWidth: 150,
+      targetContentOpacity: 0,
     } as unknown as LayoutAnimationValues);
     expect(withSpring).toHaveBeenNthCalledWith(
       1,
-      150,
+      1,
       expect.not.objectContaining({ overshootClamping: true })
     );
     expect(withSpring).toHaveBeenNthCalledWith(

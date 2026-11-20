@@ -44,6 +44,7 @@ export default function SparseAnimationDiagram() {
 
   return (
     <figure
+      data-figure="SparseAnimationDiagram"
       className={styles.figure}
       aria-label="A state-driven animation freezing while the JS thread is busy">
       <div className={styles.layout}>

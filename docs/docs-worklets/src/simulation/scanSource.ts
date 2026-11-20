@@ -5,9 +5,13 @@ const HEADER_PATTERN =
   /^\s*(?:export\s+(?:default\s+)?)?function\s*\*\s*([A-Za-z_$][\w$]*)\s*\(/;
 const NATIVE_DIRECTIVE_PATTERN = /^\s*'native';\s*$/;
 const HIDDEN_DIRECTIVE_PATTERN = /^\s*'hidden';\s*$/;
+const WORKLET_DIRECTIVE_PATTERN = /^\s*(['"])worklet\1;\s*(?:\/\/.*)?$/;
 const LOOP_PATTERN = /^\s*(?:for|while)\s*\(/;
 const YIELD_PATTERN =
-  /^\s*(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?yield\b/;
+  /^\s*(?:(?:return\s+)?(?:(?:const|let|var)\s+)?(?:[\w$.[\]{},\s]+?\s*=\s*)?|if\s*\(\s*)yield\b/;
+const REGEX_LITERAL_PATTERN =
+  /(^|[=(,:!&|?{}[;+\-*%<>~^]|\b(?:return|yield|typeof|case)\b)\s*\/(?![*/])(?:\\.|\[(?:\\.|[^\]\\])*\]|[^/\\\n])+\/[a-z]*/g;
+const IF_HEADER_PATTERN = /^\s*if\s*\(.*\)\s*\{\s*(?:\/\/.*)?$/;
 
 export function scanSource(source: string): Map<string, FnInfo> {
   const fns = new Map<string, FnInfo>();
@@ -26,6 +30,7 @@ export function scanSource(source: string): Map<string, FnInfo> {
         yieldEnds: [],
         isNative: false,
         isHidden: false,
+        isWorklet: false,
         hasLoop: false,
       };
       if (fns.has(info.name)) {
@@ -49,6 +54,12 @@ export function scanSource(source: string): Map<string, FnInfo> {
     }
     const current = top.info;
     if (YIELD_PATTERN.test(text)) {
+      if ((codeOf(text).match(/\byield\b/g) ?? []).length > 1) {
+        throw new SnippetError(
+          'put each yield on its own line; the simulator tracks one yield per line',
+          line
+        );
+      }
       current.yieldLines.push(line);
       current.yieldEnds.push(statementEnd(lines, index));
     }
@@ -57,6 +68,13 @@ export function scanSource(source: string): Map<string, FnInfo> {
     }
     if (HIDDEN_DIRECTIVE_PATTERN.test(text)) {
       current.isHidden = true;
+    }
+    if (
+      top.depth === 1 &&
+      current.yieldLines.length === 0 &&
+      WORKLET_DIRECTIVE_PATTERN.test(text)
+    ) {
+      current.isWorklet = true;
     }
     if (LOOP_PATTERN.test(text)) {
       current.hasLoop = true;
@@ -79,6 +97,9 @@ export function scanSource(source: string): Map<string, FnInfo> {
 }
 
 function statementEnd(lines: string[], startIndex: number): number {
+  if (IF_HEADER_PATTERN.test(lines[startIndex])) {
+    return startIndex + 1;
+  }
   let depth = 0;
   for (let index = startIndex; index < lines.length; index++) {
     const text = lines[index];
@@ -118,4 +139,64 @@ function bracketDelta(text: string, open: string, close: string): number {
     }
   }
   return delta;
+}
+
+function codeOf(text: string): string {
+  return withoutStrings(text)
+    .replace(REGEX_LITERAL_PATTERN, '$1""')
+    .replace(/\/\/.*$/, '');
+}
+
+function withoutStrings(text: string): string {
+  let result = '';
+  let index = 0;
+  while (index < text.length) {
+    const char = text[index];
+    if (char === "'" || char === '"') {
+      let end = index + 1;
+      while (end < text.length && text[end] !== char) {
+        end += text[end] === '\\' ? 2 : 1;
+      }
+      result += '""';
+      index = end + 1;
+      continue;
+    }
+    if (char === '`') {
+      let end = index + 1;
+      const interpolations: string[] = [];
+      while (end < text.length && text[end] !== '`') {
+        if (text[end] === '\\') {
+          end += 2;
+          continue;
+        }
+        if (text.startsWith('${', end)) {
+          const close = closingBrace(text, end + 1);
+          interpolations.push(withoutStrings(text.slice(end + 2, close)));
+          end = close + 1;
+          continue;
+        }
+        end++;
+      }
+      result += `""${interpolations.map((inner) => ` ${inner} `).join('')}`;
+      index = end + 1;
+      continue;
+    }
+    result += char;
+    index++;
+  }
+  return result;
+}
+
+function closingBrace(text: string, open: number): number {
+  let depth = 0;
+  for (let index = open; index < text.length; index++) {
+    if (text[index] === '{') depth++;
+    if (text[index] === '}') {
+      depth--;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+  return text.length;
 }

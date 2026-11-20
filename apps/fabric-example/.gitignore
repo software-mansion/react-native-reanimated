@@ -66,11 +66,11 @@ yarn-error.log
 # testing
 /coverage
 
-# Sanitizer reports from scripts/runtime-tests-server.js --sanitizer
+# Sanitizer reports from scripts/runtime-tests-server.mts --sanitizer
 sanitizer-reports/
 
-# Crash diagnostics from scripts/runtime-tests-server.js
+# Crash diagnostics from scripts/runtime-tests-server.mts
 crash-reports/
 
-# Packaged app artifacts from scripts/export-runtime-tests-app.js
+# Packaged app artifacts from scripts/export-runtime-tests-app.mts
 dist/
