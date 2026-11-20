@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-import { isBundleModeEnabled } from 'react-native-worklets';
 
 import type { RuntimeTestSuite } from '../types';
 
@@ -295,22 +294,4 @@ const SUITES: RuntimeTestSuite[] = [
   },
 ];
 
-// Bundle Mode and Legacy Eval differ only in how worklets are loaded, so a
-// short run checks Legacy Eval in a subset of suites that load worklets in
-// different ways: animations, hooks, event handlers and layout animation
-// builders.
-const LEGACY_EVAL_SHORT_RUN_SUITES = [
-  'animations',
-  'core',
-  'event handlers',
-  'layout animations entering',
-];
-
-export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES.map(
-  (suite) => ({
-    ...suite,
-    fullRunOnly:
-      !isBundleModeEnabled() &&
-      !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName),
-  })
-);
+export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES;
