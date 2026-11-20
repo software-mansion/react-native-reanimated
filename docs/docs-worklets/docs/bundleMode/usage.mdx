@@ -52,7 +52,7 @@ Requests share the app's cookie storage and TLS configuration. On Android, `WebS
 
 ## Loading lazy chunks in Worklets
 
-In development, Metro splits code behind `import()` into lazy chunks. A worklet function can `import()` such a module too: the Worklet Runtime fetches the chunk from Metro and evaluates it, like the RN Runtime does. The chunk is fetched with the runtime's own `fetch`, so the Worklet Runtime needs the [networking API](#running-network-requests-in-worklets) enabled. It is on by default; a runtime created with `enableNetworking: false` cannot load lazy chunks and the `import()` rejects.
+In development, Metro splits code behind `import()` into lazy chunks. A worklet function can `import()` such a module too: the Worklet Runtime fetches the chunk from Metro and evaluates it, like the RN Runtime does. The chunk is fetched with the runtime's own `fetch`, so the Worklet Runtime needs the [networking API](#running-network-requests-in-worklets) enabled. It is on by default. On a runtime created with `enableNetworking: false`, the `import()` rejects unless an initializer installs a `fetch` of its own on that runtime.
 
 ```tsx
 scheduleOnUI(async () => {
