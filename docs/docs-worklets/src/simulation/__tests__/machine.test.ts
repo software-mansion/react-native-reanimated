@@ -845,6 +845,7 @@ describe('Machine semantics', () => {
     assert.equal(scaled, written);
     assert.ok(frame > 0);
     assert.equal(scaledFrame, frame);
+    assert.equal(tickOfLog('setTimeout', 48, { timeScale: 0 }), written);
   });
 
   it('tick() is a no-op after the simulation finished', () => {
