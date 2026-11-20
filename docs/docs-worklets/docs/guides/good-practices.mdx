@@ -22,8 +22,13 @@ also evaluates your whole JavaScript bundle before it can run anything.
 // highlight-next-line
 const workerRuntime = createWorkletRuntime({ name: 'worker' });
 
+function processData(data) {
+  'worklet';
+  // ...
+}
+
 function processInBackground(data) {
-  scheduleOnRuntime(workerRuntime, process, data);
+  scheduleOnRuntime(workerRuntime, processData, data);
 }
 ```
 
@@ -138,7 +143,8 @@ setInterval(() => {
 ```js title="Timer on the Worker Runtime"
 scheduleOnRuntime(workerRuntime, () => {
   'worklet';
-  setInterval(tick, 100);
+  const intervalId = setInterval(tick, 100);
+  // Call clearInterval(intervalId) on the Worker Runtime when the work is complete.
 });
 ```
 
@@ -152,6 +158,6 @@ need the result within the same synchronous flow.
 
 [`runOnUISync`](../threading/runOnUISync.mdx) and [`runOnRuntimeSync`](../threading/runOnRuntimeSync.mdx) block the
 calling thread until the target runtime finishes the worklet function. While the JavaScript thread waits for the UI
-Runtime, it can't process anything else. `scheduleOnUI` also batches all calls made in the same task and sends them to
-the UI Runtime together, while a synchronous call runs on its own. See
+Runtime, it can't process anything else. `scheduleOnUI` also batches calls made synchronously one after another and sends
+them to the UI Runtime together, while a synchronous call runs on its own. See
 [Running worklet functions on the UI runtime](./running-on-the-ui-runtime.mdx) for a comparison.
