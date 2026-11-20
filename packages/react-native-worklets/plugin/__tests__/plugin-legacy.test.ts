@@ -116,7 +116,23 @@ describe('babel plugin', () => {
       // Expect a string that contains (including the backslash): sourceMap: \"{
       expect(code).toMatch(/sourceMap: /gm);
       // this non-mocked source map is hard-coded, feel free to update it accordingly
-      expect(code).toContain('AACQ,SAAAA,SAAeA,CAAA,MAAAA,SAAA,O');
+      expect(code).toContain('oBACuB,CAEb,GAAI,CAAAA,SAAG,CAAG,KAAK,CACjB');
+    });
+
+    test('maps worklet statements to their original lines', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
+      const input = html`<script>
+        function foo(width) {
+          'worklet';
+          const doubled = width * 2;
+          throw new Error(doubled);
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(code).toContain(
+        'mBACqBA,KAAK,CAAE,CAElB,KAAM,CAAAC,OAAO,CAAGD,KAAK,CAAG,CAAC,CACzB,KAAM,IAAI,CAAAE,KAAK,CAACD,OAAO,CAAC,CAC1B'
+      );
     });
 
     test('strips queries from filename when injecting source maps', () => {

@@ -1,6 +1,7 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { traverse } from '@babel/core';
 import generate from '@babel/generator';
+import type { GeneratorOptions } from '@babel/generator';
 import type {
   File as BabelFile,
   Identifier,
@@ -116,11 +117,14 @@ export function buildWorkletString(
     },
   });
 
-  const code = generate(workletFunction).code;
-
   assert(inputMap, '`inputMap` is undefined.');
 
   const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
+
+  const { code, map } = generate(workletFunction, {
+    sourceMaps: includeSourceMap,
+    inputSourceMap: inputMap,
+  } as GeneratorOptions);
 
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
@@ -131,7 +135,7 @@ export function buildWorkletString(
     extraPresets: state.opts.extraPresets,
     compact: true,
     sourceMaps: includeSourceMap,
-    inputSourceMap: inputMap,
+    inputSourceMap: map ?? undefined,
     ast: false,
     babelrc: false,
     configFile: false,
