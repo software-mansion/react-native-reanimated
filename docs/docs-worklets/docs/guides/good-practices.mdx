@@ -97,8 +97,39 @@ Pass values as arguments instead of capturing them in a
 functions](#re-use-your-worklet-functions): a worklet function whose closure
 changes has to be created anew, so it can't be re-used.
 
-Avoid wrapper worklet functions that only forward their closure to another
-worklet function. In both examples below, `foo` is a worklet function:
+```js title="❌ Bad: the value is captured in the closure"
+function Header({ title }) {
+  // A new worklet function with a new closure on every render.
+  // highlight-start
+  function logTitle() {
+    'worklet';
+    console.log(title);
+  }
+  // highlight-end
+
+  const onPress = () => scheduleOnUI(logTitle);
+  // ...
+}
+```
+
+```js title="✅ Good: the value is passed as an argument"
+function logTitle(title) {
+  'worklet';
+  console.log(title);
+}
+
+function Header({ title }) {
+  // highlight-next-line
+  const onPress = () => scheduleOnUI(logTitle, title);
+  // ...
+}
+```
+
+## Avoid wrapper worklet functions
+
+Don't create worklet functions that only forward their closure to another
+worklet function. Pass the arguments to the threading function directly. In
+both examples below, `foo` is a worklet function:
 
 ```js
 function foo(arg1, arg2) {
