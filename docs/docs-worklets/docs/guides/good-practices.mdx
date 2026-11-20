@@ -14,8 +14,8 @@ original.
 
 Create Worker Runtimes once, for example at app startup or in a module scope, and keep a reference to them.
 
-Every call to [`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) creates a new JavaScript runtime
-together with a new thread to run it on. With [Bundle Mode](../bundleMode/overview.mdx) enabled, the new runtime
+Every call to [`createWorkletRuntime`](../threading/createWorkletRuntime.mdx) creates a new JavaScript runtime.
+With the default queue, it also creates a new thread to run it on. With [Bundle Mode](../bundleMode/overview.mdx) enabled, the new runtime
 also evaluates your whole JavaScript bundle before it can run anything.
 
 ```js
