@@ -109,9 +109,15 @@ export function createWorkletRuntime(
         '[Worklets] The Event Loop cannot be enabled on a runtime with locking disabled.'
       );
     }
-    enableEventLoop = enableLocking
-      ? (nameOrConfig?.enableEventLoop ?? true)
-      : false;
+    if (__DEV__ && queue === null && nameOrConfig?.enableEventLoop) {
+      throw new Error(
+        '[Worklets] The Event Loop cannot be enabled on a runtime without a queue.'
+      );
+    }
+    enableEventLoop =
+      enableLocking && queue !== null
+        ? (nameOrConfig?.enableEventLoop ?? true)
+        : false;
     /**
      * The networking API depends on the Event Loop - `whatwg-fetch` resolves
      * its responses through `setTimeout`. Without it, requests would hang

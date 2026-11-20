@@ -104,7 +104,10 @@ WorkletRuntime::WorkletRuntime(
       (enableLocking || !enableEventLoop) &&
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
-  if (enableEventLoop) {
+  react_native_assert(
+      (queue_ || !enableEventLoop) &&
+      "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime without a queue.");
+  if (enableEventLoop && queue_) {
     eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
     eventLoop_->run();
   }
