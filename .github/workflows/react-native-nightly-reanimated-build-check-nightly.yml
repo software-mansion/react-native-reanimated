@@ -48,7 +48,7 @@ jobs:
         uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'zulu'
-          java-version: '18'
+          java-version: '17'
       - name: Load "next" tag if available
         run: |
           if npm view react-native dist-tags | grep -q 'next:' ; then

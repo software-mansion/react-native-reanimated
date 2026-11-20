@@ -61,7 +61,7 @@ jobs:
         uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
         with:
           distribution: 'zulu'
-          java-version: '18'
+          java-version: '17'
       - name: Setup Node
         uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
         with:
