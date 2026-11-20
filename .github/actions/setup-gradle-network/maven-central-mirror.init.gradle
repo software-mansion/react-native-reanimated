@@ -11,7 +11,12 @@ def useMirror = { RepositoryHandler repositories ->
 }
 
 beforeSettings { settings ->
-  useMirror(settings.pluginManagement.repositories)
+  def pluginRepositories = settings.pluginManagement.repositories
+  if (pluginRepositories.isEmpty()) {
+    pluginRepositories.maven { url = mirrorUrl }
+    pluginRepositories.gradlePluginPortal()
+  }
+  useMirror(pluginRepositories)
   useMirror(settings.buildscript.repositories)
   useMirror(settings.dependencyResolutionManagement.repositories)
 }
