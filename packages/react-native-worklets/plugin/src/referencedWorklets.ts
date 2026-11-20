@@ -27,7 +27,7 @@ export function findReferencedWorklet(
     return undefined;
   }
 
-  if (state.opts.bundleMode && bindingIsWorklet(workletBinding)) {
+  if (bindingIsWorklet(workletBinding)) {
     return undefined;
   }
 
