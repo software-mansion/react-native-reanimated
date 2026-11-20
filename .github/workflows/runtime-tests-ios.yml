@@ -11,10 +11,6 @@ on:
       - .github/actions/save-yarn-cache/**
   workflow_call:
     inputs:
-      bundleMode:
-        required: false
-        type: boolean
-        default: false
       configuration:
         required: false
         type: string
@@ -29,10 +25,6 @@ on:
         default: false
   workflow_dispatch:
     inputs:
-      bundleMode:
-        required: false
-        type: boolean
-        default: false
       configuration:
         required: false
         type: string
@@ -52,13 +44,9 @@ permissions:
 jobs:
   runtime-tests-ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
+    name: ${{ inputs.configuration || 'Debug' }}
     runs-on: macos-26
     timeout-minutes: ${{ inputs.sanitizer && 240 || 90 }}
-    strategy:
-      fail-fast: false
-      matrix:
-        bundleMode: ${{ fromJSON((github.event_name == 'pull_request' && github.workflow == 'Runtime tests iOS') && '[false, true]' || format('[{0}]', inputs.bundleMode)) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated
@@ -68,7 +56,7 @@ jobs:
       SANITIZER_SKIP_BUILD_FLAG: ${{ inputs.sanitizer && '--skip-build' || '' }}
       USE_CCACHE_LAUNCHER: 1
     concurrency:
-      group: runtime-tests-ios-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.sanitizer }}
+      group: runtime-tests-ios-${{ github.ref }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.sanitizer }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -95,10 +83,6 @@ jobs:
           cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
           cache-path: ${{ steps.setup-node.outputs.cache-path }}
-
-      - name: Toggle Bundle Mode off (Legacy Eval)
-        if: ${{ !matrix.bundleMode }}
-        run: yarn toggle-bundle-mode
 
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
@@ -170,7 +154,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
+          name: ios-crash-reports-${{ inputs.configuration || 'Debug' }}${{ inputs.sanitizer && format('-{0}', inputs.sanitizer) || '' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14

@@ -28,8 +28,6 @@ type MatrixEntry = {
   workletsVersion: string;
 };
 
-type MatrixJob = MatrixEntry & { bundleMode: boolean };
-
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const packagesDir = path.join(currentDir, '..', '..', '..', 'packages');
 
@@ -106,10 +104,7 @@ const mainEntry: MatrixEntry = {
   workletsVersion: MAIN,
 };
 
-const jobs: MatrixJob[] = [mainEntry, ...matrix].flatMap((entry) => [
-  { ...entry, bundleMode: true },
-  { ...entry, bundleMode: false },
-]);
+const jobs: MatrixEntry[] = [mainEntry, ...matrix];
 
 fs.writeFileSync(OUTPUT_PATH, JSON.stringify(jobs));
 console.log(JSON.stringify(jobs, null, 2));

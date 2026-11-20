@@ -111,15 +111,6 @@ This runs `build` in `common-app` and every `*-example` workspace in parallel. *
 grep 'RNReanimated (' apps/fabric-example/ios/Podfile.lock apps/tvos-example/ios/Podfile.lock
 ```
 
-`macos-example`'s `build` script runs `toggle-bundle-mode --off` as its first command, whether or not the build later fails. That rewrites `package.json`, `yarn.lock` and the `babel.config.js` and `metro.config.js` of `fabric-example` and `tvos-example`. Revert them and reinstall:
-
-```bash
-git checkout -- package.json yarn.lock \
-  apps/fabric-example/babel.config.js apps/fabric-example/metro.config.js \
-  apps/tvos-example/babel.config.js apps/tvos-example/metro.config.js
-yarn install
-```
-
 Run step 5 before this step, not in parallel with it: `build-apps` changes `package.json` and `node_modules` while it runs.
 
 If the lockfiles show the new version and `git status` shows only the expected files, proceed.
