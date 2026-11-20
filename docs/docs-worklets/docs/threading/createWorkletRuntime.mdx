@@ -87,7 +87,7 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
 
 ##### `enableEventLoop`
 
-Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false`.
+Determines whether to enable the default event loop. Defaults to `true`. Always disabled on runtimes with `enableLocking: false` or `queue: null`.
 When enabled, the runtime provides `setTimeout`, `setImmediate`, `setInterval`, `requestAnimationFrame`, `queueMicrotask`, `clearTimeout`, `clearInterval`, `clearImmediate`, and `cancelAnimationFrame`.
 
 <Badges version="0.13.0">
@@ -119,7 +119,7 @@ Controls the queue used for scheduling worklet functions on this runtime. Defaul
 
 - `'default'`: use the built-in queue implementation.
 - An object implementing the C++ `AsyncQueue` interface from `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
-- `null`: do not attach any queue to the Runtime. Keep in mind that this will effectively disable all asynchronous features like Promises, `setTimeout` etc. Use it if you're going to implement the event-loop for the Runtime yourself.
+- `null`: do not attach any queue to the Runtime. Keep in mind that this disables the event loop and all asynchronous features like Promises, `setTimeout` etc. Use it if you're going to implement the event-loop for the Runtime yourself.
 
 ### Returns
 
