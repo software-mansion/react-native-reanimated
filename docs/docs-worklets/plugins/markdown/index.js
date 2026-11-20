@@ -221,7 +221,7 @@ function literal(expression) {
   if (expression?.type === 'ObjectExpression') {
     return Object.fromEntries(
       expression.properties.map((property) => [
-        property.key.name,
+        property.key.name ?? property.key.value,
         literal(property.value),
       ])
     );
@@ -344,3 +344,4 @@ async function markdownPlugin(context) {
 module.exports = markdownPlugin;
 module.exports.createConverter = createConverter;
 module.exports.markdownPaths = markdownPaths;
+module.exports.literal = literal;

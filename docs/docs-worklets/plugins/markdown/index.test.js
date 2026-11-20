@@ -74,6 +74,24 @@ test('API exports retain call and platform support tables', async () => {
   assert.match(markdown, /```js[\s\S]*runOnRuntimeAsync/);
 });
 
+test('CallTable reads quoted keys in the calls object', async () => {
+  const { literal } = require('./index.js');
+  const expression = {
+    type: 'ObjectExpression',
+    properties: [
+      {
+        key: { type: 'Literal', value: 'rnRuntime' },
+        value: { type: 'Literal', value: true },
+      },
+      {
+        key: { type: 'Identifier', name: 'uiRuntime' },
+        value: { type: 'Literal', value: false },
+      },
+    ],
+  };
+  assert.deepEqual(literal(expression), { rnRuntime: true, uiRuntime: false });
+});
+
 test('admonitions keep their title and exported code', async () => {
   const admonition = await convertDoc(
     'docs/memory/registerCustomSerializable.mdx'
