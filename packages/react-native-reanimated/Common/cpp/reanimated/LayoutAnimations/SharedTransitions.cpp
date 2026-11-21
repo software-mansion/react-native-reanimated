@@ -741,8 +741,8 @@ LayoutAnimation *LayoutAnimationsProxy::timedAnimation(const SharedTransitionRun
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     return &it->second;
   }
-  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
-    return &it->second.animation;
+  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    return &it->second;
   }
   return nullptr;
 }
@@ -1550,7 +1550,7 @@ void LayoutAnimationsProxy::showCarrierReactProps(
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     animation = &it->second;
   } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
-    animation = &it->second.animation;
+    animation = &it->second;
   }
   if (!animation) {
     const auto mounted = run.carrierStartView;
@@ -1801,7 +1801,7 @@ ShadowView LayoutAnimationsProxy::movedCarrierTarget(const Tag tag, const react:
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     target = it->second.finalView;
   } else if (const auto completedIt = completedAnimations_.find(tag); completedIt != completedAnimations_.end()) {
-    target = completedIt->second.animation.finalView;
+    target = completedIt->second.finalView;
   }
   target.layoutMetrics.frame.origin += offset;
   return target;
@@ -2206,7 +2206,7 @@ const LayoutAnimation &LayoutAnimationsProxy::carrierAnimation(const SharedTrans
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     return it->second;
   }
-  return completedAnimations_.at(tag).animation;
+  return completedAnimations_.at(tag);
 }
 
 const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransitionRun &run) const {
@@ -2215,7 +2215,7 @@ const ShadowView &LayoutAnimationsProxy::carrierViewOnScreen(const SharedTransit
     return currentViewOf(it->second);
   }
   if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
-    return currentViewOf(it->second.animation);
+    return currentViewOf(it->second);
   }
   return run.carrierStartView;
 }
@@ -2360,6 +2360,7 @@ void LayoutAnimationsProxy::handleSharedTransitionsStart(
         transaction.restoreRequests.push_back({sharedTag, run.target});
         if (!afterNode->isCarrier()) {
           hideInSharedElement(sharedTag, afterNode);
+          transaction.hiddenTags.push_back(after.tag);
           transaction.filteredMutations.push_back(createPropsUpdate(
               after,
               cloneViewWithoutOpacity(after, propsParserContext),
@@ -2436,7 +2437,7 @@ void LayoutAnimationsProxy::hideTransitioningViews(
       continue;
     }
     hideInSharedElement(sharedTag, node);
-    cancelNativeOpacityAnimation(shadowView.tag);
+    transaction.hiddenTags.push_back(shadowView.tag);
     auto m = createPropsUpdate(
         shadowView, cloneViewWithoutOpacity(shadowView, propsParserContext), parentTag, propsParserContext);
     hiddenMutations.push_back(m);
@@ -2812,7 +2813,7 @@ double LayoutAnimationsProxy::contentOpacityOnScreen(const SharedTransitionRun &
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     animated = it->second.contentOpacity;
   } else if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
-    animated = it->second.animation.contentOpacity;
+    animated = it->second.contentOpacity;
   }
   return animated.value_or(run.contentFade->range.from);
 }
@@ -2873,7 +2874,7 @@ ShadowView LayoutAnimationsProxy::withContentOpacity(
 // opacity from them.
 double LayoutAnimationsProxy::ownOpacity(const std::shared_ptr<LightNode> &node, const ShadowView &animatedView) const {
   const auto tag = node->current.tag;
-  if (layoutAnimationPhase(tag) != LayoutAnimationPhase::NONE) {
+  if (node->exitedAnimation || layoutAnimationPhase(tag) != LayoutAnimationPhase::NONE) {
     return getViewProps(animatedView).opacity;
   }
   resolveLightNodeProps(node);
@@ -3112,7 +3113,7 @@ void LayoutAnimationsProxy::startHeldEntering(
       cloneViewWithOpacity(node->current, 0, propsParserContext),
       parent ? parent->current.tag : surfaceId_,
       propsParserContext));
-  startEnteringAnimation(node, held.config);
+  startEnteringAnimationOfHiddenView(node, held.config);
 }
 
 void LayoutAnimationsProxy::fadeInTargetContent(
@@ -3140,7 +3141,7 @@ void LayoutAnimationsProxy::fadeInTargetContent(
         cloneViewWithOpacity(view, 0, propsParserContext),
         child->parent.lock()->current.tag,
         propsParserContext));
-    startEnteringAnimation(child, run.contentFade->options.fadeIn, true);
+    startEnteringAnimationOfHiddenView(child, run.contentFade->options.fadeIn, true);
   }
   schedulePullOnNextFrame();
 }
@@ -3366,8 +3367,8 @@ const ShadowView &LayoutAnimationsProxy::viewOnScreen(const std::shared_ptr<Ligh
   if (const auto it = layoutAnimations_.find(tag); it != layoutAnimations_.end()) {
     return currentViewOf(it->second);
   }
-  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end() && !it->second.shouldRemove) {
-    return currentViewOf(it->second.animation);
+  if (const auto it = completedAnimations_.find(tag); it != completedAnimations_.end()) {
+    return currentViewOf(it->second);
   }
   if (const auto *queued = queuedLayoutStartView(tag)) {
     return *queued;
