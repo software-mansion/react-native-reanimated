@@ -67,9 +67,10 @@ void ReanimatedMountHook::shadowTreeDidMount(
 
     if (!isReanimatedMount) {
       // When a commit from React Native has finished, we reset the skip commit
-      // flag in order to allow Reanimated to commit its tree.
-      updatesRegistryManager_->unpauseReanimatedCommits();
-      if (updatesRegistryManager_->shouldCommitAfterPause()) {
+      // flag of its surface in order to allow Reanimated to commit its tree.
+      const auto surfaceId = rootShadowNode->getSurfaceId();
+      updatesRegistryManager_->unpauseReanimatedCommits(surfaceId);
+      if (updatesRegistryManager_->shouldCommitAfterPause(surfaceId)) {
         requestFlush_();
       }
     }
@@ -95,6 +96,9 @@ void ReanimatedMountHook::shadowTreeDidUnmount(SurfaceId surfaceId, HighResTimeS
 
   auto lock = updatesRegistryManager_->lock();
   mountedRootsRegistry_->remove(surfaceId);
+  // A React commit in flight when the surface stopped never mounts.
+  updatesRegistryManager_->unpauseReanimatedCommits(surfaceId);
+  updatesRegistryManager_->cancelCommitAfterPause(surfaceId);
 }
 
 } // namespace reanimated
