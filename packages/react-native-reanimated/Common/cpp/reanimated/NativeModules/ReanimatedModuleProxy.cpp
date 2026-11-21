@@ -1466,7 +1466,9 @@ std::function<std::string()> ReanimatedModuleProxy::createRegistriesLeakCheck() 
     std::string result = "";
 
     auto lock = strongThis->updatesRegistryManager_->lock();
-    result += "AnimatedPropsRegistry: " + format(strongThis->animatedPropsRegistry_->isEmpty());
+    result += "AnimatedPropsRegistry: " +
+        format(strongThis->animatedPropsRegistry_->isEmpty() &&
+               !strongThis->animatedPropsRegistry_->hasPendingAnimatedPropsUpdates());
     result += "\nCSSAnimationsRegistry: " + format(strongThis->cssAnimationsRegistry_->isEmpty());
     result += "\nCSSTransitionsRegistry: " + format(strongThis->cssTransitionsRegistry_->isEmpty());
     result += "\nStaticPropsRegistry: " + format(strongThis->staticPropsRegistry_->isEmpty()) + "\n";
