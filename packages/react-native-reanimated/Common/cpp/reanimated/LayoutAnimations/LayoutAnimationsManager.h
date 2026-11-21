@@ -5,6 +5,7 @@
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LiveLayoutLeaf.h>
+#include <reanimated/LayoutAnimations/NativeLayoutLimits.h>
 
 #include <jsi/jsi.h>
 #include <atomic>
@@ -137,7 +138,7 @@ class LayoutAnimationsManager {
       uint64_t buildId,
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config,
-      size_t maxLeaves,
+      const NativeLayoutLimits &limits,
       const LiveLayoutLeaves &liveLeaves);
   /// Starts the frame-driven animation of the build. It continues the `liveLeaves` of the view.
   bool startBuiltLayoutAnimation(
@@ -164,6 +165,7 @@ class LayoutAnimationsManager {
       const char *methodName,
       const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
+  static jsi::Object toJSValue(jsi::Runtime &rt, const NativeLayoutLimits &limits);
   static jsi::Array toJSValue(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
