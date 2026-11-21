@@ -200,6 +200,7 @@ describe('native timing description', () => {
           ),
       ],
       ['a spring part', () => withSequence(part(10, 200), withSpring(20))],
+      ['a spring as the one part', () => withSequence(withSpring(20))],
       [
         'a repeated part',
         () => withSequence(part(10, 200), withRepeat(part(20, 100), 2)),
@@ -242,15 +243,134 @@ describe('native timing description', () => {
     });
   });
 
-  test('the system reduced motion setting gives no description', () => {
-    const isReduceMotionOnUI = ReducedMotionManager.uiValue;
-    const wasReduced = isReduceMotionOnUI.value;
-    isReduceMotionOnUI.value = true;
-    try {
-      const create = () => withTiming(10, { easing: Easing.linear });
-      expect(describe_(onUIRuntime(create))).toBeUndefined();
-    } finally {
-      isReduceMotionOnUI.value = wasReduced;
+  test.each([
+    ['a timing', () => withTiming(10, { easing: Easing.linear })],
+    ['a spring', () => withSpring(10)],
+  ])(
+    'the system reduced motion setting gives %s no description',
+    (_, create) => {
+      const isReduceMotionOnUI = ReducedMotionManager.uiValue;
+      const wasReduced = isReduceMotionOnUI.value;
+      isReduceMotionOnUI.value = true;
+      try {
+        expect(describe_(onUIRuntime(create))).toBeUndefined();
+      } finally {
+        isReduceMotionOnUI.value = wasReduced;
+      }
     }
+  );
+});
+
+describe('native spring description', () => {
+  const DEFAULT_CONFIG = {
+    mass: 4,
+    stiffness: 900,
+    damping: 120,
+    duration: 550,
+    dampingRatio: 1,
+    overshootClamping: false,
+    energyThreshold: 6e-9,
+    velocity: 0,
+    clamp: undefined,
+    useDuration: false,
+    skipAnimation: false,
+  };
+  const springPhase = (toValue: number | string, config: object) => ({
+    kind: 'spring',
+    toValue,
+    config: { ...DEFAULT_CONFIG, ...config },
+  });
+  const springConfigOf = (animation: unknown) => {
+    const [phase] = describe_(animation)!.phases;
+    return phase.kind === 'spring' ? phase.config : undefined;
+  };
+
+  test('a spring with the default configuration is one spring phase with each field that its start reads', () => {
+    expect(describe_(onUIRuntime(() => withSpring(10)))).toEqual({
+      phases: [springPhase(10, {})],
+    });
+  });
+
+  test('a spring in physics mode keeps its configuration', () => {
+    const config = {
+      stiffness: 400,
+      damping: 12,
+      mass: 1,
+      velocity: 200,
+      overshootClamping: true,
+      energyThreshold: 1e-4,
+    };
+    expect(describe_(onUIRuntime(() => withSpring(10, config)))).toEqual({
+      phases: [springPhase(10, config)],
+    });
+  });
+
+  test('a spring in duration mode keeps a copy of its clamp', () => {
+    const clamp = { min: 95 };
+    const animation = onUIRuntime(() =>
+      withSpring(100, { duration: 300, dampingRatio: 0.3, clamp })
+    );
+    expect(describe_(animation)).toEqual({
+      phases: [
+        springPhase(100, {
+          duration: 300,
+          dampingRatio: 0.3,
+          clamp,
+          useDuration: true,
+        }),
+      ],
+    });
+    expect(springConfigOf(animation)!.clamp).not.toBe(clamp);
+  });
+
+  test('a number with a unit keeps its unit, and the copy has no reduced motion setting', () => {
+    const animation = onUIRuntime(() =>
+      withSpring('90deg', { reduceMotion: ReduceMotion.Never })
+    );
+    expect(describe_(animation)).toEqual({
+      phases: [springPhase('90deg', {})],
+    });
+    expect('reduceMotion' in springConfigOf(animation)!).toBe(false);
+  });
+
+  test('a spring with no duration skips its animation', () => {
+    expect(
+      springConfigOf(onUIRuntime(() => withSpring(10, { duration: 0 })))
+    ).toEqual({ ...DEFAULT_CONFIG, duration: 0, skipAnimation: true });
+  });
+
+  test('the start of a spring in duration mode does not change its copy', () => {
+    const animation = onUIRuntime(() =>
+      withSpring(100, { duration: 300, dampingRatio: 0.3 })
+    ) as unknown as AnimationObject;
+    animation.onStart(animation, 0, 1000, undefined);
+    animation.onFrame(animation, 1016);
+    expect(springConfigOf(animation)).toEqual(
+      springPhase(100, { duration: 300, dampingRatio: 0.3, useDuration: true })
+        .config
+    );
+  });
+
+  test.each<[string, () => unknown]>([
+    ['a callback', () => withSpring(10, {}, jest.fn())],
+    ['a target that is not a number or a string', () => withSpring([10, 20])],
+    [
+      'reduced motion',
+      () => withSpring(10, { reduceMotion: ReduceMotion.Always }),
+    ],
+    [
+      'a delay with reduced motion',
+      () => withDelay(5, withSpring(10), ReduceMotion.Always),
+    ],
+  ])('a spring with %s has no description', (_, create) => {
+    expect(describe_(onUIRuntime(create))).toBeUndefined();
+  });
+
+  test('a delay of a spring is a hold, then the spring', () => {
+    expect(
+      describe_(onUIRuntime(() => withDelay(100, withSpring(10))))
+    ).toEqual({
+      phases: [{ kind: 'hold', durationMs: 100 }, springPhase(10, {})],
+    });
   });
 });
