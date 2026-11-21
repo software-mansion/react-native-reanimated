@@ -262,6 +262,7 @@ function createWorkDir() {
   for (const script of [
     'runtime-tests-server.mts',
     'android-device.mts',
+    'runtime-tests-platform.mts',
     'runtime-tests-suites.mts',
   ]) {
     fs.copyFileSync(
