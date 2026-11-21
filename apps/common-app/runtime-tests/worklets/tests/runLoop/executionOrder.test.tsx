@@ -28,6 +28,7 @@ import {
 
 const ANIMATION_QUEUE_POLLING_RATE = 16;
 const HANDSHAKE_TIMEOUT_MS = 1000;
+const SERIAL_REGISTRATION_ATTEMPTS = 3;
 
 const TIMER_METHODS: MethodsName[] = [
   'setTimeout',
@@ -216,39 +217,20 @@ describe('Test mixed order of execution', () => {
   test.each(shortRunSubset(EXPECTED_ORDER_OF_EXECUTION_3_METHODS_SERIAL))(
     'three methods in serial, **${0}**[**${1}**], **${2}**[**${3}**], **${4}**[**${5}**], runtime: **${6}**',
     async (config) => {
-      // Arrange
-      const [
-        firstMethodName,
-        firstMethodOrder,
-        secondMethodName,
-        secondMethodOrder,
-        thirdMethodName,
-        thirdMethodOrder,
-        runtimeKind,
-      ] = config;
-      const [notification1, notification2, notification3] = [
-        'callback1',
-        'callback2',
-        'callback3',
-      ];
-      const [confirmedOrder, order] = createOrderConstraint();
-      // Act
-      dispatchWorklet(() => {
-        'worklet';
-        const nameToMethod = getMethodMap();
-        nameToMethod[firstMethodName](() =>
-          order(firstMethodOrder, notification1)
+      for (
+        let attempt = 1;
+        attempt <= SERIAL_REGISTRATION_ATTEMPTS;
+        attempt++
+      ) {
+        const { order, registeredInTime } = await runThreeMethodsInSerial(
+          config,
+          attempt
         );
-        nameToMethod[secondMethodName](() =>
-          order(secondMethodOrder, notification2)
-        );
-        nameToMethod[thirdMethodName](() =>
-          order(thirdMethodOrder, notification3)
-        );
-      }, runtimeKind);
-
-      await waitForNotifications([notification1, notification2, notification3]);
-      expect(confirmedOrder.value).toBe(3);
+        if (registeredInTime || attempt === SERIAL_REGISTRATION_ATTEMPTS) {
+          expect(order).toBe(3);
+          return;
+        }
+      }
     }
   );
 
@@ -346,4 +328,53 @@ function waitForFlag(flag: Synchronizable<boolean>) {
     }
   }
   return true;
+}
+
+async function runThreeMethodsInSerial(
+  [
+    firstMethodName,
+    firstMethodOrder,
+    secondMethodName,
+    secondMethodOrder,
+    thirdMethodName,
+    thirdMethodOrder,
+    runtimeKind,
+  ]: ThreeMethodsConfig,
+  attempt: number
+) {
+  const [notification1, notification2, notification3, registered] = [
+    `callback1-${attempt}`,
+    `callback2-${attempt}`,
+    `callback3-${attempt}`,
+    `registered-${attempt}`,
+  ];
+  const [confirmedOrder, order] = createOrderConstraint();
+  const [registeredInTime, setRegisteredInTime] =
+    createTestValue<boolean>(false);
+
+  dispatchWorklet(() => {
+    'worklet';
+    const nameToMethod = getMethodMap();
+    const registrationStart = performance.now();
+    nameToMethod[firstMethodName](() => order(firstMethodOrder, notification1));
+    nameToMethod[secondMethodName](() =>
+      order(secondMethodOrder, notification2)
+    );
+    nameToMethod[thirdMethodName](() => order(thirdMethodOrder, notification3));
+    setRegisteredInTime(
+      performance.now() - registrationStart < ANIMATION_QUEUE_POLLING_RATE - 1,
+      registered
+    );
+  }, runtimeKind);
+
+  await waitForNotifications([
+    notification1,
+    notification2,
+    notification3,
+    registered,
+  ]);
+  return {
+    order: confirmedOrder.value,
+    registeredInTime: registeredInTime.value,
+  };
 }
