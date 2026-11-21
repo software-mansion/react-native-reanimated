@@ -145,7 +145,11 @@ void OperationsLoop::activateDelayedOperations(double timestamp) {
 }
 
 void OperationsLoop::updateActiveOperations(double timestamp) {
-  auto lock = updatesRegistryManager_->lock();
+  const auto updatesRegistryManager = updatesRegistryManager_.lock();
+  if (!updatesRegistryManager) {
+    return;
+  }
+  auto lock = updatesRegistryManager->lock();
   std::erase_if(activeOps_, [&](auto &op) { return !op->update(timestamp, *this); });
 }
 
