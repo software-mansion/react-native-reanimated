@@ -328,6 +328,7 @@ export class TestRunner {
         await testSuite.afterEach();
       }
 
+      await this._animationRecorder.stopRecordingAnimationUpdates();
       await waitForFrames(1, DRAIN_MAX_WAIT_TIME_MS);
 
       this._currentTestCase = null;
@@ -343,6 +344,9 @@ export class TestRunner {
       }
       try {
         await this._animationRecorder.stopRecordingAnimationUpdates();
+        for (const error of await this._animationRecorder.takeUnreportedErrors()) {
+          reportCleanupError(error);
+        }
       } catch (error) {
         reportCleanupError(error);
       }
