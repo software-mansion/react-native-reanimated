@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <reanimated/Compat/ReactNativeDebug.h>
 
@@ -160,6 +161,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
     const size_t maxLeaves) {
+  ReanimatedSystraceSection section("LayoutAnimationsManager::buildLayoutAnimation");
   const auto configValue = config->toJSValue(rt);
   auto summary = jsi::Value::undefined();
   callLayoutAnimationsManager(rt, "build", [&](jsi::Runtime &runtime, const jsi::Function &build) {

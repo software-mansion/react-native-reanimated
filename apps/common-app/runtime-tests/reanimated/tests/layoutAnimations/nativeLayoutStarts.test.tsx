@@ -38,12 +38,16 @@ type TraceEvent = {
   reason?: string;
   buildFailure?: string;
   transactionNumber?: number;
-  presentationValue?: number[];
 };
 
 type TargetSample = {
   model: number[];
   presentation: number[];
+  /**
+   * The platform key of each physical playback on the view:
+   * `reanimated.<owner>.<generation>.<target>`.
+   */
+  playbackKeys: string[];
   monotonicTimeMs: number;
 };
 
@@ -75,6 +79,7 @@ const POSITION_TOLERANCE = 0.5;
 const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
 const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
+const FRAME_MS = 1000 / 60;
 
 const centerOf = (origin: number) => origin + BOX_SIZE / 2;
 
@@ -89,9 +94,7 @@ async function takeTraceOf(tag: number) {
 }
 
 const isHostEvent = ({ event }: TraceEvent) =>
-  event !== 'FirstFrameSampled' &&
-  event !== 'ClientAdmitted' &&
-  event !== 'ClientEnded';
+  event !== 'ClientAdmitted' && event !== 'ClientEnded';
 
 function sample(tag: number, target: string): Promise<TargetSample> {
   return new Promise((resolve, reject) => {
@@ -100,6 +103,9 @@ function sample(tag: number, target: string): Promise<TargetSample> {
     );
   });
 }
+
+const playbackCountOf = ({ playbackKeys }: TargetSample, generation: number) =>
+  playbackKeys.filter((key) => key.split('.')[2] === `${generation}`).length;
 
 function summarize(events: TraceEvent[]) {
   return events
@@ -112,8 +118,10 @@ function summarize(events: TraceEvent[]) {
 }
 
 const callbacks: string[] = [];
+const callbackTimes: Record<string, number> = {};
 function recordCallback(name: string, finished: boolean) {
   callbacks.push(`${name}:${finished}`);
+  callbackTimes[name] = performance.now();
 }
 
 let builderCalls = 0;
@@ -150,11 +158,16 @@ type Leaf = {
 type LayoutOptions = {
   name?: string;
   initialOnlyKey?: string;
+  /**
+   * The builder keeps the UI thread for this time, so the start is late on its
+   * timeline.
+   */
+  blocksForMs?: number;
 };
 
 function layoutOf(
   leaves: Partial<Record<Key, Leaf>>,
-  { name, initialOnlyKey }: LayoutOptions = {}
+  { name, initialOnlyKey, blocksForMs = 0 }: LayoutOptions = {}
 ): LayoutAnimationFunction {
   return (values) => {
     'worklet';
@@ -283,6 +296,9 @@ const NATIVE_START =
 const NATIVE_END =
   'TrackEnded:PositionX:true > TrackEnded:PositionY:true > Ended:Finished:None';
 
+// `summarizeEnd` of a command that started and ended.
+const SORTED_START_AND_END = `TrackEnded:PositionX:true > TrackEnded:PositionY:true > ${NATIVE_START} > Ended:Finished:None`;
+
 // Tracks that end in one display frame report in no fixed order.
 function summarizeEnd(events: TraceEvent[]) {
   const hostEvents = events.filter(isHostEvent);
@@ -311,10 +327,10 @@ describe('native layout starts after the mount of the final state', () => {
     expect(events[1].transactionNumber).toBe(events[0].transactionNumber);
     expect(events[3].endpointPolicy).toBe('MountedModelMustMatchEndpoint');
 
-    const { model, presentation, monotonicTimeMs } = await sample(
-      tag,
-      'PositionX'
-    );
+    const playing = await sample(tag, 'PositionX');
+    const { model, presentation, monotonicTimeMs } = playing;
+    expect(playing.playbackKeys.length).toBe(2);
+    expect(playbackCountOf(playing, events[0].generation)).toBe(2);
     expect(Math.abs(model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
     const progress = (monotonicTimeMs - events[0].monotonicTimeMs) / DURATION;
     const expectedX = centerOf(START_LEFT) + progress * (END_LEFT - START_LEFT);
@@ -326,12 +342,75 @@ describe('native layout starts after the mount of the final state', () => {
     await wait(DURATION);
     expect(summarizeEnd(await takeTraceOf(tag))).toBe(NATIVE_END);
     const end = await sample(tag, 'PositionX');
+    expect(end.playbackKeys.length).toBe(0);
     expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
       true
     );
     await render(null);
   });
 });
+
+describe('native layout starts with no duration', () => {
+  if (!hasNativeLayoutStarts) {
+    return;
+  }
+
+  test('a delay holds the start value, then the endpoint shows and the callback gets true', async () => {
+    // The Y track has the timeline end of the hold, so its end report is the time reference.
+    const layout = layoutOf(
+      { originX: { duration: 0, delays: [DURATION] }, originY: {} },
+      { name: 'hold' }
+    );
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    await wait(DURATION / 2);
+
+    const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarize(startEvents)).toBe(NATIVE_START);
+    const held = await sample(tag, 'PositionX');
+    expect(playbackCountOf(held, startEvents[0].generation)).toBe(2);
+    expect(Math.abs(held.model[0] - centerOf(END_LEFT)) < 0.01).toBe(true);
+    expect(Math.abs(held.presentation[0] - centerOf(START_LEFT)) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.length).toBe(0);
+
+    await wait(DURATION);
+    const endEvents = (await takeTraceOf(tag)).filter(isHostEvent);
+    expect(summarizeEnd(endEvents)).toBe(NATIVE_END);
+    const endTimeOf = (target: string) =>
+      endEvents.find((event) => event.target === target)!.monotonicTimeMs;
+    const holdEnd = endTimeOf('PositionX');
+    expect(holdEnd - startEvents[0].monotonicTimeMs > DURATION - FRAME_MS).toBe(
+      true
+    );
+    expect(Math.abs(holdEnd - endTimeOf('PositionY')) < FRAME_MS).toBe(true);
+    const end = await sample(tag, 'PositionX');
+    expect(end.playbackKeys.length).toBe(0);
+    expect(Math.abs(end.presentation[0] - centerOf(END_LEFT)) < 0.01).toBe(
+      true
+    );
+    expect(callbacks.join()).toBe('hold:true');
+    await render(null);
+  });
+
+  test('each negative delay wrapper counts as zero before the hold', async () => {
+    const leaf = { duration: 0, delays: [-DURATION, DURATION] };
+    const layout = layoutOf({ originX: leaf, originY: leaf });
+    const tag = await renderBox({ layout });
+    await render(<Scene left={END_LEFT} layout={layout} />);
+    await wait(DURATION / 2);
+    const held = await sample(tag, 'PositionX');
+    expect(Math.abs(held.presentation[0] - centerOf(START_LEFT)) < 0.01).toBe(
+      true
+    );
+    await wait(DURATION);
+    expect(summarizeEnd(await takeTraceOf(tag))).toBe(SORTED_START_AND_END);
+    await render(null);
+  });
+});
+
+const PAIR_TOP = 60;
 
 const styles = StyleSheet.create({
   container: {

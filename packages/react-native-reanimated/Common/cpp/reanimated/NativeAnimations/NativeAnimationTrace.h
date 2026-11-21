@@ -25,8 +25,6 @@ enum class TraceEventType : uint8_t {
   LayoutStartMounted,
   /// The first frame-driven update of a view after its native command is on the host views.
   FrameUpdateMounted,
-  /// The value on screen at the first display frame after a start in a mount report.
-  FirstFrameSampled,
   /// The layout client got the admission report.
   ClientAdmitted,
   /// The layout client got the result.
@@ -50,8 +48,6 @@ struct TraceEvent {
   std::optional<AnimationResult> result;
   std::optional<TrackBuildFailure> buildFailure;
   std::optional<int64_t> transactionNumber;
-  /// The components of the value on screen.
-  std::vector<double> presentationValue;
 };
 
 std::string_view toString(TraceEventType event);

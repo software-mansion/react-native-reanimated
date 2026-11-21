@@ -5,6 +5,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <variant>
 #include <vector>
 
@@ -39,6 +40,8 @@ using MountedAnimationResolution = std::variant<std::unique_ptr<MountedAnimation
 struct TargetSample {
   std::vector<double> model;
   std::vector<double> presentation;
+  /// The platform keys of each physical playback that the platform put on the view, for all targets.
+  std::vector<std::string> playbackKeys;
   /// On the clock of the trace events. The host sets it.
   double monotonicTimeMs{0};
 };
@@ -68,9 +71,6 @@ class NativeAnimationPlatform {
 
 #ifndef NDEBUG
   virtual std::optional<TargetSample> sample(Tag tag, AnimationTarget target) = 0;
-  /// The receiver gets the sample at the next display frame.
-  virtual void
-  sampleAtNextFrame(Tag tag, AnimationTarget target, std::function<void(std::optional<TargetSample>)> receiver) = 0;
 #endif
 };
 

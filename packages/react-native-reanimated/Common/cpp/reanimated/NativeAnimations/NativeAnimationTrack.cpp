@@ -50,4 +50,11 @@ std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track) {
   return previousOffset == 1 ? std::nullopt : std::optional(TrackBuildFailure::InvalidValue);
 }
 
+TrackPlayback playbackOf(const AnimationTrack &track) {
+  if (track.durationMs > 0 || track.endpointPolicy != EndpointPolicy::MountedModelMustMatchEndpoint) {
+    return TrackPlayback::Interpolated;
+  }
+  return track.delayMs > 0 ? TrackPlayback::HeldThroughDelay : TrackPlayback::Immediate;
+}
+
 } // namespace reanimated::native_animation
