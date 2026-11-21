@@ -71,14 +71,14 @@ export class NativeEventsManager implements INativeEventsManager {
       ) {
         // Prop got changed
         prevHandler.unregisterFromEvents(this.#eventViewTag);
-        newProp.workletEventHandler.registerForEvents(this.#eventViewTag);
+        newProp.workletEventHandler.registerForEvents(this.#eventViewTag, key);
       }
     });
 
     executeForEachEventHandler(this.#managedComponent.props, (key, handler) => {
       if (!prevProps[key]) {
         // Prop got added
-        handler.registerForEvents(this.#eventViewTag);
+        handler.registerForEvents(this.#eventViewTag, key);
       }
     });
   }
