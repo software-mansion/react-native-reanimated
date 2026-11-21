@@ -53,7 +53,12 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   void didMountItems(const std::function<void(std::uint64_t dispatch)> &report);
 
   void setTrackEndListener(TrackEndListener listener) override;
-  bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) override;
+  std::optional<UnsupportedTargetCause> unsupportedTargetCause(
+      const AnimationTrack &track,
+      const facebook::react::ShadowView &view) override;
+  bool movesOnlyPlanarTransforms() const override;
+  /// The executor writes no size, so a change of the frame size plays only within one pixel.
+  bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) override;
   bool isSurfaceRunning(SurfaceId surfaceId) override;
   bool isInWindow(SurfaceId surfaceId, Tag tag) override;
   /// The number of the dispatch that runs now: its `didMountItems` reports the pull.
@@ -76,15 +81,15 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   using Operation = std::function<void()>;
 
   AndroidNativeAnimationPlatform(
-      alias_ref<JNativeAnimationExecutor::javaobject> executor,
+      const alias_ref<JNativeAnimationExecutor::javaobject> &executor,
       std::weak_ptr<const facebook::react::UIManager> uiManager,
       GetAnimationTimestampFunction getAnimationTimestamp);
 
-  /// The rules that the track alone decides. `resolve` has no shadow view, so `canRealize` adds the rules of
-  /// the final view.
-  bool plays(const AnimationTrack &track) const;
-  bool playsTarget(const AnimationTrack &track) const;
-  bool modelEndsAt(alias_ref<JView> view, const AnimationTrack &track) const;
+  /// The rules that the track alone decides. `resolve` has no shadow view, so `unsupportedTargetCause` adds the
+  /// rules of the final view.
+  std::optional<UnsupportedTargetCause> playbackCause(const AnimationTrack &track) const;
+  std::optional<UnsupportedTargetCause> targetCause(const AnimationTrack &track) const;
+  bool modelEndsAt(const alias_ref<JView> &view, const AnimationTrack &track) const;
   void onTrackEnded(const TrackKey &track, bool finished);
   /// One platform pass: all operations of the pass read one time.
   void drainPostedOperations();

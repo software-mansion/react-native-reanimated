@@ -19,9 +19,8 @@
  * Not converted (the old pair comparison at planned times):
  * the test that calls `sampleOpacityPair`. It compares two frame-driven boxes, not a native route with its twin.
  */
-import type { ComponentRef } from 'react';
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+
+import { StyleSheet, View } from 'react-native';
 
 import {
   describe,
@@ -32,10 +31,14 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import type { PairProps } from './nativeLayoutTestKit';
 import {
+  takeTransferTrace,
+  waitUntil,
+  CLIPPED_OFFSET,
+  scrollClippingViewTo,
+  sortedCallbacks,
   ClippingScrollView,
   BOX_REF,
   BOX_SIZE,
-  callbacks,
   FRAME_BOX_REF,
   FRAME_MS,
   frameRecordedOf,
@@ -54,7 +57,6 @@ import {
   resetFrameRecords,
   routeOf,
   START_LEFT,
-  summarizeEnd,
   takeTraceOf,
   waitForCallbacks,
   movingGeometryTest,
@@ -66,21 +68,15 @@ import {
   twinRestOf,
 } from './nativeLayoutTwinTimeline';
 
-const scrollRef = React.createRef<ComponentRef<typeof ScrollView>>();
-
 /** A scroll to `CLIPPED_OFFSET` takes the two boxes out of the window. */
 function ClippedPair(pair: PairProps) {
   return (
-    <ClippingScrollView scrollRef={scrollRef} style={styles.scroll}>
+    <ClippingScrollView style={styles.scroll}>
       <Pair {...pair} />
       <View style={styles.scrollFiller} />
     </ClippingScrollView>
   );
 }
-
-const CLIPPED_OFFSET = 1500;
-const scrollTo = (y: number) =>
-  scrollRef.current?.scrollTo({ y, animated: false });
 
 describe('a native layout group whose tracks the platform removes', () => {
   if (!hasNativeLayoutRoute) {
@@ -105,9 +101,6 @@ describe('a native layout group whose tracks the platform removes', () => {
     await render(<ClippedPair {...moved} />);
     return { nativeTag, frameTag, twin, startMs };
   }
-
-  const waitUntil = ({ startMs }: Clipped, elapsedMs: number) =>
-    wait(Math.max(0, startMs + elapsedMs - performance.now()));
 
   async function readBox(tag: number) {
     const [x, y, opacity] = await Promise.all([
@@ -139,19 +132,6 @@ describe('a native layout group whose tracks the platform removes', () => {
     ]);
     return { native, frame: { ...frame, y: frame.y - PAIR_CELL_HEIGHT } };
   }
-
-  const isFrameUpdate = ({ event }: { event: string }) =>
-    event === 'FrameUpdateMounted';
-
-  async function takeTransferTrace({ nativeTag }: Clipped) {
-    const events = await takeTraceOf(nativeTag);
-    return {
-      host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
-      hasFrameUpdate: events.some(isFrameUpdate),
-    };
-  }
-
-  const sortedCallbacks = () => callbacks.slice().sort().join();
 
   async function expectOnClippedTwin(
     caseName: string,
@@ -197,9 +177,9 @@ describe('a native layout group whose tracks the platform removes', () => {
         expect(
           routeOf(startEvents, clipped.nativeTag, 'PositionX', [playing]).kind
         ).toBe('native playing');
-        scrollTo(CLIPPED_OFFSET);
+        scrollClippingViewTo(CLIPPED_OFFSET);
         await waitUntil(clipped, SLOW_SPRING_MS / 2);
-        const transfer = await takeTransferTrace(clipped);
+        const transfer = await takeTransferTrace(clipped.nativeTag);
         expect(transfer.host).toBe(
           'TrackEnded:PositionX:false > Ended:Interrupted:PlatformRemoved'
         );
@@ -240,7 +220,7 @@ describe('a native layout group whose tracks the platform removes', () => {
         expect(
           isNear(handed.native.x, handed.frame.x, POSITION_TOLERANCE)
         ).toBe(true);
-        scrollTo(0);
+        scrollClippingViewTo(0);
         expect(
           await waitForCallbacks(['frame:true', 'native:true'], SLOW_SPRING_MS)
         ).toBe('');
