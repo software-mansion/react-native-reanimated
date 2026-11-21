@@ -11,6 +11,8 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/NativeLayoutStart.h>
+#include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
 #include <cstdint>
@@ -149,6 +151,8 @@ struct LayoutAnimationsProxyDependencies {
   std::function<void(SurfaceId)> requestLayoutAnimationFlush;
   std::function<void(std::function<void()>)> scheduleOnNextUIFrame;
   std::function<std::optional<double>(Tag)> readSynchronousOpacity;
+  std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
+  GetAnimationTimestampFunction getAnimationTimestamp;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   ReleaseViewTransitionsFunction releaseViewTransitions;
@@ -203,7 +207,17 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const facebook::react::ShadowTree &shadowTree,
       std::weak_ptr<const facebook::react::MountingOverrideDelegate> mountingOverrideDelegate);
   virtual void shadowTreeWillCommit(bool /*isSurfaceRemoval*/) {}
+  /// The platform reports that the transaction of the last pull is on the host views. UI thread only.
+  virtual void surfaceDidMount() {}
   virtual void surfaceDidUnmount();
+#ifndef NDEBUG
+  virtual bool armNativeLayoutStart(Tag /*tag*/, const ArmedNativeLayoutStart & /*armedStart*/) {
+    return false;
+  }
+  virtual bool cancelNativeLayoutCommand(Tag /*tag*/) {
+    return false;
+  }
+#endif
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
   ~LayoutAnimationsProxyCommon() override = default;
