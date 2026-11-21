@@ -514,16 +514,19 @@ describe('Test fixed-type Synchronizable access', () => {
 
     const synchronizable = createSynchronizable(0, { fixedType: true });
     const lockTaken = createSynchronizable(false, { fixedType: true });
+    const writerDone = createSynchronizable(false, { fixedType: true });
 
-    let lockHolderResult = { firstRead: -1, secondRead: -1, unlockedAt: -1 };
-    let dirtyWriterReturnedAt = -1;
+    let lockHolderResult = {
+      firstRead: -1,
+      secondRead: -1,
+      writerDoneBeforeUnlock: true,
+    };
 
     const onLockHolderDone = (result: typeof lockHolderResult) => {
       lockHolderResult = result;
       notify(LOCK_HOLDER_DONE);
     };
-    const onDirtyWriterDone = (returnedAt: number) => {
-      dirtyWriterReturnedAt = returnedAt;
+    const onDirtyWriterDone = () => {
       notify(DIRTY_WRITER_DONE);
     };
 
@@ -538,9 +541,13 @@ describe('Test fixed-type Synchronizable access', () => {
         now = Date.now();
       }
       const secondRead = synchronizable.getBlocking();
-      const unlockedAt = Date.now();
+      const writerDoneBeforeUnlock = writerDone.getDirty();
       synchronizable.unlock();
-      scheduleOnRN(onLockHolderDone, { firstRead, secondRead, unlockedAt });
+      scheduleOnRN(onLockHolderDone, {
+        firstRead,
+        secondRead,
+        writerDoneBeforeUnlock,
+      });
     });
 
     scheduleOnUI(() => {
@@ -550,8 +557,8 @@ describe('Test fixed-type Synchronizable access', () => {
         taken = lockTaken.getDirty();
       }
       synchronizable.setDirty(42);
-      const returnedAt = Date.now();
-      scheduleOnRN(onDirtyWriterDone, returnedAt);
+      writerDone.setDirty(true);
+      scheduleOnRN(onDirtyWriterDone);
     });
 
     await waitForNotification(LOCK_HOLDER_DONE);
@@ -559,7 +566,7 @@ describe('Test fixed-type Synchronizable access', () => {
 
     expect(lockHolderResult.firstRead).toBe(0);
     expect(lockHolderResult.secondRead).toBe(0);
-    expect(dirtyWriterReturnedAt >= lockHolderResult.unlockedAt).toBe(true);
+    expect(lockHolderResult.writerDoneBeforeUnlock).toBe(false);
     expect(synchronizable.getBlocking()).toBe(42);
   });
 });
