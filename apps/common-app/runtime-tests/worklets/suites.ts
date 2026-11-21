@@ -58,6 +58,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/microtaskErrors.test');
       require('./tests/runtimes/weakRef.test');
       require('./tests/runtimes/performanceNow.test');
+      require('./tests/runtimes/syncCallCrossRuntimeError.test');
     },
   },
   {

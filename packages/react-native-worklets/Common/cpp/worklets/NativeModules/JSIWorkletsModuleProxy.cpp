@@ -94,6 +94,23 @@ inline void scheduleOnUI(
 #endif // NDEBUG
 }
 
+template <typename TCall>
+auto rethrowOnCallerRuntime(jsi::Runtime &callerRuntime, const WorkletRuntime &workletRuntime, TCall &&call)
+    -> decltype(auto) {
+  if (&callerRuntime == &workletRuntime.getJSIRuntime()) {
+    return std::forward<TCall>(call)();
+  }
+  try {
+    return std::forward<TCall>(call)();
+  } catch (const jsi::JSError &error) {
+    jsi::Value callerErrorValue(callerRuntime, jsi::JSError(callerRuntime, error.getMessage()).value());
+    if (callerErrorValue.isObject()) {
+      callerErrorValue.asObject(callerRuntime).setProperty(callerRuntime, "stack", error.getStack());
+    }
+    throw jsi::JSError(callerRuntime, std::move(callerErrorValue));
+  }
+}
+
 inline jsi::Value runOnUISync(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
@@ -106,12 +123,14 @@ inline jsi::Value runOnUISync(
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    auto serializedResult = rethrowOnCallerRuntime(rt, *uiWorkletRuntime, [&]() {
 #ifndef NDEBUG
-    auto serializedResult = uiWorkletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
-        serializableWorklet, scheduleStack);
+      return uiWorkletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
+          serializableWorklet, scheduleStack);
 #else
-    auto serializedResult = uiWorkletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
+      return uiWorkletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
 #endif // NDEBUG
+    });
     return serializedResult->toJSValue(rt);
   }
   return jsi::Value::undefined();
@@ -132,12 +151,13 @@ jsi::Value runOnRuntimeSync(
   if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
     throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
   }
+  auto serializedResult = rethrowOnCallerRuntime(rt, *workletRuntime, [&]() {
 #ifndef NDEBUG
-  auto serializedResult =
-      workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet, scheduleStack);
+    return workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet, scheduleStack);
 #else
-  auto serializedResult = workletRuntime->runSyncAndDrainMicrotasksSerialized(worklet);
+    return workletRuntime->runSyncAndDrainMicrotasksSerialized(worklet);
 #endif // NDEBUG
+  });
   return serializedResult->toJSValue(rt);
 }
 
@@ -684,11 +704,15 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         if (at<2>(args).isString()) {
           scheduleStack = at<2>(args).asString(rt).utf8(rt);
         }
-        auto serializedResult = workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
-            serializableWorklet, scheduleStack);
-#else
-        auto serializedResult = workletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
 #endif // NDEBUG
+        auto serializedResult = rethrowOnCallerRuntime(rt, *workletRuntime, [&]() {
+#ifndef NDEBUG
+          return workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
+              serializableWorklet, scheduleStack);
+#else
+          return workletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
+#endif // NDEBUG
+        });
         return serializedResult->toJSValue(rt);
       });
 
