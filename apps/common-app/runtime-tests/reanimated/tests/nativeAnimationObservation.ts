@@ -158,11 +158,15 @@ export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
 
 /**
  * The number of layout animation builds on the UI runtime that wait for their
- * frame-driven start or their release.
+ * frame-driven start or their release. The UI runtime gets the layout
+ * animations manager with the first layout animation config.
  */
 export function pendingBuildCountOf(): number {
   return runOnUISync(() => {
     'worklet';
+    if (global.LayoutAnimationsManager === undefined) {
+      return 0;
+    }
     const { pendingBuildCount } = global.LayoutAnimationsManager;
     if (pendingBuildCount === undefined) {
       throw new Error(
