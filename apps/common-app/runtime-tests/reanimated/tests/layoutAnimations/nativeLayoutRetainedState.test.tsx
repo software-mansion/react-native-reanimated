@@ -30,6 +30,7 @@ import {
 } from './nativeLayoutLifecycleKit';
 import type { TraceEvent } from './nativeLayoutTestKit';
 import {
+  afterMountOf,
   END_LEFT,
   entryExitOf,
   FRAME_MS,
@@ -41,6 +42,7 @@ import {
   styles,
   takeTrace,
   takeTraceUntil,
+  waitForModel,
 } from './nativeLayoutTestKit';
 
 export function describeRetainedState() {
@@ -73,6 +75,9 @@ export function describeRetainedState() {
         const scene = sceneOf(PartialReplacementScene, { left: START_LEFT });
         await scene.render({});
         const tag = getTestComponent(PARTIAL_REF).getTag();
+        await afterMountOf(() =>
+          waitForModel(tag, 'Width', ([width]) => width > 0)
+        );
         const partialViews: CycleViews = { commandTags: [tag], exitedTags: [] };
         await takeTrace();
         await scene.render({ left: END_LEFT });
