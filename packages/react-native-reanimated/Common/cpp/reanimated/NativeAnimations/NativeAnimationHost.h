@@ -8,6 +8,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+#include <variant>
 #include <vector>
 
 namespace reanimated::native_animation {
@@ -18,19 +19,27 @@ struct MountedStart {
   std::weak_ptr<NativeAnimationClient> client;
 };
 
+/// A stop of a command in a mount report. The view shows its model value again
+/// (`TrackStopMode::SettleToModel`), because the mount gave the model its value.
+struct MountedStop {
+  AnimationHandle handle;
+};
+
+using MountedOperation = std::variant<MountedStart, MountedStop>;
+
 /// The shared playback boundary. It owns the records of active commands and tracks, resolves target
-/// conflicts, and reports results. Any thread can call it; each operation runs later on the platform UI
-/// thread in call order, with no lock of the caller held.
+/// conflicts, and reports results. Any thread can call it; each operation but those of `runAfterMount` runs
+/// later on the platform UI thread in call order, with no lock of the caller held.
 class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnimationHost> {
  public:
   static std::shared_ptr<NativeAnimationHost> create(std::shared_ptr<NativeAnimationPlatform> platform);
 
   void start(AnimationRequest request, std::weak_ptr<NativeAnimationClient> client);
-  /// UI thread only, in the platform report of a mount of the surface of the requests. Starts each playback
-  /// before it returns, so the mounted state and the playback reach the screen together. It does not wait for
-  /// the queued operations and reads no surface state. The clients get their reports later, before the reports
-  /// of the queued operations.
-  void startAfterMount(const std::vector<MountedStart> &starts);
+  /// UI thread only, in the platform report of a mount of the surface of the operations. Runs each operation
+  /// before it returns, in order, so the mounted state, each stop, and each playback reach the screen
+  /// together. It does not wait for the queued operations and reads no surface state. The clients get their
+  /// reports later, before the reports of the queued operations.
+  void runAfterMount(const std::vector<MountedOperation> &operations);
   /// The static answer of the platform (`NativeAnimationPlatform::canRealize`). Any thread.
   bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const;
   /// True when the mounted view of the tag is in a window. UI thread only.
@@ -41,7 +50,7 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   /// Stops all work of the surface. Commands without a result report SurfaceDestroyed.
   void closeSurface(SurfaceId surfaceId);
 
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   void takeTrace(std::function<void(std::vector<TraceEvent>)> receiver);
   /// UI thread only.
   TraceRecorder &trace();
@@ -88,7 +97,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
       AnimationResult result,
       Deliveries &deliveries);
   void releaseReplacedTracks(const std::vector<TrackKey> &replacedTracks, Deliveries &deliveries);
-  void stopCommand(CommandMap::iterator commandIt, TrackStopMode mode, AnimationOutcome outcome);
+  void
+  stopCommand(CommandMap::iterator commandIt, TrackStopMode mode, AnimationOutcome outcome, Deliveries &deliveries);
   void endCommand(const AnimationHandle &handle, Command &command, AnimationResult result, Deliveries &deliveries);
   void reportTrackEnd(
       const std::weak_ptr<NativeAnimationClient> &client,
@@ -101,11 +111,11 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
 
   std::mutex queueMutex_;
   std::deque<Operation> queue_;
-  /// The client reports of `startAfterMount`, in admission order. They run before `queue_`.
-  std::deque<Operation> mountedStartReports_;
+  /// The client reports of `runAfterMount`, in the order of its operations. They run before `queue_`.
+  std::deque<Operation> mountReports_;
 
   CommandMap commands_;
-#ifndef NDEBUG
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   TraceRecorder trace_;
 #endif
 };

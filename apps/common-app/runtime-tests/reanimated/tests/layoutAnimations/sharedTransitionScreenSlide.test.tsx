@@ -58,9 +58,9 @@ describe('Shared transition while a native stack moves its screens', () => {
       await render(<Screens presentation={presentation} />);
       await waitForNotification(STACK_READY);
       const homeTag = getTestComponent('home').getTag();
-      const homeSamples = await recordPresentedFrames([homeTag], () =>
-        waitForFrames(2)
-      );
+      const homeSamples = await recordPresentedFrames([homeTag], async () => {
+        await waitForFrames(2);
+      });
       const home = homeSamples[homeSamples.length - 1]?.[0];
       await navigateAndLand(() => navigation.navigate('Player'));
       await waitForNotification(PLAYER_SHOWN);

@@ -558,6 +558,20 @@ describe('Tests of Test Framework', () => {
       expect(confirmedOrder.value).toBe(3);
     });
   });
+
+  describe('waitForFrames', () => {
+    test('waits for distinct UI frames, and the UI frame after them comes', async () => {
+      const timestamps = await waitForFrames(3);
+      const [next] = await waitForFrames(1);
+
+      expect(timestamps.length).toBe(3);
+      expect(
+        [...timestamps, next].every(
+          (timestamp, frame, all) => frame === 0 || timestamp > all[frame - 1]
+        )
+      ).toBe(true);
+    });
+  });
 });
 
 function makeTestSuite(

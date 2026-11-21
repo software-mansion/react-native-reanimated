@@ -146,6 +146,9 @@ const CONFIGURATION =
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
+const ANDROID_BUNDLER_HOST_EXTRAS = IS_RELEASE
+  ? []
+  : ['--es', 'RUNTIME_TESTS_BUNDLER_HOST', `localhost:${METRO_PORT}`];
 const WS_URL = `ws://127.0.0.1:${PORT}`;
 const ONLY =
   typeof args.only === 'string'
@@ -2260,7 +2263,10 @@ async function installAndLaunchAndroid(serial: string) {
 
   for (const port of [METRO_PORT, PORT]) {
     await adb(serial, ['reverse', `tcp:${port}`, `tcp:${port}`]).catch(
-      () => {}
+      (error) =>
+        console.warn(
+          `[runtime-tests] adb reverse of port ${port} failed: ${error.message}`
+        )
     );
   }
 
@@ -2292,6 +2298,7 @@ async function installAndLaunchAndroid(serial: string) {
     '--es',
     'RUNTIME_TESTS_WS_URL',
     WS_URL,
+    ...ANDROID_BUNDLER_HOST_EXTRAS,
   ]);
 }
 
@@ -2348,6 +2355,7 @@ async function startAndroidHeadlessTaskService(serial: string) {
       '--es',
       'RUNTIME_TESTS_WS_URL',
       WS_URL,
+      ...ANDROID_BUNDLER_HOST_EXTRAS,
     ],
     { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
   );
