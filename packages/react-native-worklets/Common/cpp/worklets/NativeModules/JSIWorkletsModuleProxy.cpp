@@ -103,11 +103,11 @@ auto rethrowOnCallerRuntime(jsi::Runtime &callerRuntime, const WorkletRuntime &w
   try {
     return std::forward<TCall>(call)();
   } catch (const jsi::JSError &error) {
-    jsi::JSError callerError(callerRuntime, error.getMessage());
-    if (callerError.value().isObject()) {
-      callerError.value().asObject(callerRuntime).setProperty(callerRuntime, "stack", error.getStack());
+    jsi::Value callerErrorValue(callerRuntime, jsi::JSError(callerRuntime, error.getMessage()).value());
+    if (callerErrorValue.isObject()) {
+      callerErrorValue.asObject(callerRuntime).setProperty(callerRuntime, "stack", error.getStack());
     }
-    throw callerError;
+    throw jsi::JSError(callerRuntime, std::move(callerErrorValue));
   }
 }
 
