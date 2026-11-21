@@ -3,24 +3,35 @@
  * Stubbed for web, where we don't use this file;
  */
 
-export function withReanimatedTimer() {
-  // NOOP
-}
+// Consumers' TypeScript doesn't read `index.native.ts`, so the stub borrows its
+// signatures (and, through the import, the `jest.Matchers` augmentation) to keep
+// the published types the same as what Jest runs. Web programs see the matchers
+// too, although this stub doesn't register them: the package publishes a single
+// set of declarations, so they can't be left out for web without dropping them
+// for native consumers.
+import type * as JestUtils from './index.native';
 
-export function advanceAnimationByTime() {
+export const withReanimatedTimer: typeof JestUtils.withReanimatedTimer = () => {
   // NOOP
-}
+};
 
-export function advanceAnimationByFrame() {
-  // NOOP
-}
+export const advanceAnimationByTime: typeof JestUtils.advanceAnimationByTime =
+  () => {
+    // NOOP
+  };
 
-export function setUpTests() {
-  // NOOP
-}
+export const advanceAnimationByFrame: typeof JestUtils.advanceAnimationByFrame =
+  () => {
+    // NOOP
+  };
 
-export function getAnimatedStyle() {
+export const setUpTests: typeof JestUtils.setUpTests = () => {
   // NOOP
-}
+};
+
+export const getAnimatedStyle: typeof JestUtils.getAnimatedStyle = () => {
+  // NOOP
+  return undefined as never;
+};
 
 export { cloneWorklet, worklet } from './common';
