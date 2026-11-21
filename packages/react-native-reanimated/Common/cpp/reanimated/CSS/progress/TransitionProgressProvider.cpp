@@ -31,6 +31,14 @@ TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(
       easingFunction_(getEasingFunctionFromConfig(easing_)),
       reversingShorteningFactor_(reversingShorteningFactor) {}
 
+TransitionPropertyProgressProvider::TransitionPropertyProgressProvider(const TransitionTiming &timing)
+    : TransitionPropertyProgressProvider(
+          timing.startTimestamp - timing.delay,
+          timing.duration,
+          timing.delay,
+          timing.easing,
+          timing.reversingFactor) {}
+
 double TransitionPropertyProgressProvider::getGlobalProgress() const {
   return rawProgress_.value_or(0);
 }
@@ -213,6 +221,14 @@ void TransitionProgressProvider::runProgressProvider(
         timestamp, settings.duration, settings.delay, settings.easingConfig);
   }
 
+  propertyProgressProviders_.insert_or_assign(propertyName, provider);
+  observeProperty(propertyName, *provider);
+}
+
+void TransitionProgressProvider::resumeProgressProvider(
+    const std::string &propertyName,
+    const TransitionTiming &timing) {
+  const auto provider = std::make_shared<TransitionPropertyProgressProvider>(timing);
   propertyProgressProviders_.insert_or_assign(propertyName, provider);
   observeProperty(propertyName, *provider);
 }
