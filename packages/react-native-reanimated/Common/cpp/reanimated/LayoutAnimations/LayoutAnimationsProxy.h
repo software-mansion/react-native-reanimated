@@ -4,6 +4,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/NativeLayoutGroups.h>
 #include <reanimated/LayoutAnimations/StaleSynchronousPropsTracker.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -306,8 +307,6 @@ struct TransactionMeta {
   std::unordered_set<Tag> recreatedTags;
   // Whatever changes a node's children or their exiting states during updateLightTree must reset its cursors.
   std::unordered_map<Tag, IndexCursors> indexCursors;
-  /// One time origin for all native starts of the pull.
-  std::optional<double> nativeStartTimestampMs;
 };
 
 struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
@@ -391,20 +390,16 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   // It starts above the initial LightNode::followedInSynchronousBatch, so a view that no batch marked never matches.
   mutable uint64_t synchronousBatch_ = 1;
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
-  const GetAnimationTimestampFunction getAnimationTimestamp_;
+  /// Null when layout animations have no native route.
+  const std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
   /// The native starts of the last pull. The mount report of that transaction takes them.
   mutable std::vector<native_animation::MountedStart> pendingNativeStarts_;
-  mutable uint64_t nativeStartGeneration_ = 0;
+  /// The build ends that the pull gives to the UI runtime before it returns.
+  mutable NativeLayoutBuildEnds pendingNativeBuildEnds_;
 #ifndef NDEBUG
-  mutable std::unordered_map<Tag, ArmedNativeLayoutStart> armedNativeStarts_;
-  const std::shared_ptr<native_animation::NativeAnimationClient> nativeStartTraceClient_ =
-      nativeAnimationHost_ ? nativeAnimationHost_->makeTraceClient() : nullptr;
   mutable MountingTransaction::Number pulledTransactionNumber_ = 0;
-  struct NativeCommand {
-    native_animation::AnimationHandle handle;
-    std::vector<native_animation::AnimationTarget> targetsWithoutFrameUpdate;
-  };
-  mutable std::unordered_map<Tag, NativeCommand> lastNativeCommands_;
+  /// The native tracks of each view that no frame-driven update changed after their start.
+  mutable std::unordered_map<Tag, std::vector<native_animation::TrackKey>> nativeTracksWithoutFrameUpdate_;
   mutable std::vector<native_animation::TrackKey> pulledFirstFrameUpdates_;
 #endif
   void warnAboutStaleSynchronousProps(Tag tag, Tag staleTag, LayoutAnimationType type) const;
@@ -420,19 +415,18 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void startLayoutAnimation(
       const std::shared_ptr<LightNode> &node,
       const std::shared_ptr<Serializable> &config,
-      const ShadowView &before) const;
-  struct NativeLayoutStart {
-    ShadowViewMutation update;
-    native_animation::MountedStart start;
-  };
+      const ShadowView &before,
+      TransactionMeta &transaction) const;
+  /// True when the native host plays the whole animation of `start`. The update that mounts the final state
+  /// is then in the transaction, and the request starts after that mount. Else the UI runtime holds the
+  /// result of the builder under the build of `start`. UI thread only.
+  bool startNativeLayoutAnimation(ManagedLayoutAnimationStart &start, TransactionMeta &transaction) const;
+  /// Ends the native playback of the view. A frame-driven animation or a removal takes the view.
+  // TODO (Objective 09): a frame-driven start must continue from the value on screen.
+  void cancelNativeLayoutAnimation(Tag tag) const;
+  void flushNativeBuildEnds() const;
   /// The update that brings the host view to the final state of `node`.
   ShadowViewMutation updateToMount(const ShadowViewMutation &mutation, const std::shared_ptr<LightNode> &node) const;
-  /// Has a value when the layout animation of `node` starts on the native host: the update that mounts the
-  /// final state and the request that starts after that mount.
-  std::optional<NativeLayoutStart> makeNativeLayoutStart(
-      const ShadowViewMutation &mutation,
-      const std::shared_ptr<LightNode> &node,
-      TransactionMeta &transaction) const;
   void startSharedTransition(
       SharedTransitionRun &run,
       const ShadowView &before,
@@ -459,6 +453,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext) const;
   std::vector<SharedTransitionRun *> contentFadeRuns() const;
+  bool fadesWithCarrierContent(const std::shared_ptr<LightNode> &node) const;
   void composeCarrierContent(ShadowViewMutationList &filteredMutations, const PropsParserContext &propsParserContext)
       const;
   void restoreFadedChildren(
@@ -610,9 +605,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void surfaceDidMount() override;
 #ifndef NDEBUG
-  bool armNativeLayoutStart(Tag tag, const ArmedNativeLayoutStart &armedStart) override;
-  bool cancelNativeLayoutCommand(Tag tag) override;
-  /// Records the targets of the last native command of the view that this frame-driven update changes first.
+  /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
 #endif
   void clearSurfaceState() const override;

@@ -154,6 +154,51 @@ bool LayoutAnimationsManager::startLayoutAnimation(
   });
 }
 
+jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
+    jsi::Runtime &rt,
+    const uint64_t buildId,
+    const jsi::Object &values,
+    const std::shared_ptr<Serializable> &config,
+    const size_t maxLeaves) {
+  const auto configValue = config->toJSValue(rt);
+  auto summary = jsi::Value::undefined();
+  callLayoutAnimationsManager(rt, "build", [&](jsi::Runtime &runtime, const jsi::Function &build) {
+    summary = build.call(
+        runtime,
+        jsi::Value(static_cast<double>(buildId)),
+        values,
+        configValue,
+        jsi::Value(static_cast<double>(maxLeaves)));
+  });
+  return summary;
+}
+
+bool LayoutAnimationsManager::startBuiltLayoutAnimation(
+    jsi::Runtime &rt,
+    const int tag,
+    const LayoutAnimationType type,
+    const uint64_t buildId) {
+  return callLayoutAnimationsManager(rt, "startBuilt", [&](jsi::Runtime &runtime, const jsi::Function &startBuilt) {
+    startBuilt.call(
+        runtime, jsi::Value(tag), jsi::Value(static_cast<int>(type)), jsi::Value(static_cast<double>(buildId)));
+  });
+}
+
+void LayoutAnimationsManager::finishBuiltLayoutAnimation(
+    jsi::Runtime &rt,
+    const uint64_t buildId,
+    const bool finished) {
+  callLayoutAnimationsManager(rt, "finishBuilt", [&](jsi::Runtime &runtime, const jsi::Function &finishBuilt) {
+    finishBuilt.call(runtime, jsi::Value(static_cast<double>(buildId)), jsi::Value(finished));
+  });
+}
+
+void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, const uint64_t buildId) {
+  callLayoutAnimationsManager(rt, "releaseBuilt", [&](jsi::Runtime &runtime, const jsi::Function &releaseBuilt) {
+    releaseBuilt.call(runtime, jsi::Value(static_cast<double>(buildId)));
+  });
+}
+
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   callLayoutAnimationsManager(
       rt, "stop", [&](jsi::Runtime &runtime, const jsi::Function &stop) { stop.call(runtime, jsi::Value(tag)); });
