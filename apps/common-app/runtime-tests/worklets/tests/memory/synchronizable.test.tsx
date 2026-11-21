@@ -538,8 +538,8 @@ describe('Test fixed-type Synchronizable access', () => {
         now = Date.now();
       }
       const secondRead = synchronizable.getBlocking();
-      synchronizable.unlock();
       const unlockedAt = Date.now();
+      synchronizable.unlock();
       scheduleOnRN(onLockHolderDone, { firstRead, secondRead, unlockedAt });
     });
 
