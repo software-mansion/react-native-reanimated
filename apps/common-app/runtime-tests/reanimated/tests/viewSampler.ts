@@ -153,6 +153,14 @@ export function uptimeMs(): Promise<number> {
   return getEnforcedSamplerModule().now();
 }
 
+/**
+ * A garbage collection: the next read of a weak map has no entry of a freed
+ * view.
+ */
+export function collectGarbage(): Promise<void> {
+  return getEnforcedSamplerModule().collectGarbage();
+}
+
 function getEnforcedSamplerModule(): RuntimeTestsViewSamplerModule {
   const samplerModule = getSamplerModule();
   if (samplerModule === null) {
