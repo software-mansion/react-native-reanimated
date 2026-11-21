@@ -20,6 +20,7 @@ enum Command : std::uint8_t {
   CMD_START_OF_TRANSFORM = 2,
   CMD_END_OF_TRANSFORM = 3,
   CMD_END_OF_VIEW = 4,
+  CMD_UNSET_PROP = 5,
 
   CMD_OPACITY = 10,
   CMD_ELEVATION = 11,
@@ -168,6 +169,11 @@ void serializeSynchronousPropsToBuffers(
     for (const auto &[key, value] : props.items()) {
       const auto &propName = key.getString();
       const auto command = propNameToCommand(propName);
+      if (value.isNull()) {
+        pushInt(CMD_UNSET_PROP);
+        pushInt(command);
+        continue;
+      }
       switch (command) {
         case CMD_OPACITY:
         case CMD_ELEVATION:
