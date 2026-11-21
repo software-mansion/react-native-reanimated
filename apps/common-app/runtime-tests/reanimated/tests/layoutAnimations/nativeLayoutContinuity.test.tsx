@@ -7,14 +7,26 @@
  * same model. A check of a playback key count in such a test is for each row, by the time of the row
  * against the times of the trace. Each other test has state checks and trace checks at planned times.
  *
- * Not proved: the distance of the two boxes at one instant, the lag of the frame driver, the model of the
- * native box while the frame driver has a position track or a size track (the player has statement M only
- * for the opacity and the transform), when a callback comes, that a row comes in each part of a timeline.
- * The pixels on screen, a device, and 120 Hz are not tested.
+ * The twin timeline (`expectPairParity`, `expectRowsOnTwinTimeline`): each read of the native box during
+ * the animation has its own sample time. The test finds the recorded frames of the frame-driven twin that
+ * have the native value, and gives the time error of the read from the frame times that the read can show
+ * (`nativeLayoutTwinTimeline.ts`). Apple asserts one display frame. Android prints the rows and keeps the old
+ * pair comparison.
  *
- * Not converted (the old pair comparison at planned times): each test that
- * calls `expectPairParity`, `sampleFramePairAt`, or `expectHiddenRoutesAgree`, and each shared transition
- * test that compares its container with a read of the source.
+ * Not proved: the distance of the two boxes at one instant, one common time for the values of one native
+ * sample, the lag of the frame driver, the model of the native box while the frame driver has a position
+ * track or a size track (the player has statement M only for the opacity and the transform), when a callback
+ * comes, that a row comes in each part of a timeline. The pixels on screen, a device, and 120 Hz are not
+ * tested.
+ *
+ * Not converted (a model comparison with a bound; each prints `MODEL-BOUND-ROW`): the shared transition tests
+ * that compare the model of the container with a read of the source (a native X, a native size, a child of a
+ * native X, a native transform; the container animation has no record), and the tests that call
+ * `expectHiddenRoutesAgree` (two runs one after the other, each read at a fraction of the duration from its
+ * own start, so no common time), and `a new initial value is the start value ...`: the two boxes start their
+ * replacements from their own current values, and the gap of the two starts stays in the reads (measured). The
+ * opacity of the exit in `an exit during a native X` keeps the old pair comparison: the exit of the twin has no
+ * record.
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
@@ -33,7 +45,12 @@ import {
   useTestRef,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { Leaves, PairProps, TraceEvent } from './nativeLayoutTestKit';
+import type {
+  Leaves,
+  PairProps,
+  TargetSample,
+  TraceEvent,
+} from './nativeLayoutTestKit';
 import {
   BOX_REF,
   BOX_SIZE,
@@ -45,6 +62,7 @@ import {
   PAIR_DURATION,
   PAIR_CELL_HEIGHT,
   PAIR_LEFT,
+  POSITION_TOLERANCE,
   hasNativeLayoutRoute,
   LAYOUT_DURATION,
   layoutOf,
@@ -57,7 +75,51 @@ import {
   takeTrace,
   takeTraceOf,
   movingGeometryTest,
+  resetFrameRecords,
 } from './nativeLayoutTestKit';
+import type { PairRead, TwinPair, TwinRest } from './nativeLayoutTwinTimeline';
+import {
+  expectKeptPair,
+  expectOnTwinTimeline,
+  positionReadsOf,
+  twinPairOf,
+  twinRestOf,
+} from './nativeLayoutTwinTimeline';
+
+/** Mounts a pair scene at rest with no frame records, and reads its twin. */
+async function mountTwinScene(scene: Parameters<typeof render>[0]) {
+  resetFrameRecords();
+  const tag = await mountScene(scene);
+  return { tag, twin: await twinPairOf(tag) };
+}
+
+/** The read of the `Opacity` sample of the native box. */
+const opacityReadOf = (opacity: TargetSample, rest: TwinRest): PairRead => ({
+  quantity: 'Opacity',
+  t: opacity.monotonicTimeMs,
+  native: opacity.presentation[0],
+  rest,
+});
+
+/** A row of a model comparison that has no twin timeline. */
+function logModelBound(
+  caseName: string,
+  quantity: string,
+  error: number,
+  bound: number,
+  terms: string
+) {
+  console.log(
+    [
+      'MODEL-BOUND-ROW',
+      caseName,
+      quantity,
+      error.toFixed(4),
+      bound.toFixed(4),
+      terms,
+    ].join(' | ')
+  );
+}
 
 const SHARED_SOURCE_REF = 'NativeLayoutContinuitySharedSource';
 const SHARED_PARENT_REF = 'NativeLayoutContinuitySharedParent';
@@ -165,6 +227,7 @@ describe('native layout continuity', () => {
       sample(frameTag, 'Opacity'),
     ]);
     return {
+      native: { position, opacity },
       x: position.presentation[0],
       y: position.presentation[1],
       opacity: opacity.presentation[0],
@@ -180,33 +243,112 @@ describe('native layout continuity', () => {
     layouts: Pick<PairProps, 'nativeLayout' | 'frameLayout'>,
     opacity = 1
   ) {
-    await mountScene(
+    const { twin } = await mountTwinScene(
       <Pair left={START_LEFT} top={0} opacity={opacity} {...layouts} />
     );
+    return twin;
   }
 
   const OPACITY_TOLERANCE = 0.01 + FRAME_MS / PAIR_DURATION;
+  const ONE_FRAME_TERMS = `${POSITION_TOLERANCE} pt + one display frame of ${PAIR_LEFT} pt in ${PAIR_DURATION} ms`;
 
+  type PairParity = {
+    checkpoints: number;
+    intervalMs: number;
+    /** The bound of the old pair comparison of a position. */
+    tolerance: number;
+  };
+
+  /**
+   * A pair after the unmount that starts its exit: the tags and the values at
+   * rest from before the unmount. The exit of the twin has no record, so the
+   * opacity keeps the old pair comparison.
+   */
+  type PairExit = { tags: ReturnType<typeof pairTags>; rest: TwinRest };
+
+  /**
+   * The reads of the native box are on the twin timeline. Where the twin
+   * timeline does not assert, the old pair comparison stays.
+   */
   async function expectPairParity(
-    checkpoints: number,
-    intervalMs: number,
-    tolerance: number,
-    tags = pairTags()
+    caseName: string,
+    twin: TwinPair,
+    parity: PairParity,
+    exit?: PairExit
   ) {
-    let isClose = true;
+    const tags = exit?.tags ?? pairTags();
+    const rest = exit?.rest ?? (await twinRestOf(tags.frameTag));
+    const { reads, distances } = await readPairCheckpoints(tags, parity);
+    expectOnTwinTimeline(
+      caseName,
+      twin,
+      reads.flatMap(({ position, opacity }) => [
+        ...positionReadsOf(position, rest),
+        ...(exit ? [] : [opacityReadOf(opacity, rest)]),
+      ])
+    );
+    expectKeptPair(distances.position < parity.tolerance);
+    if (exit) {
+      expect(distances.opacity < OPACITY_TOLERANCE).toBe(true);
+    } else {
+      expectKeptPair(distances.opacity < OPACITY_TOLERANCE);
+    }
+  }
+
+  /**
+   * The old pair comparison on each platform, for a case whose twin starts a
+   * replacement from another value than the native box: each box starts from
+   * its own current value.
+   */
+  async function expectPairWithinBound(caseName: string, parity: PairParity) {
+    const { distances } = await readPairCheckpoints(pairTags(), parity);
+    const terms = `${ONE_FRAME_TERMS}; the twin starts from its last frame`;
+    logModelBound(
+      caseName,
+      'Position',
+      distances.position,
+      parity.tolerance,
+      terms
+    );
+    logModelBound(
+      caseName,
+      'Opacity',
+      distances.opacity,
+      OPACITY_TOLERANCE,
+      terms
+    );
+    expect(distances.position < parity.tolerance).toBe(true);
+    expect(distances.opacity < OPACITY_TOLERANCE).toBe(true);
+  }
+
+  /**
+   * The samples of the native box at the checkpoints, and the largest distances
+   * of the pair.
+   */
+  async function readPairCheckpoints(
+    tags: ReturnType<typeof pairTags>,
+    { checkpoints, intervalMs }: PairParity
+  ) {
+    const reads: { position: TargetSample; opacity: TargetSample }[] = [];
+    const distances = { position: 0, opacity: 0 };
     // The presentation layer shows a change of the playback after the next display frame.
     await wait(2 * FRAME_MS);
     for (let checkpoint = 0; checkpoint < checkpoints; checkpoint++) {
-      const { x, y, opacity, frameX, frameY, frameOpacity } =
+      const { native, x, y, opacity, frameX, frameY, frameOpacity } =
         await samplePair(tags);
-      isClose =
-        isClose &&
-        Math.abs(x - frameX) < tolerance &&
-        Math.abs(y - frameY) < tolerance &&
-        Math.abs(opacity - frameOpacity) < OPACITY_TOLERANCE;
+      reads.push(native);
+      distances.position = Math.max(
+        distances.position,
+        Math.abs(x - frameX),
+        Math.abs(y - frameY)
+      );
+      distances.opacity = Math.max(
+        distances.opacity,
+        Math.abs(opacity - frameOpacity)
+      );
       await wait(intervalMs);
     }
-    expect(isClose).toBe(true);
+    return { reads, distances };
   }
 
   // The order of a stop that a pull decides, from the trace only. `FrameUpdateMounted` is in the first events

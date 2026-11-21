@@ -1,4 +1,5 @@
 #include <reanimated/LayoutAnimations/NativeLayoutGroups.h>
+#include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #include <algorithm>
 #include <utility>
@@ -73,6 +74,24 @@ std::optional<NativeLayoutBuildEnd> NativeLayoutGroups::start(
   return oldGroupEnd;
 }
 
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+ContainerSizes NativeLayoutGroups::containerSizes() {
+  const std::lock_guard<std::mutex> lock(mutex_);
+  std::size_t members = 0;
+  std::size_t replacedAtAdmission = 0;
+  for (const auto &[_, group] : groups_) {
+    members += group.members.size();
+    replacedAtAdmission += group.replacedAtAdmission.size();
+  }
+  return {
+      {"groups", groups_.size()},
+      {"members", members},
+      {"replacedAtAdmission", replacedAtAdmission},
+      {"liveTrackCounts", liveTrackCounts_.size()},
+      {"commandTypes", commandTypes_.size()}};
+}
+#endif
+
 std::vector<TrackKey> NativeLayoutGroups::members(const Tag tag) {
   const std::lock_guard<std::mutex> lock(mutex_);
   const auto groupIt = groups_.find(tag);
@@ -112,6 +131,7 @@ std::optional<NativeLayoutGroupCancel> NativeLayoutGroups::cancelForFrameDriver(
 }
 
 NativeLayoutBuildEnds NativeLayoutGroups::clear() {
+  ReanimatedSystraceSection section("NativeLayoutGroups::clear");
   const std::lock_guard<std::mutex> lock(mutex_);
   NativeLayoutBuildEnds ends;
   for (const auto &[tag, group] : groups_) {
@@ -139,6 +159,7 @@ void NativeLayoutGroups::onAnimationAdmitted(const AnimationHandle &handle) {
 }
 
 void NativeLayoutGroups::onTrackEnded(const TrackKey &track, const TrackEnd end) {
+  ReanimatedSystraceSection section("NativeLayoutGroups::onTrackEnded");
   NativeLayoutBuildEnds ends;
   {
     const std::lock_guard<std::mutex> lock(mutex_);

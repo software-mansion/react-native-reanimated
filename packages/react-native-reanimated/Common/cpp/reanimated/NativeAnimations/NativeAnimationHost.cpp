@@ -154,6 +154,29 @@ void NativeAnimationHost::sampleTarget(
     }
   });
 }
+
+void NativeAnimationHost::containerSizes(std::function<void(ContainerSizes)> receiver) {
+  enqueue([weakThis = weak_from_this(), receiver = std::move(receiver)] {
+    if (const auto strongThis = weakThis.lock()) {
+      receiver(strongThis->ownContainerSizes());
+    }
+  });
+}
+
+ContainerSizes NativeAnimationHost::ownContainerSizes() {
+  std::size_t tracks = 0;
+  for (const auto &[_, command] : commands_) {
+    tracks += command.tracks.size();
+  }
+  ContainerSizes sizes{{"commands", commands_.size()}, {"tracks", tracks}};
+  {
+    const std::lock_guard lock(queueMutex_);
+    sizes.emplace("queue", queue_.size());
+    sizes.emplace("mountReports", mountReports_.size());
+  }
+  addContainerSizes(sizes, "platform", platform_->containerSizes());
+  return sizes;
+}
 #endif
 
 void NativeAnimationHost::enqueue(Operation operation) {
@@ -161,6 +184,7 @@ void NativeAnimationHost::enqueue(Operation operation) {
 }
 
 void NativeAnimationHost::post(std::deque<Operation> &queue, Operation operation) {
+  ReanimatedSystraceSection section("NativeAnimationHost::post");
   {
     const std::lock_guard lock(queueMutex_);
     const bool hasPendingDrain = !queue_.empty() || !mountReports_.empty();
@@ -177,6 +201,7 @@ void NativeAnimationHost::post(std::deque<Operation> &queue, Operation operation
 }
 
 void NativeAnimationHost::drain() {
+  ReanimatedSystraceSection section("NativeAnimationHost::drain");
   while (true) {
     Operation operation;
     {
@@ -214,6 +239,7 @@ void NativeAnimationHost::admit(
     const AnimationRequest &request,
     const std::weak_ptr<NativeAnimationClient> &client,
     Deliveries &deliveries) {
+  ReanimatedSystraceSection section("NativeAnimationHost::admit");
   const auto &handle = request.handle;
   if (commands_.contains(handle)) {
     endWithoutAdmission(handle, client, {AnimationOutcome::Rejected, AnimationResultReason::StaleIdentity}, deliveries);
@@ -313,6 +339,7 @@ void NativeAnimationHost::runCloseSurface(const SurfaceId surfaceId) {
 }
 
 void NativeAnimationHost::onPlatformTrackEnded(const TrackKey &key, const bool finished) {
+  ReanimatedSystraceSection section("NativeAnimationHost::onPlatformTrackEnded");
   Deliveries deliveries;
   endTrack(key, finished ? TrackEnd::Finished : TrackEnd::PlatformRemoved, deliveries);
   for (const auto &delivery : deliveries) {

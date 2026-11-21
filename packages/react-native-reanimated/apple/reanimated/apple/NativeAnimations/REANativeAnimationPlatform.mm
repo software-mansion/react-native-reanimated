@@ -326,6 +326,27 @@ bool pictureFollowsBounds(REAUIView *view)
   return true;
 }
 
+/// Core Animation shows no layer while its size is below 0, and the frame driver shows the view. So a width or
+/// height track plays only when no value in the progress range of each segment is below 0.
+bool staysAtOrAboveZero(const AnimationTrack &track)
+{
+  const auto &timeline = std::get<ValueTimeline>(track.body);
+  const auto *start = std::get_if<AnimationValue>(&timeline.start);
+  if (start == nullptr) {
+    return false;
+  }
+  double from = std::get<double>(*start);
+  for (const auto &segment : timeline.segments) {
+    const double to = std::get<double>(segment.endValue);
+    const auto [leastProgress, largestProgress] = narrowProgressRangeOf(segment.timingFromPrevious);
+    if (std::min(from + leastProgress * (to - from), from + largestProgress * (to - from)) < 0) {
+      return false;
+    }
+    from = to;
+  }
+  return true;
+}
+
 bool playsTiming(const AnimationTiming &timing)
 {
   return std::ranges::find(kCoreAnimationTimingKinds, kindOf(timing)) != kCoreAnimationTimingKinds.end();
@@ -597,6 +618,17 @@ std::vector<PlaybackMember> playbackMembers(CALayer *layer, const AnimationTarge
   }
   return members;
 }
+
+std::size_t reanimatedAnimationKeyCount(CALayer *layer)
+{
+  std::size_t count = 0;
+  for (NSString *key in layer.animationKeys) {
+    if ([key hasPrefix:kAnimationKeyPrefix]) {
+      ++count;
+    }
+  }
+  return count;
+}
 #endif // !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
 
 /// One value, at one key time, for the start of the timeline and for the end of each segment.
@@ -827,6 +859,10 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     if (!playsTimings(track)) {
       return false;
     }
+    const bool isLength = track.target == AnimationTarget::Width || track.target == AnimationTarget::Height;
+    if (isLength && !staysAtOrAboveZero(track)) {
+      return false;
+    }
     const bool changesSize = isSizeTarget(track.target) && changesValue(track);
     if (!view.traits.check(ShadowNodeTraits::Trait::ViewKind)) {
       return !changesSize;
@@ -944,6 +980,20 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
         layer.allowsEdgeAntialiasing == YES};
   }
 
+  ContainerSizes containerSizes() override
+  {
+    RCTAssertMainQueue();
+    NSMutableSet<CALayer *> *layers = [NSMutableSet set];
+    for (const auto &[_, layer] : tracks_) {
+      [layers addObject:layer];
+    }
+    std::size_t animationKeys = 0;
+    for (CALayer *layer in layers) {
+      animationKeys += reanimatedAnimationKeyCount(layer);
+    }
+    return {{"tracks", tracks_.size()}, { "animationKeys", animationKeys }};
+  }
+
   std::vector<TrackKey> playbacksOn(CALayer *layer) const
   {
     std::vector<TrackKey> playbacks;
@@ -981,8 +1031,8 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       }
     }];
     tracks_.emplace(track, layer);
-    if (edgeAntialiasing.duringTrack) {
-      layer.allowsEdgeAntialiasing = YES;
+    if (track.target == AnimationTarget::Transform) {
+      layer.allowsEdgeAntialiasing = edgeAntialiasing.duringTrack;
     }
     [layer addAnimation:animation forKey:animationKeyForTrack(track)];
   }
@@ -990,9 +1040,10 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
  private:
   using Tracks = std::unordered_map<TrackKey, __strong CALayer *, TrackKeyHash>;
 
-  /// Takes a track from its layer. A `Transform` track can show a transform with edge antialiasing on a
-  /// layer whose model transform has none, so `play` gives the layer edge antialiasing for the time of such
-  /// a track. After that time, the layer has the value of React Native for its model transform.
+  /// Takes a track from its layer. The edge antialiasing of the transform that a `Transform` track shows can
+  /// differ from that of the model transform of its layer, so `play` gives the layer the edge antialiasing of
+  /// the frame driver for the time of such a track. After that time, the layer has the value of React Native
+  /// for its model transform.
   CALayer *release(const Tracks::iterator trackIt)
   {
     CALayer *layer = trackIt->second;
@@ -1020,6 +1071,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
       const bool holdsEndValue,
       const bool hasEdgeAntialiasingAtHeldEnd)
   {
+    ReanimatedSystraceSection section("CoreAnimationPlatform::onAnimationStopped");
     RCTAssertMainQueue();
     const auto trackIt = tracks_.find(track);
     if (trackIt == tracks_.end()) {
@@ -1049,6 +1101,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
 std::optional<AnimationResultReason> CoreAnimationMountedAnimation::prepare(
     const std::vector<AnimationTarget> &interruptedTargets)
 {
+  ReanimatedSystraceSection section("CoreAnimationMountedAnimation::prepare");
   startValues_.reserve(request_.tracks.size());
   for (const auto &track : request_.tracks) {
     const bool isInterrupting =
