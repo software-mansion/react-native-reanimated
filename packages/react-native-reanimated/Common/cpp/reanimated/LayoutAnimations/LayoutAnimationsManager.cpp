@@ -155,12 +155,22 @@ bool LayoutAnimationsManager::startLayoutAnimation(
   });
 }
 
+jsi::Object LayoutAnimationsManager::captureLiveLayoutLeaves(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {
+  jsi::Object values(rt);
+  callLayoutAnimationsManager(
+      rt, "captureLiveLeaves", [&](jsi::Runtime &runtime, const jsi::Function &captureLiveLeaves) {
+        values = captureLiveLeaves.call(runtime, toJSValue(runtime, liveLeaves)).asObject(runtime);
+      });
+  return values;
+}
+
 jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     jsi::Runtime &rt,
     const uint64_t buildId,
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
-    const size_t maxLeaves) {
+    const size_t maxLeaves,
+    const LiveLayoutLeaves &liveLeaves) {
   ReanimatedSystraceSection section("LayoutAnimationsManager::buildLayoutAnimation");
   const auto configValue = config->toJSValue(rt);
   auto summary = jsi::Value::undefined();
@@ -170,7 +180,8 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
         jsi::Value(static_cast<double>(buildId)),
         values,
         configValue,
-        jsi::Value(static_cast<double>(maxLeaves)));
+        jsi::Value(static_cast<double>(maxLeaves)),
+        toJSValue(runtime, liveLeaves));
   });
   return summary;
 }
@@ -179,10 +190,15 @@ bool LayoutAnimationsManager::startBuiltLayoutAnimation(
     jsi::Runtime &rt,
     const int tag,
     const LayoutAnimationType type,
-    const uint64_t buildId) {
+    const uint64_t buildId,
+    const LiveLayoutLeaves &liveLeaves) {
   return callLayoutAnimationsManager(rt, "startBuilt", [&](jsi::Runtime &runtime, const jsi::Function &startBuilt) {
     startBuilt.call(
-        runtime, jsi::Value(tag), jsi::Value(static_cast<int>(type)), jsi::Value(static_cast<double>(buildId)));
+        runtime,
+        jsi::Value(tag),
+        jsi::Value(static_cast<int>(type)),
+        jsi::Value(static_cast<double>(buildId)),
+        toJSValue(runtime, liveLeaves));
   });
 }
 
@@ -204,6 +220,17 @@ void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, cons
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   callLayoutAnimationsManager(
       rt, "stop", [&](jsi::Runtime &runtime, const jsi::Function &stop) { stop.call(runtime, jsi::Value(tag)); });
+}
+
+jsi::Array LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {
+  jsi::Array leaves(rt, liveLeaves.size());
+  for (size_t index = 0; index < liveLeaves.size(); ++index) {
+    jsi::Object leaf(rt);
+    leaf.setProperty(rt, "buildId", static_cast<double>(liveLeaves[index].buildId));
+    leaf.setProperty(rt, "key", jsi::String::createFromUtf8(rt, liveLeaves[index].key));
+    leaves.setValueAtIndex(rt, index, std::move(leaf));
+  }
+  return leaves;
 }
 
 bool LayoutAnimationsManager::callLayoutAnimationsManager(

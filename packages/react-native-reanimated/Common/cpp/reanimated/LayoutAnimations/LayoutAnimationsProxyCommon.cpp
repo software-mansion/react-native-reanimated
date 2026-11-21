@@ -672,9 +672,10 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
     }
 
     const bool started = start.buildId
-        ? layoutAnimationsManager_->startBuiltLayoutAnimation(uiRuntime_, start.tag, start.type, *start.buildId)
+        ? layoutAnimationsManager_->startBuiltLayoutAnimation(
+              uiRuntime_, start.tag, start.type, *start.buildId, start.liveLeaves)
         : layoutAnimationsManager_->startLayoutAnimation(
-              uiRuntime_, start.tag, start.type, layoutAnimationValues(start, window), start.config);
+              uiRuntime_, start.tag, start.type, layoutAnimationValues(start, start.before, window), start.config);
     if (!started) {
       endLayoutAnimation(start.tag, start.type == LayoutAnimationType::EXITING);
       hasFailedStart = true;
@@ -726,10 +727,11 @@ void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<Layout
 
 jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
     const ManagedLayoutAnimationStart &start,
+    const ShadowView &currentView,
     const Rect window) const {
   jsi::Object values(uiRuntime_);
   if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
-    values = SharedTransitionValuesFactory(uiRuntime_).create(start.before, start.after);
+    values = SharedTransitionValuesFactory(uiRuntime_).create(currentView, start.after);
     if (start.contentOpacity) {
       values.setProperty(uiRuntime_, "currentContentOpacity", start.contentOpacity->from);
       values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
@@ -738,7 +740,7 @@ jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
       setClipValues(uiRuntime_, values, *start.clip);
     }
   } else {
-    const Snapshot current(start.before, window);
+    const Snapshot current(currentView, window);
     const Snapshot target(start.after, window);
     if (start.type != LayoutAnimationType::ENTERING) {
       values.setProperty(uiRuntime_, "currentOriginX", current.x);
