@@ -17,7 +17,6 @@
  * of `native layout exiting and the stop of its tracks` in which the platform removes the tracks of the
  * pair (a Modal that goes hidden, a clip with a track of a layout animation).
  */
-
 import React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Dimensions, View } from 'react-native';
@@ -58,6 +57,7 @@ import {
   sampleTargets,
 } from './nativeLayoutReferencePlay';
 import type {
+  PairEvents,
   AnimationSource,
   Band,
   Leaf,
@@ -66,6 +66,10 @@ import type {
   Track,
 } from './nativeLayoutTestKit';
 import {
+  takeTraceOfPair,
+  progressOf,
+  isNear,
+  sortedCallbacks,
   BOX_REF,
   callbackOf,
   callbacks,
@@ -92,7 +96,6 @@ import {
   summarize,
   summarizeEnd,
   takeRows,
-  takeTrace,
   waitForCallbacks,
   nativeCasesOf,
 } from './nativeLayoutTestKit';
@@ -117,7 +120,6 @@ const BOX_LEFT = 20;
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const CUSTOM_OPACITY = 0.2;
 const CUSTOM_OFFSET = 80;
-const VALUE_TOLERANCE = 0.01;
 const NO_VIEW_POLL_MS = 4;
 
 const OPACITY: Track = {
@@ -357,7 +359,6 @@ function ExitingPair({
 }
 
 type Scene = Parameters<typeof render>[0];
-type PairEvents = { native: TraceEvent[]; frame: TraceEvent[] };
 
 type Exited = {
   nativeTag: number;
@@ -408,8 +409,6 @@ const exit = (pair: PairProps) =>
 const readIfMounted = (tag: number, track: Track) =>
   readTrack(tag, track).catch(() => undefined);
 
-type ExitedTags = Pick<Exited, 'nativeTag' | 'frameTag'>;
-
 const hasView = async (tag: number) =>
   (await readIfMounted(tag, OPACITY)) !== undefined;
 
@@ -423,18 +422,6 @@ async function leaves(tag: number, timeoutMs = 1000) {
     await wait(NO_VIEW_POLL_MS);
   }
   return true;
-}
-
-async function takeTraceOfPair({
-  nativeTag,
-  frameTag,
-}: ExitedTags): Promise<PairEvents> {
-  const events = await takeTrace();
-  const eventsOf = (tag: number) =>
-    events.filter(
-      (event) => event.tag === tag && event.event !== 'FrameUpdateMounted'
-    );
-  return { native: eventsOf(nativeTag), frame: eventsOf(frameTag) };
 }
 
 /**
@@ -572,15 +559,6 @@ const playedAndRemoved = (tracks: Track[]) =>
     'Ended:Cancelled:None',
   ].join(' > ');
 
-/** The part of the duration at which the track has the value. */
-const progressOf = ({ from, to, easing }: Track, value: number) => {
-  const progress = (value - from) / (to - from);
-  return easing ? easing.timeOf(progress) : progress;
-};
-
-const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
-  Math.abs(value - expected) < tolerance;
-
 type TargetReads = Pick<PlannedRead, 'samples'>[];
 
 /**
@@ -697,8 +675,6 @@ const heldProgressToleranceOf = (track: Track) =>
       ? endToleranceOf(track) / Math.abs(track.to - track.from)
       : 0
   );
-
-const sortedCallbacks = () => callbacks.slice().sort().join();
 
 const EXIT_CALLBACKS = ['native:true', 'frame:true'];
 

@@ -53,14 +53,17 @@ import type {
   PlayedTrack,
   ScalarKey,
   ScalarTrack,
-  ScrollViewRef,
   SizeBoxProps,
   TakenRow,
   TargetSample,
   TraceEvent,
+  UIFrame,
 } from './nativeLayoutTestKit';
 import {
+  CLIPPED_OFFSET,
+  scrollClippingViewTo,
   amountOf,
+  ANIMATION_CLOCK_STEP_MS,
   BOX_REF,
   BOX_SIZE,
   callbackOf,
@@ -94,6 +97,9 @@ import {
   isSameLeaf,
   isScalarTrack,
   isSpringLeaf,
+  layoutRefusalOf,
+  layoutRefusalReason,
+  playsSizeChangeOf,
   layerOf,
   layerPositionOf,
   layoutOf,
@@ -158,10 +164,7 @@ type Declaration = {
    * two boxes.
    */
   isFrameDriven?: boolean;
-  /**
-   * The failure of the `LayoutBuildFailed` event of the first build of the
-   * native box, of a case that is frame-driven.
-   */
+  /** The reason of the first layout refusal of the native box. */
   refusedWith?: string;
 };
 
@@ -404,7 +407,7 @@ export async function play(declaredCase: ReferenceCase): Promise<Played> {
       if (REMOVES_TRACKS_OUT_OF_WINDOW) {
         rowsBeforeClip = rows.length;
       }
-      scrollTo(CLIPPED_OFFSET);
+      scrollClippingViewTo(CLIPPED_OFFSET);
     },
   });
   let startMs = 0;
@@ -469,6 +472,7 @@ export async function play(declaredCase: ReferenceCase): Promise<Played> {
     clippedRow?.row.native[targets[0]].monotonicTimeMs
   );
   const frameRecords = readFrameRecords();
+  logFrameCallbackLag(frameRecords);
   const frameChecks = frameChecksOf(
     builtKeys.flat(),
     frameRecords,
@@ -536,7 +540,7 @@ function stepsOf(
   if (clip) {
     steps.push(
       { atMs: clip.atMs, run: run.clip },
-      { atMs: clip.backAtMs, run: () => scrollTo(0) }
+      { atMs: clip.backAtMs, run: () => scrollClippingViewTo(0) }
     );
   }
   if (write?.atMs !== undefined) {
@@ -546,15 +550,6 @@ function stepsOf(
     steps.push(checkpoint);
   }
   return steps.sort((first, second) => first.atMs - second.atMs);
-}
-
-const scrollRef: ScrollViewRef = React.createRef();
-const CLIPPED_OFFSET = 1500;
-function scrollTo(y: number) {
-  if (!scrollRef.current) {
-    throw new Error('The scene has no clipping host to scroll.');
-  }
-  scrollRef.current.scrollTo({ y, animated: false });
 }
 
 /**
@@ -721,7 +716,7 @@ export function expectReference(
   }
   const { drawnOpacity } = played;
   const readPlayed = drawnOpacity ? withoutNativeOpacityOf(played) : played;
-  const reads = expectNativeRows(readPlayed, matrixToleranceOf(referenceCase));
+  const reads = expectNativeTimelineOf(referenceCase, played);
   expect(reads.some(({ isChecked }) => isChecked)).toBe(
     !referenceCase.isFrameDriven
   );
@@ -776,6 +771,18 @@ export function expectReference(
     console.log(['REPLACED-SHOWN', caseName, read].join(' | '));
   }
   return reads;
+}
+
+/** Statement A of each read of the native box of a play. */
+export function expectNativeTimelineOf(
+  referenceCase: ReferenceCase,
+  played: Played
+) {
+  return expectNativeRows(
+    played.drawnOpacity ? withoutNativeOpacityOf(played) : played,
+    matrixToleranceOf(referenceCase),
+    twinFramesOf(played)
+  );
 }
 
 /** The rows and the tracks of a play with no opacity of the native box. */
@@ -973,27 +980,18 @@ function distanceToStep(
 const FALLBACK_PARTS = [0.3, 0.55, 0.8, 0.95];
 
 /**
- * The first build of the native box has the `LayoutBuildFailed` event with the
- * failure of the case, and the frame driver plays each key of that build that
- * moves: two reads of its target, at two of `FALLBACK_PARTS` of the time of the
- * build, have models that differ, and each model is the reference of the key at
- * a time from 5 display frames before the read to 2 after it, on the clock of
- * the refusal (`routeOf` of the events before the next build of the box). The
- * reference is the declared value of the key, or, for a key whose declared
- * value has no sample cells, the model of the frame-driven box in the same row.
- * The time of the build ends at the first commit, write, restyle, or clip after
- * it.
+ * A refused start has its declared reason and no native playback. Timed moves
+ * need two changing samples on their timeline. Jumps need frame-driver writes,
+ * samples on their held/end values, and the final value of an uninterrupted
+ * build.
  */
 function expectRefusedRoute(
   caseName: string,
   referenceCase: ReferenceCase,
-  { events, rows, mounted }: Played
+  { events, rows, mounted, end, frameChecks }: Played
 ) {
-  const refusal = events.find(({ event }) => event === 'LayoutBuildFailed');
-  expect(refusal?.buildFailure).toBe(referenceCase.refusedWith);
-  if (!refusal) {
-    return;
-  }
+  const refusal = layoutRefusalOf(events);
+  expect(layoutRefusalReason(refusal)).toBe(referenceCase.refusedWith);
   const buildMs = firstBuildMsOf(referenceCase);
   const [firstBuild] = buildsOf(referenceCase, mounted);
   const firstBuildEvents = eventsBeforeNextBuildOf(events, refusal);
@@ -1028,6 +1026,67 @@ function expectRefusedRoute(
         )
       : ({ model, twin }: { model: number[]; twin: number[] }) =>
           isNear(model, twin);
+    const sizeKey =
+      declared.operation === undefined ? declared.size?.key : undefined;
+    const sampledKeys = firstBuild
+      .map(({ declared: key }) => key)
+      .filter(
+        (key) =>
+          declaresMotion(key) &&
+          (key.target === declared.target || key.key === sizeKey)
+      );
+    const jumpsOnly = sampledKeys.every((key) =>
+      declaredTimelineOf(key.leaf, key.from, key.to, key.base).phases.every(
+        ({ move, durationMs }) => move === undefined || durationMs === 0
+      )
+    );
+    if (jumpsOnly) {
+      expect(firstBuildEvents.some(({ event }) => event === 'Admitted')).toBe(
+        false
+      );
+      for (const key of sampledKeys) {
+        const records = frameChecks.filter(
+          ({ record, replaced }) =>
+            record.box === 'native' && !replaced && isSameLeaf(record, key)
+        );
+        expect(records.length).toBe(1);
+        expect((records[0]?.record.frames.length ?? 0) > 0).toBe(true);
+      }
+      const first = readAt(FALLBACK_PARTS[0] * buildMs);
+      expect(
+        first !== undefined &&
+          first.monotonicTimeMs - refusal.monotonicTimeMs < buildMs
+      ).toBe(true);
+      const uninterrupted =
+        !referenceCase.commitTimesMs?.length &&
+        !referenceCase.restyle &&
+        !referenceCase.write &&
+        !referenceCase.clip;
+      const samples = reads.filter(
+        ({ monotonicTimeMs }) =>
+          monotonicTimeMs >= refusal.monotonicTimeMs &&
+          monotonicTimeMs - refusal.monotonicTimeMs < buildMs
+      );
+      if (uninterrupted) {
+        expect(end !== undefined).toBe(true);
+        if (end)
+          samples.push({
+            ...end.native[declared.target],
+            twin: end.frame[declared.target].model,
+          });
+      }
+      expect(samples.length > 0).toBe(true);
+      for (const sample of samples) {
+        expect(sample.playbacks.length).toBe(0);
+        expect(
+          isOnReference(
+            sample,
+            sample.monotonicTimeMs - refusal.monotonicTimeMs
+          )
+        ).toBe(true);
+      }
+      continue;
+    }
     const parts = distinctPartsOf(
       (part) => referenceAt(part * buildMs),
       cells,
@@ -1176,14 +1235,27 @@ function fallbackKeysOf(build: BuiltKey[]) {
 
 const THREE_D_KINDS = ['rotateX', 'rotateY', 'perspective'];
 
-/**
- * The case with the route of the platform. Below API 29 Android refuses each
- * position or transform track that moves
- * (`AndroidNativeAnimationPlatform::playsTarget`): the whole animation is
- * frame-driven, with `UnsupportedTarget`. A case that is frame-driven for
- * another reason stays as it is.
- */
+/** Frame size refusals come before track checks for the platform. */
 export function routedCaseOf(referenceCase: ReferenceCase): ReferenceCase {
+  const [before, after] = referenceCase.places;
+  if (
+    referenceCase.flow === 'layout' &&
+    before &&
+    after &&
+    (!playsSizeChangeOf(
+      (after.width ?? BOX_SIZE) - (before.width ?? BOX_SIZE)
+    ) ||
+      !playsSizeChangeOf(
+        (after.height ?? BOX_SIZE) - (before.height ?? BOX_SIZE)
+      ))
+  ) {
+    return {
+      ...referenceCase,
+      isFrameDriven: true,
+      refusedWith: 'SizeBeyondOnePixel',
+    };
+  }
+
   const movesGeometry = () =>
     movesGeometryOf(
       buildsOf(referenceCase)
@@ -1441,12 +1513,14 @@ export type RowRead = NativeRead & {
 /** Statement A for each row of the native box, with the samples of each read. */
 export function expectNativeRows(
   { rows, tracks }: Pick<Played, 'rows' | 'tracks'>,
-  matrixTolerance: MatrixTolerance
+  matrixTolerance: MatrixTolerance,
+  uiFrames: UIFrame[] = []
 ): RowRead[] {
   const readRows = expectNativeReadRows(
     rows.map(({ row }) => row.native),
     tracks,
-    matrixTolerance
+    matrixTolerance,
+    uiFrames
   );
   return rows.flatMap(({ row, spacingMs }, index) =>
     readRows[index].map((read) => ({
@@ -1458,11 +1532,24 @@ export function expectNativeRows(
   );
 }
 
+/** The frames of the frame-driven twin on the sample clock. */
+export const twinFramesOf = ({ frameChecks, clockOffset }: Played): UIFrame[] =>
+  frameChecks
+    .filter(({ record }) => record.box === 'frame')
+    .flatMap(({ record }) => record.frames)
+    .map(({ timeMs, ranMs }) => ({
+      timeMs: timeMs + middleOf(clockOffset),
+      ran: {
+        from: ranMs + clockOffset.from,
+        to: ranMs + ANIMATION_CLOCK_STEP_MS + clockOffset.to,
+      },
+    }));
+
 const isOffBand = ({ isChecked, residual }: RowRead) =>
   isChecked && !residual.isOnTimeline;
 
-const repeatsAfterGap = (read: RowRead) =>
-  isOffBand(read) && read.afterGap?.isRepeated === true;
+const isHeldAfterGap = (read: RowRead) =>
+  isOffBand(read) && read.afterGap?.isHeld === true;
 
 const describeRead = ({ target, tracks: [track], timeMs }: RowRead) =>
   `${target} of the command ${track.generation}: ${(timeMs - middleOf(track.origin)).toFixed(2)} ms after its origin`;
@@ -1567,7 +1654,7 @@ function describeReadsOffTimeline(reads: RowRead[], played: Played) {
     .filter(({ record }) => record.box === 'native')
     .flatMap(({ record }) => (record.start ? [record.start.timeMs] : []));
   return reads
-    .filter((read) => isOffBand(read) && !repeatsAfterGap(read))
+    .filter((read) => isOffBand(read) && !isHeldAfterGap(read))
     .map((read) => {
       const {
         tracks: [track],
@@ -1613,8 +1700,8 @@ function describeNearestInGap({ values, timeMs, checked }: RowRead) {
 
 function describeNativeReads(reads: RowRead[], { clockOffset }: Played) {
   const checked = reads.filter(({ isChecked }) => isChecked);
-  const repeated = checked.filter(repeatsAfterGap);
-  const onBand = checked.filter((read) => !repeated.includes(read));
+  const held = checked.filter(isHeldAfterGap);
+  const onBand = checked.filter((read) => !held.includes(read));
   const distances = onBand.flatMap(({ residual, checked: tracks }) =>
     residual.distances.map(
       (distance, track) => distance / tracks[track].tolerance
@@ -1633,7 +1720,7 @@ function describeNativeReads(reads: RowRead[], { clockOffset }: Played) {
     ).toFixed(2)} ms`,
     `clock offset band ${(clockOffset.to - clockOffset.from).toFixed(3)} ms`,
     describeNewValueReads(onBand),
-    `reads after a gap ${checked.filter(({ afterGap }) => afterGap).length}, ${repeated.length} of them off the band and equal to the read before`,
+    `reads after a gap ${checked.filter(({ afterGap }) => afterGap).length}, ${held.length} of them off the band and accepted after a gap`,
     `reads in a removal window only ${checked.filter(({ residual }) => residual.removalEndMs !== undefined).length}`,
     `reads at an edge hold only ${checked.filter(({ residual }) => residual.edgeHoldMs !== undefined).length}`,
     `reads of a layer with no animation of the target ${checked.filter(({ sampled }) => layerOf(sampled) === 'rest').length}`,
@@ -1879,6 +1966,7 @@ export const MODEL_TOLERANCE: MatrixTolerance = {
 };
 
 const MODEL_ROWS_IN_FULL = 10;
+const MODEL_READ_FRAMES = 5;
 
 /**
  * The places of the frames of statement M from the last frame at or before a
@@ -1974,8 +2062,30 @@ const describeSpread = (sorted: number[]) =>
     : `smallest ${sorted[0].toFixed(3)}, median ${sorted[Math.floor(sorted.length / 2)].toFixed(3)}, largest ${sorted[sorted.length - 1].toFixed(3)}`;
 
 /**
+ * Prints the frame callback lag of each box: the time from the frame time of
+ * each frame of the frame driver to the run of its frame function.
+ */
+function logFrameCallbackLag(frameRecords: FrameRecord[]) {
+  for (const box of BOX_NAMES) {
+    const lags = frameRecords
+      .filter((record) => record.box === box)
+      .flatMap(({ frames }) =>
+        frames.map(({ timeMs, ranMs }) => ranMs - timeMs)
+      );
+    if (lags.length > 0) {
+      console.log(
+        `FRAME-LAG | ${box} | frames ${lags.length} | frame function run after the frame time, ms: ${describeSpread(sortedOf(lags))}`
+      );
+    }
+  }
+}
+
+/**
  * The matrix of each frame of the frame driver on `target` of the native box,
- * on the sample clock, and the mount of the first frame update of its track.
+ * on the sample clock in time order, and the mount of the first frame update of
+ * its track. The frames of two records of one leaf can overlap in time
+ * (Android); a frame time has the frame of its last record, as in
+ * `frameMatricesOf`.
  */
 function modelFramesOf(
   { events, frameRecords, clockOffset }: Played,
@@ -1992,10 +2102,15 @@ function modelFramesOf(
   const frames = frameCellsOf(
     frameRecords.filter(({ box }) => box === 'native'),
     target
-  ).map(({ timeMs, cells }) => ({
-    timeMs: timeMs + middleOf(clockOffset),
-    cells,
-  }));
+  )
+    .map(({ timeMs, cells }) => ({
+      timeMs: timeMs + middleOf(clockOffset),
+      cells,
+    }))
+    .sort((first, second) => first.timeMs - second.timeMs)
+    .filter(
+      ({ timeMs }, index, sorted) => sorted[index + 1]?.timeMs !== timeMs
+    );
   if (frames.length === 0) {
     throw new Error(
       `The frame driver recorded no frame of the ${target} target of the native box.`
@@ -2082,6 +2197,16 @@ function describeModelRead(
     `the frame before it: ${describeFrame(framesBefore - 2)}`,
     `first frame after the read: ${describeFrame(framesBefore)}`,
     `the frame two before the last: ${describeFrame(framesBefore - 3)}`,
+    `frames from ${MODEL_READ_FRAMES} before the last to the first after the read: ${frames
+      .slice(
+        Math.max(0, framesBefore - MODEL_READ_FRAMES - 1),
+        framesBefore + 1
+      )
+      .map(
+        ({ timeMs: frameMs, cells }) =>
+          `${(timeMs - frameMs).toFixed(3)} ms before with ${cells.join()}`
+      )
+      .join('; ')}`,
   ].join(', ');
 }
 
@@ -2195,7 +2320,10 @@ function ReferenceScene({
 }: Omit<BoxOptions, 'animations' | 'place'> & {
   animations: Record<BoxName, Animations>;
   place?: Place;
-  /** The cells are in a scroll view: `scrollTo(CLIPPED_OFFSET)` clips them. */
+  /**
+   * The cells are in a scroll view: `scrollClippingViewTo(CLIPPED_OFFSET)`
+   * clips them.
+   */
   clips: boolean;
 }) {
   const clockRef = useTestRef(CLOCK_REF);
@@ -2215,7 +2343,7 @@ function ReferenceScene({
     <View>
       <View ref={clockRef} collapsable={false} />
       {clips ? (
-        <ClippingScrollView scrollRef={scrollRef} style={clipStyles.window}>
+        <ClippingScrollView style={clipStyles.window}>
           <View collapsable={false}>{cells}</View>
           <View style={clipStyles.filler} />
         </ClippingScrollView>

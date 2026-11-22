@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstring>
 #include <iterator>
 #include <memory>
@@ -724,6 +725,8 @@ void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<Layout
   }
 }
 
+constexpr double LAID_OUT_NOISE = 1e-4;
+
 jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
     const ManagedLayoutAnimationStart &start,
     const ShadowView &currentView,
@@ -741,24 +744,31 @@ jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
   } else {
     const Snapshot current(currentView, window);
     const Snapshot target(start.after, window);
+    // Yoga gives one laid-out length float32 noise at two places (measured: 49.904762 and 49.904755 for 131 px).
+    // A value in the noise of the pixel grid goes on the grid; a value of a running animation stays.
+    const auto scale = start.after.layoutMetrics.pointScaleFactor;
+    const auto laidOut = [scale](const double value) {
+      const auto onGrid = scale > 0 ? std::round(value * scale) / scale : value;
+      return std::abs(onGrid - value) < LAID_OUT_NOISE ? onGrid : value;
+    };
     if (start.type != LayoutAnimationType::ENTERING) {
-      values.setProperty(uiRuntime_, "currentOriginX", current.x);
-      values.setProperty(uiRuntime_, "currentGlobalOriginX", current.x);
-      values.setProperty(uiRuntime_, "currentOriginY", current.y);
-      values.setProperty(uiRuntime_, "currentGlobalOriginY", current.y);
-      values.setProperty(uiRuntime_, "currentWidth", current.width);
-      values.setProperty(uiRuntime_, "currentHeight", current.height);
+      values.setProperty(uiRuntime_, "currentOriginX", laidOut(current.x));
+      values.setProperty(uiRuntime_, "currentGlobalOriginX", laidOut(current.x));
+      values.setProperty(uiRuntime_, "currentOriginY", laidOut(current.y));
+      values.setProperty(uiRuntime_, "currentGlobalOriginY", laidOut(current.y));
+      values.setProperty(uiRuntime_, "currentWidth", laidOut(current.width));
+      values.setProperty(uiRuntime_, "currentHeight", laidOut(current.height));
     }
     if (start.isContentFadeIn && start.opacity) {
       values.setProperty(uiRuntime_, "targetOpacity", *start.opacity);
     }
     if (start.type != LayoutAnimationType::EXITING) {
-      values.setProperty(uiRuntime_, "targetOriginX", target.x);
-      values.setProperty(uiRuntime_, "targetGlobalOriginX", target.x);
-      values.setProperty(uiRuntime_, "targetOriginY", target.y);
-      values.setProperty(uiRuntime_, "targetGlobalOriginY", target.y);
-      values.setProperty(uiRuntime_, "targetWidth", target.width);
-      values.setProperty(uiRuntime_, "targetHeight", target.height);
+      values.setProperty(uiRuntime_, "targetOriginX", laidOut(target.x));
+      values.setProperty(uiRuntime_, "targetGlobalOriginX", laidOut(target.x));
+      values.setProperty(uiRuntime_, "targetOriginY", laidOut(target.y));
+      values.setProperty(uiRuntime_, "targetGlobalOriginY", laidOut(target.y));
+      values.setProperty(uiRuntime_, "targetWidth", laidOut(target.width));
+      values.setProperty(uiRuntime_, "targetHeight", laidOut(target.height));
     }
   }
   values.setProperty(uiRuntime_, "windowWidth", window.width);

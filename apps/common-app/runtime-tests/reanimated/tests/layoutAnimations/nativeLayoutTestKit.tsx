@@ -22,6 +22,7 @@ import Animated, {
   Easing,
   makeMutable,
   ReduceMotion,
+  SharedTransitionBoundary,
   withDelay,
   withSequence,
   withSpring,
@@ -99,8 +100,8 @@ const IS_APPLE = Platform.OS === 'ios';
 
 /**
  * Android refuses a Width or Height change of more than one pixel
- * (`AndroidNativeAnimationPlatform::canRealize`). Apple refuses a Width or
- * Height track that can go below 0.
+ * (`SizeBeyondOnePixel`). Apple refuses a Width or Height track that can go
+ * below 0 (`SizeBelowZero`).
  */
 export const PLAYS_SIZE_CHANGE = IS_APPLE;
 export const ONE_PIXEL = 1 / PixelRatio.get();
@@ -174,10 +175,27 @@ export const REMOVES_TRACKS_OUT_OF_WINDOW = IS_APPLE;
 export const PLAYS_CORE_ANIMATION_MEMBERS = IS_APPLE;
 export const HAS_EDGE_ANTIALIASING = IS_APPLE;
 /**
+ * Android plays the geometry on `View.setAnimationMatrix`: a 2D map that needs
+ * the inverse of the model matrix, in the matrix where React Native writes a
+ * skew (`admitsMovingGeometry` of `AndroidNativeAnimationPlatform.cpp`).
+ */
+export const WRITES_ANIMATION_MATRIX = !IS_APPLE;
+/**
+ * Core Animation refuses an opacity track on a view with an opacity filter
+ * (`canRealize` of `REANativeAnimationPlatform.mm`); the Android `playsTarget`
+ * has no filter rule.
+ */
+export const REFUSES_OPACITY_UNDER_FILTER = IS_APPLE;
+/**
  * The pull of a React commit runs in a dispatch of mount items, and its
  * `didMountItems` reports it.
  */
 export const MOUNTS_IN_DISPATCHES = !IS_APPLE;
+/**
+ * The native tracks run on the UI thread, so a block of that thread stops them:
+ * after the block the view can show the last frame from before it.
+ */
+export const SHOWS_LAST_FRAME_AFTER_BLOCK = !IS_APPLE;
 /**
  * An Android matrix has no Z row or column: a sample has the six cells of a 2D
  * affine map.
@@ -193,15 +211,15 @@ export const TRANSFORM_SAMPLE_CELLS: readonly number[] = IS_APPLE
 export const SHOWS_MATRIX_SHEAR = IS_APPLE;
 /**
  * Core Animation holds a held spring at its curve value, not at its end value,
- * so Apple refuses a spring segment on a held track (`playsTimings` of
+ * so Apple refuses a spring segment on a held track (`timingsCause` of
  * `REANativeAnimationPlatform.mm`): the build of a springified exit fails with
- * `UnsupportedTarget`.
+ * `UnsupportedTarget` (`SpringForm`).
  */
 export const PLAYS_HELD_SPRING = !IS_APPLE;
 /**
- * Apple plays a spring only as the one segment of its timeline (`playsTimings`
+ * Apple plays a spring only as the one segment of its timeline (`timingsCause`
  * of `REANativeAnimationPlatform.mm`): a spring operation with a hold beside it
- * makes the build fail with `UnsupportedTarget`.
+ * makes the build fail with `UnsupportedTarget` (`SpringForm`).
  */
 export const PLAYS_SPRING_WITH_HOLD = !IS_APPLE;
 
@@ -225,11 +243,10 @@ export const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
 export const FRAME_MS = 1000 / 60;
 /**
  * How late a frame callback runs after its frame time. Apple: no term. Android:
- * 21.7 ms, from the presentation reads of the phone (the off reads of the 18 ms
- * band are 19.4 to 34.1 ms old, 99 % to 32.4 ms). A direct measurement of the
- * emulator gives callback runs up to 25.7 ms after their frame time.
+ * the largest direct measurement, 25.7 ms on the emulator in a late frame
+ * callback state (8.2 to 9.2 ms on the phone).
  */
-export const FRAME_CALLBACK_LAG_MS = IS_APPLE ? 0 : 21.7;
+export const FRAME_CALLBACK_LAG_MS = IS_APPLE ? 0 : 25.7;
 /**
  * How long a presentation value stays. Apple: 15.7 to 17.7 ms in 76 intervals,
  * plus 0.3 ms. Android: a sample shows the animator value of the last frame
@@ -239,14 +256,19 @@ export const PRESENTATION_STAY_MS = IS_APPLE
   ? 18
   : FRAME_MS + FRAME_CALLBACK_LAG_MS;
 /**
- * How long a frame value can stay in the model in a late frame callback state.
- * Apple: no term. Android: one display frame, plus the largest run of a frame
- * callback after its frame time in the emulator runs of record REFMODEL-DIAG
- * step 3 (25.7 ms), plus the largest time from that run to the model value of
- * the native box in the run with that lag (2.8 ms). Single values of 11.9 to
- * 47.9 ms in the other runs of that table are not studied.
+ * How long after a frame callback run the native box has the model value.
+ * Apple: no term. Android: 2.8 ms, the largest in the emulator run with the
+ * late frame callback state (phone: up to 6.0 ms, with a lag of up to 9.2 ms).
  */
-export const LATE_CALLBACK_STAY_MS = IS_APPLE ? 0 : FRAME_MS + 25.7 + 2.8;
+const CALLBACK_TO_MODEL_MS = IS_APPLE ? 0 : 2.8;
+/**
+ * How long a frame value can stay in the model in a late frame callback state.
+ * Apple: no term. Android: the frame callback lag and the time to the model
+ * value, plus one display frame.
+ */
+export const LATE_CALLBACK_STAY_MS = IS_APPLE
+  ? 0
+  : FRAME_MS + FRAME_CALLBACK_LAG_MS + CALLBACK_TO_MODEL_MS;
 // Measured gaps of the reads of a key: 47.05 ms at most, 150.15 ms at least after a block.
 export const READ_GAP_MS = 100;
 // 2.146 - 0.460 + 0.091 ms, the measured edges of the removing tick.
@@ -289,6 +311,29 @@ export const isHostEvent = ({ event }: TraceEvent) =>
   event !== 'ClientAdmitted' &&
   event !== 'ClientEnded' &&
   event !== 'LayoutLeafCaptured';
+
+/** The reason of each `LayoutStartRefused` event, in order. */
+export const startRefusalsOf = (events: TraceEvent[]) =>
+  events
+    .filter(({ event }) => event === 'LayoutStartRefused')
+    .map(({ startRefusal }) => startRefusal)
+    .join();
+
+export function layoutRefusalOf(events: TraceEvent[]) {
+  const refusal = events.find(
+    ({ event }) =>
+      event === 'LayoutStartRefused' || event === 'LayoutBuildFailed'
+  );
+  if (!refusal) {
+    throw new Error('The trace has no layout refusal.');
+  }
+  return refusal;
+}
+
+export const layoutRefusalReason = (refusal: TraceEvent) =>
+  refusal.event === 'LayoutStartRefused'
+    ? refusal.startRefusal
+    : refusal.buildFailure;
 
 /** The reads of one wait for a written model, in their order. */
 export type ModelWait = {
@@ -353,15 +398,67 @@ export async function readTrack(tag: number, { sampleTarget }: Track) {
   };
 }
 
-export const isNear = (value: number, expected: number, tolerance = 0.01) =>
-  Math.abs(value - expected) < tolerance;
+/** The native box and its frame-driven twin. */
+export type PairTags = { nativeTag: number; frameTag: number };
+
+export type PairEvents = { native: TraceEvent[]; frame: TraceEvent[] };
+
+/** The events of the trace for each box of the pair, with no frame updates. */
+export async function takeTraceOfPair({
+  nativeTag,
+  frameTag,
+}: PairTags): Promise<PairEvents> {
+  const events = await takeTrace();
+  const eventsOf = (tag: number) =>
+    events.filter((event) => event.tag === tag && !isFrameUpdate(event));
+  return { native: eventsOf(nativeTag), frame: eventsOf(frameTag) };
+}
+
+export const isFrameUpdate = ({ event }: Pick<TraceEvent, 'event'>) =>
+  event === 'FrameUpdateMounted';
+
+/** The end of the native command of a view, and whether a frame updated it. */
+export async function takeTransferTrace(tag: number) {
+  const events = await takeTraceOf(tag);
+  return {
+    host: summarizeEnd(events.filter((event) => !isFrameUpdate(event))),
+    hasFrameUpdate: events.some(isFrameUpdate),
+  };
+}
+
+export const waitUntil = (
+  { startMs }: { startMs: number },
+  elapsedMs: number
+) => wait(Math.max(0, startMs + elapsedMs - performance.now()));
+
+export const VALUE_TOLERANCE = 0.01;
+
+export const isNear = (
+  value: number,
+  expected: number,
+  tolerance = VALUE_TOLERANCE
+) => Math.abs(value - expected) < tolerance;
+
+// The default easing moves by no more than two times its mean speed.
+const rangeOf = ({ from, to, easing }: Track) =>
+  Math.abs(to - from) * (easing ? 2 : 1);
+
+/** The change of the value of a track in two display frames. */
+export const twoFramesOf = (track: Track, durationMs: number) =>
+  VALUE_TOLERANCE + (2 * FRAME_MS * rangeOf(track)) / durationMs;
+
+/** The part of the duration at which the track has the value. */
+export const progressOf = ({ from, to, easing }: Track, value: number) => {
+  const progress = (value - from) / (to - from);
+  return easing ? easing.timeOf(progress) : progress;
+};
 
 /**
  * The tolerance of `isNear` for a value at an end of a track: a position has
  * `LAID_OUT_TOLERANCE`, because Android rounds each edge to the pixel grid.
  */
 export const endToleranceOf = ({ sampleTarget }: Pick<Track, 'sampleTarget'>) =>
-  sampleTarget === 'Position' ? LAID_OUT_TOLERANCE : 0.01;
+  sampleTarget === 'Position' ? LAID_OUT_TOLERANCE : VALUE_TOLERANCE;
 
 /**
  * One part of a declared timeline: a move to `to` from the end value of the
@@ -630,7 +727,15 @@ export type NativeResidual = {
   edgeHoldMs?: number;
   /** The read is on the timeline only by `asReplacedTrack` of its tracks. */
   showsReplaced?: boolean;
+  /** The read is on the timeline only by `asTrackFromStartPass` of its tracks. */
+  showsStartPass?: boolean;
 };
+
+/**
+ * A frame of the UI thread on the sample clock: its frame time and the times at
+ * which its callback can have run.
+ */
+export type UIFrame = { timeMs: number; ran: Band };
 
 /** A read `READ_GAP_MS` or more after the read before of its target. */
 export type ReadAfterGap = {
@@ -639,31 +744,71 @@ export type ReadAfterGap = {
   before: number[];
   /** The read has exactly the presentation of the read before. */
   isRepeated: boolean;
+  /**
+   * The read repeats the read before, or with `SHOWS_LAST_FRAME_AFTER_BLOCK`
+   * shows what a read at the last frame of the UI thread before it can show,
+   * when that frame ran after the read before, at a time not before the time of
+   * the read before.
+   */
+  isHeld: boolean;
 };
 
 export function readAfterGapOf(
   { monotonicTimeMs, presentation }: TargetSample,
-  before?: TargetSample
+  before: TargetSample | undefined,
+  values: number[],
+  valuesBefore: number[] | undefined,
+  tracks: NativeTrack[],
+  uiFrames: UIFrame[]
 ): ReadAfterGap | undefined {
-  if (!before) {
+  if (!before || !valuesBefore) {
     return undefined;
   }
   const gapMs = monotonicTimeMs - before.monotonicTimeMs;
-  return gapMs < READ_GAP_MS
-    ? undefined
-    : {
-        gapMs,
-        before: before.presentation,
-        isRepeated: presentation.every(
-          (value, cell) => value === before.presentation[cell]
-        ),
-      };
+  if (gapMs < READ_GAP_MS) {
+    return undefined;
+  }
+  const isRepeated = presentation.every(
+    (value, cell) => value === before.presentation[cell]
+  );
+  const lastFrameMsWhere = (ranBefore: (ran: Band) => boolean) =>
+    Math.max(
+      ...uiFrames
+        .filter(({ ran }) => ranBefore(ran) && ran.to >= before.monotonicTimeMs)
+        .map(({ timeMs }) => timeMs)
+    );
+  const lastFramesMs = [
+    lastFrameMsWhere((ran) => ran.to < monotonicTimeMs),
+    lastFrameMsWhere((ran) => ran.from < monotonicTimeMs),
+  ].filter(Number.isFinite);
+  const latestFitMsAt = (shown: number[], timeMs: number) => {
+    const residual = residualInBandOf(
+      shown,
+      timeMs,
+      tracks,
+      PRESENTATION_STAY_MS
+    );
+    return residual.isOnTimeline ? timeMs - residual.fitAgeMs : NaN;
+  };
+  const fitBeforeMs = latestFitMsAt(valuesBefore, before.monotonicTimeMs);
+  return {
+    gapMs,
+    before: before.presentation,
+    isRepeated,
+    isHeld:
+      isRepeated ||
+      (SHOWS_LAST_FRAME_AFTER_BLOCK &&
+        lastFramesMs.some((frameMs) => {
+          const fitMs = latestFitMsAt(values, frameMs);
+          return !Number.isNaN(fitMs) && !(fitMs < fitBeforeMs);
+        })),
+  };
 }
 
 /**
  * The values of one read are the declared values of the keys at one time of the
  * `PRESENTATION_STAY_MS` before the read, or the read is after a gap and
- * repeats the read before.
+ * `isHeld`.
  */
 export function expectNativeTimeline(
   values: number[],
@@ -678,7 +823,7 @@ export function expectNativeTimeline(
       return `${value.toFixed(4)} at ${(readTimeMs - origin.to).toFixed(2)}..${(readTimeMs - origin.from).toFixed(2)} ms is ${residual.distances[track].toFixed(4)} from the declared values of the frame before`;
     })
     .join(', ');
-  expect(residual.isOnTimeline || afterGap?.isRepeated ? '' : row).toBe('');
+  expect(residual.isOnTimeline || afterGap?.isHeld ? '' : row).toBe('');
   return residual;
 }
 
@@ -732,8 +877,28 @@ const asReplacedTrack = (track: NativeTrack): NativeTrack =>
   track.replaced ? { ...track.replaced, tolerance: track.tolerance } : track;
 
 /**
- * `nativeResidualOf` a read, and of a read in `isInReplacementWindow` also of
- * the replaced tracks up to the time of the read.
+ * The start pass writes the value of a track that replaced a track at the time
+ * of the pass: on Android a whole ms of the animation clock before
+ * `TrackStarted` (measured: 0.95 to 1.55 ms).
+ */
+const START_PASS_LEAD_MS = IS_APPLE ? 0 : 2;
+
+const asTrackFromStartPass = (track: NativeTrack): NativeTrack =>
+  track.replaced
+    ? {
+        ...track,
+        played: {
+          ...track.played,
+          from: track.played.from - START_PASS_LEAD_MS,
+        },
+      }
+    : track;
+
+/**
+ * `nativeResidualOf` a read, of a read in `isInReplacementWindow` also of the
+ * replaced tracks up to the time of the read, and of a read in the first
+ * `PRESENTATION_STAY_MS` of a track that replaced a track also of that track
+ * from `START_PASS_LEAD_MS` before its start.
  */
 export function readResidualOf(
   values: number[],
@@ -742,19 +907,42 @@ export function readResidualOf(
   isInWindow: boolean
 ): NativeResidual {
   const own = nativeResidualOf(values, readTimeMs, tracks);
-  if (own.isOnTimeline || !isInWindow) {
+  if (own.isOnTimeline) {
     return own;
   }
-  const replaced = nativeResidualOf(
-    values,
-    readTimeMs,
-    tracks.map(asReplacedTrack)
-  );
-  return replaced.isOnTimeline
-    ? {
+  if (isInWindow) {
+    const replaced = nativeResidualOf(
+      values,
+      readTimeMs,
+      tracks.map(asReplacedTrack)
+    );
+    if (replaced.isOnTimeline) {
+      return {
         ...replaced,
         crossesReplacement: own.crossesReplacement,
         showsReplaced: true,
+      };
+    }
+  }
+  if (
+    !tracks.some(
+      ({ replaced, played }) =>
+        replaced !== undefined &&
+        readTimeMs - played.from < PRESENTATION_STAY_MS
+    )
+  ) {
+    return own;
+  }
+  const fromStartPass = nativeResidualOf(
+    values,
+    readTimeMs,
+    tracks.map(asTrackFromStartPass)
+  );
+  return fromStartPass.isOnTimeline
+    ? {
+        ...fromStartPass,
+        crossesReplacement: own.crossesReplacement,
+        showsStartPass: true,
       }
     : own;
 }
@@ -892,10 +1080,14 @@ export const declaredBandOf = (track: TimedTrack, readTimeMs: number): Band =>
 
 /**
  * The frame times from `origin` that a read in the band `read` of the sample
- * clock can show.
+ * clock can show, when a value shows for at most `ageMs` after its frame time.
  */
-export const frameTimesOf = (read: Band, origin: Band): Band => ({
-  from: read.from - PRESENTATION_STAY_MS - origin.to,
+export const frameTimesOf = (
+  read: Band,
+  origin: Band,
+  ageMs = PRESENTATION_STAY_MS
+): Band => ({
+  from: read.from - ageMs - origin.to,
   to: read.to - origin.from,
 });
 
@@ -1469,12 +1661,14 @@ export type NativeRead = {
 /**
  * `expectNativeReads` of each sample row of one view, in order: each row gets
  * the rows before it, for the tracks that replaced a track and that an earlier
- * read showed.
+ * read showed. `uiFrames` are the frames of the UI thread that the case
+ * recorded.
  */
 export function expectNativeReadRows(
   rows: Samples[],
   tracks: PlayedTrack[],
-  matrixTolerance: MatrixTolerance
+  matrixTolerance: MatrixTolerance,
+  uiFrames: UIFrame[] = []
 ): NativeRead[][] {
   const shown = new Set<PlayedTrack>();
   return rows.map((samples, index) => {
@@ -1483,7 +1677,8 @@ export function expectNativeReadRows(
       tracks,
       matrixTolerance,
       rows[index - 1],
-      shown
+      shown,
+      uiFrames
     );
     reads.flatMap(shownReplacingTracksOf).forEach((track) => shown.add(track));
     return reads;
@@ -1501,7 +1696,8 @@ function expectNativeReads(
   tracks: PlayedTrack[],
   matrixTolerance: MatrixTolerance,
   before: Samples | undefined,
-  shown: ReadonlySet<PlayedTrack>
+  shown: ReadonlySet<PlayedTrack>,
+  uiFrames: UIFrame[]
 ): NativeRead[] {
   return Object.entries(samples).flatMap(([target, targetSample]) => {
     const { presentation, monotonicTimeMs: timeMs } = targetSample;
@@ -1510,9 +1706,11 @@ function expectNativeReads(
       return [];
     }
     const isTransform = playing.some(isOperationTrack);
-    const values = isTransform
-      ? TRANSFORM_SAMPLE_CELLS.map((cell) => presentation[cell])
-      : playing.map(() => presentation[0]);
+    const valuesOf = (shown: number[]) =>
+      isTransform
+        ? TRANSFORM_SAMPLE_CELLS.map((cell) => shown[cell])
+        : playing.map(() => shown[0]);
+    const values = valuesOf(presentation);
     const shownTracks = shownTracksOf(
       playing,
       tracks,
@@ -1525,7 +1723,15 @@ function expectNativeReads(
       : shownTracks;
     const isChecked =
       checkedTracksOf(tracks, target, timeMs).length === playing.length;
-    const afterGap = readAfterGapOf(targetSample, before?.[target]);
+    const sampleBefore = before?.[target];
+    const afterGap = readAfterGapOf(
+      targetSample,
+      sampleBefore,
+      values,
+      sampleBefore && valuesOf(sampleBefore.presentation),
+      checked,
+      uiFrames
+    );
     const isInWindow = playing.some(
       (track) =>
         track.replaced !== undefined &&
@@ -1559,7 +1765,8 @@ const shownReplacingTracksOf = ({ tracks, timeMs, residual }: NativeRead) =>
   residual.isOnTimeline && !residual.showsReplaced
     ? tracks.filter(
         ({ replaced, played }) =>
-          replaced !== undefined && timeMs - residual.ageMs >= played.from
+          replaced !== undefined &&
+          (residual.showsStartPass || timeMs - residual.ageMs >= played.from)
       )
     : [];
 
@@ -1939,15 +2146,16 @@ export type FrameResidual = {
  * one value can come from two of them (measured on Android: a first frame of
  * -391.2380828857422 for 20.190475463867188 minus 411.4285583496094, the 32-bit
  * form of 411.42857142857144; a width of 50.28572082519531 for the laid-out
- * 50.28571319580078, two 32-bit steps).
+ * 50.28571319580078, two 32-bit steps; a translation of 3.814697265625e-6, one
+ * 32-bit step at a laid-out size near 50, for a declared translation of 0).
  */
 const FLOAT32_EPSILON = 2 ** -21;
 
 /**
  * Each frame of a record wrote the value that the frame driver gives to the
  * timeline at the time of the frame, in the unit of the timeline, after the
- * start of the record, to `tolerance` and the 32-bit precision of its largest
- * value.
+ * start of the record, to `tolerance` and the 32-bit precision of the largest
+ * value of the timeline and of the layout values of the builder.
  */
 export function expectFrameTimeline(
   check: FrameCheck,
@@ -1962,7 +2170,8 @@ export function expectFrameTimeline(
   const magnitude = Math.max(
     Math.abs(timeline.from),
     Math.abs(declaredEndOf(timeline)),
-    ...values.map(Math.abs)
+    ...values.map(Math.abs),
+    ...Object.values(record.layoutValues).map(Math.abs)
   );
   const offTimeline = record.frames.flatMap(({ timeMs, value }, frame) =>
     distances[frame] <= tolerance + magnitude * FLOAT32_EPSILON
@@ -2334,7 +2543,7 @@ const CLOCK_OFFSET_READS = 6;
  * (`NativeProxy.getAnimationTimestamp`), so a read stands for each time of its
  * millisecond.
  */
-const ANIMATION_CLOCK_STEP_MS = IS_APPLE ? 0 : 1;
+export const ANIMATION_CLOCK_STEP_MS = IS_APPLE ? 0 : 1;
 
 async function readClockOffset(tag: number): Promise<Band> {
   const before = runOnUISync(animationTime);
@@ -2396,6 +2605,34 @@ export const playbackCountOf = (
   generation: number
 ) => playbacks.filter((playback) => playback.generation === generation).length;
 
+/**
+ * The events of the trace until `isComplete` holds for them: the wait for the
+ * evidence of a start or of an end. At its timeout it gives the events that it
+ * has.
+ */
+export async function takeTraceUntil(
+  isComplete: (events: TraceEvent[]) => boolean,
+  timeoutMs = 3000
+) {
+  const events = await takeTrace();
+  const deadline = performance.now() + timeoutMs;
+  while (!isComplete(events) && performance.now() < deadline) {
+    await wait(FRAME_MS);
+    events.push(...(await takeTrace()));
+  }
+  return events;
+}
+
+export const takeTraceUntilSurfaceClosed = (surfaceId: number) =>
+  takeTraceUntil(
+    (events) =>
+      events.some(
+        (event) =>
+          event.event === 'SurfaceClosed' && event.surfaceId === surfaceId
+      ),
+    1000
+  );
+
 export function summarize(events: TraceEvent[]) {
   return events
     .map(({ event, target, finished, outcome, reason, buildFailure }) =>
@@ -2407,6 +2644,7 @@ export function summarize(events: TraceEvent[]) {
 }
 
 export const callbacks: string[] = [];
+export const sortedCallbacks = () => [...callbacks].sort().join();
 /** When the React Native runtime got the last callback of each name. */
 export const callbackTimes: Record<string, number> = {};
 /** When the UI runtime gave it, on the animation clock. */
@@ -2977,7 +3215,20 @@ export function Scene({
 
 export const LONG_MOVE = layoutOf({ originX: { duration: LAYOUT_DURATION } });
 
-export type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
+type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
+
+const clippingScrollRef: ScrollViewRef = React.createRef();
+
+/** A scroll offset that takes the start of the content out of the window. */
+export const CLIPPED_OFFSET = 1500;
+
+/** Scrolls the mounted `ClippingScrollView` to `y`, with no animation. */
+export function scrollClippingViewTo(y: number) {
+  if (!clippingScrollRef.current) {
+    throw new Error('No ClippingScrollView is mounted.');
+  }
+  clippingScrollRef.current.scrollTo({ y, animated: false });
+}
 
 /**
  * A scroll view that takes its children out of the window when they are out of
@@ -2985,19 +3236,69 @@ export type ScrollViewRef = RefObject<ComponentRef<typeof ScrollView> | null>;
  * no clipping, so the clipping starts only when the prop changes.
  */
 export function ClippingScrollView({
-  scrollRef,
   style,
   children,
-}: React.PropsWithChildren<{
-  scrollRef?: ScrollViewRef;
-  style?: StyleProp<ViewStyle>;
-}>) {
+}: React.PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   const [clips, setClips] = useState(false);
   useEffect(() => setClips(true), []);
   return (
-    <ScrollView ref={scrollRef} removeClippedSubviews={clips} style={style}>
+    <ScrollView
+      ref={clippingScrollRef}
+      removeClippedSubviews={clips}
+      style={style}>
       {children}
     </ScrollView>
+  );
+}
+
+type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
+
+/**
+ * The `sharedTransitionTag` and the `sharedTransitionStyle` of a source and its
+ * target.
+ */
+export type SharedPair = {
+  sharedTag: string;
+  transition: AnimatedViewProps['sharedTransitionStyle'];
+};
+
+/**
+ * The screen of `source` and, with `showsTarget`, the screen of its shared
+ * target: the commit that shows the target starts the shared transition.
+ * `children` come before the source.
+ */
+export function SharedScreens({
+  sharedTag,
+  transition,
+  source,
+  showsTarget,
+  style,
+  targetStyle,
+  children,
+}: React.PropsWithChildren<
+  SharedPair & {
+    source: React.ReactNode;
+    showsTarget: boolean;
+    style?: StyleProp<ViewStyle>;
+    targetStyle?: StyleProp<ViewStyle>;
+  }
+>) {
+  return (
+    <View style={[styles.sharedScreens, style]}>
+      {children}
+      <SharedTransitionBoundary isActive={!showsTarget}>
+        {source}
+      </SharedTransitionBoundary>
+      {showsTarget && (
+        <SharedTransitionBoundary isActive>
+          <Animated.View
+            sharedTransitionTag={sharedTag}
+            sharedTransitionStyle={transition}
+            style={[styles.box, styles.sharedTarget, targetStyle]}
+          />
+        </SharedTransitionBoundary>
+      )}
+    </View>
   );
 }
 
@@ -3074,9 +3375,6 @@ export const NATIVE_START =
   'LayoutStartPending > LayoutStartMounted > Received > TrackStarted:PositionX > TrackStarted:PositionY > Admitted';
 export const NATIVE_END =
   'TrackEnded:PositionX:true > TrackEnded:PositionY:true > Ended:Finished:None';
-
-// `summarizeEnd` of a command that started and ended.
-export const SORTED_START_AND_END = `TrackEnded:PositionX:true > TrackEnded:PositionY:true > ${NATIVE_START} > Ended:Finished:None`;
 
 // Tracks that end in one display frame report in no fixed order.
 export function summarizeEnd(events: TraceEvent[]) {
@@ -3253,6 +3551,14 @@ export const styles = StyleSheet.create({
   container: {
     width: 300,
     height: 120,
+  },
+  sharedScreens: {
+    width: 300,
+    height: 220,
+  },
+  sharedTarget: {
+    marginLeft: 150,
+    marginTop: 100,
   },
   pairCell: {
     height: PAIR_CELL_HEIGHT,
