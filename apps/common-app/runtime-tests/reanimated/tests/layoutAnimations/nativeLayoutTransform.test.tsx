@@ -1612,7 +1612,7 @@ const FORM_END_MS = 300;
 const FORM_PROPERTIES: RecordedProperty[] = [
   'frame',
   'drawnMatrix',
-  'drawingTime',
+  'frameTime',
 ];
 const STANDARD_PARTS = [0.1, 0.25, 0.5, 0.75, 0.9, 1];
 const BOUNCE_KEYS = [4 / 11, 8 / 11, 10 / 11];

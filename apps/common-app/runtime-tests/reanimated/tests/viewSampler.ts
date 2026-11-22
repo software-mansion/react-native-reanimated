@@ -30,12 +30,9 @@ export type SampledProperty =
 
 /**
  * A property of one value, a geometry read of `GEOMETRY_VALUE_COUNTS`, or
- * `drawingTime`: the frame time of the draw in ms (`View.getDrawingTime`).
+ * `frameTime`: the frame time in ms of the frame of the draw.
  */
-export type RecordedProperty =
-  | SampledProperty
-  | GeometryProperty
-  | 'drawingTime';
+export type RecordedProperty = SampledProperty | GeometryProperty | 'frameTime';
 
 /**
  * Each in dp, with this number of values: `frame` (left, top, width, height in

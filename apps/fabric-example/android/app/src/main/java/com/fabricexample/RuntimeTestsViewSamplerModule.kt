@@ -6,6 +6,7 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.Choreographer
 import android.view.View
 import android.view.ViewTreeObserver
 import com.facebook.react.bridge.Arguments
@@ -39,13 +40,30 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   companion object {
     const val NAME = "RuntimeTestsViewSampler"
     private const val AFFINE_CELL_COUNT = 6
+    private const val NANOS_PER_MS = 1e6
   }
 
   private class Recording(
     val observer: ViewTreeObserver,
     val listener: ViewTreeObserver.OnDrawListener,
     val rows: MutableList<DoubleArray>,
+    val frameClock: FrameClock,
   )
+
+  /** The frame time in ms of the last frame. A frame callback runs before the draw of its frame. */
+  private class FrameClock : Choreographer.FrameCallback {
+    var frameTimeMs = Double.NaN
+      private set
+
+    override fun doFrame(frameTimeNanos: Long) {
+      frameTimeMs = frameTimeNanos / NANOS_PER_MS
+      Choreographer.getInstance().postFrameCallback(this)
+    }
+
+    fun start() = Choreographer.getInstance().postFrameCallback(this)
+
+    fun stop() = Choreographer.getInstance().removeFrameCallback(this)
+  }
 
   private var recording: Recording? = null
 
@@ -63,10 +81,12 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
       recording?.let(::detach)
       val names = (0 until properties.size()).map { properties.getString(it)!! }
       val rows = mutableListOf<DoubleArray>()
-      val listener = ViewTreeObserver.OnDrawListener { rows.add(rowOf(views.filterNotNull(), names)) }
+      val frameClock = FrameClock().also { it.start() }
+      val listener =
+        ViewTreeObserver.OnDrawListener { rows.add(rowOf(views.filterNotNull(), names, frameClock.frameTimeMs)) }
       val observer = views.first()!!.viewTreeObserver
       observer.addOnDrawListener(listener)
-      recording = Recording(observer, listener, rows)
+      recording = Recording(observer, listener, rows, frameClock)
       promise.resolve(null)
     }
   }
@@ -152,6 +172,7 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   }
 
   private fun detach(ended: Recording) {
+    ended.frameClock.stop()
     if (ended.observer.isAlive) {
       ended.observer.removeOnDrawListener(ended.listener)
     }
@@ -173,16 +194,16 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   private fun nativeProxy(): NativeProxy? =
     reactApplicationContext.getNativeModule(ReanimatedModule::class.java)?.nodesManager?.getNativeProxy()
 
-  private fun rowOf(views: List<View>, properties: List<String>): DoubleArray =
+  private fun rowOf(views: List<View>, properties: List<String>, frameTimeMs: Double): DoubleArray =
     doubleArrayOf(
       SystemClock.uptimeMillis().toDouble(),
-      *views.flatMap { view -> properties.flatMap { valuesOf(view, it) } }.toDoubleArray(),
+      *views.flatMap { view -> properties.flatMap { valuesOf(view, it, frameTimeMs) } }.toDoubleArray(),
     )
 
-  private fun valuesOf(view: View, property: String): List<Double> =
+  private fun valuesOf(view: View, property: String, frameTimeMs: Double): List<Double> =
     when (property) {
       "opacity" -> listOf(view.alpha.toDouble())
-      "drawingTime" -> listOf(view.drawingTime.toDouble())
+      "frameTime" -> listOf(frameTimeMs)
       "backgroundColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBackgroundColor(view)))
       "borderColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBorderColor(view, LogicalEdge.ALL)))
       "borderRadius" -> listOf(borderRadiusOf(view))
