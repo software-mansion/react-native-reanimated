@@ -475,6 +475,20 @@ describe('native layout continuity', () => {
         ...(exit ? [] : [opacityReadOf(opacity, rest)]),
       ])
     );
+    logModelBound(
+      caseName,
+      'Position',
+      distances.position,
+      parity.tolerance,
+      ONE_FRAME_TERMS
+    );
+    logModelBound(
+      caseName,
+      'Opacity',
+      distances.opacity,
+      OPACITY_TOLERANCE,
+      ONE_FRAME_TERMS
+    );
     expectKeptPair(distances.position < parity.tolerance);
     if (exit) {
       expect(distances.opacity < OPACITY_TOLERANCE).toBe(true);
