@@ -320,18 +320,21 @@ describe('native layout live clock', () => {
   }
 
   // The first mount of the scene verifies the view classes in the frame of the first start (measured: 41.7 ms).
-  const playWarmUp = async () => {
+  let isSceneWarm = false;
+  const warmUpScene = async () => {
     await play(platformCaseOf(Object.values(REFERENCE_CASES)[0]));
     await clearRenderOutput();
+    isSceneWarm = true;
   };
-  let sceneWarmUp: Promise<void> | undefined;
 
   for (const [caseName, referenceCase] of Object.entries({
     ...REFERENCE_CASES,
     ...LIVE_CLOCK_CASES,
   })) {
     test(`${caseName}: the two boxes agree on the wall clock`, async () => {
-      await (sceneWarmUp ??= playWarmUp());
+      if (!isSceneWarm) {
+        await warmUpScene();
+      }
       const platformCase = platformCaseOf(referenceCase);
       const played = await play(platformCase);
       expectNativeTimelineOf(platformCase, played);

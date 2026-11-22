@@ -47,7 +47,7 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
     val observer: ViewTreeObserver,
     val listener: ViewTreeObserver.OnDrawListener,
     val rows: MutableList<DoubleArray>,
-    val frameClock: FrameClock,
+    val frameClock: FrameClock?,
   )
 
   /** The frame time in ms of the last frame. A frame callback runs before the draw of its frame. */
@@ -81,9 +81,11 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
       recording?.let(::detach)
       val names = (0 until properties.size()).map { properties.getString(it)!! }
       val rows = mutableListOf<DoubleArray>()
-      val frameClock = FrameClock().also { it.start() }
+      val frameClock = if ("frameTime" in names) FrameClock().also { it.start() } else null
       val listener =
-        ViewTreeObserver.OnDrawListener { rows.add(rowOf(views.filterNotNull(), names, frameClock.frameTimeMs)) }
+        ViewTreeObserver.OnDrawListener {
+          rows.add(rowOf(views.filterNotNull(), names, frameClock?.frameTimeMs ?: Double.NaN))
+        }
       val observer = views.first()!!.viewTreeObserver
       observer.addOnDrawListener(listener)
       recording = Recording(observer, listener, rows, frameClock)
@@ -172,7 +174,7 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   }
 
   private fun detach(ended: Recording) {
-    ended.frameClock.stop()
+    ended.frameClock?.stop()
     if (ended.observer.isAlive) {
       ended.observer.removeOnDrawListener(ended.listener)
     }
