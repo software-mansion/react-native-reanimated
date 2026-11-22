@@ -370,12 +370,14 @@ export function routeOf<TSample extends TargetSample>(
     samples.length > 0
       ? Math.max(...samples.map(({ monotonicTimeMs }) => monotonicTimeMs))
       : Infinity;
+  const sampledOfView = ofView.filter(
+    ({ monotonicTimeMs }) => monotonicTimeMs <= lastSampleMs
+  );
   const start = lastOf(
-    ofView.filter(
+    sampledOfView.filter(
       (event) =>
-        event.monotonicTimeMs <= lastSampleMs &&
-        (isRefusal(event) ||
-          (event.event === 'TrackStarted' && event.target === target))
+        isRefusal(event) ||
+        (event.event === 'TrackStarted' && event.target === target)
     )
   );
   if (!start) {
@@ -384,7 +386,7 @@ export function routeOf<TSample extends TargetSample>(
     );
   }
   return isRefusal(start)
-    ? frameDrivenRouteOf(ofView, start, samples, isOnFrameDriverTimeline)
+    ? frameDrivenRouteOf(sampledOfView, start, samples, isOnFrameDriverTimeline)
     : nativeRouteOf(events, ofView, start, lastOf(samples));
 }
 

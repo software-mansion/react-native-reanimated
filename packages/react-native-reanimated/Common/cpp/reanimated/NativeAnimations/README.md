@@ -133,7 +133,7 @@ yarn workspace fabric-example runtime-tests --library reanimated --platform andr
 - A write to a JS file that Metro serves reloads a running Debug app, and the run ends with "device disconnected". Do not edit test files during a run. Turn Fast Refresh off in the app before a long run.
 - Keep the trace under 1024 events between two takes (`TraceRecorder::Capacity`): a scene with more events loses the oldest.
 - A run whose device log has "Unable to find module for" at the app start is not valid (a stale module provider file broke `Modal` cases once). Run `pod install` again.
-- Record the display rate of an Android device with the run (`adb -s <serial> shell settings get system peak_refresh_rate`): frame-time checks and spring leads differ between 60 Hz and 120 Hz.
+- Record the active display rate of an Android device with the run (`mActiveRenderFrameRate` in `adb -s <serial> shell dumpsys display`; the `peak_refresh_rate` setting is only the upper limit): frame-time checks and spring leads differ between 60 Hz and 120 Hz.
 
 Correctness:
 

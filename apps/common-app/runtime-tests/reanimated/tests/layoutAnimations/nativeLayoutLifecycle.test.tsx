@@ -130,7 +130,7 @@ describe('native layout lifecycle: surface teardown', () => {
       ).toBe(true);
       expect(
         (await sample(tags[TEARDOWN_CSS_REF], 'Opacity')).playbacks.length > 0
-      ).toBe(true);
+      ).toBe(hasNativeCSSTransitions);
 
       setTeardown({
         ...TEARDOWN_START,
