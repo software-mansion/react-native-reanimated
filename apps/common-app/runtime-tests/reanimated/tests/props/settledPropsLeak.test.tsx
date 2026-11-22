@@ -485,6 +485,7 @@ describe('settled animated style and props of a wrapped component', () => {
   test.each([
     { description: 'useAnimatedStyle and useAnimatedProps', mode: 'hooks' },
     { description: 'inline shared values in style and props', mode: 'inline' },
+    { description: 'useAnimatedStyle only', mode: 'styleOnly' },
   ] as const)(
     '${description} - a box that settles while another still animates gets its own sync render',
     async ({ mode }) => {
