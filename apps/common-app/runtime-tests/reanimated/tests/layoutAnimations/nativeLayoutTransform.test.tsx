@@ -1955,20 +1955,27 @@ describe('native layout transform forms against the declared shape', () => {
           if (!drawn) {
             return { part, distance: NaN };
           }
-          const frameTimeMs = Math.max(
-            ...frameCallbacks
-              .filter(([, ranMs]) => ranMs <= drawn.timeMs)
-              .map(([frameMs]) => frameMs)
+          const latestFrameMsOf = (
+            isBeforeDraw: (frame: [number, number]) => boolean
+          ) =>
+            Math.max(
+              ...frameCallbacks.filter(isBeforeDraw).map(([frameMs]) => frameMs)
+            );
+          const ranFrameMs = latestFrameMsOf(
+            ([, ranMs]) => ranMs <= drawn.timeMs
           );
-          if (!Number.isFinite(frameTimeMs)) {
+          if (!Number.isFinite(ranFrameMs)) {
             return { part, timeMs: drawn.timeMs, distance: NaN };
           }
-          const nearest = nearestDeclaredOf(
-            operations,
-            drawn,
-            frameTimeMs,
-            originMs!
+          // A frame callback can run after the draw of its frame (measured: 13 ms after the frame time).
+          const startedFrameMs = latestFrameMsOf(
+            ([frameMs]) => frameMs <= drawn.timeMs
           );
+          const [nearest] = [ranFrameMs, startedFrameMs]
+            .map((frameTimeMs) =>
+              nearestDeclaredOf(operations, drawn, frameTimeMs, originMs!)
+            )
+            .sort((a, b) => a.distance - b.distance);
           return { part, timeMs: drawn.timeMs, ...nearest };
         });
         console.log(
