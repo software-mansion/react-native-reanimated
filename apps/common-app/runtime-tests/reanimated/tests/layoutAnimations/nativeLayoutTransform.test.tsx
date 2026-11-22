@@ -44,11 +44,12 @@
  * the order `before the mount`: a case of `native layout live clock` does. The reads cannot show a write in
  * the interval before the first read.
  *
- * The tests of `native layout transform forms against the frame driver` need the view sampler of the
+ * The tests of `native layout transform forms against the declared shape` need the view sampler of the
  * Android test host. At each draw it maps the four corners of each box through the drawn matrix of the
- * view. Each test compares the native box with its frame-driven twin in the same draw, at each progress
- * of the iOS pixel table from the origin of the native track. Pixels and the alignment of the two starts
- * are not tested.
+ * view. At each progress of the iOS pixel table from the origin of the native track, each test compares
+ * the native box with its declared corners at one frame time that the draw can show. The frame-driven twin
+ * is not the reference: a phase of the frame driver starts in the frame after the end of the phase before
+ * it, so each operation of the twin has a time of its own. Pixels are not tested.
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
@@ -73,11 +74,12 @@ import {
   test,
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
-import type { RecordedProperty } from '../viewSampler';
+import type { DrawnSample, RecordedProperty } from '../viewSampler';
 import {
   drawnPointOf,
   isViewSamplerAvailable,
   recordDrawnValues,
+  recordDrawnValuesAndFrameCallbacks,
   valueCountOf,
 } from '../viewSampler';
 import {
@@ -127,8 +129,11 @@ import {
   BOX_REF,
   builderCalls,
   callbacks,
+  cellsOf,
   cellToleranceOf,
   countedOf,
+  declaredTimelineOf,
+  declaredValueOf,
   endCellsOf,
   endTransformOf,
   FRAME_BOX_REF,
@@ -1625,10 +1630,14 @@ const partsOf = (keys: number[], more: number[] = []) =>
 type TransformForm = {
   /** The transform of a layout transition of the two boxes. */
   operations?: Operation[];
-  /** The keyframe animation of an entering box, and its transform at the end. */
+  /**
+   * The keyframe animation of an entering box, its transform at the end, and
+   * the operations that it declares.
+   */
   entering?: {
     keyframeOf: () => SizeBoxProps['entering'];
     transform: ViewStyle['transform'];
+    operations: Operation[];
   };
   /** The progress of the track at each compared draw. */
   parts: number[];
@@ -1664,6 +1673,18 @@ const TRANSFORM_FORMS: Record<string, TransformForm> = {
           100: { transform: [{ scale: 1 }, { rotate: '90deg' }] },
         } as ConstructorParameters<typeof Keyframe>[0]).duration(FORM_DURATION),
       transform: [{ scale: 1 }, { rotate: '90deg' }],
+      operations: [
+        [
+          'scale',
+          0.5,
+          1,
+          {
+            via: [{ to: 1.2, duration: 0.4 * FORM_DURATION }],
+            duration: 0.6 * FORM_DURATION,
+          },
+        ],
+        ['rotate', '0deg', '90deg'],
+      ],
     },
     parts: partsOf([0.4]),
   },
@@ -1764,13 +1785,17 @@ async function playForm({ operations, entering }: TransformForm) {
     const style = endTransformOf(operations);
     await mountScene(pairSceneOf(layouts, style, FORM_BOX));
     const tags = pairTags();
-    const samples = await recordDrawnValues(tags, FORM_PROPERTIES, async () => {
-      await render(
-        pairSceneOf(layouts, style, { ...FORM_BOX, left: END_LEFT })
-      );
-      await during();
-    });
-    return { tags, samples };
+    const recorded = await recordDrawnValuesAndFrameCallbacks(
+      tags,
+      FORM_PROPERTIES,
+      async () => {
+        await render(
+          pairSceneOf(layouts, style, { ...FORM_BOX, left: END_LEFT })
+        );
+        await during();
+      }
+    );
+    return { tags, ...recorded };
   }
   const pair = {
     transform: entering!.transform,
@@ -1789,8 +1814,12 @@ async function playForm({ operations, entering }: TransformForm) {
   await Promise.all(
     tags.map((tag) => afterMountOf(() => sample(tag, 'Transform')))
   );
-  const samples = await recordDrawnValues(tags, FORM_PROPERTIES, during);
-  return { tags, samples };
+  const recorded = await recordDrawnValuesAndFrameCallbacks(
+    tags,
+    FORM_PROPERTIES,
+    during
+  );
+  return { tags, ...recorded };
 }
 
 const FORM_VALUE_COUNT = FORM_PROPERTIES.reduce(
@@ -1798,45 +1827,110 @@ const FORM_VALUE_COUNT = FORM_PROPERTIES.reduce(
   0
 );
 
-/** The drawn place of each corner of a box in its parent, from one draw. */
-function drawnCornersOf(values: number[], box: number) {
-  const offset = box * FORM_VALUE_COUNT;
-  const frame = values.slice(offset, offset + valueCountOf('frame'));
-  const matrix = values.slice(offset + frame.length, offset + FORM_VALUE_COUNT);
-  const [, , width, height] = frame;
-  return (
-    [
-      [0, 0],
-      [width, 0],
-      [0, height],
-      [width, height],
-    ] as [number, number][]
-  ).map((corner) => drawnPointOf(frame, matrix, corner));
+const AGE_STEP_MS = 0.25;
+// The animator reads whole ms of the frame time, and its start is up to 1 ms after the origin.
+const FRAME_CLOCK_BAND = { from: -2, to: 1 };
+
+/**
+ * The drawn place of each corner of the native box in its parent, from one
+ * draw.
+ */
+function drawnCornersOf(values: number[]) {
+  const frame = values.slice(0, valueCountOf('frame'));
+  const matrix = values.slice(frame.length, FORM_VALUE_COUNT);
+  return cornersOf(frame).map((corner) => drawnPointOf(frame, matrix, corner));
 }
 
 /**
- * The place of the cell of the twin from the cell of the native box, from the
- * frames of the first draw: a frame is in the parent that has the place of the
- * pair after React flattens the cells (measured on Android: the twin 200 pt to
- * the right).
+ * The declared place of each corner of the native box at a time from the origin
+ * of its track, in the frame of one draw. The view turns about its centre.
  */
-function cellOffsetOf(values: number[]): [number, number] {
-  const frameOf = (box: number) =>
-    values.slice(box * FORM_VALUE_COUNT, box * FORM_VALUE_COUNT + 2);
-  const [[nativeLeft, nativeTop], [twinLeft, twinTop]] = [0, 1].map(frameOf);
-  return [twinLeft - nativeLeft, twinTop - nativeTop];
+function declaredCornersOf(
+  operations: Operation[],
+  values: number[],
+  timeMs: number
+) {
+  const frame = values.slice(0, valueCountOf('frame'));
+  const cells = cellsOf(
+    operations.map(([kind, from, to, leaf]) => {
+      const timeline = declaredTimelineOf(
+        { duration: FORM_DURATION, ...leaf },
+        from as number | string,
+        to as number | string
+      );
+      return {
+        kind,
+        amount: declaredValueOf(timeline)(timeMs),
+        unit: timeline.unit,
+      };
+    }),
+    'rest'
+  );
+  const [, , width, height] = frame;
+  const [centerX, centerY] = [width / 2, height / 2];
+  const matrix = [
+    cells[0],
+    cells[1],
+    cells[4],
+    cells[5],
+    cells[12] + centerX - centerX * cells[0] - centerY * cells[4],
+    cells[13] + centerY - centerX * cells[1] - centerY * cells[5],
+  ];
+  return cornersOf(frame).map((corner) => drawnPointOf(frame, matrix, corner));
 }
 
-describe('native layout transform forms against the frame driver', () => {
+/**
+ * The smallest largest distance of the drawn corners of the native box from its
+ * declared corners in `FRAME_CLOCK_BAND` of the frame time of the draw, and the
+ * age of that time.
+ */
+function nearestDeclaredOf(
+  operations: Operation[],
+  { timeMs, values }: DrawnSample,
+  frameTimeMs: number,
+  originMs: number
+) {
+  const native = drawnCornersOf(values);
+  let nearest = { distance: Infinity, ageMs: NaN };
+  for (
+    let ageMs = timeMs - frameTimeMs - FRAME_CLOCK_BAND.to;
+    ageMs <= timeMs - frameTimeMs - FRAME_CLOCK_BAND.from;
+    ageMs += AGE_STEP_MS
+  ) {
+    const declared = declaredCornersOf(
+      operations,
+      values,
+      timeMs - ageMs - originMs
+    );
+    const distance = Math.max(
+      ...native.map(([x, y], corner) =>
+        Math.hypot(x - declared[corner][0], y - declared[corner][1])
+      )
+    );
+    if (distance < nearest.distance) {
+      nearest = { distance, ageMs };
+    }
+  }
+  return nearest;
+}
+
+const cornersOf = ([, , width, height]: number[]): [number, number][] => [
+  [0, 0],
+  [width, 0],
+  [0, height],
+  [width, height],
+];
+
+describe('native layout transform forms against the declared shape', () => {
   if (!hasNativeLayoutRoute || !isViewSamplerAvailable()) {
     return;
   }
 
   for (const [formName, form] of Object.entries(TRANSFORM_FORMS)) {
     movingGeometryTest(
-      `form ${formName}: at each time of the iOS table, each drawn corner of the native box is no more than ${POSITION_TOLERANCE} pt from the corner of its frame-driven twin`,
+      `form ${formName}: at each time of the iOS table, each drawn corner of the native box is no more than ${POSITION_TOLERANCE} pt from its declared corner at one frame time of the draw`,
       async () => {
-        const { tags, samples } = await playForm(form);
+        const { tags, samples, frameCallbacks } = await playForm(form);
         const [nativeTag, frameTag] = tags;
         const events = (await takeTrace()).filter(
           ({ event }) => event !== 'FrameUpdateMounted'
@@ -1853,7 +1947,7 @@ describe('native layout transform forms against the frame driver', () => {
         )?.originTimestampMs;
         expect(originMs === undefined).toBe(false);
 
-        const cellOffset = cellOffsetOf(samples[0].values);
+        const operations = form.operations ?? form.entering!.operations;
         const rows = form.parts.map((part) => {
           const drawn = samples.find(
             ({ timeMs }) => timeMs >= originMs! + part * FORM_DURATION
@@ -1861,16 +1955,21 @@ describe('native layout transform forms against the frame driver', () => {
           if (!drawn) {
             return { part, distance: NaN };
           }
-          const native = drawnCornersOf(drawn.values, 0);
-          const twin = drawnCornersOf(drawn.values, 1).map(
-            ([x, y]): [number, number] => [x - cellOffset[0], y - cellOffset[1]]
+          const frameTimeMs = Math.max(
+            ...frameCallbacks
+              .filter(([, ranMs]) => ranMs <= drawn.timeMs)
+              .map(([frameMs]) => frameMs)
           );
-          const distance = Math.max(
-            ...native.map(([x, y], corner) =>
-              Math.hypot(x - twin[corner][0], y - twin[corner][1])
-            )
+          if (!Number.isFinite(frameTimeMs)) {
+            return { part, timeMs: drawn.timeMs, distance: NaN };
+          }
+          const nearest = nearestDeclaredOf(
+            operations,
+            drawn,
+            frameTimeMs,
+            originMs!
           );
-          return { part, timeMs: drawn.timeMs, distance, native, twin };
+          return { part, timeMs: drawn.timeMs, ...nearest };
         });
         console.log(
           'RuntimeTestsTransformForms ' +

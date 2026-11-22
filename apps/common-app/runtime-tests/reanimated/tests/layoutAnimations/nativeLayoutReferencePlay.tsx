@@ -59,11 +59,13 @@ import type {
   TargetSample,
   Timeline,
   TraceEvent,
+  UIFrame,
 } from './nativeLayoutTestKit';
 import {
   CLIPPED_OFFSET,
   scrollClippingViewTo,
   amountOf,
+  ANIMATION_CLOCK_STEP_MS,
   BOX_REF,
   BOX_SIZE,
   callbackOf,
@@ -1040,7 +1042,7 @@ export function expectReference(
   }
   const { drawnOpacity } = played;
   const readPlayed = drawnOpacity ? withoutNativeOpacityOf(played) : played;
-  const reads = expectNativeRows(readPlayed, matrixToleranceOf(referenceCase));
+  const reads = expectNativeTimelineOf(referenceCase, played);
   expect(reads.some(({ isChecked }) => isChecked)).toBe(
     !referenceCase.isFrameDriven
   );
@@ -1516,6 +1518,18 @@ const describeCommonRow = (
     ...(note ? [note] : []),
   ].join(' | ');
 };
+
+/** Statement A of each read of the native box of a play. */
+export function expectNativeTimelineOf(
+  referenceCase: ReferenceCase,
+  played: Played
+) {
+  return expectNativeRows(
+    played.drawnOpacity ? withoutNativeOpacityOf(played) : played,
+    matrixToleranceOf(referenceCase),
+    twinFramesOf(played)
+  );
+}
 
 /** The rows and the tracks of a play with no opacity of the native box. */
 const withoutNativeOpacityOf = ({ rows, tracks }: Played) => ({
@@ -2357,12 +2371,14 @@ export type RowRead = NativeRead & {
 /** Statement A for each row of the native box, with the samples of each read. */
 export function expectNativeRows(
   { rows, tracks }: Pick<Played, 'rows' | 'tracks'>,
-  matrixTolerance: MatrixTolerance
+  matrixTolerance: MatrixTolerance,
+  uiFrames: UIFrame[] = []
 ): RowRead[] {
   const readRows = expectNativeReadRows(
     rows.map(({ row }) => row.native),
     tracks,
-    matrixTolerance
+    matrixTolerance,
+    uiFrames
   );
   return rows.flatMap(({ row, spacingMs }, index) =>
     readRows[index].map((read) => ({
@@ -2374,11 +2390,24 @@ export function expectNativeRows(
   );
 }
 
+/** The frames of the frame-driven twin on the sample clock. */
+export const twinFramesOf = ({ frameChecks, clockOffset }: Played): UIFrame[] =>
+  frameChecks
+    .filter(({ record }) => record.box === 'frame')
+    .flatMap(({ record }) => record.frames)
+    .map(({ timeMs, ranMs }) => ({
+      timeMs: timeMs + middleOf(clockOffset),
+      ran: {
+        from: ranMs + clockOffset.from,
+        to: ranMs + ANIMATION_CLOCK_STEP_MS + clockOffset.to,
+      },
+    }));
+
 const isOffBand = ({ isChecked, residual }: RowRead) =>
   isChecked && !residual.isOnTimeline;
 
-const repeatsAfterGap = (read: RowRead) =>
-  isOffBand(read) && read.afterGap?.isRepeated === true;
+const isHeldAfterGap = (read: RowRead) =>
+  isOffBand(read) && read.afterGap?.isHeld === true;
 
 const describeRead = ({ target, tracks: [track], timeMs }: RowRead) =>
   `${target} of the command ${track.generation}: ${(timeMs - middleOf(track.origin)).toFixed(2)} ms after its origin`;
@@ -2483,7 +2512,7 @@ function describeReadsOffTimeline(reads: RowRead[], played: Played) {
     .filter(({ record }) => record.box === 'native')
     .flatMap(({ record }) => (record.start ? [record.start.timeMs] : []));
   return reads
-    .filter((read) => isOffBand(read) && !repeatsAfterGap(read))
+    .filter((read) => isOffBand(read) && !isHeldAfterGap(read))
     .map((read) => {
       const {
         tracks: [track],
@@ -2529,8 +2558,8 @@ function describeNearestInGap({ values, timeMs, checked }: RowRead) {
 
 function describeNativeReads(reads: RowRead[], { clockOffset }: Played) {
   const checked = reads.filter(({ isChecked }) => isChecked);
-  const repeated = checked.filter(repeatsAfterGap);
-  const onBand = checked.filter((read) => !repeated.includes(read));
+  const held = checked.filter(isHeldAfterGap);
+  const onBand = checked.filter((read) => !held.includes(read));
   const distances = onBand.flatMap(({ residual, checked: tracks }) =>
     residual.distances.map(
       (distance, track) => distance / tracks[track].tolerance
@@ -2549,7 +2578,7 @@ function describeNativeReads(reads: RowRead[], { clockOffset }: Played) {
     ).toFixed(2)} ms`,
     `clock offset band ${(clockOffset.to - clockOffset.from).toFixed(3)} ms`,
     describeNewValueReads(onBand),
-    `reads after a gap ${checked.filter(({ afterGap }) => afterGap).length}, ${repeated.length} of them off the band and equal to the read before`,
+    `reads after a gap ${checked.filter(({ afterGap }) => afterGap).length}, ${held.length} of them off the band and accepted after a gap`,
     `reads in a removal window only ${checked.filter(({ residual }) => residual.removalEndMs !== undefined).length}`,
     `reads at an edge hold only ${checked.filter(({ residual }) => residual.edgeHoldMs !== undefined).length}`,
     `reads of a layer with no animation of the target ${checked.filter(({ sampled }) => layerOf(sampled) === 'rest').length}`,

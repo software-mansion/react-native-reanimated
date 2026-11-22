@@ -168,6 +168,7 @@ import {
 } from './nativeLayoutTwinTimeline';
 
 const REST_TOLERANCE = 0.01;
+const LAYOUT_TARGETS = ['PositionX', 'PositionY', 'Width', 'Height'];
 
 /**
  * Plays a case on the native box and on its frame-driven twin, with statements
@@ -182,19 +183,42 @@ async function playCase(caseName: string, referenceCase: ReferenceCase) {
 
 /**
  * At the end the native box shows its model, and the twin has the model of the
- * native box.
+ * native box, to one pixel: the twin lays out on its own place of the pixel
+ * grid.
  */
 function expectAtRest({ end }: Played) {
   for (const [target, { presentation, model }] of Object.entries(
     end?.native ?? {}
   )) {
+    const twinTolerance =
+      REST_TOLERANCE +
+      (LAYOUT_TARGETS.includes(target) ? LAID_OUT_TOLERANCE : 0);
     model.forEach((value, index) => {
       expect(Math.abs(presentation[index] - value) < REST_TOLERANCE).toBe(true);
       expect(
-        Math.abs(end!.frame[target].model[index] - value) < REST_TOLERANCE
+        Math.abs(end!.frame[target].model[index] - value) < twinTolerance
       ).toBe(true);
     });
   }
+}
+
+/**
+ * The distance of the start of a shared container from the values that its
+ * source showed from a read before the start of the transition to a read after
+ * the read of the container: the capture runs in that time.
+ */
+function distanceFromShownOf(
+  container: TargetSample,
+  before: TargetSample,
+  after: TargetSample
+) {
+  const [start] = container.model;
+  const [first, last] = [before.presentation[0], after.presentation[0]];
+  return Math.max(
+    0,
+    Math.min(first, last) - start,
+    start - Math.max(first, last)
+  );
 }
 
 /** The reads of a target of the native box in a time of the sample clock. */
@@ -254,7 +278,8 @@ const SHARED: SharedPair = {
   sharedTag: 'native-layout-continuity',
   transition: SharedTransition.duration(PAIR_DURATION / 3),
 };
-// React Native gives no tag in this range, and each shared container takes the next even number.
+// React Native gives no tag in this range, and each shared container takes the next even number, so the
+// newest container has the largest tag.
 const FIRST_SHARED_CONTAINER_TAG = 10000002;
 const SHARED_CONTAINER_TAGS = 300;
 
@@ -344,7 +369,8 @@ async function findSharedContainerTag() {
   const samples = await Promise.all(
     tags.map((tag) => sample(tag, 'PositionX').catch(() => undefined))
   );
-  return tags.find((_, index) => samples[index] !== undefined);
+  const found = tags.filter((_, index) => samples[index] !== undefined);
+  return found[found.length - 1];
 }
 
 async function sampleSharedContainer(target = 'PositionX') {
@@ -355,7 +381,10 @@ async function sampleSharedContainer(target = 'PositionX') {
       )
     )
   );
-  return samples.find((containerSample) => containerSample !== undefined);
+  const found = samples.filter(
+    (containerSample) => containerSample !== undefined
+  );
+  return found[found.length - 1];
 }
 
 describe('native layout continuity', () => {
@@ -1135,8 +1164,8 @@ describe('native layout continuity', () => {
         );
         await wait(2 * FRAME_MS);
         const container = await sampleSharedContainer();
-        // The container moves to the target for two frames after its start.
-        const distance = Math.abs(container!.model[0] - source.presentation[0]);
+        const late = await sample(tag, 'PositionX');
+        const distance = distanceFromShownOf(container!, source, late);
         logModelBound(
           `a shared transition from a view with a native X track, callback ${hasCallback}`,
           'Position x',
@@ -1147,7 +1176,7 @@ describe('native layout continuity', () => {
         expect(
           distance < oneFrame()
             ? ''
-            : `the container is at ${container!.model[0]}, ${distance} from the source ${source.presentation[0]}, bound ${oneFrame()}`
+            : `the container is at ${container!.model[0]}, ${distance} from the source ${source.presentation[0]} to ${late.presentation[0]}, bound ${oneFrame()}`
         ).toBe('');
         await wait(PAIR_DURATION / 2);
         await render(null);
@@ -1237,7 +1266,10 @@ describe('native layout continuity', () => {
         await render(null);
       }
       // The container of the native source starts where the container of the frame-driven source starts.
-      const startDistance = frameDistance(firstFrames[0], firstFrames[1]);
+      const startDistance = frameDistance(
+        { ...firstFrames[0], y: 0 },
+        { ...firstFrames[1], y: 0 }
+      );
       logModelBound(
         `a shared transition from a view with a native ${caseName}, the two first frames`,
         'Frame',
@@ -1277,7 +1309,8 @@ describe('native layout continuity', () => {
         await render(screens(PAIR_LEFT, true));
         await wait(2 * FRAME_MS);
         const container = await sampleSharedContainer();
-        const distance = Math.abs(container!.model[0] - parent.presentation[0]);
+        const late = await sample(parentTag, 'PositionX');
+        const distance = distanceFromShownOf(container!, parent, late);
         logModelBound(
           `a shared transition from a child of a view with a native X track, callback ${hasCallback}`,
           'Position x',

@@ -16,7 +16,7 @@
  * with the twin or with the declared level at planned times, with their own scene.
  */
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { PixelRatio, StyleSheet, View } from 'react-native';
 import type { LayoutAnimation } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -57,6 +57,7 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  ANIMATION_CLOCK_STEP_MS,
   CLIPPED_OFFSET,
   scrollClippingViewTo,
   sortedCallbacks,
@@ -69,6 +70,7 @@ import {
   declaredValueAt,
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
+  FRAME_CALLBACK_LAG_MS,
   FRAME_MS,
   frameDrivenOf,
   frameDriverFrameTime,
@@ -100,6 +102,8 @@ type BoxAnimations = Pick<
 >;
 type Values = Record<string, number>;
 type AnimationFunction = (values: Values) => LayoutAnimation;
+
+const laidOut = (position: number) => PixelRatio.roundToNearestPixel(position);
 
 /** One part of a sequence of levels. */
 type Part = {
@@ -845,6 +849,15 @@ function completionOf({
   const twinStartMs = frameChecks.find(
     ({ record }) => record.box === 'frame' && record.key === 'originX'
   )?.record.start?.timeMs;
+  const twinEndRanMs =
+    Math.max(
+      ...frameChecks
+        .filter(({ record }) => record.box === 'frame')
+        .flatMap(({ record }) => record.frames)
+        .map(({ ranMs }) => ranMs)
+    ) +
+    middleOf(clockOffset) -
+    originMs;
   return {
     trackEnds: timesOf('TrackEnded'),
     hostEnds: timesOf('Ended'),
@@ -852,6 +865,7 @@ function completionOf({
     twinCallback: emitted.frame + middleOf(clockOffset) - originMs,
     twinEnd: emitted.frame - (twinStartMs ?? NaN),
     clockWidth: clockOffset.to - clockOffset.from,
+    twinEndRanMs,
   };
 }
 
@@ -882,15 +896,15 @@ function logCompletion(
 
 /** The two times are from two clocks. */
 const isAfterTracks = ({ nativeCallback, trackEnds, clockWidth }: Completion) =>
-  nativeCallback > Math.max(...trackEnds) - clockWidth;
+  nativeCallback >
+  Math.max(...trackEnds) - clockWidth / 2 - ANIMATION_CLOCK_STEP_MS;
 
 /**
- * The twin ends in the display frame of the native end when each of its
- * boundaries is at a frame. Its callback is then the first of the two in that
- * frame.
+ * A native end comes in the frame of the end of the twin: before one display
+ * frame after the run of the last frame function of the twin.
  */
-const isNotAfterFrameOfTwin = ({ nativeCallback, twinCallback }: Completion) =>
-  nativeCallback - twinCallback < FRAME_MS / 2;
+const isInEndFrameOfTwin = (twinEndRanMs: number, timeMs: number) =>
+  timeMs < twinEndRanMs + FRAME_MS;
 
 const sortedBuilderCalls = () => [...namedBuilderCalls].sort().join();
 
@@ -1082,7 +1096,9 @@ describe('native layout sequences', () => {
       ).toBe(true);
       expect(completion.twinEnd > totalMs - 0.5).toBe(true);
       expect(isAfterTracks(completion)).toBe(true);
-      expect(isNotAfterFrameOfTwin(completion)).toBe(true);
+      expect(
+        isInEndFrameOfTwin(completion.twinEndRanMs, completion.nativeCallback)
+      ).toBe(true);
       await render(null);
     });
   }
@@ -1140,11 +1156,15 @@ describe('native layout sequences', () => {
     expect(trackEndsOf(events)).toBe(FINISHED_TRACKS.scalars);
     expect(
       completion.trackEnds.every(
-        (endMs) => Math.abs(endMs - totalMs) < FRAME_MS
+        (endMs) =>
+          endMs > totalMs - FRAME_MS &&
+          endMs < totalMs + FRAME_MS + FRAME_CALLBACK_LAG_MS
       )
     ).toBe(true);
     expect(isAfterTracks(completion)).toBe(true);
-    expect(isNotAfterFrameOfTwin(completion)).toBe(true);
+    expect(
+      isInEndFrameOfTwin(completion.twinEndRanMs, completion.nativeCallback)
+    ).toBe(true);
 
     // The removal of the view ends the command.
     expect(commandEndsOf(events)).toBe('Cancelled:None');
@@ -1664,12 +1684,13 @@ describe('native layout sequences and a new layout of their view', () => {
       )?.leafValue ?? NaN;
     const captured = { x: capturedOf('PositionX'), y: capturedOf('PositionY') };
     const capturedAtMs =
-      (TOTAL_MS * (captured.x - FIRST.left)) / (SECOND.left - FIRST.left);
+      (TOTAL_MS * (captured.x - laidOut(FIRST.left))) /
+      (laidOut(SECOND.left) - laidOut(FIRST.left));
     const declaredStarts = declaredStartsOf(LAYOUT);
     const declaredY =
-      FIRST.top +
+      laidOut(FIRST.top) +
       levelAt(LAYOUT, declaredStarts, 0, capturedAtMs) *
-        (SECOND.top - FIRST.top);
+        (laidOut(SECOND.top) - laidOut(FIRST.top));
 
     // The frame driver starts the second part of the twin in the frame after its declared start. The twin is
     // that time behind the declared Y at the replacement, and its last frame is one frame old or less.

@@ -943,10 +943,16 @@ describe('native layout entering', () => {
           timing.delayMs + timing.durationMs / 2
         )
       );
-      for (const { row } of played.rows) {
-        for (const [target, { model }] of Object.entries(row.native)) {
-          expect(model.join()).toBe(played.end!.native[target].model.join());
-        }
+      const startedMs = Math.min(
+        ...played.tracks.map((track) => track.played.from)
+      );
+      const readsFromStart = played.rows.flatMap(({ row }) =>
+        Object.entries(row.native).filter(
+          ([, { monotonicTimeMs }]) => monotonicTimeMs >= startedMs
+        )
+      );
+      for (const [target, { model }] of readsFromStart) {
+        expect(model.join()).toBe(played.end!.native[target].model.join());
       }
       expectNoCallbackBefore(played, timing.delayMs + timing.durationMs / 2);
       expectPlayedToEnd(played, tracks, timing.delayMs + timing.durationMs);

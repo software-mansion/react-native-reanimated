@@ -5,17 +5,18 @@
  * starts n display frames or less after its declared start, and a twin of n phases can be n display frames
  * behind its declared timeline with no late frame. The start of a phase is a computed start: the rules of
  * `replayFrames` give it for the frame times of the record. In a timeline whose first phase has no
- * duration, a timing or a delay, a phase can start one display frame or less before its declared start: the
- * start call of a layout animation steps the animation on the clock, the phase ends in that step, the next
- * timing moves its start back to its first frame, which can be before the call, and each later phase
- * follows that start. The size of one display frame is an inference from that code; measured: -0.891 ms.
- * In each other timeline a phase starts at or after its declared start.
+ * duration, a timing or a delay, a phase can start before its declared start: the start call of a layout
+ * animation steps the animation on the clock, the phase ends in that step, the next timing moves its start
+ * back to the frame time of the next frame, and each later phase follows that start. That frame runs after
+ * the call, so its frame time is before the call by its lag or less: the time from the frame time to the
+ * run of its frame function. In each other timeline a phase starts at or after its declared start.
  *
- * The pair: at one request step at the time t, the value that the native box shows and the value of its
- * twin differ by the tolerance of the key plus the largest distance between a declared value of the key
- * that the read of the native box can show and a declared value of the key in the frames of the twin:
+ * The pair: at one request step, the value that the native box shows at the time t of its sample and the
+ * value of its twin at the time t' of its sample differ by the tolerance of the key plus the largest
+ * distance between a declared value of the key that the read of the native box can show and a declared
+ * value of the key in the frames of the twin:
  *
- *   bound = tolerance + the largest |d(a) - d(b)|, a from t - 18 ms - u to t + u, b from t - n F to t + F
+ *   bound = tolerance + the largest |d(a) - d(b)|, a from t - 18 ms - u to t + u, b from t' - n F to t' + F
  *
  * d is the declared value of the key at a time, u the uncertainty of the origin of its track, F one
  * display frame, n the count of the started phases of the twin, one at the least. The times a are the band
@@ -37,16 +38,16 @@
  *
  * So the pair statement does not reject a native value that is up to 18 ms plus u older than the step: on
  * a track of one speed the bound has the travel of 18 ms plus u plus F, or of n F plus u when that is
- * longer. Statement A of `native layout reference` is the strict check of the native box, on its own clock.
- * The pair statement is a record on the wall clock and does not gate. Each test prints the smallest and
+ * longer. Statement A of `native layout reference`, which this suite also asserts on each checked read, is the
+ * strict check of the native box, on its own clock. Each test prints the smallest and
  * the largest margin of each pair: the margin is the bound minus the distance of the two boxes. A cell of a
  * `Transform` pair whose bound has no declared change has the margin of its tolerance when the two boxes
  * agree, so the test prints the margins of the cells with a declared change apart.
  *
  * A key that replaces a track on screen has two declared timelines: the native track starts at the value
  * that the route captured from the replaced track at the origin of its build, and the twin starts at the
- * value of its start call at the time of its start call. The bound of its pair has one more term: the
- * distance of these two declared timelines at the step time. The term is zero for each other key. Each
+ * value of its start call at the time of its start call. The times b of its pair bound then take the
+ * declared timeline of the twin. Each
  * pair that is over its bound is a `LIVE` row with its sample times, its two values, the generation and the
  * origin of its track, the playback keys, the two start values, the time of the last frame of the twin
  * at its start call, and each term of its bound.
@@ -98,6 +99,7 @@ import {
 import { scheduleOnUI } from 'react-native-worklets';
 
 import {
+  beforeAll,
   describe,
   expect,
   render,
@@ -115,6 +117,7 @@ import type {
   ReferenceCase,
 } from './nativeLayoutReferencePlay';
 import {
+  expectNativeTimelineOf,
   expectReference,
   handOversOf,
   isReplaced,
@@ -125,6 +128,7 @@ import {
 } from './nativeLayoutReferencePlay';
 import type {
   Band,
+  FrameRecord,
   MatrixTolerance,
   OperationValue,
   PairChanges,
@@ -146,6 +150,7 @@ import {
   declaredBandOf,
   declaredDurationOf,
   declaredEndOf,
+  declaredOf,
   declaredPairChangeAt,
   declaredStartsOf,
   declaredValueOf,
@@ -314,12 +319,19 @@ describe('native layout live clock', () => {
     return;
   }
 
+  // The first mount of the scene verifies the view classes in the frame of the first start (measured: 41.7 ms).
+  beforeAll(async () => {
+    await play(platformCaseOf(Object.values(REFERENCE_CASES)[0]));
+  });
+
   for (const [caseName, referenceCase] of Object.entries({
     ...REFERENCE_CASES,
     ...LIVE_CLOCK_CASES,
   })) {
     test(`${caseName}: the two boxes agree on the wall clock`, async () => {
-      const played = await play(platformCaseOf(referenceCase));
+      const platformCase = platformCaseOf(referenceCase);
+      const played = await play(platformCase);
+      expectNativeTimelineOf(platformCase, played);
       const expectIn = (
         quantity: string,
         value: number,
@@ -402,7 +414,9 @@ describe('native layout live clock', () => {
             `computed start of phase ${phase} of ${leaf} of the twin after its declared start, ms`,
             lateMs,
             {
-              from: startsWithNoDuration(timeline) ? -FRAME_MS : 0,
+              from: startsWithNoDuration(timeline)
+                ? -lagAfterStartCallOf(record) - ROUNDING_MS
+                : 0,
               to: phase * FRAME_MS + ROUNDING_MS,
             }
           )
@@ -519,6 +533,9 @@ describe('native layout live clock', () => {
 const startsWithNoDuration = ({ phases: [first] }: Timeline) =>
   first.durationMs === 0;
 
+const lagAfterStartCallOf = ({ frames: [, next] }: FrameRecord) =>
+  next ? Math.max(0, next.ranMs - next.timeMs) : 0;
+
 const isIn = ({ from, to }: Band, timeMs: number) =>
   timeMs >= from && timeMs <= to;
 
@@ -559,10 +576,8 @@ const pairGapOf = (native: TargetSample, twin: TargetSample) =>
 /** The terms of the bound of the pair of a scalar key, and their sum. */
 type PairBound = {
   tolerance: number;
-  /** `declaredPairChangeAt` of the key at the time. */
+  /** `declaredPairChangeAt` of the key at the times of the two samples. */
   declaredChange: PairChanges;
-  /** The distance of the declared timelines of the two boxes at the time. */
-  startValues: number;
   total: number;
 };
 
@@ -570,27 +585,27 @@ function pairBoundOf(
   track: ScalarTrack,
   played: Played,
   timeMs: number,
+  twinTimeMs: number,
   samples: Samples
 ): PairBound {
   const shown = shownTrackOf(track, played.tracks, samples);
   const { tolerance } = track;
+  const twin = twinStartOf(track, played);
   const declaredChange = declaredPairChangeAt(
     shown,
     timeMs,
-    Math.max(1, startedPhasesOf(track, timeMs - middleOf(track.origin)))
+    twinTimeMs,
+    Math.max(1, startedPhasesOf(track, twinTimeMs - middleOf(track.origin))),
+    twin &&
+      ((stepTimeMs) =>
+        twin.declared(stepTimeMs - twin.timeMs) +
+        declaredOf(shown, stepTimeMs) -
+        declaredOf(track, stepTimeMs))
   );
-  const twin = twinStartOf(track, played);
-  const startValues = twin
-    ? Math.abs(
-        twin.declared(timeMs - twin.timeMs) -
-          track.declared(timeMs - middleOf(track.origin))
-      )
-    : 0;
   return {
     tolerance,
     declaredChange,
-    startValues,
-    total: tolerance + declaredChange.removalWindow + startValues,
+    total: tolerance + declaredChange.removalWindow,
   };
 }
 
@@ -609,13 +624,8 @@ function allowanceOf(
   return distance <= edgeHold ? 'EDGE-HOLD' : 'REMOVAL-WINDOW';
 }
 
-const describePairBound = ({
-  tolerance,
-  declaredChange,
-  startValues,
-  total,
-}: PairBound) =>
-  `bound ${total.toFixed(4)}: tolerance ${tolerance}, declared change of the read band and the frames ${declaredChange.removalWindow.toFixed(4)}, with no removal window ${declaredChange.edgeHold.toFixed(4)}, with no held value ${declaredChange.stay.toFixed(4)}, distance of the declared timelines of the two boxes ${startValues.toFixed(4)}`;
+const describePairBound = ({ tolerance, declaredChange, total }: PairBound) =>
+  `bound ${total.toFixed(4)}: tolerance ${tolerance}, declared change of the read band and the frames ${declaredChange.removalWindow.toFixed(4)}, with no removal window ${declaredChange.edgeHold.toFixed(4)}, with no held value ${declaredChange.stay.toFixed(4)}`;
 
 /**
  * The start of the twin of a track that starts at a captured value: the
@@ -668,7 +678,13 @@ function handOverRowsOf(handOver: HandOver, played: Played) {
       isOnTimeline,
     } = nativeResidualOf([value], timeMs, [shown]);
     const gap = pairGapOf(native, twin);
-    const bound = pairBoundOf(track, played, timeMs, row.native).total;
+    const bound = pairBoundOf(
+      track,
+      played,
+      timeMs,
+      twin.monotonicTimeMs,
+      row.native
+    ).total;
     const isInPair = gap <= bound;
     return [
       {
@@ -798,15 +814,18 @@ function scalarPairOf(
 ): PairRow {
   const native = samples[track.target];
   const gap = pairGapOf(native, twin);
-  const bound = pairBoundOf(track, played, native.monotonicTimeMs, samples);
+  const bound = pairBoundOf(
+    track,
+    played,
+    native.monotonicTimeMs,
+    twin.monotonicTimeMs,
+    samples
+  );
   const margin = bound.total - gap;
   return {
     name: track.key,
     margin,
-    allowance: allowanceOf(
-      gap - bound.tolerance - bound.startValues,
-      bound.declaredChange
-    ),
+    allowance: allowanceOf(gap - bound.tolerance, bound.declaredChange),
     describe: () =>
       [
         describePairStep(track, track.key, native, twin, margin),
@@ -910,16 +929,18 @@ function cellsPairsOf(
     );
   }
   const timeMs = native.monotonicTimeMs;
-  const fromOriginMs = timeMs - middleOf(operations[0].origin);
+  const twinFromOriginMs =
+    twin.monotonicTimeMs - middleOf(operations[0].origin);
   const layer = layerOf(native);
   const framesBeforeOf = (track: PlayedTrack) =>
-    Math.max(1, startedPhasesOf(track, fromOriginMs));
+    Math.max(1, startedPhasesOf(track, twinFromOriginMs));
   const changes = operationPairChangesAt(
     operations,
     tracks,
     matrixTolerance,
     layer,
     timeMs,
+    twin.monotonicTimeMs,
     framesBeforeOf,
     samples
   );

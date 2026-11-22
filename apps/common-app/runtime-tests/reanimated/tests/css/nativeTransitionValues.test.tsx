@@ -273,6 +273,23 @@ async function measureClockScaleRange() {
   };
 }
 
+/**
+ * The uptimes of a time of the Reanimated clock, from one clock read between
+ * two uptime reads. Each clock read is a whole millisecond.
+ */
+async function uptimeOfClock() {
+  const beforeMs = await uptimeMs();
+  const clockMs = runOnUISync(() => {
+    'worklet';
+    return global._getAnimationTimestamp();
+  });
+  const afterMs = await uptimeMs();
+  return (timeMs: number) => ({
+    earliestMs: beforeMs + (timeMs - clockMs - 1) * clockScale(),
+    latestMs: afterMs + (timeMs - clockMs + 1) * clockScale(),
+  });
+}
+
 /** The host plays CSS transitions only while the system animators run. */
 async function animatorsEnabled() {
   return (await animatorDurationScale()) > 0;
@@ -806,6 +823,42 @@ function cancellationFaults(
   return faults.join(', ');
 }
 
+/**
+ * A CSS stop can run before the mount of an earlier commit, and that mount
+ * shows the committed value (measured on Android). So the draws before the
+ * first draw of the committed value keep the drawn value as
+ * `cancellationFaults` says, and each draw from it shows the committed value.
+ */
+function committedAfterKeptFaults(
+  samples: DrawnSample[],
+  propertyCase: PropertyCase,
+  cancelled: RenderInterval,
+  committed: number,
+  valueIndex = 0
+) {
+  const isCommitted = ({ timeMs, values }: DrawnSample) =>
+    timeMs >= cancelled.earliestMs &&
+    distance(propertyCase.property, values[valueIndex], committed) <=
+      propertyCase.tolerance;
+  const firstCommitted = samples.findIndex(isCommitted);
+  if (firstCommitted === -1) {
+    return 'no draw shows the committed value';
+  }
+  const kept = samples.slice(0, firstCommitted);
+  const later = samples
+    .slice(firstCommitted)
+    .filter((drawn) => !isCommitted(drawn))
+    .map(({ values }) => values[valueIndex]);
+  return [
+    cancellationFaults(kept, propertyCase, cancelled, valueIndex),
+    later.length > 0
+      ? `values after the committed value: ${later.join(', ')}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
 function TwoPropertyBox({
   opacity,
   color,
@@ -978,6 +1031,8 @@ async function playHeldValue(
   return { samples, heldFromMs, releasedAtMs, events };
 }
 
+const RAPID_COMMITTED_VALUE = 0.6;
+
 /**
  * A start, a replacement, and a cancellation, each in its own commit with no
  * wait between them.
@@ -985,9 +1040,15 @@ async function playHeldValue(
 async function playRapidReplacements() {
   let cancelled: RenderInterval = { earliestMs: 0, latestMs: 0 };
   const played = await play({ propertyCase: OPACITY }, async () => {
-    await render(<ValueBox propertyCase={OPACITY} value={0.6} />);
+    await render(
+      <ValueBox propertyCase={OPACITY} value={RAPID_COMMITTED_VALUE} />
+    );
     cancelled = await renderTimed(
-      <ValueBox propertyCase={OPACITY} value={0.6} transitionProperty="none" />
+      <ValueBox
+        propertyCase={OPACITY}
+        value={RAPID_COMMITTED_VALUE}
+        transitionProperty="none"
+      />
     );
     await waitClock(DURATION + SETTLE_MS);
   });
@@ -1025,8 +1086,8 @@ function Crowd({ opacity }: { opacity: number }) {
 }
 
 /**
- * 100 views start one shared cubic curve in one commit; the first and the last
- * view are sampled.
+ * 100 views start one cubic curve in one render; the first and the last view
+ * are sampled.
  */
 async function playCrowd() {
   await render(<Crowd opacity={1} />);
@@ -1046,7 +1107,7 @@ async function playCrowd() {
     }
   );
   const events = await takeTrace();
-  return { samples, frameCallbacks, started, events };
+  return { samples, frameCallbacks, started, events, tags };
 }
 
 /**
@@ -1376,7 +1437,7 @@ function registerValueCases() {
     ).toBe('');
   });
 
-  test('a replacement and a cancellation in successive commits keep the drawn value', async () => {
+  test('a replacement and a cancellation in successive commits keep the drawn value, or keep it and then show the committed value', async () => {
     const { samples, started, cancelled, frameCallbacks } =
       await playRapidReplacements();
     logDrawnValues('rapid replacements', samples, {
@@ -1384,7 +1445,18 @@ function registerValueCases() {
       startValues: [startValueOf(OPACITY)],
       frameCallbacks,
     });
-    expect(cancellationFaults(samples, OPACITY, cancelled)).toBe('');
+    const keepFaults = cancellationFaults(samples, OPACITY, cancelled);
+    const committedFaults = committedAfterKeptFaults(
+      samples,
+      OPACITY,
+      cancelled,
+      RAPID_COMMITTED_VALUE
+    );
+    expect(
+      keepFaults === '' || committedFaults === ''
+        ? ''
+        : `${keepFaults}; ${committedFaults}`
+    ).toBe('');
   });
 
   test('a held value stays through an unrelated commit and an animated style, and the next start releases it', async () => {
@@ -1535,8 +1607,9 @@ function registerValueCases() {
     expectOnCurve('Modal', { samples, started, frameCallbacks }, transition);
   });
 
-  test('100 views that start one cubic curve in one commit draw it in one phase', async () => {
-    const { samples, started, frameCallbacks } = await playCrowd();
+  test('100 views that start one cubic curve in one render each draw it from their own update', async () => {
+    const { samples, started, frameCallbacks, tags, events } =
+      await playCrowd();
     logDrawnValues('crowd', samples, {
       renderStartMs: started.earliestMs,
       startValues: [startValueOf(OPACITY), startValueOf(OPACITY)],
@@ -1546,19 +1619,26 @@ function registerValueCases() {
       propertyCase: OPACITY,
       easing: EASE_IN_OUT,
     });
-    expect(
-      curveFaults(curve, originsOf(started, 0), [
-        { samples, valueIndex: 0 },
-        { samples, valueIndex: 1 },
-      ])
-    ).toBe('');
-    const phaseSteps = samples
-      .filter(
-        ({ values }) =>
-          Math.abs(values[0] - values[1]) > (OPACITY.tolerance * 3) / 2
-      )
-      .map(({ values }) => `${values[0]} and ${values[1]}`);
-    expect(phaseSteps.join(', ')).toBe('');
+    const uptimeOf = await uptimeOfClock();
+    tags.forEach((tag, valueIndex) => {
+      const recordedMs = events.find(
+        (event) => event.tag === tag && event.event === 'Received'
+      )?.originTimestampMs;
+      const origins = originsOf(started, 0);
+      const recorded =
+        recordedMs === undefined
+          ? origins
+          : clockScale() === 1
+            ? { earliestMs: recordedMs - 1, latestMs: recordedMs + 1 }
+            : uptimeOf(recordedMs);
+      const inRender = {
+        ...origins,
+        earliestMs: Math.max(origins.earliestMs, recorded.earliestMs),
+        latestMs: Math.min(origins.latestMs, recorded.latestMs),
+      };
+      expect(inRender.earliestMs <= inRender.latestMs).toBe(true);
+      expect(curveFaults(curve, inRender, [{ samples, valueIndex }])).toBe('');
+    });
   });
 }
 
