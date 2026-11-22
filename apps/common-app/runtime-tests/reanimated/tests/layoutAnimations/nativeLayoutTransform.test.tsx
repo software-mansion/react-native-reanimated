@@ -79,7 +79,6 @@ import {
   drawnPointOf,
   isViewSamplerAvailable,
   recordDrawnValues,
-  recordDrawnValuesAndFrameCallbacks,
   valueCountOf,
 } from '../viewSampler';
 import {
@@ -1610,7 +1609,11 @@ describe('native layout transform with 3D operations on a platform that does not
 const FORM_DURATION = 8000;
 const FORM_BOX = { width: 100, height: 60 };
 const FORM_END_MS = 300;
-const FORM_PROPERTIES: RecordedProperty[] = ['frame', 'drawnMatrix'];
+const FORM_PROPERTIES: RecordedProperty[] = [
+  'frame',
+  'drawnMatrix',
+  'drawingTime',
+];
 const STANDARD_PARTS = [0.1, 0.25, 0.5, 0.75, 0.9, 1];
 const BOUNCE_KEYS = [4 / 11, 8 / 11, 10 / 11];
 
@@ -1785,17 +1788,13 @@ async function playForm({ operations, entering }: TransformForm) {
     const style = endTransformOf(operations);
     await mountScene(pairSceneOf(layouts, style, FORM_BOX));
     const tags = pairTags();
-    const recorded = await recordDrawnValuesAndFrameCallbacks(
-      tags,
-      FORM_PROPERTIES,
-      async () => {
-        await render(
-          pairSceneOf(layouts, style, { ...FORM_BOX, left: END_LEFT })
-        );
-        await during();
-      }
-    );
-    return { tags, ...recorded };
+    const samples = await recordDrawnValues(tags, FORM_PROPERTIES, async () => {
+      await render(
+        pairSceneOf(layouts, style, { ...FORM_BOX, left: END_LEFT })
+      );
+      await during();
+    });
+    return { tags, samples };
   }
   const pair = {
     transform: entering!.transform,
@@ -1814,12 +1813,8 @@ async function playForm({ operations, entering }: TransformForm) {
   await Promise.all(
     tags.map((tag) => afterMountOf(() => sample(tag, 'Transform')))
   );
-  const recorded = await recordDrawnValuesAndFrameCallbacks(
-    tags,
-    FORM_PROPERTIES,
-    during
-  );
-  return { tags, ...recorded };
+  const samples = await recordDrawnValues(tags, FORM_PROPERTIES, during);
+  return { tags, samples };
 }
 
 const FORM_VALUE_COUNT = FORM_PROPERTIES.reduce(
@@ -1837,7 +1832,10 @@ const FRAME_CLOCK_BAND = { from: -2, to: 1 };
  */
 function drawnCornersOf(values: number[]) {
   const frame = values.slice(0, valueCountOf('frame'));
-  const matrix = values.slice(frame.length, FORM_VALUE_COUNT);
+  const matrix = values.slice(
+    frame.length,
+    frame.length + valueCountOf('drawnMatrix')
+  );
   return cornersOf(frame).map((corner) => drawnPointOf(frame, matrix, corner));
 }
 
@@ -1887,9 +1885,9 @@ function declaredCornersOf(
 function nearestDeclaredOf(
   operations: Operation[],
   { timeMs, values }: DrawnSample,
-  frameTimeMs: number,
   originMs: number
 ) {
+  const frameTimeMs = values[FORM_VALUE_COUNT - 1];
   const native = drawnCornersOf(values);
   let nearest = { distance: Infinity, ageMs: NaN };
   for (
@@ -1930,7 +1928,7 @@ describe('native layout transform forms against the declared shape', () => {
     movingGeometryTest(
       `form ${formName}: at each time of the iOS table, each drawn corner of the native box is no more than ${POSITION_TOLERANCE} pt from its declared corner at one frame time of the draw`,
       async () => {
-        const { tags, samples, frameCallbacks } = await playForm(form);
+        const { tags, samples } = await playForm(form);
         const [nativeTag, frameTag] = tags;
         const events = (await takeTrace()).filter(
           ({ event }) => event !== 'FrameUpdateMounted'
@@ -1955,27 +1953,7 @@ describe('native layout transform forms against the declared shape', () => {
           if (!drawn) {
             return { part, distance: NaN };
           }
-          const latestFrameMsOf = (
-            isBeforeDraw: (frame: [number, number]) => boolean
-          ) =>
-            Math.max(
-              ...frameCallbacks.filter(isBeforeDraw).map(([frameMs]) => frameMs)
-            );
-          const ranFrameMs = latestFrameMsOf(
-            ([, ranMs]) => ranMs <= drawn.timeMs
-          );
-          if (!Number.isFinite(ranFrameMs)) {
-            return { part, timeMs: drawn.timeMs, distance: NaN };
-          }
-          // A frame callback can run after the draw of its frame (measured: 13 ms after the frame time).
-          const startedFrameMs = latestFrameMsOf(
-            ([frameMs]) => frameMs <= drawn.timeMs
-          );
-          const [nearest] = [ranFrameMs, startedFrameMs]
-            .map((frameTimeMs) =>
-              nearestDeclaredOf(operations, drawn, frameTimeMs, originMs!)
-            )
-            .sort((a, b) => a.distance - b.distance);
+          const nearest = nearestDeclaredOf(operations, drawn, originMs!);
           return { part, timeMs: drawn.timeMs, ...nearest };
         });
         console.log(

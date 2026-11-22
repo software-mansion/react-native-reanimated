@@ -182,6 +182,7 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   private fun valuesOf(view: View, property: String): List<Double> =
     when (property) {
       "opacity" -> listOf(view.alpha.toDouble())
+      "drawingTime" -> listOf(view.drawingTime.toDouble())
       "backgroundColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBackgroundColor(view)))
       "borderColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBorderColor(view, LogicalEdge.ALL)))
       "borderRadius" -> listOf(borderRadiusOf(view))
