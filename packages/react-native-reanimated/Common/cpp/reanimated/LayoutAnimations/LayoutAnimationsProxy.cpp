@@ -294,8 +294,21 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   currentPull_.transactionNumber = transactionNumber;
 #endif
+  const auto unmountedBeforePull = takeUnmountedViews();
+  std::unordered_set<Tag> deletedTags;
+  if (!unmountedBeforePull.empty()) {
+    for (const auto &mutation : mutations) {
+      if (mutation.type == ShadowViewMutation::Delete) {
+        deletedTags.insert(mutation.oldChildShadowView.tag);
+      }
+    }
+  }
   auto configLock = layoutAnimationsManager_->lockAndFlushConfigUpdates();
   if (!isLightTreeInitialized()) {
+    {
+      const std::lock_guard viewsLock(unmountedViewsMutex_);
+      unmountedViews_.insert(unmountedViews_.begin(), unmountedBeforePull.begin(), unmountedBeforePull.end());
+    }
     pendingTransactions_.emplace_back(telemetry.getRevisionNumber(), mutations);
     return MountingTransaction{surfaceId, transactionNumber, std::move(mutations), telemetry};
   }
@@ -388,6 +401,7 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   addOngoingAnimations(filteredMutations);
 
   cleanupAnimations(transaction, propsParserContext, flushStructuralMutations);
+  forgetViewsThatNeverMounted(unmountedBeforePull, deletedTags);
 
 #ifdef ANDROID
   maybeScheduleCleanupPull(flushStructuralMutations);
@@ -408,6 +422,32 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
   }
 
   return MountingTransaction{surfaceId, transactionNumber, std::move(filteredMutations), telemetry};
+}
+
+void LayoutAnimationsProxy::viewDidUnmount(const Tag tag, const int reanimatedId) const {
+  const std::lock_guard lock(unmountedViewsMutex_);
+  unmountedViews_.push_back({tag, reanimatedId});
+}
+
+void LayoutAnimationsProxy::viewDidMountAgain(const Tag tag) const {
+  const std::lock_guard lock(unmountedViewsMutex_);
+  std::erase_if(unmountedViews_, [tag](const UnmountedView &view) { return view.tag == tag; });
+}
+
+std::vector<LayoutAnimationsProxy::UnmountedView> LayoutAnimationsProxy::takeUnmountedViews() const {
+  const std::lock_guard lock(unmountedViewsMutex_);
+  return std::exchange(unmountedViews_, {});
+}
+
+void LayoutAnimationsProxy::forgetViewsThatNeverMounted(
+    const std::vector<UnmountedView> &views,
+    const std::unordered_set<Tag> &deletedTags) const {
+  for (const auto &[tag, reanimatedId] : views) {
+    if (!lightNodes_.contains(tag) && !deletedTags.contains(tag)) {
+      layoutAnimationsManager_->transferConfigFromNativeID(reanimatedId, tag);
+      layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
+    }
+  }
 }
 
 std::optional<std::uint64_t> LayoutAnimationsProxy::mountReportOfPull() const {
@@ -1592,6 +1632,10 @@ ContainerSizes LayoutAnimationsProxy::containerSizes() const {
          {"hiddenViewTags", hiddenViewTags_.size()},
          {"nativeTracksWithoutFrameUpdate", nativeTracksWithoutFrameUpdate_.size()}});
   }
+  {
+    const std::lock_guard lock(unmountedViewsMutex_);
+    sizes.insert({"unmountedViews", unmountedViews_.size()});
+  }
   if (nativeLayoutGroups_) {
     addContainerSizes(sizes, "nativeLayoutGroups", nativeLayoutGroups_->containerSizes());
   }
@@ -1610,6 +1654,7 @@ void LayoutAnimationsProxy::clearSurfaceState() const {
   for (const auto tag : lightNodes_ | std::views::keys) {
     layoutAnimationsManager_->clearLayoutAnimationConfig(tag);
   }
+  forgetViewsThatNeverMounted(takeUnmountedViews(), {});
   completedExits_.clear();
   currentPull_ = {};
   pendingPulls_.clear();

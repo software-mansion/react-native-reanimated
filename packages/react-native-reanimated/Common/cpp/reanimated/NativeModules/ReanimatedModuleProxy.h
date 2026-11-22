@@ -112,6 +112,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
 
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
+  void layoutAnimationViewDidUnmount(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &reanimatedId);
+  void layoutAnimationViewDidMountAgain(const jsi::Value &viewTag);
   void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);

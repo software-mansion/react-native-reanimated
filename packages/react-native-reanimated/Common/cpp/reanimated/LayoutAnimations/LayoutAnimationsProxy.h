@@ -125,6 +125,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_set<Tag> hiddenViewTags_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   mutable std::unordered_map<Tag, std::shared_ptr<LightNode>> lightNodes_;
+  struct UnmountedView {
+    Tag tag;
+    int reanimatedId;
+  };
+  mutable std::mutex unmountedViewsMutex_;
+  mutable std::vector<UnmountedView> unmountedViews_;
   /// The nodes whose exiting animation ended. The next pull that can remove views removes those that still
   /// have the state `COMPLETED`.
   mutable std::vector<std::shared_ptr<LightNode>> completedExits_;
@@ -301,6 +307,13 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> onGestureCancel(int tag) override;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void surfaceDidMount(std::optional<std::uint64_t> reportedMount) override;
+  void viewDidUnmount(Tag tag, int reanimatedId) const override;
+  void viewDidMountAgain(Tag tag) const override;
+  std::vector<UnmountedView> takeUnmountedViews() const;
+  /// A view that React mounted and removed between two pulls has no `Create` and no `Delete`, so its layout
+  /// animation configs stay. A pull that starts after the unmount has a revision with no view or with the view.
+  void forgetViewsThatNeverMounted(const std::vector<UnmountedView> &views, const std::unordered_set<Tag> &deletedTags)
+      const;
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;

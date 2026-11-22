@@ -68,6 +68,14 @@ class JSReanimated implements IReanimatedModule {
     // no-op
   }
 
+  layoutAnimationViewDidUnmount() {
+    // no-op
+  }
+
+  layoutAnimationViewDidMountAgain() {
+    // no-op
+  }
+
   setShouldAnimateExitingForTag() {
     // no-op
   }

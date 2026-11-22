@@ -38,6 +38,27 @@ void LayoutAnimationsProxyRegistry::surfaceDidMount(const SurfaceId surfaceId) c
   instance->surfaceDidMount(std::nullopt);
 }
 
+void LayoutAnimationsProxyRegistry::viewDidUnmount(
+    const facebook::react::ShadowNode &shadowNode,
+    const int reanimatedId) const {
+  std::shared_ptr<LayoutAnimationsProxyCommon> instance;
+  {
+    const std::lock_guard<std::mutex> lock(instancesMutex_);
+    const auto it = instances_.find(shadowNode.getSurfaceId());
+    if (it == instances_.end()) {
+      return;
+    }
+    instance = it->second;
+  }
+  instance->viewDidUnmount(shadowNode.getTag(), reanimatedId);
+}
+
+void LayoutAnimationsProxyRegistry::viewDidMountAgain(const Tag tag) const {
+  for (const auto &instance : instances()) {
+    instance->viewDidMountAgain(tag);
+  }
+}
+
 void LayoutAnimationsProxyRegistry::pulledSurfacesDidMount(const std::uint64_t dispatch) const {
   for (const auto &instance : instances()) {
     instance->surfaceDidMount(dispatch);

@@ -7,6 +7,10 @@ import { IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
+import {
+  layoutAnimationViewDidMountAgain,
+  layoutAnimationViewDidUnmount,
+} from '../core';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
@@ -62,6 +66,7 @@ export default class AnimatedComponent
   _PropsFilter = new PropsFilter();
   _NativeEventsManager?: INativeEventsManager;
   _hasWarnedAboutLayoutAnimationStyleOverwriting?: boolean;
+  _hasLayoutAnimationConfig = false;
   static contextType = SkipEnteringContext;
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
@@ -95,7 +100,11 @@ export default class AnimatedComponent
   }
 
   componentDidMount() {
+    const isRemount = this._willUnmount;
     super.componentDidMount();
+    if (isRemount && this._hasLayoutAnimationConfig) {
+      layoutAnimationViewDidMountAgain(this.getComponentViewTag());
+    }
     // It exists only on native platforms. We initialize it here because the ref to the animated component is available only post-mount
     this._NativeEventsManager = new NativeEventsManager(this, this._options);
     this._NativeEventsManager?.attachEvents();
@@ -140,6 +149,11 @@ export default class AnimatedComponent
 
     if (this._options?.jsProps?.length) {
       jsPropsUpdater.unregisterComponent(this);
+    }
+
+    const shadowNodeWrapper = this._viewInfo?.shadowNodeWrapper;
+    if (shadowNodeWrapper && this._hasLayoutAnimationConfig) {
+      layoutAnimationViewDidUnmount(shadowNodeWrapper, this.reanimatedID);
     }
   }
 
@@ -355,6 +369,7 @@ export default class AnimatedComponent
       );
     }
 
+    this._hasLayoutAnimationConfig ||= currentConfig !== undefined;
     updateLayoutAnimations(
       type === LayoutAnimationType.ENTERING
         ? this.reanimatedID
@@ -389,6 +404,7 @@ export default class AnimatedComponent
       this._sharedTransition ??
       new SharedTransition();
     if (this._sharedTransition !== sharedTransition) {
+      this._hasLayoutAnimationConfig = true;
       updateLayoutAnimations(
         useNativeId ? this.reanimatedID : this.getComponentViewTag(),
         useNativeId

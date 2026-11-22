@@ -186,9 +186,13 @@ internal class NativeAnimationExecutor(
     ) {
         UiThreadUtil.assertOnUiThread()
         val playback = remove(TrackKey(surfaceId, tag, owner, generation, target)) ?: return
-        if (mode != TrackEncoding.STOP_SETTLE_TO_MODEL || inDispatch) return
+        if (inDispatch) return
         val view = playback.view.get()
         if (view == null || findView(surfaceId, tag) !== view) return
+        if (mode != TrackEncoding.STOP_SETTLE_TO_MODEL) {
+            playback.reassert()
+            return
+        }
         when (val binding = playback.binding) {
             is OpacityBinding -> binding.writeModel(view)
             is PropertyBinding ->

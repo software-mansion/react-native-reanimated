@@ -145,6 +145,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   /// The platform reports that the transactions of the pulls since the last report are on the host views.
   /// `reportedMount` is the number of the report when the platform numbers its reports. UI thread only.
   virtual void surfaceDidMount(std::optional<std::uint64_t> /*reportedMount*/) {}
+  virtual void viewDidUnmount(Tag /*tag*/, int /*reanimatedId*/) const {}
+  virtual void viewDidMountAgain(Tag /*tag*/) const {}
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   ~LayoutAnimationsProxyCommon() override = default;

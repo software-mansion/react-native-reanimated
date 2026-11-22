@@ -116,7 +116,7 @@ A new timing kind on one platform follows steps 3 to 7: the timing check of that
 
 Builds:
 
-- The runtime tests need the test hooks: `REANIMATED_RUNTIME_TEST_HOOKS` (iOS `DebugRuntimeTests` and `ReleaseRuntimeTests` configurations, `apps/fabric-example/ios/Podfile`; Android Gradle property `reanimatedRuntimeTestHooks`, `android/build.gradle.kts`). A production build has no trace, no sample, and no hook.
+- The runtime tests use the test hooks. A build without `NDEBUG` has them. `REANIMATED_RUNTIME_TEST_HOOKS` keeps them in an optimized build (iOS configurations with `RuntimeTests` at the end of the name, `apps/fabric-example/ios/Podfile`; Android Gradle property `reanimatedRuntimeTestHooks`, `android/build.gradle.kts`). A production build has no trace, no sample, and no hook.
 - The example app turns on the four static flags (`apps/fabric-example/package.json`). Change a static flag, then run `pod install` and build again (iOS). To test the frame-driven route, build with the layout flag off.
 - Android: the native layout route needs the pull model of React Native. The runtime-tests driver builds with `--mount-thread-pull`, by default the value of `ANDROID_NATIVE_LAYOUT_ANIMATIONS` of the example app (Gradle property `fabricExampleMountThreadPull`, read in `apps/fabric-example/android/app/build.gradle`). It has no effect with `--skip-build`.
 

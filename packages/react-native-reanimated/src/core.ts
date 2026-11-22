@@ -13,6 +13,7 @@ import type {
   LayoutAnimationBatchItem,
   SensorConfig,
   SensorType,
+  ShadowNodeWrapper,
   SharedValue,
   Value3D,
   ValueRotation,
@@ -204,6 +205,20 @@ export function configureLayoutAnimationBatch(
   layoutAnimationsBatch: LayoutAnimationBatchItem[]
 ): void {
   ReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+}
+
+export function layoutAnimationViewDidUnmount(
+  shadowNodeWrapper: ShadowNodeWrapper,
+  reanimatedID: number
+): void {
+  ReanimatedModule.layoutAnimationViewDidUnmount(
+    shadowNodeWrapper,
+    reanimatedID
+  );
+}
+
+export function layoutAnimationViewDidMountAgain(viewTag: number): void {
+  ReanimatedModule.layoutAnimationViewDidMountAgain(viewTag);
 }
 
 export function setShouldAnimateExitingForTag(

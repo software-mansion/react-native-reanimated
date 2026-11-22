@@ -703,6 +703,22 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
   return jsi::Value::undefined();
 }
 
+void ReanimatedModuleProxy::layoutAnimationViewDidUnmount(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &reanimatedId) {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->viewDidUnmount(
+        *shadowNodeFromValue(rt, shadowNodeWrapper), static_cast<int>(reanimatedId.asNumber()));
+  }
+}
+
+void ReanimatedModuleProxy::layoutAnimationViewDidMountAgain(const jsi::Value &viewTag) {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->viewDidMountAgain(static_cast<Tag>(viewTag.asNumber()));
+  }
+}
+
 void ReanimatedModuleProxy::setShouldAnimateExiting(
     jsi::Runtime &rt,
     const jsi::Value &viewTag,
@@ -1755,6 +1771,28 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->unsubscribeFromKeyboardEvents(rt, at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "layoutAnimationViewDidUnmount",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->layoutAnimationViewDidUnmount(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "layoutAnimationViewDidMountAgain",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (auto strongThis = weakThis.lock()) {
+          strongThis->layoutAnimationViewDidMountAgain(at<0>(args));
+        }
       });
 
   addMethod<1>(
