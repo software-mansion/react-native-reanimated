@@ -99,7 +99,7 @@ import {
 import { scheduleOnUI } from 'react-native-worklets';
 
 import {
-  beforeAll,
+  clearRenderOutput,
   describe,
   expect,
   render,
@@ -320,15 +320,18 @@ describe('native layout live clock', () => {
   }
 
   // The first mount of the scene verifies the view classes in the frame of the first start (measured: 41.7 ms).
-  beforeAll(async () => {
+  const playWarmUp = async () => {
     await play(platformCaseOf(Object.values(REFERENCE_CASES)[0]));
-  });
+    await clearRenderOutput();
+  };
+  let sceneWarmUp: Promise<void> | undefined;
 
   for (const [caseName, referenceCase] of Object.entries({
     ...REFERENCE_CASES,
     ...LIVE_CLOCK_CASES,
   })) {
     test(`${caseName}: the two boxes agree on the wall clock`, async () => {
+      await (sceneWarmUp ??= playWarmUp());
       const platformCase = platformCaseOf(referenceCase);
       const played = await play(platformCase);
       expectNativeTimelineOf(platformCase, played);
