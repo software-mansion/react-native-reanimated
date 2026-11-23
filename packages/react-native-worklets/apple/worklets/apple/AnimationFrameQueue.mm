@@ -70,10 +70,8 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)requestAnimationFrame:(std::function<void(double)>)callback
 {
-  {
-    std::lock_guard<std::mutex> lock(callbacksMutex_);
-    frameCallbacks_.push_back(callback);
-  }
+  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  frameCallbacks_.push_back(callback);
   [self scheduleQueueExecution];
 }
 
@@ -95,7 +93,6 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   RCTAssertMainQueue();
 
   auto frameCallbacks = [self pullCallbacks];
-  [displayLink_ setPaused:TRUE];
 
 #if TARGET_OS_OSX
   auto targetTimestamp = displayLink.timestamp + displayLink.duration;
@@ -147,6 +144,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 {
   RCTAssertMainQueue();
   std::lock_guard<std::mutex> lock(callbacksMutex_);
+  [displayLink_ setPaused:TRUE];
   return std::move(frameCallbacks_);
 }
 

@@ -53,6 +53,7 @@ Use `worker->runSync(...)` for a short synchronous operation on the calling thre
     name?: string;
     initializer?: () => void;
     animationQueuePollingRate?: number;
+    enableVSync?: boolean;
     enableNetworking?: boolean;
     abortable?: boolean;
     queue?: 'default' | object | null;
@@ -84,6 +85,19 @@ An optional worklet function that will be run synchronously on the same thread i
 ##### `animationQueuePollingRate`
 
 Time interval in milliseconds between polling of frame callbacks scheduled by `requestAnimationFrame`. Defaults to `16`.
+
+<Badges version="0.15.0">
+  ##### `enableVSync`
+</Badges>
+
+Determines whether frame callbacks scheduled by `requestAnimationFrame` are flushed on the display v-sync signal instead of on a timer. Defaults to `false`.
+
+When enabled:
+
+- Each display frame sends at most one flush to the Runtime, and the callbacks receive the timestamp of that frame, the same one that `requestAnimationFrame` callbacks receive on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
+- `animationQueuePollingRate` is ignored.
+- Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background.
+- `setTimeout`, `setInterval` and `setImmediate` are not affected.
 
 ##### `enableEventLoop`
 

@@ -84,6 +84,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'run loop',
     importTest: () => {
       require('./tests/runLoop/requestAnimationFrame.test');
+      require('./tests/runLoop/requestAnimationFrameVSync.test');
       require('./tests/runLoop/cancelAnimationFrame.test');
       require('./tests/runLoop/setTimeout.test');
       require('./tests/runLoop/clearTimeout.test');

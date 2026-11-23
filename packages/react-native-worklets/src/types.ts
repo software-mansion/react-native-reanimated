@@ -120,6 +120,13 @@ type WorkletRuntimeConfigBase = {
    */
   animationQueuePollingRate?: number;
   /**
+   * Determines whether frame callbacks scheduled by requestAnimationFrame are
+   * flushed on the display v-sync signal instead of on a timer. When enabled,
+   * `animationQueuePollingRate` is ignored. If not specified, it defaults to
+   * `false`.
+   */
+  enableVSync?: boolean;
+  /**
    * Determines whether the networking API (`fetch`, `XMLHttpRequest` and
    * their supporting globals) is installed on the runtime. Effective only in
    * Bundle Mode. If not specified, it defaults to `true`.

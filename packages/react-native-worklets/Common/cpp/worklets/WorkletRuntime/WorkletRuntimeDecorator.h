@@ -23,7 +23,8 @@ class WorkletRuntimeDecorator {
       const bool enableMicrotaskQueue,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop,
-      const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);
+      const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
+      const RuntimeBindings::RequestAnimationFrame &requestAnimationFrame);
 };
 
 } // namespace worklets

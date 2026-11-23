@@ -85,7 +85,8 @@ void WorkletRuntimeDecorator::decorate(
     const bool enableMicrotaskQueue,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
-    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
+    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
+    const RuntimeBindings::RequestAnimationFrame &requestAnimationFrame) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -261,6 +262,23 @@ void WorkletRuntimeDecorator::decorate(
         if (auto strongEventLoop = weakEventLoop.lock()) {
           strongEventLoop->pushTimeout(job, delay);
         }
+        return jsi::Value::undefined();
+      });
+
+  jsi_utils::installJsiFunction(
+      rt,
+      "_scheduleAnimationFrameCallback",
+      [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop), requestAnimationFrame](jsi::Runtime &rt) -> jsi::Value {
+        if (!requestAnimationFrame) {
+          throw jsi::JSError(rt, "[Worklets] The platform frame callback is not available on this Worklet Runtime.");
+        }
+        requestAnimationFrame([weakEventLoop](const double timestampMs) {
+          if (auto strongEventLoop = weakEventLoop.lock()) {
+            strongEventLoop->pushTask([timestampMs](jsi::Runtime &rt) {
+              rt.global().getPropertyAsFunction(rt, "__runAnimationFrameCallback").call(rt, timestampMs);
+            });
+          }
+        });
         return jsi::Value::undefined();
       });
 }

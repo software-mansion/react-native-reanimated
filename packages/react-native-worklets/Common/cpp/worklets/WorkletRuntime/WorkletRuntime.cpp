@@ -164,7 +164,8 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       microtaskQueueEnabled_,
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
-      nativeLoggingHook);
+      nativeLoggingHook,
+      runtimeBindings->requestAnimationFrame);
 
   if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
     jsi_utils::installJsiFunction(rt, "__getRootTaskId", [taskState = taskState_](jsi::Runtime &) {
