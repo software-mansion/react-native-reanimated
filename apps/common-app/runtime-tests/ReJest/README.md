@@ -32,3 +32,12 @@ for paired frame snapshots. Both modes check the last value.
 Recorder errors do not stop app updates. A read reports the first recorder error.
 Cleanup reports errors that no getter reported. Stop restores all hooks, including after a test fails. Stop a recording before
 starting another one.
+
+# Synchronous props
+
+With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
+on, opacity and background color go to the view and not through the ShadowTree
+commit. The ShadowTree gets them only when the animation settles or React commits.
+`commitsSynchronousProps()` tells if they go through the commit on this platform.
+`getSynchronousProp(prop)` reads the mounted view, and also requires the ShadowTree
+to hold the same value when `commitsSynchronousProps()` is true.

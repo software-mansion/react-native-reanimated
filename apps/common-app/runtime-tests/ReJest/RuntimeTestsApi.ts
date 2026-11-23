@@ -20,6 +20,7 @@ import {
 export { Presets } from './Presets';
 export { isFullRun } from './utils/fullRun';
 export { isViewMountedNatively } from './utils/nativeViewHierarchy';
+export { commitsSynchronousProps } from './utils/synchronousProps';
 
 const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
