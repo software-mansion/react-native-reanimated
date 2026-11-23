@@ -713,6 +713,18 @@ function animateTo(
   );
 }
 
+async function animateWithHeldClock(
+  progress: SharedValue<number>,
+  toValue: number,
+  notificationName: string
+) {
+  animateTo(progress, toValue, notificationName);
+  for (let elapsed = 0; elapsed < DURATION; elapsed += FRAME_MS) {
+    await advanceAnimationTimer(FRAME_MS);
+  }
+  await waitForNotification(notificationName);
+}
+
 async function recordTextFrames(run: () => Promise<void>) {
   const updates = await recordAnimationUpdates();
   try {
@@ -742,22 +754,20 @@ describe('Animated.Text with a shared value as children', () => {
           onLayoutWidth={(width) => layoutWidths.push(width)}
         />
       );
-      await mockAnimationTimer();
+      await mockAnimationTimer({ autoAdvance: false });
       const atZero = await measureScreen();
 
-      const up = await recordScreenFrames(async () => {
-        animateTo(progress, 100, 'UP_FINISHED');
-        await waitForNotification('UP_FINISHED');
-      });
+      const up = await recordScreenFrames(() =>
+        animateWithHeldClock(progress, 100, 'UP_FINISHED')
+      );
       const atHundred = await measureScreen();
       const opacityAtHundred = Number(
         await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
       );
 
-      const down = await recordScreenFrames(async () => {
-        animateTo(progress, 0, 'DOWN_FINISHED');
-        await waitForNotification('DOWN_FINISHED');
-      });
+      const down = await recordScreenFrames(() =>
+        animateWithHeldClock(progress, 0, 'DOWN_FINISHED')
+      );
       const backAtZero = await measureScreen();
       const opacityBackAtZero = Number(
         await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
