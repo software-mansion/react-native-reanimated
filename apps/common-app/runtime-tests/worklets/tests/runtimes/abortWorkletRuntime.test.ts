@@ -137,43 +137,40 @@ describe('abortWorkletRuntime', () => {
     expect(ran.getBlocking()).toBe(false);
   });
 
-  test(
-    'lets the running job run work synchronously on its own aborted runtime',
-    async () => {
-      // Arrange
-      const runtime = createWorkletRuntime({
-        name: 'abort-sync-self',
-        abortable: true,
-      });
-      const release = createSynchronizable(false);
-      const syncResult = createSynchronizable(0);
-      scheduleOnRuntime(runtime, () => {
-        'worklet';
-        scheduleOnRN(onStarted);
-        while (!release.getBlocking()) {
-          // Wait until the test releases the job.
-        }
-        syncResult.setBlocking(
-          runOnRuntimeSync(runtime, () => {
-            'worklet';
-            return 42;
-          })
-        );
-      });
-
-      // Act
-      try {
-        await waitForNotification(STARTED_NOTIFICATION);
-        abortWorkletRuntime(runtime.runtimeId);
-      } finally {
-        release.setBlocking(true);
+  test('lets the running job run work synchronously on its own aborted runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-sync-self',
+      abortable: true,
+    });
+    const release = createSynchronizable(false);
+    const syncResult = createSynchronizable(0);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      scheduleOnRN(onStarted);
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
       }
-      await wait(200);
+      syncResult.setBlocking(
+        runOnRuntimeSync(runtime, () => {
+          'worklet';
+          return 42;
+        })
+      );
+    });
 
-      // Assert
-      expect(syncResult.getBlocking()).toBe(42);
+    // Act
+    try {
+      await waitForNotification(STARTED_NOTIFICATION);
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
     }
-  );
+    await wait(200);
+
+    // Assert
+    expect(syncResult.getBlocking()).toBe(42);
+  });
 
   test('rejects runOnRuntimeAsync on an aborted runtime', async () => {
     // Arrange
@@ -340,135 +337,126 @@ describe('abortWorkletRuntime', () => {
     expect(results[1]).toBe(ABORTED_MESSAGE);
   });
 
-  test(
-    'does not crash when the aborted runtime queued a runOnRuntimeAsync call on itself',
-    async () => {
-      // Arrange
-      const runtime = createWorkletRuntime({
-        name: 'abort-self-queued',
-        abortable: true,
-      });
-      const release = createSynchronizable(false);
-      scheduleOnRuntime(runtime, () => {
+  test('does not crash when the aborted runtime queued a runOnRuntimeAsync call on itself', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-self-queued',
+      abortable: true,
+    });
+    const release = createSynchronizable(false);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      runOnRuntimeAsync(runtime, () => {
         'worklet';
+        return 1;
+      }).catch(() => {});
+      scheduleOnRN(onStarted);
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
+      }
+    });
+    // Act
+    try {
+      await waitForNotification(STARTED_NOTIFICATION);
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
+    }
+    await wait(200);
+
+    // Assert
+    await expect(() =>
+      runOnRuntimeSync(runtime, () => {
+        'worklet';
+        return 1;
+      })
+    ).toThrow('aborted');
+  });
+
+  test('does not crash when a promise of the aborted runtime settles on another runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-promise-host',
+      abortable: true,
+    });
+    const target = createWorkletRuntime({ name: 'abort-promise-target' });
+    const release = createSynchronizable(false);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      runOnRuntimeAsync(target, () => {
+        'worklet';
+        scheduleOnRN(onStarted);
+        while (!release.getBlocking()) {
+          // Wait until the test releases the job.
+        }
+        return 1;
+      }).catch(() => {});
+    });
+
+    // Act
+    try {
+      await waitForNotification(STARTED_NOTIFICATION);
+      abortWorkletRuntime(runtime.runtimeId);
+    } finally {
+      release.setBlocking(true);
+    }
+
+    // Assert
+    const value = await runOnRuntimeAsync(target, () => {
+      'worklet';
+      return 42;
+    });
+    expect(value).toBe(42);
+  });
+
+  test('runs the UI microtasks after the UI worklet that aborted the runtime', async () => {
+    // Arrange
+    const runtime = createWorkletRuntime({
+      name: 'abort-ui-order',
+      abortable: true,
+    });
+    const release = createSynchronizable(false);
+    let order = '';
+    const onOrder = (value: string) => {
+      order = value;
+      notify(ORDER_NOTIFICATION);
+    };
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      scheduleOnRN(onStarted);
+      while (!release.getBlocking()) {
+        // Wait until the test releases the job.
+      }
+    });
+
+    // Act
+    try {
+      await waitForNotification(STARTED_NOTIFICATION);
+      runOnUI(() => {
+        'worklet';
+        const events: string[] = [];
+        const record = (event: string) => {
+          events.push(event);
+          if (events.length === 3) {
+            scheduleOnRN(onOrder, events.join(', '));
+          }
+        };
         runOnRuntimeAsync(runtime, () => {
           'worklet';
           return 1;
-        }).catch(() => {});
-        scheduleOnRN(onStarted);
-        while (!release.getBlocking()) {
-          // Wait until the test releases the job.
-        }
-      });
-      // Act
-      try {
-        await waitForNotification(STARTED_NOTIFICATION);
+        }).catch(() => record('h'));
+        queueMicrotask(() => record('m1'));
         abortWorkletRuntime(runtime.runtimeId);
-      } finally {
-        release.setBlocking(true);
-      }
-      await wait(200);
-
-      // Assert
-      await expect(() =>
-        runOnRuntimeSync(runtime, () => {
-          'worklet';
-          return 1;
-        })
-      ).toThrow('aborted');
+        record('after abort');
+      })();
+      await waitForNotification(ORDER_NOTIFICATION);
+    } finally {
+      release.setBlocking(true);
     }
-  );
 
-  test(
-    'does not crash when a promise of the aborted runtime settles on another runtime',
-    async () => {
-      // Arrange
-      const runtime = createWorkletRuntime({
-        name: 'abort-promise-host',
-        abortable: true,
-      });
-      const target = createWorkletRuntime({ name: 'abort-promise-target' });
-      const release = createSynchronizable(false);
-      scheduleOnRuntime(runtime, () => {
-        'worklet';
-        runOnRuntimeAsync(target, () => {
-          'worklet';
-          scheduleOnRN(onStarted);
-          while (!release.getBlocking()) {
-            // Wait until the test releases the job.
-          }
-          return 1;
-        }).catch(() => {});
-      });
-
-      // Act
-      try {
-        await waitForNotification(STARTED_NOTIFICATION);
-        abortWorkletRuntime(runtime.runtimeId);
-      } finally {
-        release.setBlocking(true);
-      }
-
-      // Assert
-      const value = await runOnRuntimeAsync(target, () => {
-        'worklet';
-        return 42;
-      });
-      expect(value).toBe(42);
-    }
-  );
-
-  test(
-    'runs the UI microtasks after the UI worklet that aborted the runtime',
-    async () => {
-      // Arrange
-      const runtime = createWorkletRuntime({
-        name: 'abort-ui-order',
-        abortable: true,
-      });
-      const release = createSynchronizable(false);
-      let order = '';
-      const onOrder = (value: string) => {
-        order = value;
-        notify(ORDER_NOTIFICATION);
-      };
-      scheduleOnRuntime(runtime, () => {
-        'worklet';
-        scheduleOnRN(onStarted);
-        while (!release.getBlocking()) {
-          // Wait until the test releases the job.
-        }
-      });
-
-      // Act
-      try {
-        await waitForNotification(STARTED_NOTIFICATION);
-        runOnUI(() => {
-          'worklet';
-          const events: string[] = [];
-          const record = (event: string) => {
-            events.push(event);
-            if (events.length === 3) {
-              scheduleOnRN(onOrder, events.join(', '));
-            }
-          };
-          runOnRuntimeAsync(runtime, () => {
-            'worklet';
-            return 1;
-          }).catch(() => record('h'));
-          queueMicrotask(() => record('m1'));
-          abortWorkletRuntime(runtime.runtimeId);
-          record('after abort');
-        })();
-        await waitForNotification(ORDER_NOTIFICATION);
-      } finally {
-        release.setBlocking(true);
-      }
-
-      // Assert
-      expect(order).toBe('after abort, m1, h');
-    }
-  );
+    // Assert
+    expect(order).toBe('after abort, m1, h');
+  });
 
   test('rejects the pending runOnRuntimeAsyncWithId call', async () => {
     // Arrange
