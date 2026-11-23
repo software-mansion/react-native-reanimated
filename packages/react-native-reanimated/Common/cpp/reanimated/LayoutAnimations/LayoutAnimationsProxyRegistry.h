@@ -22,6 +22,10 @@ class LayoutAnimationsProxyRegistry {
 
   std::shared_ptr<LayoutAnimationsProxyCommon> registerSurface(const facebook::react::ShadowTree &shadowTree);
   void surfaceDidMount(SurfaceId surfaceId) const;
+  /// React unmounted the view of a component with a layout animation. JS thread.
+  void viewDidUnmount(const facebook::react::ShadowNode &shadowNode, int reanimatedId) const;
+  /// React mounted the view again after its unmount. JS thread.
+  void viewDidMountAgain(Tag tag) const;
   /// The platform mount report `dispatch` ran: the transactions of the pulls that it reports are on the host
   /// views. It does not name their surfaces. UI thread only.
   void pulledSurfacesDidMount(std::uint64_t dispatch) const;

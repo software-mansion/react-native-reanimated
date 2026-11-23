@@ -14,6 +14,8 @@ import type {
   LayoutAnimationValues,
   LiveLayoutLeaf,
   NativeLayoutLimits,
+  NativeLayoutPlatformRules,
+  NativeLeafTrack,
   Mutable,
   SharedValue,
 } from '../commonTypes';
@@ -25,6 +27,7 @@ import {
   advanceNativeLeaf,
   animatePlainLeaves,
   currentOfNativeLeaf,
+  hasMovingNonPlanarTransform,
   leverOf,
   relateToLiveLeaf,
   replayTimesOfLeaves,
@@ -93,6 +96,15 @@ type LayoutAnimationBuild = {
   originMs: number;
   hasCallbackResult?: boolean;
 };
+
+function jumpsAfterDelay(tracks: (NativeLeafTrack | undefined)[]): boolean {
+  'worklet';
+  return (
+    tracks.length > 0 &&
+    tracks.every((track) => track?.durationMs === 0) &&
+    tracks.some((track) => (track?.delayMs ?? 0) > 0)
+  );
+}
 
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
@@ -171,6 +183,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
       limits: NativeLayoutLimits,
+      platformRules: NativeLayoutPlatformRules,
       liveLeaves: LiveLayoutLeaf[]
     ): LayoutAnimationBuildSummary | undefined {
       const originMs = getStartTimestamp();
@@ -189,20 +202,33 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       >;
       const keys = Object.keys(animations);
       const { transform } = animations;
-      const refusal: LayoutAnimationBuildSummary = {
+      const refusalOf = (
+        exceededLimit: keyof NativeLayoutLimits | null,
+        refusedTarget: LayoutAnimationBuildSummary['refusedTarget'] = null
+      ): LayoutAnimationBuildSummary => ({
         originMs,
-        exceedsLimit: true,
+        exceededLimit,
+        refusedTarget,
         hasInitialOnlyKeys: false,
+        jumpsAfterDelay: false,
         needsFrameDriver: false,
         replacesLiveLeaf: false,
         leaves: [],
-      };
-      const hasTooManyLeaves =
-        keys.length > limits.leaves ||
-        (Array.isArray(transform) &&
-          transform.length > limits.transformOperations);
-      if (hasTooManyLeaves) {
-        return refusal;
+      });
+      if (keys.length > limits.leaves) {
+        return refusalOf('leaves');
+      }
+      if (
+        Array.isArray(transform) &&
+        transform.length > limits.transformOperations
+      ) {
+        return refusalOf('transformOperations');
+      }
+      if (
+        platformRules.movesOnlyPlanarTransforms &&
+        hasMovingNonPlanarTransform(initialValues.transform, transform)
+      ) {
+        return refusalOf(null, 'NonPlanarTransform');
       }
       animatePlainLeaves(animations);
       const fitting = { fits: easingCurveFits, lever: leverOf(yogaValues) };
@@ -220,7 +246,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         0
       );
       if (segmentCount > limits.segments) {
-        return refusal;
+        return refusalOf('segments');
       }
       const relations: Record<string, LiveLeafRelation> = {};
       for (const liveLeaf of liveLeaves) {
@@ -231,10 +257,12 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       }
       return {
         originMs,
-        exceedsLimit: false,
+        exceededLimit: null,
+        refusedTarget: null,
         hasInitialOnlyKeys: Object.keys(initialValues).some(
           (key) => !(key in animations)
         ),
+        jumpsAfterDelay: jumpsAfterDelay(summaries.map(({ track }) => track)),
         needsFrameDriver: Object.values(relations).includes('frameDriver'),
         replacesLiveLeaf: liveLeaves.some(
           ({ key }) => key in animations && relations[key] !== 'continues'

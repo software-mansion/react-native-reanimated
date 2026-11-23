@@ -175,17 +175,27 @@ export type NativeLayoutLimits = {
   segments: number;
 };
 
+export type NativeLayoutPlatformRules = {
+  movesOnlyPlanarTransforms: boolean;
+};
+
 /** What the native route reads from the result of a layout animation builder. */
 export type LayoutAnimationBuildSummary = {
   /** The start time of the animation. All starts of one batch share it. */
   originMs: number;
   /**
-   * The builder gave more animations, operations, or segments than the caller
-   * can route.
+   * The limit of the caller that the builder exceeds with its animations,
+   * operations, or segments. The caller does not route the animation.
    */
-  exceedsLimit: boolean;
+  exceededLimit: keyof NativeLayoutLimits | null;
+  refusedTarget: 'NonPlanarTransform' | null;
   /** An initial value has no animation. */
   hasInitialOnlyKeys: boolean;
+  /**
+   * Each leaf jumps to its end after its delay: each track has no duration, and
+   * one has a delay. The frame driver plays it.
+   */
+  jumpsAfterDelay: boolean;
   /**
    * The frame driver gives a result that native playback cannot repeat, because
    * of a live leaf of the view.
@@ -233,6 +243,7 @@ export type LayoutAnimationsManager = {
     yogaValues: Partial<LayoutAnimationValues>,
     config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
     limits: NativeLayoutLimits,
+    platformRules: NativeLayoutPlatformRules,
     liveLeaves: LiveLayoutLeaf[]
   ) => LayoutAnimationBuildSummary | undefined;
   /** Gives the value that each live leaf has at the start time of this batch. */

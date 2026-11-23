@@ -71,6 +71,8 @@ import {
   isHostEvent,
   sample,
   playbackCountOf,
+  startRefusalsOf,
+  layoutRefusalOf,
   summarize,
   callbacks,
   layoutOf,
@@ -78,7 +80,6 @@ import {
   renderBox,
   NATIVE_START,
   NATIVE_END,
-  SORTED_START_AND_END,
   summarizeEnd,
 } from './nativeLayoutTestKit';
 
@@ -116,14 +117,6 @@ function expectAtRest({ end }: Played) {
       ).toBe(true);
     });
   }
-}
-
-function firstEventOf(events: TraceEvent[], name: string) {
-  const found = events.find(({ event }) => event === name);
-  if (!found) {
-    throw new Error(`The trace has no ${name} event: ${summarize(events)}`);
-  }
-  return found;
 }
 
 describe('native layout starts after the mount of the final state', () => {
@@ -225,8 +218,12 @@ describe('native layout starts with no duration', () => {
     'each negative delay wrapper counts as zero before the hold',
     async () => {
       const leaf = { duration: 0, delays: [-DURATION, DURATION] };
-      const layout = layoutOf({ originX: leaf, originY: leaf });
+      const layout = layoutOf(
+        { originX: leaf, originY: leaf },
+        { name: 'hold' }
+      );
       const tag = await renderBox({ layout });
+      const initialY = (await sample(tag, 'PositionY')).model[0];
       await render(<Scene left={END_LEFT} layout={layout} />);
       await wait(DURATION / 2);
       const held = await sample(tag, 'PositionX');
@@ -234,8 +231,25 @@ describe('native layout starts with no duration', () => {
         Math.abs(held.presentation[0] - centerOf(START_LEFT)) <=
           LAID_OUT_TOLERANCE
       ).toBe(true);
+      expect(callbacks.length).toBe(0);
       await wait(DURATION);
-      expect(summarizeEnd(await takeTraceOf(tag))).toBe(SORTED_START_AND_END);
+      expect(summarizeEnd(await takeTraceOf(tag))).toBe(
+        'LayoutBuildFailed:UnsupportedTrackForm'
+      );
+      for (const [target, endpoint] of [
+        ['PositionX', centerOf(END_LEFT)],
+        ['PositionY', initialY],
+      ] as const) {
+        const end = await sample(tag, target);
+        expect(end.playbacks.length).toBe(0);
+        expect(Math.abs(end.model[0] - endpoint) <= LAID_OUT_TOLERANCE).toBe(
+          true
+        );
+        expect(
+          Math.abs(end.presentation[0] - endpoint) <= LAID_OUT_TOLERANCE
+        ).toBe(true);
+      }
+      expect(callbacks.join()).toBe('hold:true');
       await render(null);
     }
   );
@@ -291,18 +305,18 @@ describe('native layout size', () => {
 
   /**
    * Android refuses a Width or Height track that changes by more than one pixel
-   * (`AndroidNativeAnimationPlatform::canRealize`): the frame driver plays the
-   * whole animation on the two boxes.
+   * (`SizeBeyondOnePixel`): the frame driver plays the whole animation on the
+   * two boxes.
    */
   const sizeChangeOf = (referenceCase: ReferenceCase): ReferenceCase =>
     PLAYS_SIZE_CHANGE
       ? referenceCase
       : { ...referenceCase, isFrameDriven: true };
   const SIZE_FALLBACK_NAME =
-    'keeps the whole animation frame-driven: UnsupportedTarget, and the frames of the frame driver on the two boxes are on its timeline';
+    'keeps the whole animation frame-driven: SizeBeyondOnePixel, and the frames of the frame driver on the two boxes are on its timeline';
 
   /**
-   * The fallback evidence of a refused size change: the build failure, no
+   * The fallback evidence of a refused size change: the start refusal, no
    * result of a native command, and a frame-driven route of `target` with
    * models on the declared timeline at their read times. An off-curve model
    * fails the same check.
@@ -311,9 +325,10 @@ describe('native layout size', () => {
     const events = played.events.filter(
       ({ event }) => event !== 'FrameUpdateMounted'
     );
-    expect(summarizeStart(events)).toBe('LayoutBuildFailed:UnsupportedTarget');
+    expect(summarizeStart(events)).toBe('LayoutStartRefused');
+    expect(startRefusalsOf(events)).toBe('SizeBeyondOnePixel');
     expect(summarizeResults(events)).toBe('');
-    const refusal = firstEventOf(events, 'LayoutBuildFailed');
+    const refusal = layoutRefusalOf(events);
     const valueAt = declaredTargetOf(played, target);
     const isOnTimeline = (model: number[], readMs: Band) =>
       isOnFrameDriverTimeline(valueAt, refusal.monotonicTimeMs, model, readMs);
