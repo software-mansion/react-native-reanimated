@@ -6,11 +6,12 @@
 @interface AnimationFrameQueue : NSObject
 
 /**
- * Creates a queue that delivers frames on its own thread instead of the main
- * thread, so they keep coming while the main thread is blocked. On macOS the
- * frames are still delivered on the main thread.
+ * Creates a queue with its own display link that delivers frames on the
+ * shared frame thread instead of the main thread, so they keep coming while
+ * the main thread is blocked. Can be created and invalidated on any thread.
+ * On macOS the frames are still delivered on the main thread.
  */
-- (instancetype)initOnDedicatedThread;
+- (instancetype)initOnFrameThread;
 
 - (void)requestAnimationFrame:(std::function<void(double)>)callback;
 - (void)executeQueue:(WorkletsDisplayLink *)displayLink;

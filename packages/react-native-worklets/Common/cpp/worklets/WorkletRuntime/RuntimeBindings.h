@@ -20,6 +20,7 @@ namespace worklets {
 
 struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
+  using CreateWorkerAnimationFrameSource = std::function<RequestAnimationFrame()>;
   // Host function extracted from RN runtime's `global.nativeLoggingHook`, used
   // to forward logs from Worklet runtimes to the native console in Bundle Mode.
   // Signature:
@@ -31,10 +32,12 @@ struct RuntimeBindings {
 
   const RequestAnimationFrame requestAnimationFrame;
   /**
-   * Like `requestAnimationFrame`, but the callback runs on a thread owned by
-   * the platform frame source instead of the UI thread.
+   * Creates a frame source for one Worker Runtime. The returned function is
+   * like `requestAnimationFrame`, but the callback runs on a thread owned by
+   * the platform frame source instead of the UI thread. The frame source is
+   * released together with the returned function.
    */
-  const RequestAnimationFrame requestWorkerAnimationFrame;
+  const CreateWorkerAnimationFrameSource createWorkerAnimationFrameSource;
   const NativeLoggingHook nativeLoggingHook;
   const std::shared_ptr<NetworkingBackend> networkingBackend;
 };

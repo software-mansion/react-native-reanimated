@@ -29,7 +29,7 @@ const auto POOR = CAFrameRateRangeMake(10, 24, 24);
 @implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
-  NSThread *dedicatedThread_;
+  NSThread *frameThread_;
   std::vector<std::function<void(double)>> frameCallbacks_;
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
@@ -43,15 +43,18 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (instancetype)init
 {
-  return [self initWithDedicatedThread:NO];
+  react_native_assert(
+      (IsJavaScriptQueue() || RCTIsMainQueue()) &&
+      "AnimationFrameQueue must be created on the JavaScript queue or the main queue");
+  return [self initWithFrameThread:nil];
 }
 
-- (instancetype)initOnDedicatedThread
+- (instancetype)initOnFrameThread
 {
 #if TARGET_OS_OSX
-  return [self initWithDedicatedThread:NO];
+  return [self initWithFrameThread:nil];
 #else // TARGET_OS_OSX
-  return [self initWithDedicatedThread:YES];
+  return [self initWithFrameThread:[AnimationFrameQueue frameThread]];
 #endif // TARGET_OS_OSX
 }
 
@@ -64,25 +67,43 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)invalidate
 {
-  AssertTurboModuleManagerQueue();
-  if (dedicatedThread_ == nil) {
+  if (frameThread_ == nil) {
+    AssertTurboModuleManagerQueue();
     [displayLink_ invalidate];
     return;
   }
-  [self performSelector:@selector(invalidateOnDedicatedThread)
-               onThread:dedicatedThread_
-             withObject:nil
-          waitUntilDone:NO];
+  [displayLink_ performSelector:@selector(invalidate) onThread:frameThread_ withObject:nil waitUntilDone:NO];
 }
 
 #pragma mark-- private
 
-- (instancetype)initWithDedicatedThread:(BOOL)useDedicatedThread
++ (NSThread *)frameThread
 {
-  react_native_assert(
-      (IsJavaScriptQueue() || RCTIsMainQueue()) &&
-      "AnimationFrameQueue must be created on the JavaScript queue or the main queue");
-  if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
+  static NSThread *frameThread;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    frameThread = [[NSThread alloc] initWithBlock:^{
+      NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+      [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+      while (true) {
+        @autoreleasepool {
+          [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+        }
+      }
+    }];
+    frameThread.name = @"WorkletsFrameSource";
+    frameThread.qualityOfService = NSQualityOfServiceUserInteractive;
+    [frameThread start];
+  });
+  return frameThread;
+}
+
+- (instancetype)initWithFrameThread:(NSThread *)frameThread
+{
+  frameThread_ = frameThread;
+  if (frameThread_ != nil) {
+    displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
+  } else if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
     bool supportsProMotion = false;
 #if !TARGET_OS_OSX
     supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
@@ -101,46 +122,30 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   displayLink_.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif // TARGET_OS_OSX
   [displayLink_ setPaused:TRUE];
-  if (useDedicatedThread) {
-    [self startDedicatedThread];
+  if (frameThread_ != nil) {
+    [self performSelector:@selector(attachDisplayLinkToFrameThread)
+                 onThread:frameThread_
+               withObject:nil
+            waitUntilDone:NO];
   } else {
     [displayLink_ addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   }
   return self;
 }
 
-- (void)startDedicatedThread
+- (void)attachDisplayLinkToFrameThread
 {
-  WorkletsDisplayLink *displayLink = displayLink_;
-  dedicatedThread_ = [[NSThread alloc] initWithBlock:^{
-    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
-    [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
-    [displayLink addToRunLoop:runLoop forMode:NSDefaultRunLoopMode];
-    while (![NSThread currentThread].isCancelled) {
-      @autoreleasepool {
-        [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
-      }
-    }
-  }];
-  dedicatedThread_.name = @"WorkletsFrameSource";
-  dedicatedThread_.qualityOfService = NSQualityOfServiceUserInteractive;
-  [dedicatedThread_ start];
-}
-
-- (void)invalidateOnDedicatedThread
-{
-  [displayLink_ invalidate];
-  [[NSThread currentThread] cancel];
+  [displayLink_ addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 }
 
 - (void)assertFrameThread
 {
-  if (dedicatedThread_ == nil) {
+  if (frameThread_ == nil) {
     RCTAssertMainQueue();
   } else {
     react_native_assert(
-        [NSThread currentThread] == dedicatedThread_ &&
-        "AnimationFrameQueue must execute its callbacks on its dedicated thread");
+        [NSThread currentThread] == frameThread_ &&
+        "AnimationFrameQueue must execute its callbacks on the frame thread");
   }
 }
 

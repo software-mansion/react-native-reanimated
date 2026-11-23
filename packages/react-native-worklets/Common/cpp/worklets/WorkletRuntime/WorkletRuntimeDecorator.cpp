@@ -86,7 +86,7 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
     const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
-    const RuntimeBindings::RequestAnimationFrame &requestWorkerAnimationFrame) {
+    const RuntimeBindings::CreateWorkerAnimationFrameSource &createWorkerAnimationFrameSource) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -265,12 +265,23 @@ void WorkletRuntimeDecorator::decorate(
         return jsi::Value::undefined();
       });
 
-  if (eventLoop && requestWorkerAnimationFrame) {
+  if (eventLoop && createWorkerAnimationFrameSource) {
+    /**
+     * The frame source is created with the first request, so that only the
+     * runtimes that use it own one. The function is called only from the
+     * runtime it is installed on.
+     */
+    const auto requestWorkerAnimationFrame = std::make_shared<RuntimeBindings::RequestAnimationFrame>();
     jsi_utils::installJsiFunction(
         rt,
         "_scheduleAnimationFrameCallback",
-        [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop), requestWorkerAnimationFrame](jsi::Runtime &) {
-          requestWorkerAnimationFrame([weakEventLoop](const double timestampMs) {
+        [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop),
+         createWorkerAnimationFrameSource,
+         requestWorkerAnimationFrame](jsi::Runtime &) {
+          if (!*requestWorkerAnimationFrame) {
+            *requestWorkerAnimationFrame = createWorkerAnimationFrameSource();
+          }
+          (*requestWorkerAnimationFrame)([weakEventLoop](const double timestampMs) {
             if (auto strongEventLoop = weakEventLoop.lock()) {
               strongEventLoop->pushTask([timestampMs](jsi::Runtime &rt) {
                 rt.global().getPropertyAsFunction(rt, "__runAnimationFrameCallback").call(rt, timestampMs);

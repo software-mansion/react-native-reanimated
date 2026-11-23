@@ -28,6 +28,15 @@ using namespace worklets;
 
 namespace {
 
+struct WorkerAnimationFrameQueueHolder {
+  AnimationFrameQueue *const queue = [[AnimationFrameQueue alloc] initOnFrameThread];
+
+  ~WorkerAnimationFrameQueueHolder()
+  {
+    [queue invalidate];
+  }
+};
+
 BundleModeConfig makeBundleModeConfig(NSURL *bundleURL, NSURL *downloadedBundleFileURL)
 {
   return BundleModeConfig{
@@ -48,7 +57,6 @@ NSURL *getDownloadedBundleFileURL(RCTBundleManager *bundleManager)
 
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
-  AnimationFrameQueue *workerAnimationFrameQueue_;
   std::shared_ptr<IOSUIScheduler> uiScheduler_;
   std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletsModuleProxyInitializer> initializer_;
@@ -123,7 +131,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   AssertTurboModuleManagerQueue();
 
   [animationFrameQueue_ invalidate];
-  [workerAnimationFrameQueue_ invalidate];
 
   if (rnRuntimeStatus_) {
     rnRuntimeStatus_->setDead();
@@ -145,7 +152,6 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 - (void)createPlatformObjects
 {
   animationFrameQueue_ = [AnimationFrameQueue new];
-  workerAnimationFrameQueue_ = [[AnimationFrameQueue alloc] initOnDedicatedThread];
   uiScheduler_ = std::make_shared<IOSUIScheduler>();
   rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
 }
@@ -178,9 +184,11 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .requestWorkerAnimationFrame = [workerAnimationFrameQueue = workerAnimationFrameQueue_](
-                                         std::function<void(const double)> &&callback) -> void {
-        [workerAnimationFrameQueue requestAnimationFrame:callback];
+      .createWorkerAnimationFrameSource = []() -> RuntimeBindings::RequestAnimationFrame {
+        const auto holder = std::make_shared<WorkerAnimationFrameQueueHolder>();
+        return [holder](std::function<void(const double)> &&callback) -> void {
+          [holder->queue requestAnimationFrame:callback];
+        };
       },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AppleNetworkingBackend>()});

@@ -235,4 +235,43 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     expect(blockEnd - blockStart >= UI_BLOCK_MS).toBe(true);
     expect(duringBlock.length >= MIN_FRAMES_DURING_UI_BLOCK).toBe(true);
   });
+
+  test('runs callbacks on two runtimes at the same time', async () => {
+    // Arrange
+    const notifications = ['vsyncFirst', 'vsyncSecond', 'vsyncUIPair'];
+    const runtimes = [
+      createWorkletRuntime({ name: 'vsync1', enableVSync: true }),
+      createWorkletRuntime({ name: 'vsync2', enableVSync: true }),
+    ];
+    const frames = [0, 0, 0];
+    const makeOnDone = (index: number) => (value: number) => {
+      frames[index] = value;
+      notify(notifications[index]);
+    };
+    const countFrames = (onDone: (frames: number) => void) => {
+      'worklet';
+      let count = 0;
+      const start = performance.now();
+      const onFrame = () => {
+        count++;
+        if (performance.now() - start < RATE_WINDOW_MS) {
+          requestAnimationFrame(onFrame);
+        } else {
+          scheduleOnRN(onDone, count);
+        }
+      };
+      requestAnimationFrame(onFrame);
+    };
+
+    // Act
+    scheduleOnUI(countFrames, makeOnDone(2));
+    scheduleOnRuntime(runtimes[0], countFrames, makeOnDone(0));
+    scheduleOnRuntime(runtimes[1], countFrames, makeOnDone(1));
+    await waitForNotifications(notifications);
+
+    // Assert
+    expect(frames[2] > 0).toBe(true);
+    expect(frames[0] >= frames[2] * MIN_RATE_RATIO).toBe(true);
+    expect(frames[1] >= frames[2] * MIN_RATE_RATIO).toBe(true);
+  });
 });
