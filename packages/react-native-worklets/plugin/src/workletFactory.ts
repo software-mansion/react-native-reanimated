@@ -101,13 +101,17 @@ export function makeWorkletFactory(
     state
   );
   let reactName = initialReactName;
+  const importedNames = new Set(
+    [...moduleBindingsToImport, ...relativeBindingsToImport].map(
+      (binding) => binding.identifier.name
+    )
+  );
+  let factoryName = `${workletName}Factory`;
+  while (importedNames.has(factoryName)) {
+    factoryName = `_${factoryName}`;
+  }
   if (closureVariables.length === 0) {
     // The worklet binding will share module scope with forwarded imports.
-    const importedNames = new Set(
-      [...moduleBindingsToImport, ...relativeBindingsToImport].map(
-        (binding) => binding.identifier.name
-      )
-    );
     while (importedNames.has(reactName)) {
       reactName = `_${reactName}`;
     }
@@ -190,7 +194,7 @@ export function makeWorkletFactory(
   );
 
   const factory = functionExpression(
-    identifier(workletName + 'Factory'),
+    identifier(factoryName),
     factoryParams.length > 0
       ? [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))]
       : [],
