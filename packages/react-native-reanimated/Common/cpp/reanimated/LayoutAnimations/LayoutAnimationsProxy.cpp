@@ -1516,7 +1516,7 @@ ShadowView LayoutAnimationsProxy::cloneViewWithoutOpacity(
   auto newView = shadowView;
   folly::dynamic rawProps = folly::dynamic::object("opacity", 0);
 #ifdef RN_SERIALIZABLE_STATE
-  rawProps = withBaseRawProps(shadowView.props, std::move(rawProps));
+  rawProps = rawPropsForClone(shadowView.props, std::move(rawProps));
 #endif
   auto newProps = componentDescriptorRegistry_->at(newView.componentHandle)
                       .cloneProps(propsParserContext, newView.props, RawProps(rawProps));

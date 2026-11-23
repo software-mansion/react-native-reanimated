@@ -132,12 +132,12 @@ struct IndexCursors {
 };
 
 #ifdef RN_SERIALIZABLE_STATE
-// `cloneProps` keeps only the given raw props in `Props::rawProps`, unless React Native accumulates them itself.
-inline folly::dynamic withBaseRawProps(const Props::Shared &baseProps, folly::dynamic rawProps) {
+// `cloneProps` merges the base raw props itself when `enableAccumulatedUpdatesInRawPropsAndroid` is on.
+inline folly::dynamic rawPropsForClone(const Props::Shared &base, folly::dynamic rawProps) {
   if (ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return rawProps;
   }
-  return folly::dynamic::merge(baseProps->rawProps, rawProps);
+  return folly::dynamic::merge(base->rawProps, rawProps);
 }
 #endif
 

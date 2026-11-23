@@ -813,11 +813,12 @@ ShadowView LayoutAnimationsProxy::withGeometryOf(
     const PropsParserContext &propsParserContext) const {
   auto result = view;
   result.layoutMetrics = target.layoutMetrics;
-#ifdef ANDROID
-  auto rawProps = view.props->rawProps;
-  rawProps["transform"] = target.props->rawProps.getDefault("transform", nullptr);
-  rawProps["transformOrigin"] = target.props->rawProps.getDefault("transformOrigin", nullptr);
-  rawProps["opacity"] = getViewProps(target).opacity;
+#ifdef RN_SERIALIZABLE_STATE
+  auto rawProps = rawPropsForClone(
+      view.props,
+      folly::dynamic::object("transform", target.props->rawProps.getDefault("transform", nullptr))(
+          "transformOrigin", target.props->rawProps.getDefault("transformOrigin", nullptr))(
+          "opacity", getViewProps(target).opacity));
   result.props = componentDescriptorRegistry_->at(view.componentHandle)
                      .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
 #else
@@ -842,7 +843,7 @@ void LayoutAnimationsProxy::overrideTransform(
 #ifdef RN_SERIALIZABLE_STATE
   auto array = folly::dynamic::array(folly::dynamic::object("matrix", transform->operator folly::dynamic()));
   folly::dynamic newTransformDynamic = folly::dynamic::object("transform", array);
-  auto newRawProps = withBaseRawProps(shadowView.props, std::move(newTransformDynamic));
+  auto newRawProps = rawPropsForClone(shadowView.props, std::move(newTransformDynamic));
   auto newProps = componentDescriptorRegistry_->at(shadowView.componentHandle)
                       .cloneProps(propsParserContext, shadowView.props, RawProps(newRawProps));
   auto viewProps = std::const_pointer_cast<ViewProps>(std::static_pointer_cast<const ViewProps>(newProps));
@@ -1230,10 +1231,11 @@ ShadowView LayoutAnimationsProxy::ownCarrierView(
   resolveLightNodeProps(carrier);
   auto carrierView = carrier->current;
   carrierView.layoutMetrics = view.layoutMetrics;
-#ifdef ANDROID
-  auto rawProps = carrierView.props->rawProps;
-  rawProps["transform"] = view.props->rawProps.getDefault("transform", nullptr);
-  rawProps["opacity"] = getViewProps(view).opacity;
+#ifdef RN_SERIALIZABLE_STATE
+  auto rawProps = rawPropsForClone(
+      carrierView.props,
+      folly::dynamic::object("transform", view.props->rawProps.getDefault("transform", nullptr))(
+          "opacity", getViewProps(view).opacity));
   carrierView.props = componentDescriptorRegistry_->at(carrierView.componentHandle)
                           .cloneProps(propsParserContext, carrierView.props, RawProps(std::move(rawProps)));
 #else
@@ -1273,16 +1275,17 @@ ShadowView LayoutAnimationsProxy::withChangedStyleOf(
   if (source.componentHandle != view.componentHandle) {
     return view;
   }
-#ifdef ANDROID
+#ifdef RN_SERIALIZABLE_STATE
   const auto &sourceRawProps = source.props->rawProps;
   const auto &referenceRawProps = reference.props->rawProps;
-  auto rawProps = view.props->rawProps;
+  folly::dynamic changedStyle = folly::dynamic::object();
   for (const auto *name : kAnimatedStyleProps) {
     const auto value = sourceRawProps.getDefault(name, nullptr);
     if (value != referenceRawProps.getDefault(name, nullptr)) {
-      rawProps[name] = value;
+      changedStyle[name] = value;
     }
   }
+  auto rawProps = rawPropsForClone(view.props, std::move(changedStyle));
   view.props = componentDescriptorRegistry_->at(view.componentHandle)
                    .cloneProps(propsParserContext, view.props, RawProps(std::move(rawProps)));
 #else
