@@ -7,6 +7,10 @@ export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
   const moduleId = objectToUnpack.__moduleId;
   if (moduleId !== undefined) {
     return getWorklet(moduleId, objectToUnpack.__closure);
+  } else if (objectToUnpack.__workletHash !== undefined) {
+    throw new Error(
+      '[Worklets] This worklet was compiled without Metro, so it has no module to load on a Worklet Runtime. Make sure Metro transforms the source of the library that defines it.'
+    );
   } else {
     throw new Error(
       `[Worklets] Data type not recognized by value unpacker: "${globalThis._toString(

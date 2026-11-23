@@ -28,7 +28,7 @@ pub fn build_factory_expression<'a>(
     worklet_hash: u64,
     state: &State,
 ) -> Expression<'a> {
-    let (worklet_name, react_name) = (names.worklet_name.as_str(), names.react_name.as_str());
+    let react_name = names.react_name.as_str();
     let pat = closure_binding_pattern(builder, closure_variables);
     let factory_param = builder.plain_formal_parameter(SPAN, pat);
     let params_vec = if closure_variables.is_empty() {
@@ -79,7 +79,7 @@ pub fn build_factory_expression<'a>(
 
     let factory_body = builder.function_body(SPAN, builder.vec(), statements);
 
-    let factory_id_name = builder.ident(&format!("{worklet_name}Factory"));
+    let factory_id_name = builder.ident(&names.factory_name);
     let factory_id = builder.binding_identifier(SPAN, factory_id_name);
 
     Expression::FunctionExpression(builder.alloc_function(
