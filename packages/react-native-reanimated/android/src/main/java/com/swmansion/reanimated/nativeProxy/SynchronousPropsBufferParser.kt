@@ -199,7 +199,7 @@ internal object SynchronousPropsBufferParser {
                     while (true) {
                         val transformCommand = intIterator.nextInt()
                         if (transformCommand == CMD_END_OF_TRANSFORM) {
-                            props.putArray("transform", transform)
+                            props.putArray(commandToString(command), transform)
                             break
                         }
                         val name = transformCommandToString(transformCommand)
