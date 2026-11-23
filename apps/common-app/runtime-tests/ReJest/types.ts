@@ -202,7 +202,8 @@ declare global {
       descriptors: {
         value: Array<{ tag: number; shadowNodeWrapper: unknown }>;
       },
-      updates: OperationUpdate
+      updates: OperationUpdate,
+      isAnimatedProps: boolean
     ): void;
     flush(): void;
   };

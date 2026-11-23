@@ -19,7 +19,6 @@ type NativeUpdate = {
   tag: number;
   shadowNodeWrapper?: unknown;
   snapshot: Record<string, unknown>;
-  jsUpdateIndex: number;
 };
 
 export function createUpdatesContainer({
@@ -105,7 +104,6 @@ export function createUpdatesContainer({
 
   function _updateNativeSnapshot(
     updateInfos: JsUpdate[],
-    jsUpdateIndex: number,
     terminalSnapshots?: NativeUpdate[]
   ): JsUpdate[] {
     'worklet';
@@ -152,7 +150,6 @@ export function createUpdatesContainer({
         tag: updateInfo.tag,
         shadowNodeWrapper: updateInfo.shadowNodeWrapper,
         snapshot,
-        jsUpdateIndex,
       });
       snapshotted.push(updateInfo);
     }
@@ -213,11 +210,7 @@ export function createUpdatesContainer({
     'worklet';
     const entries = [...pendingFrame.value.values()];
     const sampled: NativeUpdate[] = [];
-    const captured = _updateNativeSnapshot(
-      entries,
-      frameUpdates.value.length,
-      sampled
-    );
+    const captured = _updateNativeSnapshot(entries, sampled);
     frameUpdates.modify((values) => {
       values.push(...captured);
       return values;
@@ -231,25 +224,26 @@ export function createUpdatesContainer({
     pendingFrame.value = new Map();
   }
 
+  function _sampleLatestUpdates() {
+    'worklet';
+    const latest = new Map<number, JsUpdate>();
+    for (const entry of jsUpdates.value) {
+      const previous = latest.get(entry.tag);
+      latest.set(entry.tag, {
+        ...entry,
+        update: { ...previous?.update, ...entry.update },
+      });
+    }
+    const sampled: NativeUpdate[] = [];
+    _updateNativeSnapshot([...latest.values()], sampled);
+    return sampled;
+  }
+
   function captureTerminal() {
     'worklet';
     try {
       flushFrame();
-      const latest = new Map<number, JsUpdate>();
-      for (const entry of jsUpdates.value) {
-        const previous = latest.get(entry.tag);
-        latest.set(entry.tag, {
-          ...entry,
-          update: { ...previous?.update, ...entry.update },
-        });
-      }
-      const terminal: NativeUpdate[] = [];
-      _updateNativeSnapshot(
-        [...latest.values()],
-        jsUpdates.value.length - 1,
-        terminal
-      );
-      terminalSnapshots.value = terminal;
+      terminalSnapshots.value = _sampleLatestUpdates();
     } catch (error) {
       saveError(error);
     }
@@ -282,10 +276,7 @@ export function createUpdatesContainer({
       }
       return pending;
     });
-    const snapshotted = _updateNativeSnapshot(
-      newUpdates,
-      jsUpdates.value.length - 1
-    );
+    const snapshotted = _updateNativeSnapshot(newUpdates);
     _updateJsSnapshot(snapshotted);
   }
 
@@ -315,10 +306,7 @@ export function createUpdatesContainer({
         updatesCopy.backgroundColor
       );
     }
-    const snapshotted = _updateNativeSnapshot(
-      [{ tag, update }],
-      jsUpdates.value.length - 1
-    );
+    const snapshotted = _updateNativeSnapshot([{ tag, update }]);
     if (snapshotted.length === 0) {
       return;
     }
@@ -502,21 +490,9 @@ export function createUpdatesContainer({
   function readWithTerminal() {
     return runOnUIBlocking(() => {
       'worklet';
-      const latest = new Map<number, JsUpdate>();
-      for (const entry of jsUpdates.value) {
-        const previous = latest.get(entry.tag);
-        latest.set(entry.tag, {
-          ...entry,
-          update: { ...previous?.update, ...entry.update },
-        });
-      }
-      const terminal: NativeUpdate[] = [];
-      for (const entry of latest.values()) {
-        _updateNativeSnapshot([entry], jsUpdates.value.length - 1, terminal);
-      }
       return {
         jsUpdates: [...jsUpdates.value],
-        nativeSnapshots: [...nativeSnapshots.value, ...terminal],
+        nativeSnapshots: [...nativeSnapshots.value, ..._sampleLatestUpdates()],
       };
     });
   }

@@ -28,13 +28,13 @@ export class AnimationUpdatesRecorder {
       // oxlint-disable-next-line typescript/unbound-method
       const originalUpdate = manager.update;
       global.originalUpdatePropsManagerUpdate = originalUpdate;
-      manager.update = function (descriptors, updates) {
+      manager.update = function (descriptors, updates, isAnimatedProps) {
         try {
           registerViews(descriptors.value);
         } catch (error) {
           saveError(error);
         }
-        originalUpdate.call(manager, descriptors, updates);
+        originalUpdate.call(manager, descriptors, updates, isAnimatedProps);
       };
       global.animationUpdatesRecordingStarted = false;
 

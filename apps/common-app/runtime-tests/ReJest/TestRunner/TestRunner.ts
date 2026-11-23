@@ -344,6 +344,10 @@ export class TestRunner {
       }
       try {
         await this._animationRecorder.stopRecordingAnimationUpdates();
+      } catch (error) {
+        reportCleanupError(error);
+      }
+      try {
         for (const error of await this._animationRecorder.takeUnreportedErrors()) {
           reportCleanupError(error);
         }
