@@ -17,6 +17,8 @@ interface RuntimeTestsViewSamplerModule extends TurboModule {
   postsAnimatorEnd(): Promise<boolean | null>;
   failNextViewLookup(tag: number): Promise<void>;
   takeViewLookupFailure(): Promise<number[] | null>;
+  startFrameClock(): void;
+  frameClockRows(): number[][];
 }
 
 export type SampledProperty =
@@ -26,8 +28,15 @@ export type SampledProperty =
   | 'borderRadius'
   | 'shadowColor';
 
-/** A property of one value, or a geometry read of `GEOMETRY_VALUE_COUNTS`. */
-export type RecordedProperty = SampledProperty | GeometryProperty;
+/**
+ * A property of one value, a geometry read of `GEOMETRY_VALUE_COUNTS`, or
+ * `animationTime`: the animation clock of the frame of the draw
+ * (`ClockFrame`).
+ */
+export type RecordedProperty =
+  | SampledProperty
+  | GeometryProperty
+  | 'animationTime';
 
 /**
  * Each in dp, with this number of values: `frame` (left, top, width, height in
@@ -84,6 +93,34 @@ const LOG_MARKER = 'RuntimeTestsViewSampler';
 const DECIMALS = 1e4;
 
 const MODULE_NAME = 'RuntimeTestsViewSampler';
+
+/**
+ * A frame of the UI thread, each time in ms of the monotonic clock of the
+ * samples: the frame time that a frame callback gets, the animation clock of
+ * the animators, and the run of the frame callback of the sampler. The two
+ * clocks differ in the buffer stuffing recovery of Android 16.
+ */
+export type ClockFrame = {
+  frameTimeMs: number;
+  animationTimeMs: number;
+  ranMs: number;
+};
+
+/** Starts the frame clock of the sampler. It runs until the app ends. */
+export function startFrameClock() {
+  getEnforcedSamplerModule().startFrameClock();
+}
+
+/** The frames of the frame clock, the oldest first. */
+export function readFrameClock(): ClockFrame[] {
+  return getEnforcedSamplerModule()
+    .frameClockRows()
+    .map(([frameTimeMs, animationTimeMs, ranMs]) => ({
+      frameTimeMs,
+      animationTimeMs,
+      ranMs,
+    }));
+}
 
 export function isViewSamplerAvailable(): boolean {
   return getSamplerModule() !== null;
@@ -151,6 +188,14 @@ export function logDrawnValues(
 /** The uptime in ms: the clock of the samples. */
 export function uptimeMs(): Promise<number> {
   return getEnforcedSamplerModule().now();
+}
+
+/**
+ * A garbage collection: the next read of a weak map has no entry of a freed
+ * view.
+ */
+export function collectGarbage(): Promise<void> {
+  return getEnforcedSamplerModule().collectGarbage();
 }
 
 function getEnforcedSamplerModule(): RuntimeTestsViewSamplerModule {

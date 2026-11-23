@@ -145,6 +145,20 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     );
   }
 
+  layoutAnimationViewDidUnmount(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    reanimatedID: number
+  ) {
+    this.#reanimatedModuleProxy.layoutAnimationViewDidUnmount(
+      shadowNodeWrapper,
+      reanimatedID
+    );
+  }
+
+  layoutAnimationViewDidMountAgain(viewTag: number) {
+    this.#reanimatedModuleProxy.layoutAnimationViewDidMountAgain(viewTag);
+  }
+
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean) {
     this.#reanimatedModuleProxy.setShouldAnimateExitingForTag(
       viewTag,
