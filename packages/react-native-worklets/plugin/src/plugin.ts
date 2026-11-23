@@ -8,16 +8,22 @@ import {
 import { processIfWorkletMethod } from './classMethod';
 import { handleWorkletDirective } from './directives';
 import { initializeState } from './globals';
-import type { WorkletsPluginPass } from './types';
+import type { WorkletModulesMode, WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
 module.exports = function WorkletsBabelPlugin(api: ConfigAPI): PluginItem {
-  const inlineModules = api.caller(
-    (caller) =>
-      (caller as { supportsInlineModules?: boolean } | undefined)
-        ?.supportsInlineModules === true
-  );
+  const workletModules: WorkletModulesMode = api.caller((caller) => {
+    const info = caller as
+      | { name?: string; bundler?: string; supportsInlineModules?: boolean }
+      | undefined;
+    if (info?.supportsInlineModules === true) {
+      return 'inline';
+    }
+    return info?.bundler === 'metro' || info?.name === 'metro'
+      ? 'file'
+      : 'in-place';
+  });
 
   function runWithTaggedExceptions(state: WorkletsPluginPass, fun: () => void) {
     if (state.skipFile) {
@@ -38,7 +44,7 @@ module.exports = function WorkletsBabelPlugin(api: ConfigAPI): PluginItem {
 
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(this, () => {
-        initializeState(this, inlineModules);
+        initializeState(this, workletModules);
         /**
          * We run the micro-plugin in the `pre` step of the whole pipeline to
          * add all 'worklet' directives before React Compiler kicks in.

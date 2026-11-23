@@ -33,6 +33,40 @@ test(
         /require\(["']metro:inline;base64,[A-Za-z0-9+/=]+["']\)\.default/,
         `got:\n${result?.code}`
       );
+
+      const inPlaceResult = babelCore.transformSync(
+        `function foo(x) { 'worklet'; return x + 1; }`,
+        {
+          filename: 'test.js',
+          babelrc: false,
+          configFile: false,
+          plugins: [shim],
+        }
+      );
+      assert.ok(inPlaceResult && inPlaceResult.code);
+      assert.match(
+        inPlaceResult.code,
+        /const foo = function foo_\w+Factory\(\) \{/,
+        `got:\n${inPlaceResult?.code}`
+      );
+      assert.doesNotMatch(inPlaceResult.code, /require\(/);
+
+      const metroResult = babelCore.transformSync(
+        `function foo(x) { 'worklet'; return x + 1; }`,
+        {
+          filename: 'test.js',
+          babelrc: false,
+          configFile: false,
+          caller: { name: 'metro', bundler: 'metro' },
+          plugins: [shim],
+        }
+      );
+      assert.ok(metroResult && metroResult.code);
+      assert.match(
+        metroResult.code,
+        /require\(["']react-native-worklets\/\.worklets\/\d+\.js["']\)\.default/,
+        `got:\n${metroResult?.code}`
+      );
     } finally {
       delete require_.cache[require_.resolve('../babel.js')];
     }
