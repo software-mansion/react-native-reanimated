@@ -140,6 +140,8 @@ Apply the `metro` patch for your Metro version from the [Worklets repository](ht
 
 Under any other bundler, such as webpack, Turbopack or Babel run on its own, the plugin emits each worklet in place, as a factory function in the file that defines it. Nothing is written to disk and no module has to be resolved. Such a bundle has no Worklet Runtimes, so this output serves the web and tooling; running worklets on native requires Metro.
 
+A library that precompiles its worklets this way must still let Metro transform its source, for example through the `react-native` or `source` field of its `package.json`. A worklet taken from such precompiled output has no module to load on a Worklet Runtime and fails with `[Worklets] This worklet was compiled without Metro`.
+
 ## Enable fast refresh on Worklet Runtimes
 
 _This step is optional but highly recommended._
