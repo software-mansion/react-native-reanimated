@@ -35,12 +35,10 @@ export default class CSSManager implements ICSSManager {
    */
   private hadTransitionLastUpdate = false;
 
-  constructor(
-    { shadowNodeWrapper, viewTag, reactViewName = 'RCTView' }: ViewInfo,
-    componentDisplayName = ''
-  ) {
+  constructor(viewInfo: ViewInfo, componentDisplayName = '') {
+    const { viewTag, reactViewName = 'RCTView' } = viewInfo;
     const tag = (this.viewTag = viewTag as number);
-    const wrapper = shadowNodeWrapper as ShadowNodeWrapper;
+    const wrapper = () => viewInfo.shadowNodeWrapper as ShadowNodeWrapper;
 
     const compoundComponentName = getCompoundComponentName(
       reactViewName,

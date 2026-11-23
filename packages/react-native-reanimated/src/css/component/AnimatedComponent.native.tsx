@@ -88,12 +88,16 @@ export default class AnimatedComponent<
     const viewInfo = getViewInfo(hostInstance);
     const viewTag = viewInfo.viewTag ?? -1;
     const reactViewName = viewInfo.reactViewName;
-    const shadowNodeWrapper = getShadowNodeWrapperFromRef(
-      this as InternalHostInstance,
-      hostInstance
-    );
+    const ref = this as InternalHostInstance;
+    getShadowNodeWrapperFromRef(ref, hostInstance);
 
-    return { viewTag, shadowNodeWrapper, reactViewName };
+    return {
+      viewTag,
+      reactViewName,
+      get shadowNodeWrapper() {
+        return getShadowNodeWrapperFromRef(ref, hostInstance);
+      },
+    };
   }
 
   _setComponentRef = (ref: Component | HTMLElement) => {

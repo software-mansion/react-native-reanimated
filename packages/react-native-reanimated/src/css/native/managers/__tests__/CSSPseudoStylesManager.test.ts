@@ -32,7 +32,7 @@ describe('CSSPseudoStylesManager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     manager = new CSSPseudoStylesManager(
-      shadowNodeWrapper,
+      () => shadowNodeWrapper,
       viewTag,
       propsBuilder,
       'RCTView$View'
@@ -113,7 +113,7 @@ describe('CSSPseudoStylesManager', () => {
 
     test('stays quiet for an SVG shape, which is hit-tested without opacity', () => {
       const svgManager = new CSSPseudoStylesManager(
-        shadowNodeWrapper,
+        () => shadowNodeWrapper,
         viewTag,
         propsBuilder,
         'RNSVGCircle$Circle'
