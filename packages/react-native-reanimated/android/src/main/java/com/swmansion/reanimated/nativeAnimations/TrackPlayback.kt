@@ -68,6 +68,10 @@ internal class TrackPlayback(
     var ownsProperty = true
         private set
 
+    /** The animation clock in ms of the frame of the update of fraction 1. */
+    var endAnimationTimeMs = Double.NaN
+        private set
+
     /** Not null from the return of `animator.start()` until the first animator frame. */
     private var pendingAlignment: AnimatorAlignment? = null
 
@@ -99,6 +103,7 @@ internal class TrackPlayback(
     private fun onAnimatorUpdate(animation: ValueAnimator) {
         val firstFrameAlignment = pendingAlignment
         if (firstFrameAlignment == null) {
+            if (animation.animatedFraction >= 1f) endAnimationTimeMs = AnimationUtils.currentAnimationTimeMillis().toDouble()
             showValueAt(animation.animatedFraction)
             return
         }

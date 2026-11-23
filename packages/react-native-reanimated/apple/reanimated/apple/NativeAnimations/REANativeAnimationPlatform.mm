@@ -1120,7 +1120,7 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
         [layer removeAnimationForKey:animationKeyForTrack(track)];
       }
     }
-    trackEndListener_(track, finished);
+    trackEndListener_(track, finished, std::nullopt);
   }
 
   __weak RCTSurfacePresenter *surfacePresenter_;

@@ -502,6 +502,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   object.setProperty(rt, "event", toJSIString(rt, event.event));
   setHandle(rt, object, event.handle);
   object.setProperty(rt, "objective", static_cast<int>(event.objective));
+  if (event.animationTimeMs) {
+    object.setProperty(rt, "animationTimeMs", *event.animationTimeMs);
+  }
   if (event.target) {
     object.setProperty(rt, "target", toJSIString(rt, *event.target));
   }
@@ -534,6 +537,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   }
   if (event.originTimestampMs) {
     object.setProperty(rt, "originTimestampMs", *event.originTimestampMs);
+  }
+  if (event.passTimestampMs) {
+    object.setProperty(rt, "passTimestampMs", *event.passTimestampMs);
   }
   if (event.leafValue) {
     object.setProperty(rt, "leafValue", *event.leafValue);

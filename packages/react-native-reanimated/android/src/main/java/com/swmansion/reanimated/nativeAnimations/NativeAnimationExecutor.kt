@@ -437,7 +437,17 @@ internal class NativeAnimationExecutor(
             playback.timeline.release(timingCache)
         }
         val key = playback.key
-        nativeCallGuard { callbacks.onTrackEnded(key.surfaceId, key.tag, key.owner, key.generation, key.target, true) }
+        nativeCallGuard {
+            callbacks.onTrackEnded(
+                key.surfaceId,
+                key.tag,
+                key.owner,
+                key.generation,
+                key.target,
+                true,
+                playback.endAnimationTimeMs,
+            )
+        }
     }
 
     private fun remove(key: TrackKey): TrackPlayback? {

@@ -436,6 +436,12 @@ class AndroidMountedAnimation final : public MountedAnimation {
     playback_->install(toJavaTrackKeys(replacedTracks));
   }
 
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  std::optional<double> passTimestampMs() const override {
+    return passTimestampMs_;
+  }
+#endif
+
  private:
   const alias_ref<JNativeAnimationExecutor::javaobject> executor_;
   const global_ref<JView::javaobject> view_;
@@ -488,9 +494,10 @@ std::shared_ptr<AndroidNativeAnimationPlatform> AndroidNativeAnimationPlatform::
   auto platform = std::shared_ptr<AndroidNativeAnimationPlatform>(
       new AndroidNativeAnimationPlatform(executor, std::move(uiManager), std::move(getAnimationTimestamp)));
   executor->setCallbacks(NativeAnimationPlatformCallbacks::newObjectCxxArgs(
-      [weakPlatform = platform->weak_from_this()](const TrackKey &track, const bool finished) {
+      [weakPlatform = platform->weak_from_this()](
+          const TrackKey &track, const bool finished, const double animationTimeMs) {
         if (const auto strongPlatform = weakPlatform.lock()) {
-          strongPlatform->onTrackEnded(track, finished);
+          strongPlatform->onTrackEnded(track, finished, animationTimeMs);
         }
       },
       [weakPlatform = platform->weak_from_this()] {
@@ -740,7 +747,10 @@ bool AndroidNativeAnimationPlatform::modelEndsAt(const alias_ref<JView> &view, c
   return model.size() == 1 && isSameValue(end, AnimationValue{model.front()});
 }
 
-void AndroidNativeAnimationPlatform::onTrackEnded(const TrackKey &track, const bool finished) {
+void AndroidNativeAnimationPlatform::onTrackEnded(
+    const TrackKey &track,
+    const bool finished,
+    const double animationTimeMs) {
   ReanimatedSystraceSection section("AndroidNativeAnimationPlatform::onTrackEnded");
   {
     const std::lock_guard lock(operationsMutex_);
@@ -748,7 +758,7 @@ void AndroidNativeAnimationPlatform::onTrackEnded(const TrackKey &track, const b
       return;
     }
   }
-  trackEndListener_(track, finished);
+  trackEndListener_(track, finished, animationTimeMs);
 }
 
 void AndroidNativeAnimationPlatform::drainPostedOperations() {

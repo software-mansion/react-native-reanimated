@@ -55,6 +55,9 @@ struct TraceEvent {
   uint8_t objective{5};
   std::optional<EndpointPolicy> endpointPolicy;
   std::optional<bool> finished;
+  /// Of a track end: the animation clock in ms of the frame of the last update of the track, where the platform
+  /// gives it (Android).
+  std::optional<double> animationTimeMs;
   std::optional<AnimationResult> result;
   std::optional<TrackBuildFailure> buildFailure;
   /// The clause of an `UnsupportedTarget` build failure.
@@ -67,6 +70,9 @@ struct TraceEvent {
   std::optional<int64_t> transactionNumber;
   /// The origin of the timelines of the request of a received command.
   std::optional<double> originTimestampMs;
+  /// Of a track start: the time of the platform pass that writes the start value, where the platform gives it
+  /// (Android).
+  std::optional<double> passTimestampMs;
   /// The value of the layout animation key that a capture got.
   std::optional<double> leafValue;
   /// The name that the layout domain gives to the type of the animation of a pending start, a refused start,

@@ -111,10 +111,14 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
   admit(const AnimationRequest &request, const std::weak_ptr<NativeAnimationClient> &client, Deliveries &deliveries);
   void runCancel(const AnimationHandle &handle, TrackStopMode mode);
   void runCloseSurface(SurfaceId surfaceId);
-  void onPlatformTrackEnded(const TrackKey &key, bool finished);
+  void onPlatformTrackEnded(const TrackKey &key, bool finished, std::optional<double> animationTimeMs);
   /// The command and the active track of `key`, if the host has them.
   std::optional<std::pair<CommandMap::iterator, std::vector<Track>::iterator>> findTrack(const TrackKey &key);
-  void endTrack(const TrackKey &key, TrackEnd end, Deliveries &deliveries);
+  void endTrack(
+      const TrackKey &key,
+      TrackEnd end,
+      Deliveries &deliveries,
+      std::optional<double> animationTimeMs = std::nullopt);
 
   std::optional<AnimationResultReason> validate(const AnimationRequest &request) const;
   std::vector<TrackKey> conflictingTracks(const AnimationRequest &request) const;
@@ -144,7 +148,8 @@ class NativeAnimationHost final : public std::enable_shared_from_this<NativeAnim
       const TrackKey &key,
       TrackEnd end,
       Deliveries &deliveries,
-      const AnimationHandle *conflictHandle = nullptr);
+      const AnimationHandle *conflictHandle = nullptr,
+      std::optional<double> animationTimeMs = std::nullopt);
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   ContainerSizes ownContainerSizes();
 #endif

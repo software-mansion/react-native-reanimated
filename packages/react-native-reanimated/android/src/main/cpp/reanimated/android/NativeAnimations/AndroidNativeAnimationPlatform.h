@@ -90,7 +90,7 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   std::optional<UnsupportedTargetCause> playbackCause(const AnimationTrack &track) const;
   std::optional<UnsupportedTargetCause> targetCause(const AnimationTrack &track) const;
   bool modelEndsAt(const alias_ref<JView> &view, const AnimationTrack &track) const;
-  void onTrackEnded(const TrackKey &track, bool finished);
+  void onTrackEnded(const TrackKey &track, bool finished, double animationTimeMs);
   /// One platform pass: all operations of the pass read one time.
   void drainPostedOperations();
 

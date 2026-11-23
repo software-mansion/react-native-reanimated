@@ -34,6 +34,13 @@ class MountedAnimation {
 
   /// Cannot fail. Removes `replacedTracks` and starts playback in one platform transaction.
   virtual void start(const std::vector<TrackKey> &replacedTracks) = 0;
+
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  /// The time of the platform pass that writes the start values, where the platform has one.
+  virtual std::optional<double> passTimestampMs() const {
+    return std::nullopt;
+  }
+#endif
 };
 
 /// The reason is why the platform rejects the command.
@@ -70,7 +77,9 @@ struct TargetSample {
 /// UI thread.
 class NativeAnimationPlatform {
  public:
-  using TrackEndListener = std::function<void(const TrackKey &track, bool finished)>;
+  /// `animationTimeMs` is the animation clock of the frame of the last update of the track, where the platform has it.
+  using TrackEndListener =
+      std::function<void(const TrackKey &track, bool finished, std::optional<double> animationTimeMs)>;
 
   virtual ~NativeAnimationPlatform() = default;
 
