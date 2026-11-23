@@ -300,11 +300,11 @@ function ExampleListScreen({
 
       return (
         <Item
+          disabled={entry.disabledPlatforms?.includes(Platform.OS)}
           icon={entry.icon}
           shouldWork={platform ? entry.shouldWork?.[platform] : undefined}
           title={entry.title}
           wasClicked={wasClicked.includes(name)}
-          disabled={entry.disabledPlatforms?.includes(Platform.OS)}
           onPress={() => openExample(name)}
         />
       );
