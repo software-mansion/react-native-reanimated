@@ -38,6 +38,7 @@ pub struct State {
     pub source_text: String,
 
     pub emitted_files: Vec<(String, String)>,
+    pub changed: bool,
 
     pub imports_by_symbol: HashMap<SymbolId, ImportInfo>,
 
@@ -65,6 +66,7 @@ impl State {
             forwardable_relative_paths,
             source_text,
             emitted_files: Vec::new(),
+            changed: false,
             imports_by_symbol: HashMap::new(),
             error: None,
         }
