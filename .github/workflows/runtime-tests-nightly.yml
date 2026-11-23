@@ -29,6 +29,19 @@ jobs:
       SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
       SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
 
+  # Library defaults: FabricExample turns the synchronous UI prop flags on.
+  ios-argent-synchronous-ui-props-off:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: $/.github/workflows/runtime-tests-ios-argent.yml
+    with:
+      configuration: Debug
+      bundleMode: true
+      synchronousUIProps: false
+      full: true
+    secrets:
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+
   android:
     if: github.repository == 'software-mansion/react-native-reanimated'
     strategy:
@@ -40,4 +53,13 @@ jobs:
     with:
       configuration: ${{ matrix.configuration }}
       bundleMode: ${{ matrix.bundleMode }}
+      full: true
+
+  android-synchronous-ui-props-off:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: $/.github/workflows/runtime-tests-android.yml
+    with:
+      configuration: Debug
+      bundleMode: true
+      synchronousUIProps: false
       full: true

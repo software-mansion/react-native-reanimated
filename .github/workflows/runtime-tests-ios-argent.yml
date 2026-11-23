@@ -25,6 +25,10 @@ on:
         required: false
         type: boolean
         default: false
+      synchronousUIProps:
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -47,6 +51,11 @@ on:
         required: false
         type: boolean
         default: false
+      synchronousUIProps:
+        description: Build with the synchronous UI prop flags of FabricExample (false = library defaults)
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -72,11 +81,11 @@ jobs:
   # Build on macos runner
   build-app:
     needs: preflight
-    name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}${{ !inputs.synchronousUIProps && ', synchronous UI props off' || '' }})
     runs-on: macos-26
     timeout-minutes: 90
     concurrency:
-      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -118,6 +127,13 @@ jobs:
         if: ${{ !matrix.bundleMode }}
         run: yarn toggle-bundle-mode
 
+      - name: Turn off synchronous UI prop updates
+        if: ${{ !inputs.synchronousUIProps }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          jq '.reanimated.staticFeatureFlags += {ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false, IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS: false}' package.json > package.json.new
+          mv package.json.new package.json
+
       - name: Build Reanimated package
         working-directory: packages/react-native-reanimated
         run: yarn build
@@ -140,7 +156,7 @@ jobs:
         run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION"
 
       - name: Save ccache
-        if: inputs.bundleMode
+        if: inputs.bundleMode && inputs.synchronousUIProps
         uses: $/.github/actions/save-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
@@ -149,7 +165,7 @@ jobs:
       # fan-out saves. Bundle Mode, because the Legacy Eval legs run
       # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
-        if: inputs.bundleMode && env.CONFIGURATION == 'Debug'
+        if: inputs.bundleMode && inputs.synchronousUIProps && env.CONFIGURATION == 'Debug'
         uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -171,7 +187,7 @@ jobs:
       - name: Upload app artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}
+          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
           path: apps/fabric-example/dist/FabricExample.app.zip
           if-no-files-found: error
           retention-days: 3
@@ -179,11 +195,11 @@ jobs:
   # Test on remote simulator running on Argent Cloud
   run-tests-remote:
     needs: build-app
-    name: Remote tests (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    name: Remote tests (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}${{ !inputs.synchronousUIProps && ', synchronous UI props off' || '' }})
     runs-on: ubuntu-latest # <- the whole point: no macOS, no local simulator
     timeout-minutes: 60
     concurrency:
-      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
@@ -245,7 +261,7 @@ jobs:
       - name: Download app artifact
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}
+          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
           path: apps/fabric-example/dist
 
       - name: Unpack app artifact
@@ -310,7 +326,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14
