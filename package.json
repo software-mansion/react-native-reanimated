@@ -82,7 +82,8 @@
     "typescript": "5.9.3"
   },
   "resolutions": {
-    "metro": "patch:metro@npm%3A0.88.0#~/.yarn/patches/metro-npm-0.88.0-4800af9fce.patch",
-    "metro-runtime": "patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch"
+    "metro": "0.88.0",
+    "metro-runtime": "patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch",
+    "@react-native/metro-babel-transformer": "0.89.0-rc.2"
   }
 }
