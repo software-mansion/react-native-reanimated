@@ -12,6 +12,7 @@ export interface TransformOptions extends PluginOptions {
   envName?: string;
   pluginVersion?: string;
   workletsPackageDir?: string;
+  inPlace?: boolean;
 }
 
 export interface EmittedFile {

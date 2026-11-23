@@ -60,6 +60,7 @@ function runPlugin(
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
     filename: MOCK_LOCATION,
+    caller: { name: 'metro', bundler: 'metro' },
     compact: false,
     babelrc: false,
     configFile: false,
