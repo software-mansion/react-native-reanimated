@@ -6,6 +6,7 @@ export interface PluginOptions {
     relativePaths?: string[];
   };
   silenceDangerousPathsWarning?: boolean;
+  disableSourceMaps?: boolean;
 }
 
 export interface TransformOptions extends PluginOptions {

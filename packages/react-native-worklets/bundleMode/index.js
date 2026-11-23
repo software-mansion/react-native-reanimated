@@ -40,15 +40,19 @@ function bundleModeResolveRequest(
 }
 
 const workletSourceMapCommentRegex = /^\/\/# workletSourceMap=(\S+)$/m;
+const generatedWorkletsDir = path.resolve(__dirname, '..', '.worklets');
 
 function bundleModeCustomizeFrame(/** @type {any} */ frame) {
-  const file = frame.file?.replace(/\\/g, '/');
-  if (!file || !file.includes(workletsDirPath)) {
+  if (!frame.file) {
+    return undefined;
+  }
+  const file = path.resolve(frame.file);
+  if (path.dirname(file) !== generatedWorkletsDir || !file.endsWith('.js')) {
     return undefined;
   }
   try {
     const match = fs
-      .readFileSync(frame.file, 'utf8')
+      .readFileSync(file, 'utf8')
       .match(workletSourceMapCommentRegex);
     if (!match) {
       return undefined;

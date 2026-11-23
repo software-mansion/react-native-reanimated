@@ -41,7 +41,7 @@ pub fn run(
         strip_typescript(&mut program, &allocator, filename)?;
     }
 
-    let mut state = State::new(options, source_text.to_string());
+    let mut state = State::new(options, source_text);
 
     let flag_enabled = bundle_mode::enable_flag(&mut program, builder, filename);
 

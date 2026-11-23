@@ -26,7 +26,7 @@ pub struct ImportInfo {
 }
 
 #[derive(Debug)]
-pub struct State {
+pub struct State<'a> {
     pub opts: PluginOptions,
 
     pub worklet_number: u32,
@@ -35,7 +35,7 @@ pub struct State {
 
     pub forwardable_relative_paths: Vec<String>,
 
-    pub source_text: String,
+    pub source_text: &'a str,
 
     pub emitted_files: Vec<(String, String)>,
 
@@ -44,8 +44,8 @@ pub struct State {
     pub error: Option<String>,
 }
 
-impl State {
-    pub fn new(opts: PluginOptions, source_text: String) -> Self {
+impl<'a> State<'a> {
+    pub fn new(opts: PluginOptions, source_text: &'a str) -> Self {
         let user_forwarding = opts.import_forwarding.clone().unwrap_or_default();
         let mut forwardable_module_names: Vec<String> = DEFAULT_FORWARDABLE_MODULE_NAMES
             .iter()

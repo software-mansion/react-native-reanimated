@@ -8,7 +8,7 @@ const REAL_VERSION: &str = env!("WORKLETS_PACKAGE_VERSION");
  * The version stamped onto a worklet, or `None` in release builds where the
  * field is omitted entirely.
  */
-pub fn plugin_version(state: &State) -> Option<&str> {
+pub fn plugin_version<'s>(state: &'s State<'_>) -> Option<&'s str> {
     if is_release(state.opts.env_name.as_deref()) {
         return None;
     }
