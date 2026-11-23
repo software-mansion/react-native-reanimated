@@ -94,6 +94,7 @@ const KIND_CASES = [
     mountedView: true,
     mode: ComparisonMode.COLOR,
   },
+  // TODO: Read Circle fill, Switch value and TextInput text back from native.
   {
     description: 'Circle fill',
     hookName: 'useAnimatedProps',
@@ -425,16 +426,24 @@ type Updates = Awaited<ReturnType<typeof recordAnimationUpdates>>;
 
 // Ways to read the value back from native.
 function createReaders(updates: Updates, prop: string, mode: ComparisonMode) {
-  // Every value of `prop` sent to native, in order, from all views (the
-  // recorder can't tell views apart).
+  // Every value of `prop` sent to native, in order, from all views. Works only
+  // because `_updateProps` passes no tag (see the TODO in
+  // TestsOfTestingFramework.test.tsx). Once fixed, `getUpdates()` throws
+  // "Recorded snapshots of many views" and the hook-and-inline tests break.
   const sentValues = async (): Promise<TestValue[]> => {
     try {
       return (await updates.getUpdates())
         .filter((update) => prop in update)
         .map((update) => toComparable((update as ReceivedProps)[prop], mode));
-    } catch {
+    } catch (error) {
       // `getUpdates` throws when nothing was recorded yet.
-      return [];
+      if (
+        error instanceof Error &&
+        error.message.includes('No updates were recorded')
+      ) {
+        return [];
+      }
+      throw error;
     }
   };
 
