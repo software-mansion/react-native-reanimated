@@ -44,11 +44,12 @@
  * the order `before the mount`: a case of `native layout live clock` does. The reads cannot show a write in
  * the interval before the first read.
  *
- * The tests of `native layout transform forms against the frame driver` need the view sampler of the
+ * The tests of `native layout transform forms against the declared shape` need the view sampler of the
  * Android test host. At each draw it maps the four corners of each box through the drawn matrix of the
- * view. Each test compares the native box with its frame-driven twin in the same draw, at each progress
- * of the iOS pixel table from the origin of the native track. Pixels and the alignment of the two starts
- * are not tested.
+ * view. At each progress of the iOS pixel table from the origin of the native track, each test compares
+ * the native box with its declared corners at one frame time that the draw can show. The frame-driven twin
+ * is not the reference: a phase of the frame driver starts in the frame after the end of the phase before
+ * it, so each operation of the twin has a time of its own. Pixels are not tested.
  */
 
 import type { ViewStyle } from 'react-native';
