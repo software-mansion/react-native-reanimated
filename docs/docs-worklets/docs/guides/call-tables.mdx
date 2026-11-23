@@ -8,7 +8,7 @@ import CallTableBundleModeSource from '!!raw-loader!./_call-tables/callTableBund
 
 # Call tables
 
-Call tables are quick references that show **from which runtimes a given scheduling function can be called**. Since worklets run in [Bundle Mode](/docs/bundleMode), every runtime has access to the full JavaScript bundle and most threading APIs are available on all runtimes - however, some functions can still be called only from specific runtimes.
+Call tables are quick references that show **from which runtimes a given scheduling function can be called**. Since worklets run in [Bundle Mode](../bundleMode/overview.mdx), every runtime has access to the full JavaScript bundle and most threading APIs are available on all runtimes - however, some functions can still be called only from specific runtimes.
 
 ### How to read a call table
 
@@ -28,7 +28,7 @@ In the following example, the RN Runtime schedules a worker, and that worker sch
 
 <ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource} bundleMode/>
 
-Compare it with [runOnUIAsync](/docs/threading/runOnUIAsync), which can be called only from the RN Runtime:
+Compare it with [runOnUIAsync](../threading/runOnUIAsync.mdx), which can be called only from the RN Runtime:
 
 <CallTable
   calls={{
