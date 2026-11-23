@@ -99,7 +99,7 @@ export interface IWorkletEventHandler<Event extends object> {
     newEvents: string[]
   ) => void;
   registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
-  unregisterFromEvents: (viewTag: number) => void;
+  unregisterFromEvents: (viewTag: number, fallbackEventName?: string) => void;
 }
 
 export interface AnimatedStyleHandle<Style = DefaultStyle> {

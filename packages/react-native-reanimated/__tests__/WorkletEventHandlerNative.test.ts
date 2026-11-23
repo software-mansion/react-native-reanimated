@@ -23,13 +23,7 @@ beforeEach(() => {
 });
 
 test('registers the fallback name on mount', () => {
-  const h = holder();
-  const component = {
-    _componentRef: { __nativeTag: 1 },
-    props: { onScroll: h },
-    getComponentViewTag: () => 1,
-  };
-  new NativeEventsManager(component as never).attachEvents();
+  mount({ onScroll: holder() });
   expect(calls()).toEqual([['onScroll', 1]]);
 });
 
@@ -40,10 +34,10 @@ test('registers the fallback name when a handler is added', () => {
 });
 
 test('registers the fallback name when a handler is replaced', () => {
-  const h1 = holder();
-  const { component, manager } = setup({ onScroll: h1 });
+  const oldRegistrationId = nextId;
+  const { component, manager } = setup({ onScroll: holder() });
   update(component, manager, { onScroll: holder() });
-  expect(unregister).toHaveBeenCalledTimes(1);
+  expect(unregister.mock.calls).toEqual([[oldRegistrationId]]);
   expect(calls()).toEqual([['onScroll', 1]]);
 });
 
@@ -57,9 +51,11 @@ test('registers the fallback name after host replacement', () => {
   const { component, manager } = setup({});
   const props = { onScroll: holder() };
   update(component, manager, props);
+  const oldRegistrationId = register.mock.results[0].value;
   register.mockClear();
   (component._componentRef as { __nativeTag: number }).__nativeTag = 2;
   update(component, manager, props);
+  expect(unregister.mock.calls).toEqual([[oldRegistrationId]]);
   expect(calls()).toEqual([['onScroll', 2]]);
 });
 
@@ -80,7 +76,7 @@ test('keeps a separate fallback name for each view through rebuilds', () => {
     ['onScroll', 1],
     ['onMomentumScrollEnd', 2],
   ]);
-  h.unregisterFromEvents(1);
+  h.unregisterFromEvents(1, 'onScroll');
   register.mockClear();
   h.updateEventHandler(() => undefined, []);
   expect(calls()).toEqual([['onMomentumScrollEnd', 2]]);
@@ -97,6 +93,42 @@ test('uses explicit event names and restores the fallback when they are removed'
   expect(calls()).toEqual([['onScroll', 1]]);
 });
 
+test('unregisters every prop of a shared handler on unmount', () => {
+  const shared = holder();
+  const { manager } = mount({
+    onScroll: shared,
+    onMomentumScrollEnd: shared,
+  });
+  const registrationIds = registeredIds();
+  manager.detachEvents();
+  expect(unregisteredIds()).toEqual(registrationIds);
+});
+
+test('re-registers every prop of a shared handler when it is rebuilt', () => {
+  const shared = holder();
+  mount({ onScroll: shared, onMomentumScrollEnd: shared });
+  const registrationIds = registeredIds();
+  register.mockClear();
+  shared.workletEventHandler.updateEventHandler(() => undefined, []);
+  expect(unregisteredIds()).toEqual(registrationIds);
+  expect(calls()).toEqual([
+    ['onScroll', 1],
+    ['onMomentumScrollEnd', 1],
+  ]);
+});
+
+test('keeps the other prop of a shared handler when one prop is removed', () => {
+  const shared = holder();
+  const { component, manager } = setup({
+    onScroll: shared,
+    onMomentumScrollEnd: shared,
+  });
+  update(component, manager, { onMomentumScrollEnd: shared });
+  register.mockClear();
+  shared.workletEventHandler.updateEventHandler(() => undefined, []);
+  expect(calls()).toEqual([['onMomentumScrollEnd', 1]]);
+});
+
 function holder(eventNames: string[] = []) {
   return {
     workletEventHandler: new WorkletEventHandler(() => undefined, eventNames),
@@ -104,6 +136,12 @@ function holder(eventNames: string[] = []) {
 }
 
 function setup(props: Record<string, unknown>) {
+  const mounted = mount(props);
+  register.mockClear();
+  return mounted;
+}
+
+function mount(props: Record<string, unknown>) {
   const component = {
     _componentRef: { __nativeTag: 1 },
     props,
@@ -111,7 +149,6 @@ function setup(props: Record<string, unknown>) {
   };
   const manager = new NativeEventsManager(component as never);
   manager.attachEvents();
-  register.mockClear();
   return { component, manager };
 }
 
@@ -127,4 +164,12 @@ function update(
 
 function calls() {
   return register.mock.calls.map(([, name, tag]) => [name, tag]);
+}
+
+function registeredIds() {
+  return register.mock.results.map(({ value }) => value as number).sort();
+}
+
+function unregisteredIds() {
+  return unregister.mock.calls.map(([id]) => id as number).sort();
 }

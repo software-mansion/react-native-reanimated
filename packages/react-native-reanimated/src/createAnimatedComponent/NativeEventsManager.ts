@@ -34,8 +34,8 @@ export class NativeEventsManager implements INativeEventsManager {
   }
 
   public detachEvents() {
-    executeForEachEventHandler(this.#registeredProps, (_key, handler) => {
-      handler.unregisterFromEvents(this.#eventViewTag);
+    executeForEachEventHandler(this.#registeredProps, (key, handler) => {
+      handler.unregisterFromEvents(this.#eventViewTag, key);
     });
   }
 
@@ -45,8 +45,8 @@ export class NativeEventsManager implements INativeEventsManager {
     // If the event view tag changes, we need to completely re-mount all events
     if (this.#eventViewTag !== computedEventTag) {
       // Remove all bindings from previous props that ran on the old viewTag
-      executeForEachEventHandler(prevProps, (_key, handler) => {
-        handler.unregisterFromEvents(this.#eventViewTag);
+      executeForEachEventHandler(prevProps, (key, handler) => {
+        handler.unregisterFromEvents(this.#eventViewTag, key);
       });
       // We don't need to unregister from current (new) props, because their events weren't registered yet
       // Replace the view tag
@@ -64,13 +64,13 @@ export class NativeEventsManager implements INativeEventsManager {
       const newProp = this.#managedComponent.props[key];
       if (!newProp) {
         // Prop got deleted
-        prevHandler.unregisterFromEvents(this.#eventViewTag);
+        prevHandler.unregisterFromEvents(this.#eventViewTag, key);
       } else if (
         isWorkletEventHandler(newProp) &&
         newProp.workletEventHandler !== prevHandler
       ) {
         // Prop got changed
-        prevHandler.unregisterFromEvents(this.#eventViewTag);
+        prevHandler.unregisterFromEvents(this.#eventViewTag, key);
         newProp.workletEventHandler.registerForEvents(this.#eventViewTag, key);
       }
     });
