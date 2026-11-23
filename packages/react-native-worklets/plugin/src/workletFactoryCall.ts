@@ -1,5 +1,9 @@
 import type { NodePath } from '@babel/core';
-import type { CallExpression, MemberExpression } from '@babel/types';
+import type {
+  CallExpression,
+  Expression,
+  MemberExpression,
+} from '@babel/types';
 import {
   callExpression,
   identifier,
@@ -15,9 +19,21 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): CallExpression | MemberExpression {
-  const { factoryCallParamPack, workletHash } = makeWorkletFactory(path, state);
+  const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
+    path,
+    state
+  );
 
-  const workletModule = memberExpression(
+  if (state.workletModules === 'in-place') {
+    const inPlaceCall = callExpression(
+      factory,
+      factoryCallParamPack.elements.length === 0 ? [] : [factoryCallParamPack]
+    );
+    addStackTraceDataToWorkletFactory(path, inPlaceCall);
+    return inPlaceCall;
+  }
+
+  const workletModule: Expression = memberExpression(
     callExpression(identifier('require'), [
       stringLiteral(
         `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
