@@ -59,6 +59,7 @@ async function readRecorded<TProp extends string>(
   ) as Record<TProp, unknown[]>;
 }
 
+// `waitForFrames(n)` with n > 1 breaks the UI frame loop.
 async function waitTwoFrames() {
   await waitForFrames(1);
   await waitForFrames(1);
