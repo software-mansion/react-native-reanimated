@@ -28,6 +28,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 import { ComparisonMode } from '../../../ReJest/types';
+import { processColorNumber } from '../../../ReJest/utils/colorUtils';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
@@ -180,10 +181,9 @@ async function recordColorFrames(
     }
     await advanceAnimationTimer(FRAME_INTERVAL_MS);
   }
-  await expectEventually(() => box.getSynchronousProp('backgroundColor')).toBe(
-    toColor,
-    ComparisonMode.COLOR
-  );
+  await expectEventually(async () =>
+    processColorNumber(await box.getAnimatedStyle('backgroundColor'))
+  ).toBe(processColorNumber(toColor), ComparisonMode.NUMBER);
 
   await stopRecordingAnimationUpdates();
   const snapshots = await updatesContainer.getSnapshots();
