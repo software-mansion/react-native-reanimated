@@ -263,6 +263,36 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
   padding-left: 0;
 }
 
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_'] {
+  scrollbar-color: var(--ifm-link-color) transparent;
+  scrollbar-width: thin;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_']::-webkit-scrollbar {
+  width: 8px;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_']::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_']::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--ifm-link-color);
+}
+
 .docs-version-current .theme-doc-sidebar-menu .menu__list {
   margin: 0;
   padding-left: 0;
