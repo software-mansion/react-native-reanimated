@@ -11,6 +11,7 @@ import Animated, {
 import {
   advanceAnimationTimer,
   clearRenderOutput,
+  commitsSynchronousProps,
   describe,
   expect,
   expectEventually,
@@ -116,8 +117,8 @@ async function expectBox(size: number, color: string) {
 
 async function expectBoxStaysSettled(size: number, color: string) {
   const component = getTestComponent(BOX_REF);
-  await expectEventually(
-    async () => (await component.getMountedViewProps())?.backgroundColor
+  await expectEventually(() =>
+    component.getSynchronousProp('backgroundColor')
   ).toBe(color, ComparisonMode.COLOR);
   await expectBox(size, color);
   await wait(DURATION_MS + FRAME_INTERVAL_MS + 4);
@@ -140,6 +141,16 @@ function toColorFrames(snapshot: SingleViewSnapshot): SingleViewSnapshot {
   });
 }
 
+function progressFrames(
+  frames: SingleViewSnapshot,
+  toColor: string
+): Array<number> {
+  return frames.map((frame) => {
+    const red = parseInt(colorOf(frame).slice(1, 3), 16);
+    return toColor === COLOR_ON ? red : 255 - red;
+  });
+}
+
 async function recordColorFrames(
   fromColor: string,
   toColor: string,
@@ -151,7 +162,7 @@ async function recordColorFrames(
   await render(<RecordedColorBox color={color} size={SIZE_BIG} />);
   await advanceAnimationTimer(DURATION_MS);
   const updatesContainer = await recordAnimationUpdates({
-    nativeSource: 'mountedView',
+    nativeSource: commitsSynchronousProps() ? 'shadowTree' : 'mountedView',
   });
   await runOnUIBlocking(() => {
     'worklet';
@@ -169,9 +180,10 @@ async function recordColorFrames(
     }
     await advanceAnimationTimer(FRAME_INTERVAL_MS);
   }
-  await expectEventually(
-    async () => (await box.getMountedViewProps())?.backgroundColor
-  ).toBe(toColor, ComparisonMode.COLOR);
+  await expectEventually(() => box.getSynchronousProp('backgroundColor')).toBe(
+    toColor,
+    ComparisonMode.COLOR
+  );
 
   await stopRecordingAnimationUpdates();
   const snapshots = await updatesContainer.getSnapshots();
@@ -273,6 +285,12 @@ describe('animation of a non-layout prop across React renders', () => {
       );
 
       expect(observed.frames).toMatchSnapshots(reference.frames);
+
+      const progress = progressFrames(observed.frames, toColor);
+      for (let i = 1; i < progress.length; i++) {
+        expect(progress[i]).toBeWithinRange(progress[i - 1], 255);
+      }
+      expect(progress[progress.length - 1] > progress[resizeFrame]).toBe(true);
 
       await expectBox(SIZE_SMALL, toColor);
     }

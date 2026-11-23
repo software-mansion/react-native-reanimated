@@ -534,11 +534,11 @@ async function expectShows(
 async function expectOpacity(expected: number, step: string) {
   await waitTwoFrames();
   const opacity =
-    (await getTestComponent(TEXT_REF).getMountedViewProps())?.opacity ?? NaN;
+    await getTestComponent(TEXT_REF).getSynchronousProp('opacity');
   expectRow(
     step,
-    Math.abs(opacity - expected) < 0.01,
-    `has opacity ${expected} (got ${opacity})`
+    Math.abs(Number(opacity) - expected) < 0.01,
+    `has opacity ${expected} (got ${String(opacity)})`
   );
 }
 
@@ -762,17 +762,17 @@ describe('Animated.Text with a shared value as children', () => {
         animateWithHeldClock(progress, 100, 'UP_FINISHED')
       );
       const atHundred = await measureScreen();
-      const opacityAtHundred = Number(
-        (await getTestComponent(ROW.OPACITY).getMountedViewProps())?.opacity
-      );
+      const opacityAtHundred = await getTestComponent(
+        ROW.OPACITY
+      ).getSynchronousProp('opacity');
 
       const down = await recordScreenFrames(() =>
         animateWithHeldClock(progress, 0, 'DOWN_FINISHED')
       );
       const backAtZero = await measureScreen();
-      const opacityBackAtZero = Number(
-        (await getTestComponent(ROW.OPACITY).getMountedViewProps())?.opacity
-      );
+      const opacityBackAtZero = await getTestComponent(
+        ROW.OPACITY
+      ).getSynchronousProp('opacity');
       await unmockAnimationTimer();
 
       expect(up.counter.map((group) => group.value).join(',')).toBe(
@@ -1042,7 +1042,7 @@ describe('Animated.Text with a shared value as children', () => {
         opacityFrames.every((v, i) => i === 0 || v <= opacityFrames[i - 1])
       ).toBe(true);
       expect(
-        (await getTestComponent(TEXT_REF).getMountedViewProps())?.opacity
+        await getTestComponent(TEXT_REF).getSynchronousProp('opacity')
       ).toBe(0.2, ComparisonMode.FLOAT_DISTANCE);
       expect((await readSettled('width')) > widthAtZero).toBe(true);
     });
@@ -1054,7 +1054,7 @@ describe('Animated.Text with a shared value as children', () => {
       const component = getTestComponent(TEXT_REF);
       const readOpacity = async () => {
         await waitTwoFrames();
-        return (await component.getMountedViewProps())?.opacity;
+        return component.getSynchronousProp('opacity');
       };
 
       opacity.value = 0.3;

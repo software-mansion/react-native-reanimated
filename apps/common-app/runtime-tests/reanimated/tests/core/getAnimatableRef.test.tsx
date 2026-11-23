@@ -98,7 +98,7 @@ function Scenario({
 }
 
 async function readOpacity(ref: string) {
-  return (await getTestComponent(ref).getMountedViewProps())?.opacity;
+  return getTestComponent(ref).getSynchronousProp('opacity');
 }
 
 // Reads right after the animation ends: with FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS

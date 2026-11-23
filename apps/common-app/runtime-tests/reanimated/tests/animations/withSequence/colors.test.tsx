@@ -217,7 +217,7 @@ describe('withSequence animation of color', () => {
       const passiveComponent = getTestComponent(Component.PASSIVE);
       const expectBothMounted = async (color: string) => {
         for (const component of [activeComponent, passiveComponent]) {
-          expect((await component.getMountedViewProps())?.backgroundColor).toBe(
+          expect(await component.getSynchronousProp('backgroundColor')).toBe(
             color,
             ComparisonMode.COLOR
           );
@@ -232,7 +232,7 @@ describe('withSequence animation of color', () => {
       // so only the passive one is checked here.
       if (!startColor.startsWith('hwb')) {
         expect(
-          (await passiveComponent.getMountedViewProps())?.backgroundColor
+          await passiveComponent.getSynchronousProp('backgroundColor')
         ).toBe(startColor, ComparisonMode.COLOR);
       }
       await advanceAnimationTimer(DELAY / 2);

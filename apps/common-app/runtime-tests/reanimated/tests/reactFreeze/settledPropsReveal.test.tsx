@@ -122,7 +122,7 @@ function CollectorKeeper() {
 }
 
 async function readNativeOpacity() {
-  return (await getTestComponent(BOX_REF).getMountedViewProps())?.opacity;
+  return getTestComponent(BOX_REF).getSynchronousProp('opacity');
 }
 
 async function readShadowTreeOpacity() {
