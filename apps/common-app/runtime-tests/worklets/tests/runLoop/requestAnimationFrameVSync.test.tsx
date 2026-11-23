@@ -17,6 +17,8 @@ import {
 const FRAMES = 20;
 const RATE_WINDOW_MS = 1000;
 const MIN_RATE_RATIO = 0.9;
+const UI_BLOCK_MS = 500;
+const MIN_FRAMES_DURING_UI_BLOCK = 5;
 
 type WorkletRuntimeConfig = Parameters<typeof createWorkletRuntime>[0];
 
@@ -178,5 +180,59 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     expect(uiFrames > 0).toBe(true);
     expect(workerFrames >= uiFrames * MIN_RATE_RATIO).toBe(true);
     expect(workerFrames <= uiFrames + 1).toBe(true);
+  });
+
+  test('runs callbacks while the UI thread is blocked', async () => {
+    // Arrange
+    const [workerNotification, uiNotification] = [
+      'vsyncWorkerUnblocked',
+      'vsyncUIBlocked',
+    ];
+    const runtime = createWorkletRuntime({ name: 'vsync', enableVSync: true });
+    let workerCallbackTimes: number[] = [];
+    let blockStart = 0;
+    let blockEnd = 0;
+    const onWorkerDone = (times: number[]) => {
+      workerCallbackTimes = times;
+      notify(workerNotification);
+    };
+    const onUIDone = (start: number, end: number) => {
+      blockStart = start;
+      blockEnd = end;
+      notify(uiNotification);
+    };
+
+    // Act
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      const times: number[] = [];
+      const start = performance.now();
+      const onFrame = () => {
+        const now = performance.now();
+        times.push(now);
+        if (now - start < 3 * UI_BLOCK_MS) {
+          requestAnimationFrame(onFrame);
+        } else {
+          scheduleOnRN(onWorkerDone, times);
+        }
+      };
+      requestAnimationFrame(onFrame);
+    });
+    scheduleOnUI(() => {
+      'worklet';
+      const start = performance.now();
+      while (performance.now() - start < UI_BLOCK_MS) {
+        /** Busy wait. */
+      }
+      scheduleOnRN(onUIDone, start, performance.now());
+    });
+    await waitForNotifications([workerNotification, uiNotification]);
+
+    // Assert
+    const duringBlock = workerCallbackTimes.filter(
+      (time) => time > blockStart && time < blockEnd
+    );
+    expect(blockEnd - blockStart >= UI_BLOCK_MS).toBe(true);
+    expect(duringBlock.length >= MIN_FRAMES_DURING_UI_BLOCK).toBe(true);
   });
 });

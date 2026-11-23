@@ -14,6 +14,7 @@ import com.facebook.soloader.SoLoader
 import com.swmansion.worklets.networking.Networking
 import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
+import com.swmansion.worklets.runloop.DedicatedThreadFrameSource
 
 @Suppress("KotlinJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME, needsEagerInit = true)
@@ -39,6 +40,8 @@ class WorkletsModule(
 
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
+    private val mWorkerAnimationFrameQueue =
+        AnimationFrameQueue(reactContext, DedicatedThreadFrameSource())
     private val mNetworking = Networking()
     private var mSlowAnimationsEnabled = false
     private var mHostResumed = false
@@ -96,6 +99,11 @@ class WorkletsModule(
         mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
     }
 
+    @DoNotStrip
+    fun requestWorkerAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
+        mWorkerAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
+    }
+
     /** @noinspection unused */
     @DoNotStrip
     fun isOnJSQueueThread(): Boolean = reactApplicationContext.isOnJSQueueThread
@@ -108,6 +116,7 @@ class WorkletsModule(
         val animationsDragFactor = 10
         mSlowAnimationsEnabled = !mSlowAnimationsEnabled
         mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
+        mWorkerAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
     }
 
     @OptIn(FrameworkAPI::class)
@@ -136,6 +145,7 @@ class WorkletsModule(
                 .removeTaskEventListener(this)
         }
         mAnimationFrameQueue.invalidate()
+        mWorkerAnimationFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
             invalidateCpp()
         }
@@ -175,8 +185,10 @@ class WorkletsModule(
                 HeadlessJsTaskContext.getInstance(reactApplicationContext).hasActiveTasks()
             if (mHostResumed || hasActiveHeadlessTasks) {
                 mAnimationFrameQueue.resume()
+                mWorkerAnimationFrameQueue.resume()
             } else {
                 mAnimationFrameQueue.pause()
+                mWorkerAnimationFrameQueue.pause()
             }
         }
     }

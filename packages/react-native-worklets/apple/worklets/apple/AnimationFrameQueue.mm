@@ -29,6 +29,7 @@ const auto POOR = CAFrameRateRangeMake(10, 24, 24);
 @implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
+  NSThread *dedicatedThread_;
   std::vector<std::function<void(double)>> frameCallbacks_;
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
@@ -41,6 +42,42 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 #pragma mark-- public
 
 - (instancetype)init
+{
+  return [self initWithDedicatedThread:NO];
+}
+
+- (instancetype)initOnDedicatedThread
+{
+#if TARGET_OS_OSX
+  return [self initWithDedicatedThread:NO];
+#else // TARGET_OS_OSX
+  return [self initWithDedicatedThread:YES];
+#endif // TARGET_OS_OSX
+}
+
+- (void)requestAnimationFrame:(std::function<void(double)>)callback
+{
+  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  frameCallbacks_.push_back(callback);
+  [self scheduleQueueExecution];
+}
+
+- (void)invalidate
+{
+  AssertTurboModuleManagerQueue();
+  if (dedicatedThread_ == nil) {
+    [displayLink_ invalidate];
+    return;
+  }
+  [self performSelector:@selector(invalidateOnDedicatedThread)
+               onThread:dedicatedThread_
+             withObject:nil
+          waitUntilDone:NO];
+}
+
+#pragma mark-- private
+
+- (instancetype)initWithDedicatedThread:(BOOL)useDedicatedThread
 {
   react_native_assert(
       (IsJavaScriptQueue() || RCTIsMainQueue()) &&
@@ -64,24 +101,48 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   displayLink_.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif // TARGET_OS_OSX
   [displayLink_ setPaused:TRUE];
-  [displayLink_ addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  if (useDedicatedThread) {
+    [self startDedicatedThread];
+  } else {
+    [displayLink_ addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
   return self;
 }
 
-- (void)requestAnimationFrame:(std::function<void(double)>)callback
+- (void)startDedicatedThread
 {
-  std::lock_guard<std::mutex> lock(callbacksMutex_);
-  frameCallbacks_.push_back(callback);
-  [self scheduleQueueExecution];
+  WorkletsDisplayLink *displayLink = displayLink_;
+  dedicatedThread_ = [[NSThread alloc] initWithBlock:^{
+    NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+    [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+    [displayLink addToRunLoop:runLoop forMode:NSDefaultRunLoopMode];
+    while (![NSThread currentThread].isCancelled) {
+      @autoreleasepool {
+        [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+      }
+    }
+  }];
+  dedicatedThread_.name = @"WorkletsFrameSource";
+  dedicatedThread_.qualityOfService = NSQualityOfServiceUserInteractive;
+  [dedicatedThread_ start];
 }
 
-- (void)invalidate
+- (void)invalidateOnDedicatedThread
 {
-  AssertTurboModuleManagerQueue();
   [displayLink_ invalidate];
+  [[NSThread currentThread] cancel];
 }
 
-#pragma mark-- private
+- (void)assertFrameThread
+{
+  if (dedicatedThread_ == nil) {
+    RCTAssertMainQueue();
+  } else {
+    react_native_assert(
+        [NSThread currentThread] == dedicatedThread_ &&
+        "AnimationFrameQueue must execute its callbacks on its dedicated thread");
+  }
+}
 
 - (void)scheduleQueueExecution
 {
@@ -90,7 +151,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)executeQueue:(WorkletsDisplayLink *)displayLink
 {
-  RCTAssertMainQueue();
+  [self assertFrameThread];
 
   auto frameCallbacks = [self pullCallbacks];
 
@@ -142,7 +203,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (std::vector<std::function<void(double)>>)pullCallbacks
 {
-  RCTAssertMainQueue();
+  [self assertFrameThread];
   std::lock_guard<std::mutex> lock(callbacksMutex_);
   [displayLink_ setPaused:TRUE];
   return std::move(frameCallbacks_);

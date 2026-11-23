@@ -48,6 +48,7 @@ NSURL *getDownloadedBundleFileURL(RCTBundleManager *bundleManager)
 
 @implementation WorkletsModule {
   AnimationFrameQueue *animationFrameQueue_;
+  AnimationFrameQueue *workerAnimationFrameQueue_;
   std::shared_ptr<IOSUIScheduler> uiScheduler_;
   std::shared_ptr<RNRuntimeStatus> rnRuntimeStatus_;
   std::shared_ptr<WorkletsModuleProxyInitializer> initializer_;
@@ -122,6 +123,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
   AssertTurboModuleManagerQueue();
 
   [animationFrameQueue_ invalidate];
+  [workerAnimationFrameQueue_ invalidate];
 
   if (rnRuntimeStatus_) {
     rnRuntimeStatus_->setDead();
@@ -143,6 +145,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
 - (void)createPlatformObjects
 {
   animationFrameQueue_ = [AnimationFrameQueue new];
+  workerAnimationFrameQueue_ = [[AnimationFrameQueue alloc] initOnDedicatedThread];
   uiScheduler_ = std::make_shared<IOSUIScheduler>();
   rnRuntimeStatus_ = std::make_shared<RNRuntimeStatus>();
 }
@@ -174,6 +177,10 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
+      },
+      .requestWorkerAnimationFrame = [workerAnimationFrameQueue = workerAnimationFrameQueue_](
+                                         std::function<void(const double)> &&callback) -> void {
+        [workerAnimationFrameQueue requestAnimationFrame:callback];
       },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AppleNetworkingBackend>()});

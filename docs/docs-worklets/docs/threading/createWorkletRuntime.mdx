@@ -97,6 +97,7 @@ Determines whether frame callbacks scheduled by `requestAnimationFrame` are flus
 When enabled:
 
 - Each display frame sends at most one flush to the Runtime, and the callbacks receive the timestamp of that frame, the same one that `requestAnimationFrame` callbacks receive on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
+- The frames come from a dedicated thread, so a blocked UI thread does not delay them. On macOS they come from the main thread.
 - `animationQueuePollingRate` cannot be set. TypeScript rejects the combination and `createWorkletRuntime` throws.
 - Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background.
 - `setTimeout`, `setInterval` and `setImmediate` are not affected.

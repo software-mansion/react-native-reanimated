@@ -24,7 +24,7 @@ class WorkletRuntimeDecorator {
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop,
       const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
-      const RuntimeBindings::RequestAnimationFrame &requestAnimationFrame);
+      const RuntimeBindings::RequestAnimationFrame &requestWorkerAnimationFrame);
 };
 
 } // namespace worklets

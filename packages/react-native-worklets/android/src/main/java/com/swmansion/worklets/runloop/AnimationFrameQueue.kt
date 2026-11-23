@@ -2,21 +2,18 @@ package com.swmansion.worklets.runloop
 
 import android.os.SystemClock
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.modules.core.ReactChoreographer
 import com.facebook.react.uimanager.GuardedFrameCallback
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AnimationFrameQueue(
     reactApplicationContext: ReactApplicationContext,
+    private val mFrameSource: FrameSource = ReactChoreographerFrameSource(),
 ) {
     private var mFirstUptime = SystemClock.uptimeMillis()
     private var mSlowAnimationsEnabled = false
     private var lastFrameTimeMs = 0.0
     private var mAnimationsDragFactor = 1
 
-    // ReactChoreographer is
-    // [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
-    private val mReactChoreographer: ReactChoreographer = ReactChoreographer.getInstance()
     private val mChoreographerCallback: GuardedFrameCallback =
         object : GuardedFrameCallback(reactApplicationContext) {
             override fun doFrameGuarded(frameTimeNanos: Long) {
@@ -38,10 +35,7 @@ class AnimationFrameQueue(
     fun pause() {
         synchronized(mPaused) {
             if (!mPaused.getAndSet(true) && mCallbackPosted.getAndSet(false)) {
-                mReactChoreographer.removeFrameCallback(
-                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
-                    mChoreographerCallback,
-                )
+                mFrameSource.removeFrameCallback(mChoreographerCallback)
             }
         }
     }
@@ -54,6 +48,7 @@ class AnimationFrameQueue(
                 mFrameCallbacks.clear()
             }
         }
+        mFrameSource.invalidate()
     }
 
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
@@ -83,20 +78,14 @@ class AnimationFrameQueue(
                 return
             }
             if (!mPaused.get() && !mCallbackPosted.getAndSet(true)) {
-                mReactChoreographer.postFrameCallback(
-                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
-                    mChoreographerCallback,
-                )
+                mFrameSource.postFrameCallback(mChoreographerCallback)
             }
         }
     }
 
     private fun removePostedFrameCallback() {
         if (mCallbackPosted.getAndSet(false)) {
-            mReactChoreographer.removeFrameCallback(
-                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
-                mChoreographerCallback,
-            )
+            mFrameSource.removeFrameCallback(mChoreographerCallback)
         }
     }
 

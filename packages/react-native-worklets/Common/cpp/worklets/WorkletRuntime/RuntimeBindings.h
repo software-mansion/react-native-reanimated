@@ -30,6 +30,11 @@ struct RuntimeBindings {
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
+  /**
+   * Like `requestAnimationFrame`, but the callback runs on a thread owned by
+   * the platform frame source instead of the UI thread.
+   */
+  const RequestAnimationFrame requestWorkerAnimationFrame;
   const NativeLoggingHook nativeLoggingHook;
   const std::shared_ptr<NetworkingBackend> networkingBackend;
 };
