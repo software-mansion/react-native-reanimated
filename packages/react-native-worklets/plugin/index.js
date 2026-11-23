@@ -376,7 +376,8 @@ var require_layoutAnimationAutoworkletization = __commonJS({
     ]);
     var LayoutAnimations = /* @__PURE__ */ new Set([
       ...EntryExitAnimations,
-      ...LayoutTransitions
+      ...LayoutTransitions,
+      "SharedTransition"
     ]);
     var BaseAnimationsChainableMethods = /* @__PURE__ */ new Set([
       "build",
@@ -385,12 +386,15 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "getDuration",
       "randomDelay",
       "getDelay",
-      "getDelayFunction"
+      "getDelayFunction",
+      "reduceMotion",
+      "withCallback"
     ]);
     var ComplexAnimationsChainableMethods = /* @__PURE__ */ new Set([
       "easing",
       "rotate",
       "springify",
+      "dampingRatio",
       "damping",
       "mass",
       "stiffness",
@@ -399,6 +403,7 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "restDisplacementThreshold",
       "restSpeedThreshold",
       "withInitialValues",
+      "withTargetValues",
       "getAnimationAndConfig"
     ]);
     var DefaultTransitionChainableMethods = /* @__PURE__ */ new Set([
@@ -410,12 +415,23 @@ var require_layoutAnimationAutoworkletization = __commonJS({
       "exiting",
       "reverse"
     ]);
+    var SharedTransitionChainableMethods = /* @__PURE__ */ new Set([
+      "fadeContent",
+      "custom",
+      "progressAnimation",
+      "defaultTransitionType"
+    ]);
     var LayoutAnimationsChainableMethods = /* @__PURE__ */ new Set([
       ...BaseAnimationsChainableMethods,
       ...ComplexAnimationsChainableMethods,
-      ...DefaultTransitionChainableMethods
+      ...DefaultTransitionChainableMethods,
+      ...SharedTransitionChainableMethods
     ]);
-    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set(["withCallback"]);
+    var LayoutAnimationsCallbacks = /* @__PURE__ */ new Set([
+      "withCallback",
+      "custom",
+      "progressAnimation"
+    ]);
     function isLayoutAnimationCallback(path) {
       return (0, types_12.isCallExpression)(path.parent) && (0, types_12.isExpression)(path.parent.callee) && isLayoutAnimationCallbackMethod(path.parent.callee);
     }
@@ -476,7 +492,10 @@ var require_autoworkletization = __commonJS({
       "runOnRuntimeAsync",
       "scheduleOnRuntime",
       "runOnRuntimeSyncWithId",
-      "scheduleOnRuntimeWithId"
+      "runOnRuntimeAsyncWithId",
+      "scheduleOnRuntimeWithId",
+      // runtime creation
+      "createWorkletRuntime"
     ]);
     var reanimatedFunctionArgsToWorkletize = new Map([
       ["useFrameCallback", [0]],
@@ -500,9 +519,24 @@ var require_autoworkletization = __commonJS({
       ["runOnRuntimeAsync", [1]],
       ["scheduleOnRuntime", [1]],
       ["runOnRuntimeSyncWithId", [1]],
+      ["runOnRuntimeAsyncWithId", [1]],
       ["scheduleOnRuntimeWithId", [1]],
+      ["createWorkletRuntime", [1]],
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerObjectHooks).map((name) => [name, [0]]),
       ...Array.from(gestureHandlerAutoworkletization_1.gestureHandlerBuilderMethods).map((name) => [name, [0]])
+    ]);
+    var configPropertiesToWorkletize = /* @__PURE__ */ new Map([
+      ["createWorkletRuntime", { argIndex: 0, keys: ["initializer"] }],
+      [
+        "createShareable",
+        { argIndex: 2, keys: ["hostDecorator", "guestDecorator"] }
+      ],
+      [
+        "registerCustomSerializable",
+        { argIndex: 0, keys: ["determine", "pack", "unpack"] }
+      ],
+      ["withTiming", { argIndex: 1, keys: ["easing"] }],
+      ["useHandler", { argIndex: 0, keys: null }]
     ]);
     function addDirectivesToKnownCallback(path) {
       if ((0, gestureHandlerAutoworkletization_1.isGestureHandlerEventCallback)(path) || (0, layoutAnimationAutoworkletization_1.isLayoutAnimationCallback)(path)) {
@@ -524,6 +558,32 @@ var require_autoworkletization = __commonJS({
       } else if (!(0, types_12.isV8IntrinsicIdentifier)(callee) && (0, gestureHandlerAutoworkletization_1.isGestureObjectEventCallbackMethod)(callee)) {
         const args = path.get("arguments");
         addDirectivesToArgs(args, state, true, true);
+      }
+      const configProperties = configPropertiesToWorkletize.get(name);
+      if (configProperties) {
+        addDirectivesToConfigProperties(path.get("arguments")[configProperties.argIndex], configProperties.keys, state);
+      }
+    }
+    function addDirectivesToConfigProperties(config, keys, state) {
+      if (!(config === null || config === void 0 ? void 0 : config.isObjectExpression())) {
+        return;
+      }
+      for (const property of config.get("properties")) {
+        if (!(property.isObjectMethod() || property.isObjectProperty()) || property.node.computed) {
+          continue;
+        }
+        const key = property.node.key;
+        const keyName = (0, types_12.isIdentifier)(key) ? key.name : (0, types_12.isStringLiteral)(key) ? key.value : void 0;
+        if (keyName === void 0 || keys && !keys.includes(keyName)) {
+          continue;
+        }
+        if (property.isObjectMethod()) {
+          if (property.node.kind === "method") {
+            (0, directives_12.addWorkletDirectivesToPath)(property);
+          }
+        } else if (property.isObjectProperty()) {
+          (0, findWorklet_1.forEachWorkletizableFunction)(property.get("value"), state, true, false, directives_12.addWorkletDirectivesToPath);
+        }
       }
     }
     function addDirectivesToArgs(args, state, acceptWorkletizableFunction, acceptObject) {
@@ -963,6 +1023,113 @@ var require_file = __commonJS({
   }
 });
 
+// lib/imports.js
+var require_imports = __commonJS({
+  "lib/imports.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.COMMON_FOLDER_NAMES = void 0;
+    exports2.updateRelativeRequires = updateRelativeRequires;
+    exports2.isImport = isImport;
+    exports2.isImportRelative = isImportRelative;
+    exports2.canForwardModuleImport = canForwardModuleImport;
+    exports2.canForwardRelativeImport = canForwardRelativeImport;
+    exports2.createImportPathLiteral = createImportPathLiteral;
+    exports2.warnAboutDangerousRelativePaths = warnAboutDangerousRelativePaths;
+    exports2.isDangerousRelativePath = isDangerousRelativePath;
+    var core_1 = require("@babel/core");
+    var types_12 = require("@babel/types");
+    var path_1 = require("path");
+    var types_2 = require_types();
+    function updateRelativeRequires(node, state) {
+      (0, core_1.traverse)(node, {
+        noScope: true,
+        CallExpression(nodePath) {
+          const specifier = nodePath.get("arguments")[0];
+          if (!(specifier === null || specifier === void 0 ? void 0 : specifier.isStringLiteral()) || !specifier.node.value.startsWith(".")) {
+            return;
+          }
+          const callee = nodePath.get("callee");
+          if (callee.isImport() || callee.isIdentifier({ name: "require" })) {
+            specifier.replaceWith(createImportPathLiteral(specifier.node.value, state));
+          }
+        }
+      });
+    }
+    function isImport(binding) {
+      return binding.kind === "module" && binding.constant && (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration();
+    }
+    function isImportRelative(imported) {
+      return imported.path.parentPath.node.source.value.startsWith(".");
+    }
+    function canForwardModuleImport(moduleName, forwardableModuleNames) {
+      return forwardableModuleNames.includes(moduleName);
+    }
+    function canForwardRelativeImport(modulePath, relativePaths) {
+      return !!modulePath && relativePaths.some((relativePath) => matchesFilenameSegment(modulePath, relativePath));
+    }
+    function matchesFilenameSegment(filename, allowedPath) {
+      const pkgSegments = allowedPath.split(path_1.posix.sep);
+      let fileSegments = filename.split(path_1.sep);
+      const lastNodeModules = fileSegments.lastIndexOf("node_modules");
+      if (lastNodeModules !== -1) {
+        fileSegments = fileSegments.slice(lastNodeModules + 1);
+      }
+      for (let i = 0; i <= fileSegments.length - pkgSegments.length; i++) {
+        if (pkgSegments.every((segment, segmentIndex) => fileSegments[i + segmentIndex] === segment)) {
+          return true;
+        }
+      }
+      return false;
+    }
+    function createImportPathLiteral(originalPath, state) {
+      const generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
+      const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), originalPath);
+      const relativePath = (0, path_1.relative)(generatedWorkletsDirPath, resolved);
+      return (0, types_12.stringLiteral)(path_1.sep === "/" ? relativePath : relativePath.split(path_1.sep).join("/"));
+    }
+    exports2.COMMON_FOLDER_NAMES = /* @__PURE__ */ new Set([
+      "app",
+      "build",
+      "cjs",
+      "common",
+      "commonjs",
+      "components",
+      "core",
+      "dist",
+      "esm",
+      "helpers",
+      "lib",
+      "module",
+      "modules",
+      "shared",
+      "source",
+      "src",
+      "utils"
+    ]);
+    var warnedDangerousPaths = /* @__PURE__ */ new Set();
+    function warnAboutDangerousRelativePaths(relativePaths, silenced) {
+      if (silenced || !relativePaths) {
+        return;
+      }
+      for (const relativePath of relativePaths) {
+        if (typeof relativePath !== "string" || warnedDangerousPaths.has(relativePath) || !isDangerousRelativePath(relativePath)) {
+          continue;
+        }
+        warnedDangerousPaths.add(relativePath);
+        console.warn(getDangerousRelativePathWarning(relativePath));
+      }
+    }
+    function isDangerousRelativePath(relativePath) {
+      const segments = relativePath.split(path_1.posix.sep);
+      return relativePath.length > 0 && segments.every((segment) => exports2.COMMON_FOLDER_NAMES.has(segment));
+    }
+    function getDangerousRelativePathWarning(relativePath) {
+      return `[Worklets] \`importForwarding.relativePaths\` contains '${relativePath}', which has only common folder names. It can also match folders inside packages in node_modules, for example 'node_modules/<package>/${relativePath}', and the relative imports inside their worklets get forwarded too, which can crash the app. Use a path that only your code has. Set the \`silenceDangerousPathsWarning\` plugin option to \`true\` to hide this warning. See https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths`;
+    }
+  }
+});
+
 // lib/globals.js
 var require_globals = __commonJS({
   "lib/globals.js"(exports2) {
@@ -978,6 +1145,7 @@ var require_globals = __commonJS({
     exports2.addCustomGlobals = addCustomGlobals;
     var assert_1 = require("assert");
     var path_1 = __importDefault(require("path"));
+    var imports_1 = require_imports();
     var types_12 = require_types();
     var notCapturedIdentifiers = [
       // Based on https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects
@@ -1116,6 +1284,9 @@ var require_globals = __commonJS({
         addCustomGlobals(state);
       }
       const userImportForwarding = state.opts.importForwarding;
+      if (state.opts.bundleMode) {
+        (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
+      }
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
       state.importForwarding = {
         relativePaths: [
@@ -1246,70 +1417,6 @@ var require_webOptimization = __commonJS({
           path.replaceWith((0, types_12.booleanLiteral)(true));
         }
       }
-    }
-  }
-});
-
-// lib/imports.js
-var require_imports = __commonJS({
-  "lib/imports.js"(exports2) {
-    "use strict";
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.updateRelativeRequires = updateRelativeRequires;
-    exports2.isImport = isImport;
-    exports2.isImportRelative = isImportRelative;
-    exports2.canForwardModuleImport = canForwardModuleImport;
-    exports2.canForwardRelativeImport = canForwardRelativeImport;
-    exports2.createImportPathLiteral = createImportPathLiteral;
-    var core_1 = require("@babel/core");
-    var types_12 = require("@babel/types");
-    var path_1 = require("path");
-    var types_2 = require_types();
-    function updateRelativeRequires(node, state) {
-      (0, core_1.traverse)(node, {
-        noScope: true,
-        CallExpression(nodePath) {
-          var _a;
-          if (nodePath.get("callee").isIdentifier({ name: "require" }) && ((_a = nodePath.get("arguments")[0]) === null || _a === void 0 ? void 0 : _a.isStringLiteral())) {
-            const requiredModule = nodePath.get("arguments")[0];
-            if (requiredModule.node.value.startsWith(".") && canForwardRelativeImport(state.file.opts.filename || "", state.importForwarding.relativePaths)) {
-              requiredModule.replaceWith(createImportPathLiteral(requiredModule.node.value, state));
-            }
-          }
-        }
-      });
-    }
-    function isImport(binding) {
-      return binding.kind === "module" && binding.constant && (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration();
-    }
-    function isImportRelative(imported) {
-      return imported.path.parentPath.node.source.value.startsWith(".");
-    }
-    function canForwardModuleImport(moduleName, forwardableModuleNames) {
-      return forwardableModuleNames.some((forwardableModuleName) => moduleName === forwardableModuleName || moduleName.startsWith(forwardableModuleName + "/"));
-    }
-    function canForwardRelativeImport(modulePath, relativePaths) {
-      return !!modulePath && relativePaths.some((relativePath) => matchesFilenameSegment(modulePath, relativePath));
-    }
-    function matchesFilenameSegment(filename, allowedPath) {
-      const pkgSegments = allowedPath.split(path_1.posix.sep);
-      let fileSegments = filename.split(path_1.sep);
-      const lastNodeModules = fileSegments.lastIndexOf("node_modules");
-      if (lastNodeModules !== -1) {
-        fileSegments = fileSegments.slice(lastNodeModules + 1);
-      }
-      for (let i = 0; i <= fileSegments.length - pkgSegments.length; i++) {
-        if (pkgSegments.every((segment, segmentIndex) => fileSegments[i + segmentIndex] === segment)) {
-          return true;
-        }
-      }
-      return false;
-    }
-    function createImportPathLiteral(originalPath, state) {
-      const generatedWorkletsDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
-      const resolved = (0, path_1.resolve)((0, path_1.dirname)(state.file.opts.filename), originalPath);
-      const relativePath = (0, path_1.relative)(generatedWorkletsDirPath, resolved);
-      return (0, types_12.stringLiteral)(path_1.sep === "/" ? relativePath : relativePath.split(path_1.sep).join("/"));
     }
   }
 });
@@ -1634,12 +1741,10 @@ var require_workletStringCode = __commonJS({
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var convertSourceMap = __importStar(require("convert-source-map"));
-    var fs = __importStar(require("fs"));
     var transform_1 = require_transform();
     var types_2 = require_types();
     var utils_1 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
-    var querySuffixRE = /[?#].*$/;
     function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
       var _a;
       restoreRecursiveCalls(fun, workletName);
@@ -1680,12 +1785,6 @@ var require_workletStringCode = __commonJS({
       const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
-      if (includeSourceMap) {
-        inputMap.sourcesContent = [];
-        for (const sourceFile of inputMap.sources) {
-          inputMap.sourcesContent.push(fs.readFileSync(sourceFile.replace(querySuffixRE, "")).toString("utf-8"));
-        }
-      }
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
@@ -1750,7 +1849,7 @@ var require_workletStringCode = __commonJS({
       }
     }
     function getClosurePlugin(closureVariables) {
-      const closureDeclaration = (0, types_12.variableDeclaration)("const", [
+      const closureDeclaration = (0, types_12.variableDeclaration)("let", [
         (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
       ]);
       return {

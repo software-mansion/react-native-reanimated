@@ -204,6 +204,15 @@ describe(processTransformOrigin, () => {
                 input: '25', // number without px unit
                 message: ERROR_MESSAGES.invalidValue('25', 'x', '25', false),
               },
+              {
+                input: 'toString', // inherited object key
+                message: ERROR_MESSAGES.invalidValue(
+                  'toString',
+                  'x',
+                  'toString',
+                  false
+                ),
+              },
             ],
           },
         ],

@@ -74,8 +74,12 @@ export const ERROR_MESSAGES = {
 function maybeSwapComponents(components: ReadonlyArray<string | number>) {
   'worklet';
   if (
-    components[0] in VERTICAL_CONVERSIONS &&
-    (components[1] === undefined || components[1] in HORIZONTAL_CONVERSIONS)
+    Object.prototype.hasOwnProperty.call(VERTICAL_CONVERSIONS, components[0]) &&
+    (components[1] === undefined ||
+      Object.prototype.hasOwnProperty.call(
+        HORIZONTAL_CONVERSIONS,
+        components[1]
+      ))
   ) {
     const copy = [...components];
     [copy[0], copy[1]] = [copy[1], copy[0]];
@@ -112,7 +116,10 @@ function parseValue(
   if (typeof value === 'number') {
     return value;
   }
-  if (keywordConversions && value in keywordConversions) {
+  if (
+    keywordConversions &&
+    Object.prototype.hasOwnProperty.call(keywordConversions, value)
+  ) {
     return keywordConversions[value];
   }
   if (allowPercentages && value.endsWith('%')) {

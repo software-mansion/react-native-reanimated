@@ -13,8 +13,6 @@ const AmountExample: React.FC = () =>
   React.createElement(require('./AmountExample').default as React.FC);
 const AndroidDrawPassExample: React.FC = () =>
   React.createElement(require('./AndroidDrawPassExample').default as React.FC);
-const AnimatableRefExample: React.FC = () =>
-  React.createElement(require('./AnimatableRefExample').default as React.FC);
 const AnimatedPropsExample: React.FC = () =>
   React.createElement(require('./AnimatedPropsExample').default as React.FC);
 const AnimatedSensorExample: React.FC = () =>
@@ -50,6 +48,18 @@ const ChangeThemeExample: React.FC = () =>
 const ChangeThemeSharedExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ChangeTheme').default
+  );
+const CustomTransitionExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/CustomTransition').default as React.FC
+  );
+const ModalHostExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalHost').default as React.FC
+  );
+const ModalPresentationsExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalPresentations').default as React.FC
   );
 const ChatHeadsExample: React.FC = () =>
   React.createElement(require('./ChatHeadsExample').default as React.FC);
@@ -101,6 +111,11 @@ const DurationZeroExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/DurationZero').default as React.FC
   );
+const EnteringMovedBeforeFirstPaint: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/EnteringMovedBeforeFirstPaint')
+      .default as React.FC
+  );
 const ExitingTagReuseStressExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/ExitingTagReuseStressExample')
@@ -112,6 +127,10 @@ const EmojiWaterfallExample: React.FC = () =>
   React.createElement(require('./EmojiWaterfallExample').default as React.FC);
 const EmptyExample: React.FC = () =>
   React.createElement(require('./EmptyExample').default as React.FC);
+const FadeContentExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/FadeContent').default
+  );
 const SettledPropsLeakExample: React.FC = () =>
   React.createElement(require('./SettledPropsLeakExample').default as React.FC);
 const InlineStylesAndPropsExample: React.FC = () =>
@@ -148,8 +167,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   );
 const FrameCallbackExample: React.FC = () =>
   React.createElement(require('./FrameCallbackExample').default as React.FC);
-const FreezeExample: React.FC = () =>
-  React.createElement(require('./FreezeExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -160,13 +177,14 @@ const HabitsExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/HabitsExample').default as React.FC
   );
-const InvalidValueAccessExample: React.FC = () =>
-  React.createElement(
-    require('./InvalidValueAccessExample').default as React.FC
-  );
 const InterruptedExitingExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/InterruptedExitingExample').default as React.FC
+  );
+const ExitingInterruptsEnteringExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/ExitingInterruptsEnteringExample')
+      .default as React.FC
   );
 const InvertedFlatListExample: React.FC = () =>
   React.createElement(require('./InvertedFlatListExample').default as React.FC);
@@ -214,6 +232,12 @@ const NestedRotationExample: React.FC = () =>
 const SynchronousPropsSETExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/SynchronousPropsExample').default
+  );
+const NestedTagsExample: React.FC = () =>
+  React.createElement(require('./SharedElementTransitions/NestedTags').default);
+const NestedZOrderExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/NestedZOrder').default
   );
 const NestedStacksExample: React.FC = () =>
   React.createElement(
@@ -378,12 +402,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     section: SHOW_CASES,
     screen: ThirdPartyComponentsExample,
   },
-  ReactFreeze: {
-    icon: '❄️',
-    title: 'React freeze',
-    section: REGRESSIONS,
-    screen: FreezeExample,
-  },
   CircularSliderExample: {
     icon: '🔘',
     title: 'Circular slider',
@@ -399,11 +417,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '🎨',
     title: 'Animated props',
     screen: AnimatedPropsExample,
-  },
-  InvalidReadWriteExample: {
-    icon: '🔒',
-    title: 'Invalid read/write during render',
-    screen: InvalidValueAccessExample,
   },
   BottomSheetExample: {
     icon: '⬆️',
@@ -476,11 +489,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
   },
 
   // Basic examples
-  AnimatableRefExample: {
-    icon: '⏬',
-    title: 'Animate inner component',
-    screen: AnimatableRefExample,
-  },
   AmountExample: {
     icon: '📈',
     title: 'Amount',
@@ -728,6 +736,10 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: '[LA] Interrupted exiting animation (#7493)',
     screen: InterruptedExitingExample,
   },
+  ExitingInterruptsEntering: {
+    title: '[LA] Exiting animation interrupting entering',
+    screen: ExitingInterruptsEnteringExample,
+  },
   LayoutAnimationBatchSync: {
     title: '[LA] Batch synchronization',
     screen: LayoutAnimationBatchSyncExample,
@@ -813,6 +825,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: FinalFrameAccuracyExample,
     title: '[LA] Final frame accuracy',
   },
+  EnteringMovedBeforeFirstPaint: {
+    title: '[LA] Entering view moved before first paint',
+    screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
 
   // Shared Element Transitions
 
@@ -833,6 +850,24 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  NestedTagsExample: {
+    title: '[SET] Nested tags',
+    screen: NestedTagsExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  NestedZOrderExample: {
+    title: '[SET] Nested z-order',
+    screen: NestedZOrderExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   NestedStacksExample: {
     title: '[SET] Nested stacks',
     screen: NestedStacksExample,
@@ -847,7 +882,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: ModalsExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // broken header height
+      ios: true,
       android: true,
     },
   },
@@ -874,7 +909,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: TransitionRestartExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // goes too far up for some reason?
+      ios: false, // the restarted transition targets the new screen before its header height is known
       android: true,
     },
   },
@@ -883,16 +918,26 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: ChangeThemeSharedExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // s2 -> change theme -> go back (progress) will have wrong target
+      ios: true,
       android: true,
     },
+  },
+  CustomTransitionExample: {
+    title: '[SET] Custom Transition',
+    screen: CustomTransitionExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  ModalPresentationsExample: {
+    title: '[SET] Modal presentations',
+    screen: ModalPresentationsExample,
+    disabledPlatforms: [REAPlatform.WEB],
   },
   NestedRotationSharedExample: {
     title: '[SET] Nested Transforms',
     screen: NestedRotationExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // broken for modals
+      ios: false, // the rotation reverses for a few frames when the modal is dismissed
       android: false, // broken transform, I think due to skew
     },
   },
@@ -901,7 +946,7 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: BorderRadiiExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
-      ios: false, // broken on back gesture
+      ios: true,
       android: true,
     },
   },
@@ -914,9 +959,27 @@ const ALL_EXAMPLES: Record<string, Example> = {
       android: true,
     },
   },
+  ModalHostExample: {
+    title: '[SET] Inside a Modal',
+    screen: ModalHostExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
   ScreenlessBasic: {
     title: '[SET] Screenless Basic',
     screen: ScreenlessBasic,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  FadeContentExample: {
+    title: '[SET] Fade content',
+    screen: FadeContentExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

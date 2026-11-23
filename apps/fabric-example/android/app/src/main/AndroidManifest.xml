@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
       android:name=".MainApplication"
@@ -10,6 +11,7 @@
       android:allowBackup="false"
       android:theme="@style/AppTheme"
       android:usesCleartextTraffic="${usesCleartextTraffic}"
+      android:gwpAsanMode="${gwpAsanMode}"
       android:supportsRtl="true">
       <activity
         android:name=".MainActivity"
@@ -24,5 +26,13 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+      <activity
+        android:name=".HostPauseActivity"
+        android:theme="@android:style/Theme.Translucent.NoTitleBar"
+        android:exported="false" />
+      <service
+        android:name=".RuntimeTestsHeadlessTaskService"
+        android:permission="android.permission.DUMP"
+        android:exported="true" />
     </application>
 </manifest>

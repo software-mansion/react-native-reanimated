@@ -3,6 +3,7 @@
 import { logger } from '../../common';
 import { removeElementAnimation } from '../../common/web';
 import { LayoutAnimationType, ReduceMotion } from '../../commonTypes';
+import type { AnimatableDOMElement } from '../../createAnimatedComponent/commonTypes';
 import type { EasingFunctionFactory } from '../../Easing';
 import { EasingNameSymbol } from '../../Easing';
 import type { ReanimatedHTMLElement } from '../../ReanimatedModule/js-reanimated';
@@ -136,12 +137,13 @@ function getReversedFromConfig(config: CustomConfig) {
 export function getProcessedConfig(
   animationName: string,
   animationType: LayoutAnimationType,
-  config: CustomConfig
+  config: CustomConfig,
+  presetName = animationName
 ): AnimationConfig {
   return {
     animationName,
     animationType,
-    duration: getDurationFromConfig(config, animationName),
+    duration: getDurationFromConfig(config, presetName),
     delay: getDelayFromConfig(config),
     easing: getEasingFromConfig(config),
     callback: getCallbackFromConfig(config),
@@ -171,7 +173,7 @@ export function maybeModifyStyleForKeyframe(
   }
 }
 
-export function saveSnapshot(element: HTMLElement) {
+export function saveSnapshot(element: AnimatableDOMElement) {
   const rect = element.getBoundingClientRect();
 
   const snapshot: ReanimatedSnapshot = {
@@ -200,7 +202,8 @@ export function setElementAnimation(
     element.style.animationTimingFunction = easing;
 
     if (
-      animationConfig.animationType === LayoutAnimationType.ENTERING &&
+      (animationConfig.animationType === LayoutAnimationType.ENTERING ||
+        animationConfig.startsFromCurrentValues) &&
       delay > 0
     ) {
       element.style.animationFillMode = 'backwards';
@@ -336,8 +339,8 @@ export function handleLayoutTransition(
   setElementAnimation(element, animationConfig);
 }
 
-function getElementScrollValue(element: HTMLElement): ScrollOffsets {
-  let current: HTMLElement | null = element;
+function getElementScrollValue(element: AnimatableDOMElement): ScrollOffsets {
+  let current: AnimatableDOMElement | null = element;
 
   const scrollOffsets: ScrollOffsets = {
     scrollTopOffset: 0,

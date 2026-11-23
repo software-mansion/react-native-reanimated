@@ -1,6 +1,15 @@
-import { Platform } from 'react-native';
+import { DevSettings, Platform } from 'react-native';
 
-type ConsoleLevel = 'log' | 'info' | 'warn' | 'error';
+import type {
+  ConsoleLevel,
+  DeclaredSuite,
+  DeviceMessage,
+  DoneMessage,
+  ErrorMessage,
+  RunSummary,
+  TestFailure,
+  ServerMessage,
+} from './remoteProtocol';
 
 const CONSOLE_LEVELS: ConsoleLevel[] = ['log', 'info', 'warn', 'error'];
 
@@ -16,34 +25,19 @@ function shouldSuppress(args: unknown[]): boolean {
   return SUPPRESSED_LOG_PATTERNS.some((pattern) => pattern.test(first));
 }
 
-interface DeclaredSuite {
-  name: string;
-  skipByDefault: boolean;
-  disabled: boolean;
-}
-
-interface RunSummary {
-  passed: number;
-  failed: number;
-  skipped: number;
-  failedTests: string[];
-  durationMs: number;
-}
-
 export interface RemoteReporterOptions {
   wsUrl: string;
   library: string;
   declaredSuites: DeclaredSuite[];
   onStatus: (message: string) => void;
+  /** Called once, when the connection to the server has ended. */
+  onFinished?: () => void;
   onStart: (params: {
     only?: string[];
+    full?: boolean;
     reportSuiteFinished: (suiteName: string) => void;
+    requestReload: (resumeFromSuite: string, summarySoFar: RunSummary) => void;
   }) => Promise<RunSummary | void>;
-}
-
-interface StartMessage {
-  type: 'start';
-  only?: string[];
 }
 
 interface ErrorUtilsGlobal {
@@ -82,6 +76,7 @@ export function runWithRemoteReporter({
   library,
   declaredSuites,
   onStatus,
+  onFinished,
   onStart,
 }: RemoteReporterOptions): () => void {
   let socket: WebSocket | null = null;
@@ -91,6 +86,7 @@ export function runWithRemoteReporter({
     socket = new WebSocket(wsUrl);
   } catch (error) {
     onStatus(`Failed to open WebSocket: ${(error as Error).message}`);
+    onFinished?.();
     return () => {};
   }
 
@@ -107,7 +103,7 @@ export function runWithRemoteReporter({
   const nativeLog = console.log.bind(console);
   const nativeWarn = console.warn.bind(console);
 
-  const safeSend = (payload: unknown) => {
+  const safeSend = (payload: DeviceMessage) => {
     if (ws.readyState === 1) {
       try {
         ws.send(JSON.stringify(payload));
@@ -182,7 +178,7 @@ export function runWithRemoteReporter({
     }
   };
 
-  const sendFinalEnvelope = (envelope: Record<string, unknown>) => {
+  const sendFinalEnvelope = (envelope: DoneMessage | ErrorMessage) => {
     if (runFinishedEnvelopeSent) {
       return;
     }
@@ -232,13 +228,19 @@ export function runWithRemoteReporter({
     }
     restoreConsole();
     restoreGlobalErrorHandler();
+    onFinished?.();
   };
 
   ws.onmessage = (event) => {
-    let parsed: StartMessage;
+    let parsed: ServerMessage;
     try {
-      parsed = JSON.parse(event.data as string) as StartMessage;
+      parsed = JSON.parse(event.data as string) as ServerMessage;
     } catch {
+      return;
+    }
+
+    if (parsed.type === 'reloadAccepted') {
+      DevSettings.reload('runtime tests requested a reload');
       return;
     }
 
@@ -255,13 +257,26 @@ export function runWithRemoteReporter({
       safeSend({ type: 'suiteFinished', name: suiteName });
     };
 
-    onStart({ only: parsed.only, reportSuiteFinished })
+    const requestReload = (
+      resumeFromSuite: string,
+      summarySoFar: RunSummary
+    ) => {
+      safeSend({ type: 'reload', resumeFromSuite, ...summarySoFar });
+    };
+
+    onStart({
+      only: parsed.only,
+      full: parsed.full,
+      reportSuiteFinished,
+      requestReload,
+    })
       .then((summary) => {
         const finalSummary = summary ?? {
           passed: 0,
           failed: 0,
           skipped: 0,
           failedTests: [] as string[],
+          failures: [] as TestFailure[],
           durationMs: 0,
         };
         sendFinalEnvelope({ type: 'done', ...finalSummary });

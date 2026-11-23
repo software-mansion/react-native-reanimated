@@ -20,8 +20,17 @@ type CompatibilityData = {
 
 const compatibilityData = untypedCompatibilityData as CompatibilityData;
 
-export function Yes() {
-  return <div className={styles.supported}>yes</div>;
+interface YesProps {
+  since?: string;
+}
+
+export function Yes({ since }: YesProps) {
+  return (
+    <div className={styles.supported}>
+      yes
+      {since && <span className={styles.since}>{since}+</span>}
+    </div>
+  );
 }
 
 export function No() {

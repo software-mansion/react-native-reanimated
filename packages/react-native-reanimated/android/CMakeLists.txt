@@ -22,7 +22,8 @@ if(${REANIMATED_PROFILING})
 endif()
 
 if(${IS_REANIMATED_EXAMPLE_APP})
-  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic")
+  string(APPEND CMAKE_CXX_FLAGS " -DIS_REANIMATED_EXAMPLE_APP -Wpedantic\
+    -Werror=deprecated-declarations")
 endif()
 
 if(NOT ${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -53,8 +54,8 @@ add_library(
   ${REANIMATED_COMMON_CPP_SOURCES} ${REANIMATED_ANDROID_CPP_SOURCES}
   ${REANIMATED_NATIVEVIEW_CPP_SOURCES})
 
-target_precompile_headers(reanimated PRIVATE
-                          "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
+include("${CMAKE_SOURCE_DIR}/cmake/pch-ccache.cmake")
+pch_ccache_precompile_headers(reanimated "${ANDROID_CPP_DIR}/ReanimatedPCH.h")
 
 # Stop Clang from embedding a build timestamp in the .pch. Without this the PCH
 # is non-reproducible across builds, so ccache can't reuse it and translation
@@ -64,6 +65,8 @@ target_compile_options(
 
 include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
 target_compile_reactnative_options(reanimated PUBLIC)
+# Acknowledge framework-tier APIs when the app opts into RN_STRICT_API.
+target_compile_definitions(reanimated PRIVATE RN_ALLOW_FRAMEWORKS)
 
 target_include_directories(
   reanimated
@@ -77,7 +80,7 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/android"
 )
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)

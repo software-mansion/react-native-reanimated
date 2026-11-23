@@ -170,6 +170,163 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
+  describe('import forwarding by module name', () => {
+    test.each([
+      ['forwards an import of the module itself', 'some-library', true],
+      ['does not forward an import of a subpath', 'some-library/sub/file', false],
+      [
+        'does not forward a module that only shares the prefix',
+        'some-library-extra',
+        false,
+      ],
+    ])('%s', (_label, source, forwarded) => {
+      const { files } = runPlugin(
+        `
+        import { value } from '${source}';
+        function foo() {
+          'worklet';
+          return value;
+        }
+      `,
+        {},
+        { importForwarding: { moduleNames: ['some-library'] } }
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content.includes(source)).toBe(forwarded);
+    });
+
+    test('does not forward a namespace import of a listed module', () => {
+      const { files } = runPlugin(
+        `
+        import * as value from 'some-library';
+        function foo() {
+          'worklet';
+          return value;
+        }
+      `,
+        {},
+        { importForwarding: { moduleNames: ['some-library'] } }
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content.includes('some-library')).toBe(false);
+    });
+  });
+
+  describe('import forwarding by relative path', () => {
+    test.each([
+      ['forwards in an app folder', '/app/src/screen.js', ['src'], true],
+      [
+        'forwards in a package folder with the same name',
+        '/app/node_modules/some-lib/src/index.js',
+        ['src'],
+        true,
+      ],
+      [
+        'forwards in a package matched by its name',
+        '/app/node_modules/some-lib/src/index.js',
+        ['some-lib'],
+        true,
+      ],
+      [
+        'ignores the folders before the last node_modules',
+        '/my-app/node_modules/some-lib/index.js',
+        ['my-app'],
+        false,
+      ],
+      [
+        'ignores a package before a nested node_modules',
+        '/app/node_modules/outer/node_modules/inner/index.js',
+        ['outer'],
+        false,
+      ],
+      [
+        'does not match part of a folder name',
+        '/app/src-backup/screen.js',
+        ['src'],
+        false,
+      ],
+    ])('%s', (_label, filename, relativePaths, forwarded) => {
+      const { files } = runPlugin(
+        `
+        import { helperValue } from './helperModule';
+        function foo() {
+          'worklet';
+          return helperValue;
+        }
+      `,
+        {},
+        {
+          importForwarding: { relativePaths },
+          silenceDangerousPathsWarning: true,
+        },
+        filename
+      );
+      expect(files).toHaveLength(1);
+      expect(files[0].content.includes('helperModule')).toBe(forwarded);
+    });
+  });
+
+  describe('dangerous relative paths warning', () => {
+    const input = `
+      function foo() {
+        'worklet';
+        return 1;
+      }
+    `;
+
+    function warningsFor(pluginOpts: PluginOptions) {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        runPlugin(input, {}, pluginOpts);
+        return warn.mock.calls
+          .map(([message]) => String(message))
+          .filter((message) => message.includes('importForwarding.relativePaths'));
+      } finally {
+        warn.mockRestore();
+      }
+    }
+
+    test('warns about a path with only common folder names', () => {
+      const warnings = warningsFor({
+        importForwarding: { relativePaths: ['dist', 'build/esm'] },
+      });
+      expect(warnings).toHaveLength(2);
+      expect(warnings[0]).toContain("'dist'");
+      expect(warnings[0]).toContain('silenceDangerousPathsWarning');
+      expect(warnings[1]).toContain("'build/esm'");
+    });
+
+    test('warns about each path only once', () => {
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['shared'] } })
+      ).toHaveLength(1);
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['shared'] } })
+      ).toHaveLength(0);
+    });
+
+    test('does not warn about a path with a specific folder name', () => {
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['my-lib/dist'] } })
+      ).toHaveLength(0);
+    });
+
+    test('does not warn about a path with an empty segment', () => {
+      expect(
+        warningsFor({ importForwarding: { relativePaths: ['utils/'] } })
+      ).toHaveLength(0);
+    });
+
+    test('does not warn when silenced', () => {
+      expect(
+        warningsFor({
+          importForwarding: { relativePaths: ['lib'] },
+          silenceDangerousPathsWarning: true,
+        })
+      ).toHaveLength(0);
+    });
+  });
+
   describe('worklet file emission', () => {
     test('writes one worklet file per worklet', () => {
       const input = html`<script>
@@ -425,7 +582,27 @@ describe('babel plugin in bundleMode', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
-    test('does not rebase relative requires from non-workletizable files', () => {
+    test('rebases relative dynamic imports inside the worklet body against the worklets directory', () => {
+      const input = html`<script>
+        function baz() {
+          'worklet';
+          return import('./helper');
+        }
+      </script>`;
+
+      const fakeFilename = path.resolve(
+        __dirname,
+        '../../../some-library/file.js'
+      );
+      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(
+        `import("../../some-library/helper")`
+      );
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('rebases relative requires from files without import forwarding', () => {
       const input = html`<script>
         function baz() {
           'worklet';
@@ -434,10 +611,15 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const fakeFilename = '/not-a-workletizable-package/src/file.ts';
+      const fakeFilename = path.resolve(
+        __dirname,
+        '../../../not-a-workletizable-package/src/file.ts'
+      );
       const { files } = runPlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(/require\(["']\.\/helper["']\)/);
+      expect(files[0].content).toContain(
+        `require("../../not-a-workletizable-package/src/helper")`
+      );
       expect(files[0].content).toMatchSnapshot();
     });
   });

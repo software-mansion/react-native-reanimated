@@ -1,7 +1,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 #include <reanimated/Tools/FeatureFlags.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <utility>
@@ -21,8 +21,10 @@ UpdatesRegistryManager::ScopedLock::~ScopedLock() {
   tCurrentThreadHoldsLock = false;
 }
 
-UpdatesRegistryManager::UpdatesRegistryManager(const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry)
-    : staticPropsRegistry_(staticPropsRegistry) {}
+UpdatesRegistryManager::UpdatesRegistryManager(
+    const std::shared_ptr<StaticPropsRegistry> &staticPropsRegistry,
+    const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry)
+    : staticPropsRegistry_(staticPropsRegistry), mountedRootsRegistry_(mountedRootsRegistry) {}
 
 UpdatesRegistryManager::ScopedLock UpdatesRegistryManager::lock() const {
   return ScopedLock{mutex_};
@@ -73,28 +75,34 @@ void UpdatesRegistryManager::markNodeAsRemovable(const std::shared_ptr<const Sha
 void UpdatesRegistryManager::unmarkNodeAsRemovable(Tag viewTag) {
   react_native_assert(isLockedByCurrentThread());
   removableShadowNodes_.erase(viewTag);
+  for (auto &registry : registries_) {
+    registry->handleRemount(viewTag);
+  }
 }
 
-void UpdatesRegistryManager::handleNodeRemovals(const RootShadowNode &rootShadowNode) {
+std::vector<Tag> UpdatesRegistryManager::handleNodeRemovals(const SurfaceId surfaceId) {
   react_native_assert(isLockedByCurrentThread());
-  RemovableShadowNodes remainingShadowNodes;
-
-  for (const auto &[tag, shadowNodeFamily] : removableShadowNodes_) {
+  std::vector<Tag> removedTags;
+  std::erase_if(removableShadowNodes_, [&](const auto &entry) {
+    const auto &[tag, shadowNodeFamily] = entry;
     if (!shadowNodeFamily) {
-      continue;
+      return true;
     }
-
-    if (shadowNodeFamily->getAncestors(rootShadowNode).empty()) {
-      for (auto &registry : registries_) {
-        registry->remove(tag);
-      }
-      staticPropsRegistry_->remove(tag);
-    } else {
-      remainingShadowNodes.emplace(tag, shadowNodeFamily);
+    const auto nodeSurfaceId = shadowNodeFamily->getSurfaceId();
+    if (nodeSurfaceId != surfaceId && mountedRootsRegistry_->isRunning(nodeSurfaceId)) {
+      return false;
     }
-  }
-
-  removableShadowNodes_ = std::move(remainingShadowNodes);
+    if (mountedRootsRegistry_->isMounted(*shadowNodeFamily)) {
+      return false;
+    }
+    for (auto &registry : registries_) {
+      registry->removeUnmounted(shadowNodeFamily);
+    }
+    staticPropsRegistry_->remove(tag);
+    removedTags.push_back(tag);
+    return true;
+  });
+  return removedTags;
 }
 
 PropsMap UpdatesRegistryManager::collectProps() {
@@ -111,6 +119,16 @@ void UpdatesRegistryManager::mergeRegistryProps(const Tag viewTag, folly::dynami
   for (const auto &registry : registries_) {
     registry->mergeInto(viewTag, target);
   }
+}
+
+std::optional<folly::dynamic> UpdatesRegistryManager::getRegistryProp(const Tag viewTag, const char *propName) const {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto registry = registries_.rbegin(); registry != registries_.rend(); ++registry) {
+    if (auto value = (*registry)->getProp(viewTag, propName)) {
+      return value;
+    }
+  }
+  return std::nullopt;
 }
 
 #ifdef ANDROID
@@ -142,7 +160,7 @@ void UpdatesRegistryManager::addToPropsMap(
   auto it = propsMap.find(shadowNodeFamily);
 
   if (it == propsMap.cend()) {
-    auto propsVector = std::vector<RawProps>{};
+    auto propsVector = std::vector<folly::dynamic>{};
     propsVector.emplace_back(props);
     propsMap.emplace(shadowNodeFamily, propsVector);
   } else {

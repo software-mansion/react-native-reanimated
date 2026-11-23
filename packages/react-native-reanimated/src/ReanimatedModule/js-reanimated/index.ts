@@ -2,11 +2,7 @@
 import { logger } from '../../common';
 import type { AnimatedStyle, StyleProps } from '../../commonTypes';
 import type { PropUpdates } from '../../createAnimatedComponent/commonTypes';
-import {
-  createReactDOMStyle,
-  createTextShadowValue,
-  createTransformValue,
-} from './webUtils';
+import { createReactDOMStyle } from './webUtils';
 
 export { createJSReanimatedModule } from './JSReanimated';
 
@@ -55,18 +51,24 @@ export const _updatePropsJS = (
       [{}, {}]
     );
 
-    if (typeof component.setNativeProps === 'function') {
-      // This is the legacy way to update props on React Native Web <= 0.18.
-      // Also, some components (e.g. from react-native-svg) don't have styles
-      // and always provide setNativeProps function instead (even on React Native Web 0.19+).
-      setNativeProps(component, rawStyles, isAnimatedProps);
-    } else if (
+    // Check for a DOM node first: React Native Web 0.22 gives its DOM nodes
+    // a setNativeProps function that does nothing.
+    if (
       createReactDOMStyle !== undefined &&
+      'nodeType' in component &&
       component.style !== undefined
     ) {
-      // React Native Web 0.19+ no longer provides setNativeProps function,
-      // so we need to update DOM nodes directly.
+      // For Animated.Text we need to update textContent directly
+      if ('children' in rawStyles) {
+        component.textContent = rawStyles.children;
+        delete rawStyles.children;
+      }
+
       updatePropsDOM(component, rawStyles, isAnimatedProps);
+    } else if (typeof component.setNativeProps === 'function') {
+      // Some components (e.g. from react-native-svg) don't have styles
+      // and always provide setNativeProps function instead.
+      setNativeProps(component, rawStyles, isAnimatedProps);
     } else if (component.props && Object.keys(component.props).length > 0) {
       Object.keys(component.props).forEach((key) => {
         if (!(key in rawStyles)) {
@@ -114,36 +116,73 @@ const updatePropsDOM = (
   const currentStyle = { ...previousStyle, ...style };
   (component as JSReanimatedComponent).previousStyle = currentStyle;
 
-  const domStyle = createReactDOMStyle(currentStyle);
-  if (Array.isArray(domStyle.transform) && createTransformValue !== undefined) {
-    domStyle.transform = createTransformValue(domStyle.transform);
+  if (createReactDOMStyle == null) {
+    return;
   }
 
-  if (
-    createTextShadowValue !== undefined &&
-    (domStyle.textShadowColor ||
-      domStyle.textShadowRadius ||
-      domStyle.textShadowOffset)
-  ) {
-    domStyle.textShadow = createTextShadowValue({
-      textShadowColor: domStyle.textShadowColor,
-      textShadowOffset: domStyle.textShadowOffset,
-      textShadowRadius: domStyle.textShadowRadius,
-    });
-  }
+  if (isAnimatedProps) {
+    // Props are attributes, not styles: keep their names, and use the raw
+    // value when StyleSheet renames or drops the key (`start`, `tintColor`).
+    const resolved = createReactDOMStyle(currentStyle);
 
-  for (const key in domStyle) {
-    if (isAnimatedProps) {
+    for (const key in currentStyle) {
+      const attributeValue: string | number | null | undefined =
+        key in resolved ? resolved[key] : currentStyle[key];
+
+      if (attributeValue == null) {
+        continue;
+      }
+
       // We need to explicitly set the 'text' property on input component because React Native's
       // internal _valueTracker (https://github.com/facebook/react/blob/main/packages/react-dom-bindings/src/client/inputValueTracking.js)
       // prevents updates when only modifying attributes.
       if ((component as HTMLElement).nodeName === 'INPUT' && key === 'text') {
-        (component as HTMLInputElement).value = domStyle[key] as string;
+        (component as HTMLInputElement).value = String(attributeValue);
       } else {
-        (component as HTMLElement).setAttribute(key, domStyle[key]);
+        (component as HTMLElement).setAttribute(key, String(attributeValue));
       }
-    } else {
-      (component.style as StyleProps)[key] = domStyle[key];
+    }
+
+    return;
+  }
+
+  // StyleSheet builds `boxShadow` from the animated shadow* keys only, which
+  // would replace a static shadow with a partial one. Leave them out.
+  const {
+    shadowColor: _shadowColor,
+    shadowOpacity: _shadowOpacity,
+    shadowOffset: _shadowOffset,
+    shadowRadius: _shadowRadius,
+    ...styleWithoutShadow
+  } = currentStyle;
+
+  const domStyle = createReactDOMStyle(
+    styleWithoutShadow,
+    getWritingDirection(component)
+  );
+
+  for (const key in domStyle) {
+    (component.style as StyleProps)[key] = domStyle[key];
+  }
+};
+
+const DIR_SELECTOR = '[dir]:not(html):not(body)';
+
+// Same rule as react-native-web: the nearest `dir`, ignoring <html> and <body>.
+// An element's own `auto` (set by a root Text) defers to its ancestors.
+const getWritingDirection = (
+  component: JSReanimatedComponent | HTMLElement
+): 'ltr' | 'rtl' => {
+  if ('closest' in component) {
+    const start =
+      component.getAttribute('dir') === 'auto'
+        ? component.parentElement
+        : component;
+
+    if (start?.closest(DIR_SELECTOR)?.getAttribute('dir') === 'rtl') {
+      return 'rtl';
     }
   }
+
+  return 'ltr';
 };

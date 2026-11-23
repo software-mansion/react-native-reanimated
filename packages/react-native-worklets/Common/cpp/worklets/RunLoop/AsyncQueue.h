@@ -37,6 +37,13 @@ class AsyncQueue : public facebook::jsi::NativeState {
    * with this token. The default implementation keeps every job.
    */
   virtual void abortPending(AbortToken /* abortToken */) {}
+
+  /**
+   * Drops the pending jobs of the aborted owner, as in `abortPending`, and
+   * stops accepting new ones. A queue shared between several owners keeps
+   * serving the others. The default implementation does nothing.
+   */
+  virtual void stop(AbortToken /* abortToken */) {}
 };
 
 } // namespace worklets

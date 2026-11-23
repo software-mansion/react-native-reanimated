@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import type { HostInstance } from 'react-native';
 import {
-  createSerializable,
   createShareable,
+  hasSerializableMapping,
   scheduleOnUI,
-  serializableMappingCache,
+  setSerializableMapping,
   UIRuntimeId,
 } from 'react-native-worklets';
 
@@ -28,19 +28,25 @@ export function useAnimatedRef<
     createShareable<ShadowNodeWrapper | null>(UIRuntimeId, null)
   );
 
-  const resultRef = useAnimatedRefBase<TRef>((ref) => {
-    const currentWrapper = getShadowNodeWrapperFromRef(ref);
+  const resultRef = useAnimatedRefBase<TRef>(
+    (ref) => {
+      const currentWrapper = getShadowNodeWrapperFromRef(ref);
 
-    scheduleOnUI(() => {
-      (sharedWrapper as AnimatedRefOnUI).value = currentWrapper;
-    });
+      scheduleOnUI(() => {
+        (sharedWrapper as AnimatedRefOnUI).value = currentWrapper;
+      });
 
-    return currentWrapper;
-  });
+      return currentWrapper;
+    },
+    () => {
+      scheduleOnUI(() => {
+        (sharedWrapper as AnimatedRefOnUI).value = null;
+      });
+    }
+  );
 
-  if (!serializableMappingCache.get(resultRef)) {
-    const animatedRefSerializable = createSerializable(sharedWrapper);
-    serializableMappingCache.set(resultRef, animatedRefSerializable);
+  if (!hasSerializableMapping(resultRef)) {
+    setSerializableMapping(resultRef, sharedWrapper);
   }
 
   return resultRef;

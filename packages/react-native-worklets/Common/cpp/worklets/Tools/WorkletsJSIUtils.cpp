@@ -1,6 +1,6 @@
 #include <worklets/Tools/WorkletsJSIUtils.h>
 
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <sstream>

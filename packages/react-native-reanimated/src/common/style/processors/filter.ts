@@ -96,14 +96,9 @@ const parseDropShadow = (
     return null;
   }
 
-  const processedColor = processColor(color, context);
-  if (processedColor === null) {
-    return null;
-  }
-
   return {
     // TODO - add support for IOS dynamic colors in CSS (for now we just assume that it's a number)
-    color: processedColor as number,
+    color: processColor(color, context) as number,
     offsetX: parseFloat(offsetX as string),
     offsetY: parseFloat(offsetY as string),
     standardDeviation: parsedStdDev,
@@ -204,27 +199,53 @@ const parseFilterString = (
   return filterArray;
 };
 
+const parseFilterArray = (
+  value: ReadonlyArray<FilterFunction>,
+  context: ValueProcessorContext | undefined
+): FilterArray => {
+  'worklet';
+  const filterArray: FilterArray = [];
+  for (const filter of value) {
+    const entries = Object.entries(filter);
+    // Each filter object holds exactly one function, like `{ blur: 2 }`.
+    const parsed =
+      entries.length === 1
+        ? parseFilterProperty(entries[0][0], entries[0][1], context)
+        : null;
+    if (parsed === null) {
+      return [];
+    }
+    filterArray.push(parsed);
+  }
+  return filterArray;
+};
+
+export const ERROR_MESSAGES = {
+  invalidFilter(value: unknown) {
+    'worklet';
+    return `Invalid filter value: ${JSON.stringify(value)}`;
+  },
+};
+
 export const processFilter: ValueProcessor<
   ReadonlyArray<FilterFunction> | string,
   FilterArray
 > = (value, context) => {
   'worklet';
-  if (typeof value === 'string') {
-    return parseFilterString(value, context);
+  // `none` and an empty string or array clear the filter.
+  if (value === 'none' || value.length === 0) {
+    return [];
   }
 
-  if (Array.isArray(value)) {
-    const filterArray: FilterArray = [];
-    for (const filter of value) {
-      const filterKey = Object.keys(filter)[0];
-      const parsed = parseFilterProperty(filterKey, filter[filterKey], context);
-      if (parsed === null) {
-        return [];
-      }
-      filterArray.push(parsed);
-    }
-    return filterArray;
+  const filterArray =
+    typeof value === 'string'
+      ? parseFilterString(value, context)
+      : parseFilterArray(value, context);
+
+  // One invalid function invalidates the whole declaration, like in CSS.
+  if (filterArray.length === 0) {
+    throw new Error(`[Reanimated] ${ERROR_MESSAGES.invalidFilter(value)}`);
   }
 
-  return [];
+  return filterArray;
 };

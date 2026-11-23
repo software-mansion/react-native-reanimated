@@ -4,6 +4,7 @@
 #import <reanimated/apple/CSS/REACSSPlatformTransitions.h>
 #import <reanimated/apple/READisplayLink.h>
 #import <reanimated/apple/REANodesManager.h>
+#import <reanimated/apple/REASharedTransitionOverlays.h>
 #import <reanimated/apple/REASlowAnimations.h>
 #import <reanimated/apple/REAUIView.h>
 #import <reanimated/apple/RNGestureHandlerStateManager.h>
@@ -18,6 +19,8 @@
 #import <React/RCTMountingManager.h>
 #import <React/RCTViewComponentView.h>
 
+#import <algorithm>
+#import <cmath>
 #import <memory>
 #import <variant>
 
@@ -84,6 +87,14 @@ MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesMa
     [nodesManager maybeFlushUIUpdatesQueue];
   };
   return maybeFlushUIUpdatesQueueFunction;
+}
+
+IsSensorAvailableFunction makeIsSensorAvailableFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
+{
+  auto isSensorAvailableFunction = [=](int sensorType) -> bool {
+    return [reanimatedSensorContainer isSensorAvailable:(ReanimatedSensorType)sensorType];
+  };
+  return isSensorAvailableFunction;
 }
 
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer)
@@ -210,6 +221,33 @@ ForceScreenSnapshotFunction makeForceScreenSnapshotFunction(REANodesManager *nod
   return forceScreenSnapshot;
 }
 
+#if TARGET_OS_IOS
+SetSharedTransitionOverlayFunction makeSetSharedTransitionOverlayFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](SurfaceId surfaceId, std::optional<Tag> tag) {
+    if (tag) {
+      [overlays showOverlayWithTag:*tag surfaceId:surfaceId];
+    } else {
+      [overlays hideOverlayForSurfaceId:surfaceId];
+    }
+  };
+}
+
+NativeViewPlacementFunction makeNativeViewPlacementFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](SurfaceId surfaceId, Tag tag, Tag parentTag, bool settled) {
+    return [overlays placementOfViewWithTag:tag parentTag:parentTag surfaceId:surfaceId settled:settled];
+  };
+}
+
+IsMovedByContainerTransitionFunction makeIsMovedByContainerTransitionFunction(REASharedTransitionOverlays *overlays)
+{
+  return [overlays](Tag tag) {
+    return [overlays isViewWithTagMovedByContainerTransition:tag];
+  };
+}
+#endif
+
 ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *nodesManager)
 {
   auto readMountedViewProps = [=](Tag tag) -> Props::Shared {
@@ -224,6 +262,55 @@ ReadMountedViewPropsFunction makeReadMountedViewPropsFunction(REANodesManager *n
     return [componentView props];
   };
   return readMountedViewProps;
+}
+
+#if !TARGET_OS_OSX
+static int argbFromCGColor(CGColorRef color)
+{
+  CGFloat red = 0;
+  CGFloat green = 0;
+  CGFloat blue = 0;
+  CGFloat alpha = 0;
+  if (color != nil) {
+    [[UIColor colorWithCGColor:color] getRed:&red green:&green blue:&blue alpha:&alpha];
+  }
+  const auto channel = [](CGFloat value) {
+    return static_cast<uint32_t>(std::lround(std::clamp(value, 0.0, 1.0) * 255));
+  };
+  return static_cast<int>(channel(alpha) << 24 | channel(red) << 16 | channel(green) << 8 | channel(blue));
+}
+#endif
+
+ObtainMountedViewPropsFunction makeObtainMountedViewPropsFunction(REANodesManager *nodesManager)
+{
+  return [=](Tag tag, bool presented) -> std::optional<MountedViewProps> {
+#if TARGET_OS_OSX
+    return std::nullopt;
+#else
+    RCTComponentViewRegistry *componentViewRegistry =
+        nodesManager.surfacePresenter.mountingManager.componentViewRegistry;
+    REAUIView *view = [componentViewRegistry findComponentViewWithTag:tag];
+    if (view == nil || view.window == nil) {
+      return std::nullopt;
+    }
+    // A layer has no presentation layer until Core Animation renders it.
+    CALayer *layer = presented ? (view.layer.presentationLayer ?: view.layer) : view.layer;
+    const CGSize size = layer.bounds.size;
+    const CGPoint anchor = layer.anchorPoint;
+    return MountedViewProps{
+        .x = layer.position.x - size.width * anchor.x,
+        .y = layer.position.y - size.height * anchor.y,
+        .width = size.width,
+        .height = size.height,
+        .opacity = layer.opacity,
+        // React Native paints the background on an unanimated sublayer for non-circular corners and for
+        // visible borders without clipping, and keeps its color in `backgroundColor`.
+        .backgroundColor = argbFromCGColor(
+            layer.backgroundColor
+                ?: [view.backgroundColor resolvedColorWithTraitCollection:view.traitCollection].CGColor),
+    };
+#endif
+  };
 }
 
 PlatformAttachPseudoSelectorFunction makeAttachPseudoSelectorFunction(REAPseudoSelectorAttachQueue *attachQueue)
@@ -242,7 +329,10 @@ PlatformDetachPseudoSelectorFunction makeDetachPseudoSelectorFunction(REAPseudoS
   };
 }
 
-PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager)
+PlatformDepMethodsHolder makePlatformDepMethodsHolder(
+    RCTModuleRegistry *moduleRegistry,
+    REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver)
 {
   auto requestRender = makeRequestRender(nodesManager);
 
@@ -250,19 +340,32 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
 
   auto readMountedViewPropsFunction = makeReadMountedViewPropsFunction(nodesManager);
 
+  SetSharedTransitionOverlayFunction setSharedTransitionOverlayFunction;
+  NativeViewPlacementFunction nativeViewPlacementFunction;
+  IsMovedByContainerTransitionFunction isMovedByContainerTransitionFunction;
+#if TARGET_OS_IOS
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    REASharedTransitionOverlays *sharedTransitionOverlays =
+        [[REASharedTransitionOverlays alloc] initWithSurfacePresenter:nodesManager.surfacePresenter];
+    setSharedTransitionOverlayFunction = makeSetSharedTransitionOverlayFunction(sharedTransitionOverlays);
+    nativeViewPlacementFunction = makeNativeViewPlacementFunction(sharedTransitionOverlays);
+    isMovedByContainerTransitionFunction = makeIsMovedByContainerTransitionFunction(sharedTransitionOverlays);
+  }
+#endif
+
   auto synchronouslyUpdateUIPropsFunction = makeSynchronouslyUpdateUIPropsFunction(nodesManager);
 
   auto getAnimationTimestamp = makeGetAnimationTimestamp();
 
   ReanimatedSensorContainer *reanimatedSensorContainer = [[ReanimatedSensorContainer alloc] init];
 
+  auto isSensorAvailableFunction = makeIsSensorAvailableFunction(reanimatedSensorContainer);
+
   auto registerSensorFunction = makeRegisterSensorFunction(reanimatedSensorContainer);
 
   auto unregisterSensorFunction = makeUnregisterSensorFunction(reanimatedSensorContainer);
 
   auto setGestureStateFunction = makeSetGestureStateFunction(moduleRegistry);
-
-  REAKeyboardEventObserver *keyboardObserver = [[REAKeyboardEventObserver alloc] init];
 
   auto subscribeForKeyboardEventsFunction = makeSubscribeForKeyboardEventsFunction(keyboardObserver);
 
@@ -275,14 +378,20 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
   auto attachPseudoSelectorFunction = makeAttachPseudoSelectorFunction(attachQueue);
   auto detachPseudoSelectorFunction = makeDetachPseudoSelectorFunction(attachQueue);
 
+  auto obtainMountedViewPropsFunction = makeObtainMountedViewPropsFunction(nodesManager);
+
   auto platformTransitionBackend = makePlatformTransitionBackend(nodesManager);
 
   PlatformDepMethodsHolder platformDepMethodsHolder = {
       requestRender,
       forceScreenSnapshotFunction,
       readMountedViewPropsFunction,
+      setSharedTransitionOverlayFunction,
+      nativeViewPlacementFunction,
+      isMovedByContainerTransitionFunction,
       synchronouslyUpdateUIPropsFunction,
       getAnimationTimestamp,
+      isSensorAvailableFunction,
       registerSensorFunction,
       unregisterSensorFunction,
       setGestureStateFunction,
@@ -291,6 +400,7 @@ PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleR
       maybeFlushUIUpdatesQueueFunction,
       attachPseudoSelectorFunction,
       detachPseudoSelectorFunction,
+      obtainMountedViewPropsFunction,
       platformTransitionBackend,
   };
   return platformDepMethodsHolder;

@@ -78,6 +78,8 @@ export type {
   LayoutAnimationType,
   MeasuredDimensions,
   SensorConfig,
+  SensorValue,
+  SensorValueMap,
   SharedValue,
   StyleProps,
   TransformArrayItem,
@@ -171,7 +173,13 @@ export {
   setUpTests,
   withReanimatedTimer,
 } from './jestUtils';
-export type { ReanimatedKeyframe } from './layoutReanimation';
+export type {
+  CustomSharedTransitionAnimation,
+  FadeContentConfig,
+  ProgressSharedTransitionAnimation,
+  ReanimatedKeyframe,
+  SharedTransitionAnimationsValues,
+} from './layoutReanimation';
 export {
   BaseAnimationBuilder,
   // Bounce
@@ -242,6 +250,7 @@ export {
   RotateOutUpRight,
   SequencedTransition,
   SharedTransition,
+  SharedTransitionType,
   SlideInDown,
   SlideInLeft,
   // Slide

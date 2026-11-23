@@ -474,11 +474,21 @@ function LayoutAnimationsTest() {
     // `SharedTransition` so it remains assignable to `sharedTransitionStyle`.
     const sharedTransition = SharedTransition.springify(400).dampingRatio(1);
 
-    // `withInitialValues` / `withTargetValues` (defined on
-    // `ComplexAnimationBuilder`) must survive a static modifier chain.
-    const sharedTransitionWithOverrides = SharedTransition.springify(400)
-      .withInitialValues({ opacity: 0 })
-      .withTargetValues({ opacity: 1 });
+    // `fadeContent` keeps the `SharedTransition` type in both chain orders.
+    const fadeContentTransition = SharedTransition.fadeContent().duration(400);
+    const springFadeContentTransition =
+      SharedTransition.springify(400).fadeContent();
+    const fadeContentWithOptions = SharedTransition.fadeContent({
+      fadeOut: { end: 0.5 },
+      fadeIn: { duration: 200 },
+    }).springify();
+    // @ts-expect-error `fadeOut.end` is a number.
+    SharedTransition.fadeContent({ fadeOut: { end: '50%' } });
+
+    // @ts-expect-error Shared transitions don't support custom initial values.
+    SharedTransition.springify(400).withInitialValues({ opacity: 0 });
+    // @ts-expect-error Shared transitions don't support custom target values.
+    SharedTransition.springify(400).withTargetValues({ opacity: 1 });
 
     // Entering/exiting subclasses keep their concrete value type after a static
     // modifier, so `withInitialValues` still rejects unknown props.
@@ -493,7 +503,15 @@ function LayoutAnimationsTest() {
         />
         <Animated.View
           sharedTransitionTag="tag"
-          sharedTransitionStyle={sharedTransitionWithOverrides}
+          sharedTransitionStyle={fadeContentTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={springFadeContentTransition}
+        />
+        <Animated.View
+          sharedTransitionTag="tag"
+          sharedTransitionStyle={fadeContentWithOptions}
         />
       </View>
     );

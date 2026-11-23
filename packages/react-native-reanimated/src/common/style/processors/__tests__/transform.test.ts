@@ -9,6 +9,10 @@ describe(processTransform, () => {
     ]);
   });
 
+  test('returns an empty list for none', () => {
+    expect(processTransform('none')).toEqual([]);
+  });
+
   describe('converts transform string to transform objects', () => {
     const cases: {
       name: string;

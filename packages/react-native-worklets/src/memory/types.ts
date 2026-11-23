@@ -72,7 +72,7 @@ export type RegistrationData<TValue extends object, TPacked = unknown> = {
   pack: (value: TValue) => TPacked;
   /**
    * A worklet that unpacks the packed value, after it's been deserialized from
-   * it's packed form, back into the JavaScript value of type `TValue`.
+   * its packed form, back into the JavaScript value of type `TValue`.
    */
   unpack: (value: TPacked) => TValue;
 };

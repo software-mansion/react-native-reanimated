@@ -14,7 +14,7 @@ describe(processFontWeight, () => {
   });
 
   describe('throws an error for invalid font weight values', () => {
-    test.each(['unknown-weight', '1000', '0', 505])(
+    test.each(['unknown-weight', '1000', '0', 505, 'toString'])(
       'throws an error for %p',
       (value) => {
         expect(() => processFontWeight(value)).toThrow(

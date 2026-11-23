@@ -1,5 +1,9 @@
 'use strict';
 
+import {
+  installLazyBundleRegistrar,
+  makeLazyBundleRegistrar,
+} from './bundleMode/lazyBundles';
 import { isBundleModeEnabled } from './debug/bundleMode';
 import { getStaticFeatureFlag } from './featureFlags/featureFlags';
 import { addNoBundleModeGuardImplementation } from './guardImplementation';
@@ -83,6 +87,7 @@ export function createWorkletRuntime(
   let enableEventLoop = true;
   let enableLocking = true;
   let enableNetworking = true;
+  let abortable = false;
   if (typeof nameOrConfig === 'string') {
     name = nameOrConfig;
     initializerFn = initializer;
@@ -114,6 +119,7 @@ export function createWorkletRuntime(
      */
     enableNetworking =
       (nameOrConfig?.enableNetworking ?? true) && enableEventLoop;
+    abortable = nameOrConfig?.abortable ?? false;
   }
 
   const useDefaultQueue = queue === 'default';
@@ -126,6 +132,8 @@ export function createWorkletRuntime(
     );
   }
 
+  const lazyBundleRegistrar = makeLazyBundleRegistrar();
+
   return WorkletsModule.createWorkletRuntime(
     name,
     createSerializable(() => {
@@ -135,6 +143,7 @@ export function createWorkletRuntime(
         setupConsole(runtimeBoundCapturableConsole!);
       } else if (__DEV__) {
         setupConsoleForwarding(runtimeBoundCapturableConsole!);
+        installLazyBundleRegistrar(lazyBundleRegistrar);
       }
       if (enableEventLoop) {
         setupRunLoop(animationQueuePollingRate);
@@ -145,7 +154,8 @@ export function createWorkletRuntime(
     customQueue,
     enableEventLoop,
     enableLocking,
-    enableNetworking
+    enableNetworking,
+    abortable
   );
 }
 
@@ -465,6 +475,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
       ? new Error().stack
       : undefined;
 
+    const serializableResolve = createSerializable(resolve);
+    const serializableReject = createSerializable(reject);
+
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
       createSerializable(() => {
@@ -486,7 +499,9 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
           );
         }
       }),
-      scheduleStack
+      scheduleStack,
+      serializableResolve,
+      serializableReject
     );
   });
 }
@@ -539,6 +554,9 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
       ? new Error().stack
       : undefined;
 
+    const serializableResolve = createSerializable(resolve);
+    const serializableReject = createSerializable(reject);
+
     WorkletsModule.scheduleOnRuntimeWithId(
       runtimeId,
       createSerializable(() => {
@@ -560,7 +578,9 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
           );
         }
       }),
-      scheduleStack
+      scheduleStack,
+      serializableResolve,
+      serializableReject
     );
   });
 }
@@ -582,4 +602,20 @@ export function getUIRuntimeHolder(): object {
 
 export function getUISchedulerHolder(): object {
   return WorkletsModule.getUISchedulerHolder();
+}
+
+export function abortWorkletRuntime(runtimeId: number): boolean {
+  return WorkletsModule.abortWorkletRuntime(runtimeId);
+}
+
+if (!isBundleModeEnabled()) {
+  function abortWorkletRuntimeWorklet(runtimeId: number): boolean {
+    'worklet';
+    return globalThis.__workletsModuleProxy.abortWorkletRuntime(runtimeId);
+  }
+
+  serializableMappingCache.set(
+    abortWorkletRuntime,
+    createSerializable(abortWorkletRuntimeWorklet)
+  );
 }

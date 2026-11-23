@@ -12,7 +12,7 @@ import type {
   IInlinePropManager,
   ViewInfo,
 } from './commonTypes';
-import { flattenArray } from './utils';
+import { flattenArray, normalizeTextProp } from './utils';
 
 function isInlineStyleTransform(transform: unknown): boolean {
   if (!Array.isArray(transform)) {
@@ -164,6 +164,7 @@ export class InlinePropManager implements IInlinePropManager {
       const hasInlineTopLevelProps =
         Object.keys(inlineTopLevelProps).length > 0;
       const hasInlineProps = hasInlineStyleProps || hasInlineTopLevelProps;
+      const isText = animatedComponent.ChildComponent.displayName === 'Text';
       const updaterFunction = () => {
         'worklet';
         if (hasInlineStyleProps) {
@@ -177,11 +178,13 @@ export class InlinePropManager implements IInlinePropManager {
           // props, not styles — process them like `useAnimatedProps` updates
           // (in particular, don't run them through the style props builder,
           // which drops non-style keys).
-          updateProps(
-            shareableViewDescriptors,
-            getInlinePropsUpdate(inlineTopLevelProps) as StyleProps,
-            true
-          );
+          const update = getInlinePropsUpdate(
+            inlineTopLevelProps
+          ) as StyleProps;
+          if (isText && 'children' in update) {
+            update.children = normalizeTextProp(update.children);
+          }
+          updateProps(shareableViewDescriptors, update, true);
         }
       };
       this._inlineStyleProps = inlineStyleProps;

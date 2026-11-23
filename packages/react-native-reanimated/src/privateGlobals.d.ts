@@ -11,7 +11,7 @@ import type {
   ShadowNodeWrapper,
 } from './commonTypes';
 import type { PropUpdates } from './createAnimatedComponent/commonTypes';
-import type { FrameCallbackRegistryUI } from './frameCallback/FrameCallbackRegistryUI';
+import type { FrameCallbackRegistryUI } from './frameCallback/commonTypes';
 import type { ReanimatedModuleProxy } from './ReanimatedModule';
 import type { RNScreensTurboModuleType } from './screenTransition/commonTypes';
 import type { SensorContainer } from './SensorContainer';
@@ -42,6 +42,7 @@ declare global {
           shadowNodeWrapper: ShadowNodeWrapper;
 
           updates: PropUpdates;
+          isAnimatedProps: boolean;
         }[]
       ) => void)
     | undefined;
@@ -78,7 +79,7 @@ declare global {
    *   future.
    */
   var __frameTimestamp: number | undefined;
-  var __mapperRun: () => void;
+  var __mapperRun: (() => void) | undefined;
   var __requestMapperRunFinalizer: (finalizer: () => void) => void;
   var _maybeFlushUIUpdatesQueue: () => void;
   var __UI_WORKLET_RUNTIME_HOLDER: object | undefined;

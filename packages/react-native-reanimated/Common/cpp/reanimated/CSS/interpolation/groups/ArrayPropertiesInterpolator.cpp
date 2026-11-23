@@ -11,6 +11,23 @@ ArrayPropertiesInterpolator::ArrayPropertiesInterpolator(
     const std::shared_ptr<ViewStylesRepository> &viewStylesRepository)
     : GroupPropertiesInterpolator(propertyPath, viewStylesRepository), factories_(factories) {}
 
+folly::dynamic ArrayPropertiesInterpolator::getDefaultValue() const {
+  auto result = folly::dynamic::array();
+  // One factory is a variable-length list (boxShadow, backgroundImage), several
+  // are a fixed tuple (transformOrigin). See InterpolatorRegistry.cpp.
+  if (factories_.size() > 1) {
+    for (const auto &factory : factories_) {
+      result.push_back(factory->getDefaultValue().toDynamic());
+    }
+  }
+  return result;
+}
+
+folly::dynamic ArrayPropertiesInterpolator::getResetStyle(const std::shared_ptr<const ShadowNode> &shadowNode) const {
+  const auto value = PropertyInterpolator::getStyleValue(shadowNode);
+  return value.isArray() ? value : getDefaultValue();
+}
+
 void ArrayPropertiesInterpolator::updateKeyframes(jsi::Runtime &rt, const jsi::Value &keyframes) {
   const jsi::Array keyframesArray = keyframes.asObject(rt).asArray(rt);
   const size_t valuesCount = keyframesArray.size(rt);

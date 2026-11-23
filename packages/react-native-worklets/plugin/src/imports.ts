@@ -17,24 +17,18 @@ export function updateRelativeRequires(
   traverse(node, {
     noScope: true,
     CallExpression(nodePath) {
+      const specifier = nodePath.get('arguments')[0];
       if (
-        nodePath.get('callee').isIdentifier({ name: 'require' }) &&
-        nodePath.get('arguments')[0]?.isStringLiteral()
+        !specifier?.isStringLiteral() ||
+        !specifier.node.value.startsWith('.')
       ) {
-        const requiredModule = nodePath.get(
-          'arguments'
-        )[0] as NodePath<StringLiteral>;
-        if (
-          requiredModule.node.value.startsWith('.') &&
-          canForwardRelativeImport(
-            state.file.opts.filename || '',
-            state.importForwarding.relativePaths
-          )
-        ) {
-          requiredModule.replaceWith(
-            createImportPathLiteral(requiredModule.node.value, state)
-          );
-        }
+        return;
+      }
+      const callee = nodePath.get('callee');
+      if (callee.isImport() || callee.isIdentifier({ name: 'require' })) {
+        specifier.replaceWith(
+          createImportPathLiteral(specifier.node.value, state)
+        );
       }
     },
   });
@@ -59,11 +53,7 @@ export function canForwardModuleImport(
   moduleName: string,
   forwardableModuleNames: string[]
 ): boolean {
-  return forwardableModuleNames.some(
-    (forwardableModuleName) =>
-      moduleName === forwardableModuleName ||
-      moduleName.startsWith(forwardableModuleName + '/')
-  );
+  return forwardableModuleNames.includes(moduleName);
 }
 
 export function canForwardRelativeImport(
@@ -113,5 +103,66 @@ export function createImportPathLiteral(
   const relativePath = relative(generatedWorkletsDirPath, resolved);
   return stringLiteral(
     sep === '/' ? relativePath : relativePath.split(sep).join('/')
+  );
+}
+
+export const COMMON_FOLDER_NAMES = new Set([
+  'app',
+  'build',
+  'cjs',
+  'common',
+  'commonjs',
+  'components',
+  'core',
+  'dist',
+  'esm',
+  'helpers',
+  'lib',
+  'module',
+  'modules',
+  'shared',
+  'source',
+  'src',
+  'utils',
+]);
+
+const warnedDangerousPaths = new Set<string>();
+
+export function warnAboutDangerousRelativePaths(
+  relativePaths: string[] | undefined,
+  silenced: boolean | undefined
+) {
+  if (silenced || !relativePaths) {
+    return;
+  }
+  for (const relativePath of relativePaths) {
+    if (
+      typeof relativePath !== 'string' ||
+      warnedDangerousPaths.has(relativePath) ||
+      !isDangerousRelativePath(relativePath)
+    ) {
+      continue;
+    }
+    warnedDangerousPaths.add(relativePath);
+    console.warn(getDangerousRelativePathWarning(relativePath));
+  }
+}
+
+export function isDangerousRelativePath(relativePath: string) {
+  const segments = relativePath.split(posix.sep);
+  return (
+    relativePath.length > 0 &&
+    segments.every((segment) => COMMON_FOLDER_NAMES.has(segment))
+  );
+}
+
+function getDangerousRelativePathWarning(relativePath: string) {
+  return (
+    `[Worklets] \`importForwarding.relativePaths\` contains '${relativePath}', which has only common folder names. ` +
+    `It can also match folders inside packages in node_modules, for example 'node_modules/<package>/${relativePath}', ` +
+    `and the relative imports inside their worklets get forwarded too, which can crash the app. ` +
+    `Use a path that only your code has. ` +
+    `Set the \`silenceDangerousPathsWarning\` plugin option to \`true\` to hide this warning. ` +
+    `See https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths`
   );
 }

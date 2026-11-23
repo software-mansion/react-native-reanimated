@@ -1,1 +1,0 @@
-Add `backgroundImage` support to CSS animations and CSS transitions, with interpolation of gradient colors, color stop positions, angle direction, and radial size and position on native and a CSS gradient string on web.

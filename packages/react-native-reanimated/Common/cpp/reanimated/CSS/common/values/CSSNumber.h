@@ -59,18 +59,4 @@ struct CSSIndex : public CSSNumberBase<CSSIndex, int> {
   CSSIndex interpolate(double progress, const CSSIndex &other) const override;
 };
 
-#ifdef ANDROID
-
-// For some reason Android crashes when blurRadius is smaller than 1 so we use a
-// custom value that will never be smaller than 1
-
-struct CSSShadowRadiusAndroid : public CSSNumberBase<CSSShadowRadiusAndroid, double> {
-  CSSShadowRadiusAndroid();
-  explicit CSSShadowRadiusAndroid(double value);
-  explicit CSSShadowRadiusAndroid(jsi::Runtime &rt, const jsi::Value &jsiValue);
-  explicit CSSShadowRadiusAndroid(const folly::dynamic &value);
-};
-
-#endif
-
 } // namespace reanimated::css

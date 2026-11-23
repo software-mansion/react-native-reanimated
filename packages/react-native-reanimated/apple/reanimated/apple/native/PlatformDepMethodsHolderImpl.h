@@ -7,11 +7,15 @@
 
 namespace reanimated {
 
-PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager);
+PlatformDepMethodsHolder makePlatformDepMethodsHolder(
+    RCTModuleRegistry *moduleRegistry,
+    REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver);
 SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleRegistry);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
 GetAnimationTimestampFunction makeGetAnimationTimestamp();
 MaybeFlushUIUpdatesQueueFunction makeMaybeFlushUIUpdatesQueueFunction(REANodesManager *nodesManager);
+IsSensorAvailableFunction makeIsSensorAvailableFunction(ReanimatedSensorContainer *reanimatedSensorContainer);
 RegisterSensorFunction makeRegisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer);
 UnregisterSensorFunction makeUnregisterSensorFunction(ReanimatedSensorContainer *reanimatedSensorContainer);
 KeyboardEventSubscribeFunction makeSubscribeForKeyboardEventsFunction(REAKeyboardEventObserver *keyboardObserver);

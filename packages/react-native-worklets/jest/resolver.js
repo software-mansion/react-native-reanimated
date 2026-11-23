@@ -1,11 +1,14 @@
 const path = require('path');
 
+const WORKLETS_DIR = /[\\/]react-native-worklets[\\/](src|lib)[\\/]/;
+
 /** @type {import('jest-resolve').SyncResolver} */
 module.exports = (request, options) => {
   const { defaultResolver } = options;
   if (
-    options.basedir.includes('react-native-worklets') ||
-    request.includes('react-native-worklets')
+    WORKLETS_DIR.test(options.basedir + path.sep) ||
+    request === 'react-native-worklets' ||
+    request.startsWith('react-native-worklets/')
   ) {
     const workletOptions = { ...options };
     workletOptions.extensions = workletOptions.extensions?.filter(

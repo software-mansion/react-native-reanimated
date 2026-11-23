@@ -10,7 +10,7 @@ import { useEnteringExitingPlayground } from '@site/src/components/InteractivePl
 
 Entering/Exiting animations let you animate elements when they are added to or removed from the view hierarchy.
 
-Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](/docs/layout-animations/keyframe-animations) or create your own [custom entering/exiting animations](/docs/layout-animations/custom-animations).
+Reanimated comes with a bunch of predefined animations you can customize. For more advanced use-cases, you can use [Keyframes](./keyframe-animations.mdx) or create your own [custom entering/exiting animations](./custom-animations.mdx).
 
 <InteractivePlayground usePlayground={useEnteringExitingPlayground}/>
 
@@ -24,11 +24,12 @@ Spring-based animations are yet to be introduced to the web. Due to that, playgr
 - `withInitialValues` and `withTargetValues` are typed per preset, so only props specific to the animation preset are accepted (see each preset's _Values & Type definitions_ block).
 - <Badges version="4.4.0"> For transforms, prefer flat top-level props like `{ translateX: 50 }` over `transform: [{ translateX: 50 }]`. The `transform: [{ ... }]` tuple form still works but is deprecated since 4.4.0.</Badges>
 - `withInitialValues` overrides the initial values of the animation (the state the element starts from).
+- <Badges version="4.8.0"> An exiting animation that interrupts a running layout animation, such as an entering one, starts each property that the running animation drives from its current value. This takes precedence over `withInitialValues`. On web, this applies only to `opacity` of predefined animations.</Badges>
 - <Badges version="4.4.0"> `withTargetValues` overrides the target values of the animation (the state the element animates to).</Badges>
 - _Values & Type definitions_ blocks after each animation preset show the exact type for both `withInitialValues` and `withTargetValues` (they accept the same props per preset). The deprecated `transform` prop also shows the order in which transforms are applied. In the flat form, object key order is ignored and the preset applies transforms in its built-in order.
 - If both forms are used, the flat prop wins for that transform slot; remaining slots fall back to the tuple value, then to the preset default. Mixing forms is supported but not recommended.
 - On the New Architecture:
-  - `nativeID` is used internally to configure entering animations, so overwriting it will result in entering animations not running. Some components (e.g. TouchableWithoutFeedback) overwrite `nativeID` of its children. To work around this issue wrap your animated children with a `View`.
+  - `nativeID` is used internally to configure entering animations, so a component with its own `nativeID` does not run its entering animation. Some components (e.g. `TouchableWithoutFeedback` with a `nativeID`) give their `nativeID` to their child. To work around this issue, put the `nativeID` on a `View` that wraps the animated component. <Badges version="4.8.0">`nativeID={undefined}` does not stop the entering animation.</Badges>
   - removing a non-animated view will trigger exiting animations in its children, but the non-animated view will not wait for the children's animations to finish. This is due to view flattening and can be mitigated by using `collapsable={false}`.
 
 ## Fade
@@ -157,7 +158,7 @@ Available fade animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 FadeOutLeft.duration(500).easing(Easing.ease);
@@ -171,7 +172,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 FadeInUp.springify()
@@ -513,7 +514,7 @@ Available flip animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 FlipOutYLeft.duration(500).easing(Easing.ease);
@@ -527,7 +528,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 FlipInXUp.springify()
@@ -660,7 +661,7 @@ Available lightspeed animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 LightSpeedOutLeft.duration(500).easing(Easing.ease);
@@ -674,7 +675,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 LightSpeedInLeft.springify()
@@ -797,7 +798,7 @@ Available pinwheel animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 PinwheelOut.duration(500).easing(Easing.ease);
@@ -811,7 +812,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 PinwheelIn.springify()
@@ -941,7 +942,7 @@ Available roll animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 RollOutLeft.duration(500).easing(Easing.ease);
@@ -955,7 +956,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 RollInLeft.springify()
@@ -1109,7 +1110,7 @@ Available rotate animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 RotateOutDownRight.duration(500).easing(Easing.ease);
@@ -1123,7 +1124,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 RotateInUpLeft.springify()
@@ -1267,7 +1268,7 @@ Available slide animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 SlideOutLeft.duration(500).easing(Easing.ease);
@@ -1281,7 +1282,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 SlideInUp.springify()
@@ -1417,7 +1418,7 @@ Available stretch animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 StretchOutX.duration(500).easing(Easing.ease);
@@ -1431,7 +1432,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 StretchInX.springify()
@@ -1633,7 +1634,7 @@ Available zoom animations:
 
 #### Time-based <Optional/>
 
-Time-based modifiers rely on [`withTiming`](/docs/animations/withTiming) function.
+Time-based modifiers rely on [`withTiming`](../animations/withTiming.mdx) function.
 
 ```javascript
 ZoomOutLeft.duration(500).easing(Easing.ease);
@@ -1647,7 +1648,7 @@ Time-based modifiers have no effect when `.springify()` is used.
 
 #### Spring-based <Optional/>
 
-Spring-based modifiers rely on [`withSpring`](/docs/animations/withSpring) function.
+Spring-based modifiers rely on [`withSpring`](../animations/withSpring.mdx) function.
 
 ```javascript
 ZoomInRotate.springify()

@@ -63,18 +63,16 @@ describe('withTiming', () => {
     });
 
     test('does not evaluate an easing that diverges below 0', () => {
-      // x1 = 0 makes the curve's x-derivative zero at t = 0, so a ratio just
-      // below 0 sends the Newton-Raphson solver outside the output range.
-      const easing = Easing.bezier(0, 0, 0.2, 1);
+      const easing = (t: number) => {
+        'worklet';
+        return 1000 * t;
+      };
       const duration = 50;
       const runtime = -5;
       const animation = startTiming(411, duration, 0, START, easing);
 
       expect(animation.onFrame(animation, START + runtime)).toBe(false);
       expect(animation.current).toBe(0);
-
-      const extrapolated = 411 * easing.factory()(runtime / duration);
-      expect(extrapolated).toBeGreaterThan(411);
     });
   });
 

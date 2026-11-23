@@ -2,7 +2,7 @@
 
 #include <reanimated/CSS/common/definitions.h>
 
-#include <react/renderer/core/ShadowNode.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <string>
@@ -114,6 +114,11 @@ using InterpolationContextFor = typename InterpolationContext<TCSSValues...>::Ty
 /// Values that need no context at all satisfy this trivially.
 template <typename TCSSValue, typename TContext>
 concept InterpolatesWith = !Resolvable<TCSSValue> || std::is_same_v<typename TCSSValue::ContextType, TContext>;
+
+/// Unlike InterpolatesWith, this demands the value actually resolve, and with
+/// this exact context.
+template <typename TCSSValue, typename TContext>
+concept ResolvesWith = Resolvable<TCSSValue> && std::is_same_v<typename TCSSValue::ContextType, TContext>;
 
 // Checks if a type is a discrete value
 template <typename TCSSValue>
