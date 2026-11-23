@@ -22,7 +22,7 @@ workerRuntime: true,
 }}
 />
 
-A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime.
+A green check mark in the table means that the function can be called from that runtime, while a red cross means that the function is not supported on that runtime. In development builds such a call throws an error. So in this case, `scheduleOnUI` can be called from any runtime.
 
 In the following example, the RN Runtime schedules a worker, and that worker schedules a function on the UI Runtime. The UI Runtime receives the task and logs the result.
 
