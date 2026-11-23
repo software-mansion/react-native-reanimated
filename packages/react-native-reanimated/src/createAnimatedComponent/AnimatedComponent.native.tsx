@@ -3,15 +3,17 @@ import type React from 'react';
 import { Fragment } from 'react';
 
 import { checkStyleOverwriting, maybeBuild } from '../animationBuilder';
-import { IS_IOS, IS_JEST, logger } from '../common';
+import { IS_ANDROID, IS_IOS, IS_JEST, logger } from '../common';
 import type { StyleProps } from '../commonTypes';
-import { LayoutAnimationType } from '../commonTypes';
+import { LayoutAnimationType, ReduceMotion } from '../commonTypes';
 import { SkipEnteringContext } from '../component/LayoutAnimationConfig';
 import ReanimatedAnimatedComponent from '../css/component/AnimatedComponent';
 import { getStaticFeatureFlag } from '../featureFlags';
 import type { AnimatedStyleHandle } from '../hook/commonTypes';
+import { isSharedValue } from '../isSharedValue';
 import { SharedTransition } from '../layoutReanimation/SharedTransition';
 import { PropsRegistryGarbageCollector } from '../PropsRegistryGarbageCollector';
+import { ReducedMotionManager } from '../ReducedMotion';
 import { updateLayoutAnimations } from '../UpdateLayoutAnimations';
 import type {
   AnimatedComponentProps,
@@ -29,7 +31,7 @@ import { InlinePropManager } from './InlinePropManager';
 import jsPropsUpdater from './JSPropsUpdater';
 import { NativeEventsManager } from './NativeEventsManager';
 import { PropsFilter } from './PropsFilter';
-import { filterStyles, flattenArray } from './utils';
+import { filterStyles, flattenArray, normalizeTextProp } from './utils';
 
 let id = 0;
 
@@ -67,13 +69,16 @@ export default class AnimatedComponent
   context!: React.ContextType<typeof SkipEnteringContext>;
   reanimatedID = id++;
   _sharedTransition?: SharedTransition;
+  _defaultSharedTransition?: SharedTransition;
   _sharedTransitionTag?: string;
+  _sharedTransitionFadeContent?: SharedTransition['fadeContentV'];
 
   constructor(
     ChildComponent: AnyComponent,
     props: AnimatedComponentProps<InitialComponentProps>,
     displayName: string,
-    options?: Options<InitialComponentProps>
+    options?: Options<InitialComponentProps>,
+    context?: React.ContextType<typeof SkipEnteringContext>
   ) {
     super(ChildComponent, props);
     this._options = options;
@@ -87,12 +92,15 @@ export default class AnimatedComponent
       this.jestAnimatedStyle = { value: {} };
       this.jestAnimatedProps = { value: {} };
     }
-    this._configureSharedTransition(true);
-    const entering = this.props.entering;
-    const skipEntering = this.context?.current;
-    if (!skipEntering) {
-      this._configureLayoutAnimation(LayoutAnimationType.ENTERING, entering);
+    if (this.props.nativeID == null) {
+      this._configureSharedTransition(true);
     }
+    if (__DEV__ && this.props.entering && this.props.nativeID != null) {
+      logger.warn(
+        `${displayName}: The entering animation does not run on a component with its own \`nativeID\`.`
+      );
+    }
+    this._configureEnteringAnimation(context);
   }
 
   componentDidMount() {
@@ -114,12 +122,8 @@ export default class AnimatedComponent
       jsPropsUpdater.registerComponent(this, this._options.jsProps);
     }
 
-    const skipEntering = this.context?.current;
-    if (IS_IOS && !this._isFirstRender && !skipEntering) {
-      this._configureLayoutAnimation(
-        LayoutAnimationType.ENTERING,
-        this.props.entering
-      );
+    if (IS_IOS && !this._isFirstRender) {
+      this._configureEnteringAnimation();
     }
     this._configureLayoutAnimation(
       LayoutAnimationType.LAYOUT,
@@ -131,9 +135,11 @@ export default class AnimatedComponent
     );
 
     this._isFirstRender = false;
+    this._syncReducedMotionListener();
   }
 
   componentWillUnmount() {
+    ReducedMotionManager.listeners.delete(this._onReducedMotionChange);
     super.componentWillUnmount();
     this._NativeEventsManager?.detachEvents();
     this._detachStyles();
@@ -151,39 +157,14 @@ export default class AnimatedComponent
     }
   }
 
-  _syncStylePropsBackToReact(settledUpdates: StyleProps) {
+  _syncStylePropsBackToReact(props: StyleProps, style: StyleProps) {
     if (!FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS) {
       return;
     }
-    // Settled updates arrive as one bag with no style-vs-props origin, so
-    // partition them by the keys of attached animated props — only values
-    // from `useAnimatedProps` or shared values passed as inline top-level
-    // props may be passed as top-level props, all the other ones are
-    // style-only.
-    const animatedPropsKeys = new Set([
-      ...this._animatedProps.flatMap((animatedProp) =>
-        Object.keys(animatedProp.initial?.value ?? {})
-      ),
-      ...Object.keys(this._InlinePropManager._inlineTopLevelProps),
-    ]);
-    if (animatedPropsKeys.size === 0) {
-      this.setState((state) => ({
-        settledStyle: { ...state.settledStyle, ...settledUpdates },
-      }));
-      return;
-    }
-    this.setState((state) => {
-      const settledProps = { ...state.settledProps };
-      const settledStyle = { ...state.settledStyle };
-      for (const key in settledUpdates) {
-        if (animatedPropsKeys.has(key)) {
-          settledProps[key] = settledUpdates[key];
-        } else {
-          settledStyle[key] = settledUpdates[key];
-        }
-      }
-      return { settledProps, settledStyle };
-    });
+    this.setState((state) => ({
+      settledProps: { ...state.settledProps, ...props },
+      settledStyle: { ...state.settledStyle, ...style },
+    }));
     // TODO(future): revert changes when animated styles are detached
   }
 
@@ -207,6 +188,8 @@ export default class AnimatedComponent
   }
 
   _attachHostBindings() {
+    this._NativeEventsManager?.updateEvents();
+
     // Configs registered so far, including this update's from the snapshot,
     // went to the previous tag.
     this._configureLayoutAnimation(
@@ -341,12 +324,13 @@ export default class AnimatedComponent
     );
   }
 
-  componentDidUpdate(prevProps: AnimatedComponentProps<InitialComponentProps>) {
+  componentDidUpdate() {
     this._refreshComponentRef();
 
-    this._NativeEventsManager?.updateEvents(prevProps);
+    this._NativeEventsManager?.updateEvents();
     this._updateAnimatedStylesAndProps();
     this._InlinePropManager.attachInlineProps(this, this._getViewInfo());
+    this._syncReducedMotionListener();
   }
 
   _updateStyles(props: AnimatedComponentProps<InitialComponentProps>): void {
@@ -382,6 +366,18 @@ export default class AnimatedComponent
       this._cssStyle = filteredStyles.cssStyle ?? {};
     }
   }
+
+  // Native moves the entering config to the view when it inserts a view with
+  // the Reanimated native ID, so a view with its own `nativeID` never gets it.
+  _configureEnteringAnimation(context = this.context) {
+    if (!context?.current && this.props.nativeID == null) {
+      this._configureLayoutAnimation(
+        LayoutAnimationType.ENTERING,
+        this.props.entering
+      );
+    }
+  }
+
   _configureLayoutAnimation(
     type: LayoutAnimationType,
     currentConfig: LayoutAnimationOrBuilder | undefined,
@@ -417,32 +413,65 @@ export default class AnimatedComponent
     );
   }
 
+  _onReducedMotionChange = () => this._configureSharedTransition();
+
+  _syncReducedMotionListener() {
+    if (
+      getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS') &&
+      this.props.sharedTransitionTag
+    ) {
+      if (!ReducedMotionManager.listeners.has(this._onReducedMotionChange)) {
+        ReducedMotionManager.listeners.add(this._onReducedMotionChange);
+        this._configureSharedTransition();
+      }
+    } else {
+      ReducedMotionManager.listeners.delete(this._onReducedMotionChange);
+    }
+  }
+
   _configureSharedTransition(useNativeId?: boolean) {
     if (!getStaticFeatureFlag('ENABLE_SHARED_ELEMENT_TRANSITIONS')) {
       return;
     }
-    if (!this.props.sharedTransitionTag) {
+    const sharedTransition = this.props.sharedTransitionTag
+      ? (this.props.sharedTransitionStyle ??
+        (this._defaultSharedTransition ??= new SharedTransition()))
+      : undefined;
+    const reduceMotion = sharedTransition?.getReduceMotion();
+    const sharedTransitionTag =
+      reduceMotion === ReduceMotion.Always ||
+      (reduceMotion === ReduceMotion.System && ReducedMotionManager.jsValue)
+        ? undefined
+        : this.props.sharedTransitionTag;
+    if (!sharedTransitionTag || !sharedTransition) {
+      this._sharedTransition = sharedTransition;
       if (this._sharedTransitionTag) {
-        updateLayoutAnimations(
-          useNativeId ? this.reanimatedID : this.getComponentViewTag(),
-          useNativeId
-            ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
-            : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
-          undefined,
-          undefined,
-          undefined
-        );
+        for (const nativeId of useNativeId ? [true] : [true, false]) {
+          updateLayoutAnimations(
+            nativeId ? this.reanimatedID : this.getComponentViewTag(),
+            nativeId
+              ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_NATIVE_ID
+              : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
+            undefined
+          );
+          if (!IS_ANDROID) {
+            updateLayoutAnimations(
+              nativeId ? this.reanimatedID : this.getComponentViewTag(),
+              nativeId
+                ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+                : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+              undefined
+            );
+          }
+        }
         this._sharedTransitionTag = undefined;
       }
       return;
     }
-    const sharedTransition =
-      this.props.sharedTransitionStyle ??
-      this._sharedTransition ??
-      new SharedTransition();
     if (
       this._sharedTransition === sharedTransition &&
-      this._sharedTransitionTag === this.props.sharedTransitionTag
+      this._sharedTransitionTag === sharedTransitionTag &&
+      this._sharedTransitionFadeContent === sharedTransition.fadeContentV
     ) {
       return;
     }
@@ -453,10 +482,25 @@ export default class AnimatedComponent
         : LayoutAnimationType.SHARED_ELEMENT_TRANSITION,
       maybeBuild(sharedTransition),
       undefined,
-      this.props.sharedTransitionTag
+      sharedTransitionTag,
+      sharedTransition.buildContentFade?.(),
+      sharedTransition.callbackV,
+      sharedTransition.followsTarget?.()
     );
+    if (!IS_ANDROID) {
+      updateLayoutAnimations(
+        useNativeId ? this.reanimatedID : this.getComponentViewTag(),
+        useNativeId
+          ? LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID
+          : LayoutAnimationType.SHARED_ELEMENT_TRANSITION_PROGRESS,
+        sharedTransition.getProgressAnimation(),
+        undefined,
+        undefined
+      );
+    }
     this._sharedTransition = sharedTransition;
-    this._sharedTransitionTag = this.props.sharedTransitionTag;
+    this._sharedTransitionTag = sharedTransitionTag;
+    this._sharedTransitionFadeContent = sharedTransition.fadeContentV;
   }
 
   // Android pulls the mounting transaction inside the React commit, so the
@@ -497,8 +541,15 @@ export default class AnimatedComponent
         jestAnimatedStyle: this.jestAnimatedStyle,
         jestAnimatedProps: this.jestAnimatedProps,
       };
-    } else if (!skipEntering) {
+    } else if (!skipEntering || this._sharedTransitionTag) {
       nativeID = `${this.reanimatedID}`;
+    }
+
+    if (
+      this.ChildComponent.displayName === 'Text' &&
+      isSharedValue(this.props.children)
+    ) {
+      filteredProps.children = normalizeTextProp(filteredProps.children);
     }
 
     // TODO: Remove need for this \/\/\/\/.
@@ -516,8 +567,8 @@ export default class AnimatedComponent
 
     if (FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS && this.state.settledStyle) {
       return super.render({
-        nativeID,
         ...filteredProps,
+        nativeID: filteredProps.nativeID ?? nativeID,
         ...this.state.settledProps,
         style: [...flattenArray(filteredProps.style), this.state.settledStyle],
         ...jestProps,
@@ -525,8 +576,8 @@ export default class AnimatedComponent
     }
 
     return super.render({
-      nativeID,
       ...filteredProps,
+      nativeID: filteredProps.nativeID ?? nativeID,
       ...jestProps,
     });
   }

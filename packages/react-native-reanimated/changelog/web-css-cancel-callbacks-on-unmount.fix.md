@@ -1,1 +1,0 @@
-Deliver CSS animation and transition cancellation callbacks on web when their element unmounts, without pending cleanup retaining otherwise unreachable elements on browsers with weak reference support.

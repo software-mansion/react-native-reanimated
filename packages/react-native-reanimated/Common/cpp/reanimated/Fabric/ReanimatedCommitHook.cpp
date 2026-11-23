@@ -17,11 +17,13 @@ ReanimatedCommitHook::ReanimatedCommitHook(
     const std::shared_ptr<UpdatesRegistryManager> &updatesRegistryManager,
     const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry,
     const std::shared_ptr<LayoutAnimationsProxyRegistry> &layoutAnimationsProxyRegistry,
+    const std::shared_ptr<LayoutAnimationsManager> &layoutAnimationsManager,
     const std::shared_ptr<SynchronousWritesTracker> &synchronousWritesTracker)
     : uiManager_(uiManager),
       updatesRegistryManager_(updatesRegistryManager),
       mountedRootsRegistry_(mountedRootsRegistry),
       layoutAnimationsProxyRegistry_(layoutAnimationsProxyRegistry),
+      layoutAnimationsManager_(layoutAnimationsManager),
       synchronousWritesTracker_(synchronousWritesTracker) {
   uiManager_->registerCommitHook(*this);
   uiManager_->getShadowTreeRegistry().enumerate([this](const ShadowTree &shadowTree, bool & /*stop*/) {
@@ -54,21 +56,28 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     proxy->shadowTreeWillCommit(newRootShadowNode->getChildren().empty());
   }
 
-  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    return newRootShadowNode;
-  }
-
+  std::vector<Tag> removedTags;
   {
     auto lock = updatesRegistryManager_->lock();
     if (newRootShadowNode->getChildren().empty()) {
       // A stopping surface commits an empty root; its mount is not reported on a paused Android host.
       mountedRootsRegistry_->remove(shadowTree.getSurfaceId());
+      removedTags = updatesRegistryManager_->handleNodeRemovals(shadowTree.getSurfaceId());
       if (synchronousWritesTracker_) {
         synchronousWritesTracker_->onSurfaceStop(shadowTree.getSurfaceId());
       }
     } else {
       mountedRootsRegistry_->registerSurface(shadowTree.getSurfaceId());
     }
+  }
+
+  // The proxy of the stopping surface still maps these views, so it releases their configs when it unmaps them.
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->releaseSharedTransitionConfigs(removedTags, *layoutAnimationsManager_);
+  }
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return newRootShadowNode;
   }
 
   auto reaShadowNode = std::reinterpret_pointer_cast<ReanimatedCommitShadowNode>(newRootShadowNode);
@@ -99,17 +108,20 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
   // ShadowTree not commited by Reanimated, apply updates from the updates
   // registry manager
   reaShadowNode->unsetReanimatedMountTrait();
+  // The UI thread takes the registry lock on each frame, so the clone runs outside it. Without the commit pause,
+  // Reanimated commits can then start during the clone, and React starts its commit again more often.
+  constexpr bool cloneInsideRegistryLock = StaticFeatureFlags::getFlag("DISABLE_COMMIT_PAUSING_MECHANISM");
   RootShadowNode::Unshared rootNode = newRootShadowNode;
+  PropsMap propsMap;
 
   {
     auto lock = updatesRegistryManager_->lock();
 
-    PropsMap propsMap = updatesRegistryManager_->collectProps();
+    propsMap = updatesRegistryManager_->collectProps();
     updatesRegistryManager_->cancelCommitAfterPause();
 
-    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
     // Must share the registry lock with `collectProps`, or a write can get the epoch of a snapshot that lacks it.
-    trackCommit(rootNode, true);
+    trackWillCommit(rootNode, true);
     // If the commit comes from React Native then pause commits from
     // Reanimated since the ShadowTree to be committed by Reanimated may not
     // include the new changes from React Native yet and all changes of animated
@@ -119,8 +131,16 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // (very bad). We don't pause Reanimated commits for state updates coming
     // from React Native as this would break sticky header animations.
     updatesRegistryManager_->pauseReanimatedCommits();
+
+    if constexpr (cloneInsideRegistryLock) {
+      rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+    }
   }
 
+  if constexpr (!cloneInsideRegistryLock) {
+    rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
+  }
+  trackDidCommit(rootNode);
   return rootNode;
 }
 
@@ -140,7 +160,23 @@ void ReanimatedCommitHook::trackCommit(const RootShadowNode::Shared &rootShadowN
   if (!synchronousWritesTracker_) {
     return;
   }
+  trackWillCommit(rootShadowNode, carriesRegistryValues);
+  trackDidCommit(rootShadowNode);
+}
+
+void ReanimatedCommitHook::trackWillCommit(
+    const RootShadowNode::Shared &rootShadowNode,
+    const bool carriesRegistryValues) const {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
   synchronousWritesTracker_->onWillCommit(rootShadowNode, carriesRegistryValues);
+}
+
+void ReanimatedCommitHook::trackDidCommit([[maybe_unused]] const RootShadowNode::Shared &rootShadowNode) const {
+  if (!synchronousWritesTracker_) {
+    return;
+  }
 #if REACT_NATIVE_VERSION_MINOR < 88
   // Before 0.88 there is no `shadowTreeDidCommit`. The root that this hook returns is the only one available.
   synchronousWritesTracker_->onDidCommit(rootShadowNode);

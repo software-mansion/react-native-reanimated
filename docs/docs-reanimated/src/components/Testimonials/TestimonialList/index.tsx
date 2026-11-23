@@ -12,7 +12,7 @@ const items = [
     link: 'https://twitter.com/mrousavy/status/1754909520571019756',
     image: {
       alt: 'marc rousavy',
-      src: 'https://pbs.twimg.com/profile_images/1713946397391667200/l-LXWNl2_400x400.jpg',
+      src: '/img/testimonials/mrousavy.jpg',
     },
   },
   {
@@ -22,7 +22,7 @@ const items = [
     link: 'https://twitter.com/alotoronto/status/1754905332709576823',
     image: {
       alt: 'andrew lo',
-      src: 'https://pbs.twimg.com/profile_images/870388069819707393/WSdiZCDG_400x400.jpg',
+      src: '/img/testimonials/alotoronto.jpg',
     },
   },
   {
@@ -31,7 +31,7 @@ const items = [
     link: 'https://twitter.com/gorhom/status/1754974706782896465',
     image: {
       alt: 'mo gorhom',
-      src: 'https://pbs.twimg.com/profile_images/1699071865996869632/R09iQ1T5_400x400.jpg',
+      src: '/img/testimonials/gorhom.jpg',
     },
   },
   {
@@ -40,7 +40,7 @@ const items = [
     link: 'https://twitter.com/bran_aust/status/1754907731536863670',
     image: {
       alt: 'brandon austin',
-      src: 'https://pbs.twimg.com/profile_images/1963741259186532352/i8PXAyFU_400x400.jpg',
+      src: '/img/testimonials/bran_aust.jpg',
     },
   },
   {
@@ -50,7 +50,7 @@ const items = [
     link: 'https://twitter.com/codewithnomi_/status/1754910812584436199',
     image: {
       alt: 'syed noman',
-      src: 'https://pbs.twimg.com/profile_images/2001708244700667904/mYkC_6PQ_400x400.jpg',
+      src: '/img/testimonials/codewithnomi_.jpg',
     },
   },
   {
@@ -60,7 +60,7 @@ const items = [
     link: 'https://twitter.com/daniel_mark01/status/1754925618494337459',
     image: {
       alt: 'daniel grychtol',
-      src: 'https://pbs.twimg.com/profile_images/1979995516042702849/ESeyj8pK_400x400.jpg',
+      src: '/img/testimonials/daniel_mark01.jpg',
     },
   },
 ];
@@ -141,8 +141,11 @@ const TestimonialList = () => {
       </div>
       <div className={styles.dotsContainer}>
         {renderedItems.map((_, idx) => (
-          <span
+          <button
             key={idx}
+            type="button"
+            aria-label={`Show testimonials ${idx + 1} of ${renderedItems.length}`}
+            aria-current={idx === activeIndex}
             className={clsx(
               styles.dot,
               idx === activeIndex && styles.activeDot

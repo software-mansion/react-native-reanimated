@@ -31,16 +31,19 @@ class Networking {
         const val ERROR_TIMEOUT = 1
         const val ERROR_ABORTED = 2
         private const val PROGRESS_INTERVAL_MS = 50L
+        private const val MAX_CLOSE_REASON_BYTES = 123
         private const val READ_BUFFER_SIZE = 65536L
         private val METHODS_REQUIRING_BODY = setOf("POST", "PUT", "PATCH")
     }
 
+    private val mCookieHandler: ForwardingCookieHandler by lazy { ForwardingCookieHandler() }
     private val mClient: OkHttpClient by lazy {
         val client = OkHttpClientProvider.createClient()
-        (client.cookieJar as? CookieJarContainer)?.setCookieJar(JavaNetCookieJar(ForwardingCookieHandler()))
+        (client.cookieJar as? CookieJarContainer)?.setCookieJar(JavaNetCookieJar(mCookieHandler))
         client
     }
     private val mCalls = ConcurrentHashMap<Long, Call>()
+    private val mWebSockets = ConcurrentHashMap<Long, WorkletsWebSocket>()
     private val mAbortedIds: MutableSet<Long> = Collections.newSetFromMap(ConcurrentHashMap())
 
     @DoNotStrip
@@ -95,6 +98,57 @@ class Networking {
             cleanup(requestId)
             listener.onError(ERROR_NETWORK, e.message ?: e.javaClass.simpleName)
         }
+    }
+
+    @DoNotStrip
+    @Suppress("LongParameterList")
+    fun connectWebSocket(
+        socketIdAsDouble: Double,
+        url: String,
+        protocols: Array<String>,
+        headerNames: Array<String>,
+        headerValues: Array<String>,
+        listener: WebSocketListener,
+    ) {
+        val socketId = socketIdAsDouble.toLong()
+        val socket =
+            WorkletsWebSocket(
+                url,
+                protocols.toList(),
+                headerNames.indices.map { headerNames[it] to headerValues[it] },
+                mCookieHandler,
+                listener,
+            ) { mWebSockets.remove(socketId) }
+        mWebSockets[socketId] = socket
+        socket.connect()
+    }
+
+    @DoNotStrip
+    fun sendWebSocketText(
+        socketIdAsDouble: Double,
+        message: ByteArray,
+    ) {
+        mWebSockets[socketIdAsDouble.toLong()]?.sendText(message)
+    }
+
+    @DoNotStrip
+    fun sendWebSocketBinary(
+        socketIdAsDouble: Double,
+        message: ByteArray,
+    ) {
+        mWebSockets[socketIdAsDouble.toLong()]?.sendBinary(message)
+    }
+
+    @DoNotStrip
+    fun closeWebSocket(
+        socketIdAsDouble: Double,
+        code: Int,
+        reason: String,
+    ) {
+        if (reason.toByteArray().size > MAX_CLOSE_REASON_BYTES) {
+            return
+        }
+        mWebSockets[socketIdAsDouble.toLong()]?.close(code, reason)
     }
 
     @DoNotStrip

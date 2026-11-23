@@ -4,7 +4,9 @@
 
 #include <react/renderer/uimanager/UIManager.h>
 
+#include <functional>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -16,20 +18,41 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
 
   /// Returns updates that settled (received no update since `settledTimestamp`)
   /// or whose synced `settledProps` snapshot was invalidated by a fresh update.
+  /// Skips tags with updates not yet flushed into the registry.
   /// Also evicts entries that have already been synced to React — by the time
   /// of the next call, the corresponding `settledProps` state is guaranteed to
   /// be committed, so the registry entries are redundant. Skips views that JS
-  /// cannot deliver to, e.g. ones hidden by a Suspense boundary.
+  /// cannot deliver to, e.g. ones hidden by a Suspense boundary. Calls
+  /// `isViewRegistered` only for entries that have work.
   jsi::Value
-  collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp, const std::unordered_set<Tag> &registeredViewTags);
+  collectSettledUpdates(jsi::Runtime &rt, double settledTimestamp, const std::function<bool(Tag)> &isViewRegistered);
 
   void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily) override;
   void handleRemount(Tag tag) override;
 
+  /// Returns true while an update of a registered view is still in the batch,
+  /// not yet synced to React or not yet evicted, so `collectSettledUpdates`
+  /// still has work to do.
+  /// Views that are not registered are skipped, as in `collectSettledUpdates`.
+  [[nodiscard]] bool hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const;
+
  private:
   static constexpr size_t MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD = 256;
 
-  std::unordered_map<Tag, double> timestampMap_;
+  struct KeyOrigins {
+    bool writtenByAnimatedProps = false;
+    bool writtenByAnimatedStyle = false;
+    bool lastWrittenByAnimatedStyle = false;
+  };
+
+  struct WriteHistory {
+    double lastWriteTimestamp = 0;
+    std::unordered_map<std::string, KeyOrigins> keyOrigins;
+  };
+
+  // Kept after eviction of the registry entry, until `removeTag`. Each sync
+  // must send a key to the same React fields as the syncs before it.
+  std::unordered_map<Tag, WriteHistory> writeHistories_;
   // Tags whose latest values have already been pushed to React `settledProps`.
   // Intentionally retained after eviction to detect re-animation staleness.
   std::unordered_set<Tag> syncedTags_;
@@ -44,6 +67,10 @@ class AnimatedPropsRegistry : public UpdatesRegistry {
   bool isUnmounted(const ShadowNodeFamily &shadowNodeFamily) const;
   void pruneExpiredUnmountedFamilies();
 
+  void trackUpdate(Tag tag, const folly::dynamic &updates, bool isAnimatedProps, double timestamp);
+  void invalidateSyncedTag(Tag tag);
+  static jsi::Object
+  createSettledUpdate(jsi::Runtime &rt, Tag viewTag, const folly::dynamic &props, const WriteHistory &writeHistory);
   void removeTag(Tag tag) override;
 };
 

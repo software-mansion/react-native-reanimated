@@ -23,7 +23,7 @@ const useCases = [
   },
   {
     title: 'React Native Skia',
-    url: 'https://shopify.github.io/react-native-skia/docs/getting-started/installation',
+    url: 'https://wcandillon.github.io/react-native-skia/docs/getting-started/installation',
     description:
       'Library that lets you draw 2D graphics in React Native. It separates drawing processes from the main business logic using Worklets, enabling better performance.',
     mp4: SkiaVideo,

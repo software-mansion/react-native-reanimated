@@ -830,3 +830,15 @@ describe('Shareable hosted on Worker Runtime', () => {
     }
   );
 });
+
+const devOnlyTest = __DEV__ ? test : test.skip;
+
+describe('Shareable host runtime id', () => {
+  devOnlyTest.each([1.5, -1, NaN, Infinity, undefined, '1'])(
+    'rejects %s as hostRuntimeId',
+    async (hostRuntimeId) => {
+      const fn = () => createShareable(hostRuntimeId as unknown as number, 0);
+      await expect(fn).toThrow('hostRuntimeId must be the runtimeId');
+    }
+  );
+});

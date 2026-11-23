@@ -25,7 +25,7 @@ export class ValueRegistry {
       () => {
         'worklet';
       },
-      1000,
+      5000,
       `the UI runtime to drain before reading '${name}' on the JS runtime`
     );
     return this._valueRegistry[name].value as TValue;
@@ -40,7 +40,7 @@ export class ValueRegistry {
         'worklet';
         return sharedValue.value;
       },
-      1000,
+      5000,
       `the UI runtime to report the value of '${name}'`
     );
     return uiValue as TValue;

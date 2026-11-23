@@ -7,7 +7,10 @@
 
 namespace reanimated {
 
-PlatformDepMethodsHolder makePlatformDepMethodsHolder(RCTModuleRegistry *moduleRegistry, REANodesManager *nodesManager);
+PlatformDepMethodsHolder makePlatformDepMethodsHolder(
+    RCTModuleRegistry *moduleRegistry,
+    REANodesManager *nodesManager,
+    REAKeyboardEventObserver *keyboardObserver);
 SetGestureStateFunction makeSetGestureStateFunction(RCTModuleRegistry *moduleRegistry);
 RequestRenderFunction makeRequestRender(REANodesManager *nodesManager);
 GetAnimationTimestampFunction makeGetAnimationTimestamp();

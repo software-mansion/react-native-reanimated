@@ -3,6 +3,17 @@ import type { StyleProps } from '../commonTypes';
 import type { CSSStyle } from '../css';
 import type { NestedArray } from './commonTypes';
 
+export function normalizeTextProp(text: unknown): string {
+  'worklet';
+  if (typeof text === 'number') {
+    return String(text);
+  }
+  if (typeof text === 'string' && text !== '') {
+    return text;
+  }
+  return '\u200b'; // use zero-width space when text is empty to prevent collapsing of the Text component
+}
+
 export function flattenArray<T>(array: NestedArray<T>): T[] {
   if (!Array.isArray(array)) {
     return [array];

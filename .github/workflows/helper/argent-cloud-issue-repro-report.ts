@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import {
   clampText,
+  configurationLabel,
   detailsBlock,
   escapeSlack,
   extractVerdict,
@@ -15,7 +16,10 @@ import {
   requireEnv,
   screenshotsSection,
   staticFeatureFlagsLabel,
+  commentFooter,
+  reportForComment,
   summaryOfOutput,
+  writeCommentFile,
 } from './argent-cloud-report.ts';
 import type {
   Screenshots,
@@ -56,6 +60,7 @@ type Plan = {
   reanimatedVersion?: string;
   workletsVersion?: string | null;
   architecture?: string;
+  configuration?: string;
   staticFeatureFlags?: StaticFeatureFlags;
   appKind?: string;
   reproductionSteps?: string[];
@@ -83,9 +88,12 @@ async function main(): Promise<void> {
     case 'notify':
       await notify(readContext());
       break;
+    case 'comment':
+      writeComment(readContext());
+      break;
     default:
       throw new Error(
-        `usage: argent-cloud-issue-repro-report.ts <report|publish|notify>, got '${command ?? ''}'`
+        `usage: argent-cloud-issue-repro-report.ts <report|publish|notify|comment>, got '${command ?? ''}'`
       );
   }
 }
@@ -168,7 +176,7 @@ function writeReport(context: Context): void {
       `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`
     );
     lines.push(
-      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, Release |`
+      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, ${configurationLabel(context.plan.configuration)} |`
     );
   }
   lines.push(`| Cost | ${costLine(context.costs)} |`, '');
@@ -242,6 +250,44 @@ function writeReport(context: Context): void {
   fs.mkdirSync(path.dirname(reportFile), { recursive: true });
   fs.writeFileSync(reportFile, lines.join('\n'));
   console.log(`wrote ${reportFile}`);
+}
+
+function writeComment(context: Context): void {
+  const lines = [
+    '## Argent Cloud reproduction',
+    '',
+    `An AI agent tried to reproduce this issue in a small app on an iOS simulator. Verdict: **${outcomeLabel(context)}**.`,
+    '',
+    context.summary,
+    '',
+  ];
+  if (context.plan) {
+    lines.push(
+      '| | |',
+      '|---|---|',
+      `| React Native | ${context.plan.reactNativeVersion ?? 'unknown'} |`,
+      `| Reanimated | ${context.plan.reanimatedVersion ?? 'unknown'} |`,
+      `| Worklets | ${context.plan.workletsVersion ?? 'none'} |`,
+      `| Architecture | ${context.plan.architecture ?? 'unknown'} |`,
+      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`,
+      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, ${configurationLabel(context.plan.configuration)} |`,
+      ''
+    );
+  }
+  if (context.output) {
+    lines.push(
+      ...detailsBlock('Report of the agent', reportForComment(context.output)),
+      ''
+    );
+  }
+  lines.push(...commentFooter(context.runUrl), '');
+  if (context.screenshots) {
+    lines.push(
+      `The agent took ${context.screenshots.files.length} screenshot(s). They follow below in the order it took them.`,
+      ''
+    );
+  }
+  writeCommentFile(lines);
 }
 
 async function publish(context: Context): Promise<void> {

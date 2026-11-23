@@ -21,6 +21,10 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -38,9 +42,15 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        description: Run the long variants and every suite, as the nightly does
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
+  actions: write
 
 jobs:
   # Check if we have all must-have credentials before running the workflow.
@@ -83,65 +93,55 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Restore packaged app from cache
-        id: appcache
-        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
-        with:
-          path: apps/fabric-example/dist/FabricExample.app.zip
-          key:
-            runtime-tests-app-zip-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}-${{ hashFiles(
-            'yarn.lock',
-            'apps/fabric-example/**',
-            '!apps/fabric-example/scripts/**',
-            'apps/common-app/**',
-            'packages/react-native-reanimated/**',
-            'packages/react-native-worklets/**',
-            'scripts/patches/**',
-            'scripts/toggle-bundle-mode.sh'
-            ) }}
-
       - name: Use Ruby version from `.ruby-version` file
-        if: steps.appcache.outputs.cache-hit != 'true'
         uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         with:
           bundler-cache: true
 
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
-        if: steps.appcache.outputs.cache-hit != 'true'
         run: yarn install --immutable
 
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
+
       - name: Toggle Bundle Mode off (Legacy Eval)
-        if: steps.appcache.outputs.cache-hit != 'true' && !matrix.bundleMode
+        if: ${{ !matrix.bundleMode }}
         run: yarn toggle-bundle-mode
 
       - name: Build Reanimated package
-        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: packages/react-native-reanimated
         run: yarn build
 
       - name: Setup ccache
-        if: steps.appcache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/setup-ccache
+        uses: $/.github/actions/setup-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
           needs-compile-database: 'false'
 
       - name: Install Pods
         id: install-pods
-        if: steps.appcache.outputs.cache-hit != 'true'
-        uses: ./.github/actions/install-pods
+        uses: $/.github/actions/install-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
 
       - name: Build runtime-tests app
-        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: node scripts/runtime-tests-server.js --build-only --configuration "$CONFIGURATION"
+        run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION"
 
       - name: Save ccache
-        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode
-        uses: ./.github/actions/save-ccache
+        if: inputs.bundleMode
+        uses: $/.github/actions/save-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
 
@@ -149,8 +149,8 @@ jobs:
       # fan-out saves. Bundle Mode, because the Legacy Eval legs run
       # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
-        if: steps.appcache.outputs.cache-hit != 'true' && inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
-        uses: ./.github/actions/save-pods
+        if: inputs.bundleMode && env.CONFIGURATION == 'Debug'
+        uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
           pod-directory: ios
@@ -158,7 +158,6 @@ jobs:
           cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
 
       - name: Package app artifact
-        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           # Debug apps are deliberately Metro-fed here (the test job runs
@@ -167,7 +166,7 @@ jobs:
           case "$CONFIGURATION" in
             Debug*) EXPORT_FLAGS="--allow-debug" ;;
           esac
-          node scripts/export-runtime-tests-app.js --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
+          node --experimental-strip-types scripts/export-runtime-tests-app.mts --configuration "$CONFIGURATION" --out dist/FabricExample.app.zip $EXPORT_FLAGS
 
       - name: Upload app artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -203,8 +202,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
       - name: Install monorepo node dependencies
         run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
       # Debug legs serve JS from Metro running on this runner, so this
       # checkout's js must match the native app's bundle mode.
@@ -218,7 +230,7 @@ jobs:
         run: yarn toggle-bundle-mode
 
       - name: Install sim-remote CLI
-        uses: ./.github/actions/install-sim-remote
+        uses: $/.github/actions/install-sim-remote
 
       - name: Log in and acquire a cloud machine
         shell: bash
@@ -253,27 +265,27 @@ jobs:
           # Device-pick logic lives in the driver (`pick` subcommand) so it
           # is testable and reusable outside CI.
           if [ -n "$INPUT_UDID" ]; then
-            UDID=$(node scripts/runtime-tests-remote.mjs pick --udid "$INPUT_UDID")
+            UDID=$(node --experimental-strip-types scripts/runtime-tests-remote.mts pick --udid "$INPUT_UDID")
           else
-            UDID=$(node scripts/runtime-tests-remote.mjs pick)
+            UDID=$(node --experimental-strip-types scripts/runtime-tests-remote.mts pick)
           fi
 
           echo "using remote simulator $UDID"
           echo "udid=$UDID" >> "$GITHUB_OUTPUT"
 
-          node scripts/runtime-tests-remote.mjs install --udid "$UDID" \
+          node --experimental-strip-types scripts/runtime-tests-remote.mts install --udid "$UDID" \
             --app-path dist/unpacked/FabricExample.app
 
       - name: Run ReJest self-tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
           --library self-tests --configuration "$CONFIGURATION"
 
       - name: Verify CI catches failing tests
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
-          if node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}" \
+          if RUNTIME_TESTS_CI_REPORT=0 node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}" \
             --library self-tests --configuration "$CONFIGURATION" \
             --only "intentional failures";
           then
@@ -285,14 +297,23 @@ jobs:
       - name: Run Worklets runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
-          --library worklets --configuration "$CONFIGURATION"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
+          --library worklets --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
 
       - name: Run Reanimated runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
-          node scripts/runtime-tests-remote.mjs run --udid "${{ steps.sim.outputs.udid }}"
-          --library reanimated --configuration "$CONFIGURATION"
+          node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
+          --library reanimated --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
+
+      - name: Upload crash reports
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          path: apps/fabric-example/crash-reports
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Release remote simulator
         if: always()
@@ -302,8 +323,8 @@ jobs:
 
           if command -v sim-remote >/dev/null; then
             if [ -n "$UDID" ]; then
-              sim-remote proxy stop "$UDID" 8082 || true
-              sim-remote proxy stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
+              sim-remote reverse stop "$UDID" 8082 || true
+              sim-remote reverse stop "$UDID" 8081 || true # Metro tunnel (Debug legs)
               sim-remote simctl shutdown "$UDID" || true
             fi
 

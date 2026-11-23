@@ -8,7 +8,7 @@ import React, {
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
 
-import { configure, runTests } from './RuntimeTestsApi';
+import { configure, importRuntimeTestSuite, runTests } from './RuntimeTestsApi';
 import { RenderLock } from './utils/RenderLock';
 
 export class ErrorBoundary extends React.Component<
@@ -63,6 +63,7 @@ interface TestData {
   testSuiteName: string;
   importTest: () => void;
   skipByDefault?: boolean;
+  needsRuntimeTestsServer?: boolean;
   disabled?: boolean;
 }
 
@@ -83,7 +84,7 @@ export default function RuntimeTestsRunner({
 
   useEffect(() => {
     tests.forEach((testData) => {
-      !testData.skipByDefault &&
+      isSelectedByDefault(testData) &&
         testSelectionCallbacks.current.add(testData.importTest);
     });
   }, [tests]);
@@ -110,7 +111,14 @@ export default function RuntimeTestsRunner({
       return;
     }
     claimSession(runnerId);
-    testSelectionCallbacks.current.forEach((callback) => callback());
+    testSelectionCallbacks.current.forEach((callback) => {
+      const testSuite = tests.find((test) => test.importTest === callback);
+      if (testSuite) {
+        importRuntimeTestSuite(testSuite.testSuiteName, callback);
+      } else {
+        callback();
+      }
+    });
     setStarted(true);
     // eslint-disable-next-line no-void
     void run();
@@ -150,6 +158,10 @@ export default function RuntimeTestsRunner({
   );
 }
 
+function isSelectedByDefault(testData: TestData) {
+  return !testData.skipByDefault && !testData.needsRuntimeTestsServer;
+}
+
 interface TestSelectorProps {
   tests: Array<TestData>;
   testSelectionCallbacks: React.RefObject<Set<() => void>>;
@@ -158,7 +170,7 @@ interface TestSelectorProps {
 function TestSelector({ tests, testSelectionCallbacks }: TestSelectorProps) {
   const [selectedTests, setSelectedTests] = useState<Map<string, boolean>>(
     tests.reduce((acc, testData) => {
-      acc.set(testData.testSuiteName, !testData.skipByDefault);
+      acc.set(testData.testSuiteName, isSelectedByDefault(testData));
       return acc;
     }, new Map<string, boolean>())
   );

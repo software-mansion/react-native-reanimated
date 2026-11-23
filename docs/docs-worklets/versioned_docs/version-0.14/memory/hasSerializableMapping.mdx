@@ -1,0 +1,42 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # hasSerializableMapping
+</Badges>
+
+Checks whether Worklets remembers a mapping for an object. An object has one after [setSerializableMapping](./setSerializableMapping.mdx), or after Worklets [serialized](./serializable.mdx) it.
+
+## Reference
+
+```typescript
+import {
+  hasSerializableMapping,
+  setSerializableMapping,
+} from 'react-native-worklets';
+
+const flag = { current: false };
+console.log(hasSerializableMapping(flag)); // logs `false`
+
+setSerializableMapping(flag, { current: true });
+console.log(hasSerializableMapping(flag)); // logs `true`
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function hasSerializableMapping(value: object): boolean;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object to check. It's compared by reference.
+
+## Remarks
+
+- On the Web `hasSerializableMapping` always returns `false`.

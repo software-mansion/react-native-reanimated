@@ -39,7 +39,7 @@ const ignoredFiles = [
 ];
 
 const urlRegex =
-  /\b((http|https):\/\/?)[^\s<>[\]`]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
+  /\b((http|https):\/\/?)[^\s<>[\]`'"]+(?:\([\w\d]+\)|([^[:punct:]\s]|\/?))(?<!\.)\b/g;
 
 /**
  * @param {string} dir
@@ -87,10 +87,17 @@ async function validUrls(data) {
     }
     try {
       const response = await fetch(currentData.url, {
-        headers: [],
+        headers: {
+          'User-Agent':
+            'react-native-reanimated-url-validator (https://github.com/software-mansion/react-native-reanimated)',
+        },
       });
       const status = response.status;
-      if (![200, 301, 302, 307, 503].includes(status)) {
+      const extraStatuses =
+        Object.entries(extraValidStatuses).find(([host]) =>
+          currentData.url.includes(host)
+        )?.[1] ?? [];
+      if (![200, 301, 302, 307, 503, ...extraStatuses].includes(status)) {
         console.error(
           `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
         );
@@ -98,7 +105,10 @@ async function validUrls(data) {
       }
     } catch (error) {
       isBrokenUrlDetected = true;
-      console.error('Error:', error);
+      console.error(
+        `🔴 Request failed: ${currentData.url} in file: ${currentData.file}\n`,
+        error
+      );
     }
   }
   if (isBrokenUrlDetected) {
@@ -142,5 +152,9 @@ const skippedUrls = [
 const skippedExactUrls = [
   'https://docs.swmansion.com/react-native-worklets/docs',
 ];
+
+const extraValidStatuses = {
+  'swm-delivery.com': [204], // README banner slot with no banner booked
+};
 
 scanLinks();

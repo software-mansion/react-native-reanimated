@@ -26,6 +26,7 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
 import { ComparisonMode } from '../../../ReJest/types';
+import { processColorNumber } from '../../../ReJest/utils/colorUtils';
 import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const BOX_REF = 'NON_LAYOUT_PROP_BOX';
@@ -184,11 +185,16 @@ async function recordColorFrames(
     await waitForAnimationUpdates(RECORDED_FRAMES + 1);
   }
 
+  const box = getTestComponent(BOX_REF);
+  await expectEventually(async () =>
+    processColorNumber(await box.getAnimatedStyle('backgroundColor'))
+  ).toBe(processColorNumber(toColor), ComparisonMode.NUMBER);
+
+  await stopRecordingAnimationUpdates();
   const frames = toColorFrames(await updatesContainer.getUpdates());
   const nativeFrames = toColorFrames(
     await updatesContainer.getNativeSnapshots()
   );
-  await stopRecordingAnimationUpdates();
   await unmockAnimationTimer();
 
   return { frames, nativeFrames };

@@ -96,6 +96,11 @@ const config = {
 
   themes: ['@docusaurus/theme-mermaid'],
 
+  clientModules:
+    process.env.NODE_ENV === 'development'
+      ? [require.resolve('./src/clientModules/devFigureLabels.ts')]
+      : [],
+
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
 
@@ -116,7 +121,7 @@ const config = {
           sidebarCollapsed: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
-          lastVersion: '0.13',
+          lastVersion: '0.14',
           versions: {
             current: {
               label: 'Unreleased',
@@ -124,6 +129,7 @@ const config = {
               banner: 'unreleased',
               noIndex: true,
             },
+            0.14: { label: '0.14', banner: 'none' },
             0.13: { label: '0.13', banner: 'none' },
             '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
@@ -132,16 +138,14 @@ const config = {
         theme: { customCss: require.resolve('./src/css/index.css') },
       }),
     ],
-    [
-      require.resolve('@swmansion/t-rex-ui/preset'),
-      { collapsibleSidebar: true },
-    ],
+    [require.resolve('./plugins/preset'), { collapsibleSidebar: true }],
   ],
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       image: 'img/og-image.png',
       colorMode: { respectPrefersColorScheme: true },
+      docs: { sidebar: { hideable: true } },
       metadata: [
         { name: 'og:image:width', content: '1200' },
         { name: 'og:image:height', content: '630' },
@@ -190,10 +194,11 @@ const config = {
         appId: 'EXKV34DSZ0',
         apiKey: 'b0df4e45a4bec8a2f79aa77da07b56bd',
         indexName: 'react-native-worklets',
-        contextualSearch: false,
+        contextualSearch: true,
       },
     }),
   plugins: [
+    require.resolve('./plugins/search'),
     ...[
       process.env.NODE_ENV === 'production' && '@docusaurus/plugin-debug',
       process.env.NODE_ENV === 'production' && [
@@ -209,12 +214,52 @@ const config = {
       ({
         redirects: [
           {
+            from: '/docs/category/fundamentals',
+            to: '/docs/category/concepts',
+          },
+          {
+            from: '/docs/category/worklets-plugin',
+            to: '/docs/worklets-plugin/about',
+          },
+          {
+            from: '/docs/fundamentals/closures',
+            to: '/docs/concepts/closures',
+          },
+          {
+            from: '/docs/fundamentals/getting-started',
+            to: '/docs/',
+          },
+          {
+            from: '/docs/fundamentals/glossary',
+            to: '/docs/category/concepts',
+          },
+          {
+            from: '/docs/fundamentals/runtimeKinds',
+            to: '/docs/concepts/runtimeKinds',
+          },
+          {
+            from: '/docs/fundamentals/sharing-memory',
+            to: '/docs/concepts/sharing-memory',
+          },
+          {
+            from: '/docs/getting-started',
+            to: '/docs/',
+          },
+          {
+            from: '/docs/unreleased/getting-started',
+            to: '/docs/unreleased/',
+          },
+          {
             from: '/docs/worklets-babel-plugin/about',
             to: '/docs/worklets-plugin/about',
           },
           {
             from: '/docs/worklets-babel-plugin/plugin-options',
             to: '/docs/worklets-plugin/plugin-options',
+          },
+          {
+            from: '/docs/category/worklets-babel-plugin',
+            to: '/docs/worklets-plugin/about',
           },
         ],
       }),
@@ -265,6 +310,14 @@ const config = {
             ],
             module: {
               rules: [
+                {
+                  test: /(?:src[\\/]simulation[\\/]snippets|docs[\\/].*[\\/]_[^\\/]+)[\\/][^\\/]+\.jsx?$/,
+                  enforce: 'pre',
+                  use: path.resolve(
+                    __dirname,
+                    'src/simulation/snippetNamesLoader.js'
+                  ),
+                },
                 { test: /\.txt$/, type: 'asset/source' },
                 { test: /\.tsx?$/, use: 'babel-loader' },
                 {

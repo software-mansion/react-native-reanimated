@@ -189,3 +189,9 @@
     }
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .sunAnimation {
+    animation: none !important;
+  }
+}
