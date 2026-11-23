@@ -52,15 +52,17 @@ Use `worker->runSync(...)` for a short synchronous operation on the calling thre
   type WorkletRuntimeConfig = {
     name?: string;
     initializer?: () => void;
-    animationQueuePollingRate?: number;
-    enableVSync?: boolean;
     enableNetworking?: boolean;
     abortable?: boolean;
     queue?: 'default' | object | null;
   } & (
     | { enableEventLoop?: boolean; enableLocking?: true }
     | { enableEventLoop?: false; enableLocking: false }
-  );
+  ) &
+    (
+      | { animationQueuePollingRate?: number; enableVSync?: false }
+      | { animationQueuePollingRate?: never; enableVSync: true }
+    );
 
   function createWorkletRuntime(
     config?: WorkletRuntimeConfig
@@ -84,7 +86,7 @@ An optional worklet function that will be run synchronously on the same thread i
 
 ##### `animationQueuePollingRate`
 
-Time interval in milliseconds between polling of frame callbacks scheduled by `requestAnimationFrame`. Defaults to `16`.
+Time interval in milliseconds between polling of frame callbacks scheduled by `requestAnimationFrame`. Defaults to `16`. Cannot be set together with `enableVSync: true`.
 
 <Badges version="0.15.0">
   ##### `enableVSync`
@@ -95,9 +97,10 @@ Determines whether frame callbacks scheduled by `requestAnimationFrame` are flus
 When enabled:
 
 - Each display frame sends at most one flush to the Runtime, and the callbacks receive the timestamp of that frame, the same one that `requestAnimationFrame` callbacks receive on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
-- `animationQueuePollingRate` is ignored.
+- `animationQueuePollingRate` cannot be set. TypeScript rejects the combination and `createWorkletRuntime` throws.
 - Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background.
 - `setTimeout`, `setInterval` and `setImmediate` are not affected.
+- The order of a frame callback relative to a timer scheduled in the same task is not defined, because it depends on when the next frame arrives.
 
 ##### `enableEventLoop`
 

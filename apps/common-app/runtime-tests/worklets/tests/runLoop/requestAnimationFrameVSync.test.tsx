@@ -15,34 +15,24 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 
 const FRAMES = 20;
+const RATE_WINDOW_MS = 1000;
+const MIN_RATE_RATIO = 0.9;
+
+type WorkletRuntimeConfig = Parameters<typeof createWorkletRuntime>[0];
 
 describe('Test requestAnimationFrame with enableVSync', () => {
-  test('ignores animationQueuePollingRate', async () => {
+  test('throws when animationQueuePollingRate is also set', async () => {
     // Arrange
-    const notification = 'vsyncCallback';
-    const runtime = createWorkletRuntime({
+    const config = {
       name: 'vsync',
       enableVSync: true,
-      animationQueuePollingRate: 60_000,
-    });
-    let elapsed = Infinity;
-    const onFrame = (value: number) => {
-      elapsed = value;
-      notify(notification);
-    };
+      animationQueuePollingRate: 16,
+    } as unknown as WorkletRuntimeConfig;
 
-    // Act
-    scheduleOnRuntime(runtime, () => {
-      'worklet';
-      const start = performance.now();
-      requestAnimationFrame(() => {
-        scheduleOnRN(onFrame, performance.now() - start);
-      });
-    });
-    await waitForNotification(notification);
-
-    // Assert
-    expect(elapsed < 1000).toBe(true);
+    // Act & Assert
+    await expect(() => {
+      createWorkletRuntime(config);
+    }).toThrow('`animationQueuePollingRate` option cannot be set');
   });
 
   test('passes one timestamp per frame and a later one to the next frame', async () => {
@@ -145,5 +135,48 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     );
     expect(workerTimestamps.length).toBe(FRAMES);
     expect(shared.length > 0).toBe(true);
+  });
+
+  test('runs callbacks at the frame rate of the UI Runtime', async () => {
+    // Arrange
+    const [workerNotification, uiNotification] = [
+      'vsyncWorkerRate',
+      'vsyncUIRate',
+    ];
+    const runtime = createWorkletRuntime({ name: 'vsync', enableVSync: true });
+    let workerFrames = 0;
+    let uiFrames = 0;
+    const onWorkerDone = (frames: number) => {
+      workerFrames = frames;
+      notify(workerNotification);
+    };
+    const onUIDone = (frames: number) => {
+      uiFrames = frames;
+      notify(uiNotification);
+    };
+    const countFrames = (onDone: (frames: number) => void) => {
+      'worklet';
+      let frames = 0;
+      const start = performance.now();
+      const onFrame = () => {
+        frames++;
+        if (performance.now() - start < RATE_WINDOW_MS) {
+          requestAnimationFrame(onFrame);
+        } else {
+          scheduleOnRN(onDone, frames);
+        }
+      };
+      requestAnimationFrame(onFrame);
+    };
+
+    // Act
+    scheduleOnUI(countFrames, onUIDone);
+    scheduleOnRuntime(runtime, countFrames, onWorkerDone);
+    await waitForNotifications([workerNotification, uiNotification]);
+
+    // Assert
+    expect(uiFrames > 0).toBe(true);
+    expect(workerFrames >= uiFrames * MIN_RATE_RATIO).toBe(true);
+    expect(workerFrames <= uiFrames + 1).toBe(true);
   });
 });

@@ -105,6 +105,11 @@ export function createWorkletRuntime(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
     enableVSync = nameOrConfig?.enableVSync ?? false;
+    if (enableVSync && nameOrConfig?.animationQueuePollingRate !== undefined) {
+      throw new Error(
+        '[Worklets] The `animationQueuePollingRate` option cannot be set on a runtime with `enableVSync` enabled.'
+      );
+    }
     enableLocking = nameOrConfig?.enableLocking ?? true;
     if (__DEV__ && !enableLocking && nameOrConfig?.enableEventLoop) {
       throw new Error(
