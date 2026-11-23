@@ -123,6 +123,24 @@ export function createWorkletRuntimeTypeTests() {
     animationQueuePollingRate: 8,
   });
 
+  // @ts-expect-error - Using enableVSync without the Event Loop
+  createWorkletRuntime({
+    enableVSync: true,
+    enableEventLoop: false,
+  });
+
+  // @ts-expect-error - Using enableVSync without the default queue
+  createWorkletRuntime({
+    enableVSync: true,
+    queue: null,
+  });
+
+  // @ts-expect-error - Using enableVSync with a custom queue
+  createWorkletRuntime({
+    enableVSync: true,
+    queue: {},
+  });
+
   // @ts-expect-error - Using both enableVSync and animationQueuePollingRate
   createWorkletRuntime({
     enableVSync: true,

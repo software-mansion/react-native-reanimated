@@ -37,6 +37,25 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     }).toThrow('`animationQueuePollingRate` option cannot be set');
   });
 
+  test.each([
+    ['the Event Loop is disabled', { enableEventLoop: false }],
+    ['locking is disabled', { enableLocking: false }],
+    ['the runtime has no queue', { queue: null }],
+    ['the runtime has a custom queue', { queue: {} }],
+  ] as const)('throws when %s', async ([_description, overrides]) => {
+    // Arrange
+    const config = {
+      name: 'vsync',
+      enableVSync: true,
+      ...overrides,
+    } as unknown as WorkletRuntimeConfig;
+
+    // Act & Assert
+    await expect(() => {
+      createWorkletRuntime(config);
+    }).toThrow('requires the default queue and the Event Loop');
+  });
+
   test('passes one timestamp per frame and a later one to the next frame', async () => {
     // Arrange
     const notification = 'vsyncTimestamps';

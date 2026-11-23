@@ -61,7 +61,12 @@ Use `worker->runSync(...)` for a short synchronous operation on the calling thre
   ) &
     (
       | { animationQueuePollingRate?: number; enableVSync?: false }
-      | { animationQueuePollingRate?: never; enableVSync: true }
+      | {
+          animationQueuePollingRate?: never;
+          enableVSync: true;
+          enableEventLoop?: true;
+          queue?: 'default';
+        }
     );
 
   function createWorkletRuntime(
@@ -92,7 +97,7 @@ Time interval in milliseconds between polling of frame callbacks scheduled by `r
   ##### `enableVSync`
 </Badges>
 
-Determines whether frame callbacks scheduled by `requestAnimationFrame` are flushed on the display v-sync signal instead of on a timer. Defaults to `false`.
+Determines whether frame callbacks scheduled by `requestAnimationFrame` are flushed on the display v-sync signal instead of on a timer. Defaults to `false`. Available only on a Runtime with the default queue and the Event Loop; TypeScript rejects other combinations and `createWorkletRuntime` throws.
 
 When enabled:
 

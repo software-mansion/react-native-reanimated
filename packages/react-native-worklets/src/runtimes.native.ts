@@ -129,6 +129,12 @@ export function createWorkletRuntime(
     abortable = nameOrConfig?.abortable ?? false;
   }
 
+  if (enableVSync && (queue !== 'default' || !enableEventLoop)) {
+    throw new Error(
+      '[Worklets] The `enableVSync` option requires the default queue and the Event Loop.'
+    );
+  }
+
   const useDefaultQueue = queue === 'default';
   const customQueue =
     typeof queue === 'object' && queue !== null ? queue : undefined;

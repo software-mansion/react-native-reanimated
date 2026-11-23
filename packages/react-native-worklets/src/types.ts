@@ -198,8 +198,14 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * Determines whether frame callbacks scheduled by
          * requestAnimationFrame are flushed on the display v-sync signal
          * instead of on a timer. If not specified, it defaults to `false`.
+         * Available only on a runtime with the default queue and the Event
+         * Loop.
          */
         enableVSync: true;
+        enableEventLoop?: true;
+        queue?: 'default';
+        useDefaultQueue?: true;
+        customQueue?: never;
       }
   ) &
   (
