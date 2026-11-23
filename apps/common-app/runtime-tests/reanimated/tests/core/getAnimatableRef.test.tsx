@@ -98,14 +98,14 @@ function Scenario({
 }
 
 async function readOpacity(ref: string) {
-  return Number(await getTestComponent(ref).getAnimatedStyle('opacity'));
+  return (await getTestComponent(ref).getMountedViewProps())?.opacity;
 }
 
 // Reads right after the animation ends: with FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS
 // the settled value later reaches the inner view through React props too, so
 // polling for longer would pass even when the animated updates go elsewhere.
 async function expectOnlyInnerAt(targetOpacity: number) {
-  // The last update is committed at the end of the frame it was sent in.
+  // The last update reaches the view at the end of the frame it was sent in.
   await waitForFrames(2);
   expect(await readOpacity(INNER_REF)).toBe(
     targetOpacity,

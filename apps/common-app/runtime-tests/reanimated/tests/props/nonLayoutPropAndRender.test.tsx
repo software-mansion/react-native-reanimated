@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import {
+  advanceAnimationTimer,
   clearRenderOutput,
   describe,
   expect,
@@ -22,7 +23,6 @@ import {
   unmockAnimationTimer,
   useTestRef,
   wait,
-  waitForAnimationUpdates,
   waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 import type { SingleViewSnapshot } from '../../../ReJest/TestRunner/UpdatesContainer';
@@ -34,6 +34,7 @@ const BOX_REF = 'NON_LAYOUT_PROP_BOX';
 const DURATION_MS = 300;
 const RECORDED_FRAMES = 12;
 const FRAME_INTERVAL_MS = 16;
+const ANIMATION_FRAMES = Math.ceil(DURATION_MS / FRAME_INTERVAL_MS);
 
 const COLOR_OFF = '#00ffff';
 const COLOR_ON = '#ff0000';
@@ -160,13 +161,13 @@ function progressFrames(
 async function recordColorFrames(
   fromColor: string,
   toColor: string,
-  resizeDelayMs: number | null
+  resizeFrame: number | null
 ) {
   await clearRenderOutput();
   const color = makeMutable(fromColor);
-  await mockAnimationTimer();
+  await mockAnimationTimer({ autoAdvance: false });
   await render(<RecordedColorBox color={color} size={SIZE_BIG} />);
-  await waitForFrames(Math.ceil(DURATION_MS / FRAME_INTERVAL_MS) + 2);
+  await advanceAnimationTimer(DURATION_MS);
   const updatesContainer = await recordAnimationUpdates({
     nativeSource: 'mountedView',
   });
@@ -174,29 +175,18 @@ async function recordColorFrames(
     'worklet';
     color.value = toColor;
   });
-
-  let resizeFrameAfterRender = 0;
-  if (resizeDelayMs !== null) {
-    const resizeFrame = Math.ceil(resizeDelayMs / FRAME_INTERVAL_MS);
-    if (resizeFrame > 0) {
-      await waitForFrames(resizeFrame);
-    }
-    await render(<RecordedColorBox color={color} size={SIZE_SMALL} />);
-    await expectEventually(
-      async () =>
-        (await getTestComponent(BOX_REF).getMountedViewProps())?.height
-    ).toBe(SIZE_SMALL, ComparisonMode.PIXEL);
-    resizeFrameAfterRender = await runOnUIBlocking(() => {
-      'worklet';
-      return global.animationUpdatesRecordingStarted === true
-        ? (global.framesCount ?? 0)
-        : 0;
-    });
-    await waitForFrames(3);
-  }
-  await waitForAnimationUpdates(RECORDED_FRAMES + 1);
+  await waitForFrames(1);
 
   const box = getTestComponent(BOX_REF);
+  for (let frame = 0; frame < ANIMATION_FRAMES; frame++) {
+    if (frame === resizeFrame) {
+      await render(<RecordedColorBox color={color} size={SIZE_SMALL} />);
+      await expectEventually(
+        async () => (await box.getMountedViewProps())?.height
+      ).toBe(SIZE_SMALL, ComparisonMode.PIXEL);
+    }
+    await advanceAnimationTimer(FRAME_INTERVAL_MS);
+  }
   await expectEventually(
     async () => (await box.getMountedViewProps())?.backgroundColor
   ).toBe(toColor, ComparisonMode.COLOR);
@@ -207,26 +197,26 @@ async function recordColorFrames(
   const nativeFrames = toColorFrames(snapshots.nativeSnapshots);
   await unmockAnimationTimer();
 
-  return { frames, nativeFrames, resizeFrame: resizeFrameAfterRender };
+  return { frames, nativeFrames };
 }
 
 const recordedCases = [
   {
     description: 'right after the color toggle',
     fromColor: COLOR_OFF,
-    resizeDelayMs: 0,
+    resizeFrame: 0,
     toColor: COLOR_ON,
   },
   {
     description: 'a third into the off-to-on animation',
     fromColor: COLOR_OFF,
-    resizeDelayMs: 100,
+    resizeFrame: 6,
     toColor: COLOR_ON,
   },
   {
     description: 'a third into the on-to-off animation',
     fromColor: COLOR_ON,
-    resizeDelayMs: 100,
+    resizeFrame: 6,
     toColor: COLOR_OFF,
   },
 ];
@@ -290,13 +280,9 @@ describe('animation of a non-layout prop across React renders', () => {
 
   test.each(recordedCases)(
     'a size render ${description} keeps every color frame',
-    async ({ fromColor, resizeDelayMs, toColor }) => {
+    async ({ fromColor, resizeFrame, toColor }) => {
       const reference = await recordColorFrames(fromColor, toColor, null);
-      const observed = await recordColorFrames(
-        fromColor,
-        toColor,
-        resizeDelayMs
-      );
+      const observed = await recordColorFrames(fromColor, toColor, resizeFrame);
 
       expect(observed.frames).toMatchNativeSnapshots(
         observed.nativeFrames,
@@ -326,8 +312,6 @@ describe('animation of a non-layout prop across React renders', () => {
       for (let i = 1; i < progress.length; i++) {
         expect(progress[i]).toBeWithinRange(progress[i - 1], 255);
       }
-      const resizeFrame = observed.resizeFrame;
-      expect(resizeFrame).toBeWithinRange(0, RECORDED_FRAMES - 1);
       expect(progress[progress.length - 1]).toBeWithinRange(
         progress[resizeFrame] + 1,
         255
