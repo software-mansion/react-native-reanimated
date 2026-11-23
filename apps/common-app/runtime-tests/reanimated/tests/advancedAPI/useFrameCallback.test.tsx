@@ -30,12 +30,14 @@ const LAST_STEP = 'LAST_STEP';
 const DELTA_SUM = 'DELTA_SUM';
 const TIME_SINCE_FIRST_FRAME = 'TIME_SINCE_FIRST_FRAME';
 
-// Long enough to see a doubled frame loop or a callback that did not stop.
+/** Long enough to see a doubled frame loop or a callback that did not stop. */
 const MEASURED_FRAMES = 10;
-// Lets an autostarted callback get past its first frame.
+/** Lets an autostarted callback get past its first frame. */
 const WARM_UP_FRAMES = 5;
-// Same as ComparisonMode.FLOAT_DISTANCE. The sum of a few dozen float deltas
-// stays far below it.
+/**
+ * Same as ComparisonMode.FLOAT_DISTANCE. The sum of a few dozen float deltas
+ * stays far below it.
+ */
 const DELTA_SUM_TOLERANCE = 1e-5;
 
 let frameCallbacks: Record<string, FrameCallback> = {};
@@ -63,9 +65,11 @@ type ProbeProps = {
   step: number;
 };
 
-// VIOLATIONS counts inconsistent FrameInfo and second calls within one frame
-// (a leaked registration or a second loop), and frames on which DELTA_SUM
-// differs from timeSinceFirstFrame, so that two wrong deltas cannot cancel out.
+/**
+ * VIOLATIONS counts inconsistent FrameInfo and second calls within one frame (a
+ * leaked registration or a second loop), and frames on which DELTA_SUM differs
+ * from timeSinceFirstFrame, so that two wrong deltas cannot cancel out.
+ */
 function Probe({ name, autostart, step }: ProbeProps) {
   const count = useSharedValue(0);
   const firstFrames = useSharedValue(0);
@@ -139,9 +143,11 @@ function Scenario({
   );
 }
 
-// Counted on the UI runtime: reading from JS would also count the frames of
-// the JS-UI round trips. requestAnimationFrame is FIFO and the frame callback
-// loop is queued first, so each read sees the call of its own frame.
+/**
+ * Counted on the UI runtime: reading from JS would also count the frames of the
+ * JS-UI round trips. requestAnimationFrame is FIFO and the frame callback loop
+ * is queued first, so each read sees the call of its own frame.
+ */
 function countCallsOverFrames(probe: string, frames: number) {
   const count = counts[probe];
   if (!count) {
@@ -194,7 +200,7 @@ async function expectConsistentFrames(probe: string, firstFrames: number) {
   expect(await readValue(probe, VIOLATIONS)).toBe(0, ComparisonMode.NUMBER);
 }
 
-// Call only while the probe is stopped, so both values are from the same frame.
+/** Call only while the probe is stopped, so both values are from the same frame. */
 async function expectDeltasAddUp(probe: string) {
   const timeSinceFirstFrame = await readValue(probe, TIME_SINCE_FIRST_FRAME);
   expect(timeSinceFirstFrame).toBeWithinRange(1, Number.MAX_SAFE_INTEGER);
@@ -204,10 +210,12 @@ async function expectDeltasAddUp(probe: string) {
   );
 }
 
-// Replaces the manual checks of FrameCallbackExample (#3372, FrameInfo since
-// #3455): a callback runs on every frame, it can be started and stopped at any
-// moment, two callbacks do not affect each other, and FrameInfo stays
-// consistent. Calls and frames are counted on the UI runtime.
+/**
+ * Replaces the manual checks of FrameCallbackExample (#3372, FrameInfo since
+ * #3455): a callback runs on every frame, it can be started and stopped at any
+ * moment, two callbacks do not affect each other, and FrameInfo stays
+ * consistent. Calls and frames are counted on the UI runtime.
+ */
 describe('useFrameCallback', () => {
   beforeEach(() => {
     frameCallbacks = {};
@@ -216,24 +224,38 @@ describe('useFrameCallback', () => {
 
   test('a callback with autostart false does not run until setActive(true)', async () => {
     await render(<Scenario autostart={false} />);
+    expect(getFrameCallback(FIRST).isActive).toBe(false);
     await waitForFrames(MEASURED_FRAMES);
     expect(await readValue(FIRST, COUNT)).toBe(0, ComparisonMode.NUMBER);
 
     getFrameCallback(FIRST).setActive(true);
+    expect(getFrameCallback(FIRST).isActive).toBe(true);
     await expectRunsForEveryFrame(FIRST);
     await expectConsistentFrames(FIRST, 1);
   });
 
   test('setActive(false) stops the callback and setActive(true) starts it with a new first frame', async () => {
     await render(<Scenario autostart />);
+    expect(getFrameCallback(FIRST).isActive).toBe(true);
     await waitForFrames(WARM_UP_FRAMES);
 
     getFrameCallback(FIRST).setActive(false);
+    expect(getFrameCallback(FIRST).isActive).toBe(false);
     await expectStopped(FIRST);
 
     getFrameCallback(FIRST).setActive(true);
+    expect(getFrameCallback(FIRST).isActive).toBe(true);
     await expectRunsForEveryFrame(FIRST);
     await expectConsistentFrames(FIRST, 2);
+  });
+
+  test('setActive(true) on a running callback keeps a single frame loop', async () => {
+    await render(<Scenario autostart />);
+    await waitForFrames(WARM_UP_FRAMES);
+
+    getFrameCallback(FIRST).setActive(true);
+    await expectRunsForEveryFrame(FIRST);
+    await expectConsistentFrames(FIRST, 1);
   });
 
   test('stopping and starting the only callback in one frame keeps a single frame loop', async () => {
@@ -296,6 +318,19 @@ describe('useFrameCallback', () => {
 
     await render(<Scenario autostart step={2} />);
     await expectStopped(FIRST);
+    expect(getFrameCallback(FIRST).isActive).toBe(false);
+  });
+
+  test('a callback started with setActive(true) keeps running after a re-render with a new closure', async () => {
+    await render(<Scenario autostart={false} step={1} />);
+    getFrameCallback(FIRST).setActive(true);
+    await expectRunsForEveryFrame(FIRST);
+
+    await render(<Scenario autostart={false} step={2} />);
+    await expectRunsForEveryFrame(FIRST);
+    expect(getFrameCallback(FIRST).isActive).toBe(true);
+    expect(await readValue(FIRST, LAST_STEP)).toBe(2, ComparisonMode.NUMBER);
+    expect(await readValue(FIRST, VIOLATIONS)).toBe(0, ComparisonMode.NUMBER);
   });
 
   test('timeSincePreviousFrame adds up to timeSinceFirstFrame after starts, joins and restarts', async () => {
