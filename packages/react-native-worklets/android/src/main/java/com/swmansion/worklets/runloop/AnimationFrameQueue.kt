@@ -64,11 +64,12 @@ class AnimationFrameQueue(
     fun enableSlowAnimations(
         slowAnimationsEnabled: Boolean,
         animationsDragFactor: Int,
+        firstUptime: Long = SystemClock.uptimeMillis(),
     ) {
         mSlowAnimationsEnabled = slowAnimationsEnabled
         mAnimationsDragFactor = animationsDragFactor
         if (slowAnimationsEnabled) {
-            mFirstUptime = SystemClock.uptimeMillis()
+            mFirstUptime = firstUptime
         }
     }
 

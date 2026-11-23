@@ -129,6 +129,12 @@ export function createWorkletRuntimeTypeTests() {
     enableEventLoop: false,
   });
 
+  // @ts-expect-error - Using enableVSync without locking
+  createWorkletRuntime({
+    enableVSync: true,
+    enableLocking: false,
+  });
+
   // @ts-expect-error - Using enableVSync without the default queue
   createWorkletRuntime({
     enableVSync: true,

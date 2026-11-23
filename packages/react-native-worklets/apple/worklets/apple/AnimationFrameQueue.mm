@@ -30,6 +30,7 @@ const auto POOR = CAFrameRateRangeMake(10, 24, 24);
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
   NSThread *frameThread_;
+  BOOL ownedByWorkerRuntime_;
   std::vector<std::function<void(double)>> frameCallbacks_;
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
@@ -51,6 +52,7 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (instancetype)initOnFrameThread
 {
+  ownedByWorkerRuntime_ = YES;
 #if TARGET_OS_OSX
   return [self initWithFrameThread:nil];
 #else // TARGET_OS_OSX
@@ -67,12 +69,17 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)invalidate
 {
-  if (frameThread_ == nil) {
-    AssertTurboModuleManagerQueue();
-    [displayLink_ invalidate];
+  if (frameThread_ != nil) {
+    [displayLink_ performSelector:@selector(invalidate) onThread:frameThread_ withObject:nil waitUntilDone:NO];
     return;
   }
-  [displayLink_ performSelector:@selector(invalidate) onThread:frameThread_ withObject:nil waitUntilDone:NO];
+  if (ownedByWorkerRuntime_) {
+    WorkletsDisplayLink *displayLink = displayLink_;
+    dispatch_async(dispatch_get_main_queue(), ^{ [displayLink invalidate]; });
+    return;
+  }
+  AssertTurboModuleManagerQueue();
+  [displayLink_ invalidate];
 }
 
 #pragma mark-- private

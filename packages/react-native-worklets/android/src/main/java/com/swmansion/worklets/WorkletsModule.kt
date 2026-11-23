@@ -1,5 +1,6 @@
 package com.swmansion.worklets
 
+import android.os.SystemClock
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.LifecycleEventListener
@@ -115,8 +116,9 @@ class WorkletsModule(
     fun toggleSlowAnimations() {
         val animationsDragFactor = 10
         mSlowAnimationsEnabled = !mSlowAnimationsEnabled
-        mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
-        mWorkerAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
+        val firstUptime = SystemClock.uptimeMillis()
+        mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
+        mWorkerAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
     }
 
     @OptIn(FrameworkAPI::class)

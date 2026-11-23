@@ -203,6 +203,7 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          */
         enableVSync: true;
         enableEventLoop?: true;
+        enableLocking?: true;
         queue?: 'default';
         useDefaultQueue?: true;
         customQueue?: never;
