@@ -7,7 +7,7 @@ export function commitsSynchronousProps() {
       ? 'IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS'
       : 'ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS';
   return (
-    getStaticFeatureFlag('USE_ANIMATION_BACKEND') ||
+    !getStaticFeatureFlag('USE_ANIMATION_BACKEND') &&
     !getStaticFeatureFlag(synchronousFlag)
   );
 }

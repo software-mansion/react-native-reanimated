@@ -36,8 +36,10 @@ starting another one.
 # Synchronous props
 
 With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS`
-on, opacity and background color go to the view and not through the ShadowTree
-commit. The ShadowTree gets them only when the animation settles or React commits.
+on, or with `USE_ANIMATION_BACKEND` on, opacity and background color can go to the
+view and not through the ShadowTree commit. The ShadowTree then gets them when the
+animation settles or React commits.
 `commitsSynchronousProps()` tells if they go through the commit on this platform.
-`getSynchronousProp(prop)` reads the mounted view, and also requires the ShadowTree
-to hold the same value when `commitsSynchronousProps()` is true.
+`getSynchronousProp(prop)` gives the mounted value. When
+`commitsSynchronousProps()` is true, it gives the ShadowTree value, and a text with
+both values when the ShadowTree and the mounted view are different.

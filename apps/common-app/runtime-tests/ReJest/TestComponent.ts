@@ -1,17 +1,14 @@
 import { findNodeHandle } from 'react-native';
 import { getViewProp } from 'react-native-reanimated';
 
-import { getComparator } from './matchers/Comparators';
+import {
+  getComparator,
+  getComparisonModeForProp,
+} from './matchers/Comparators';
 import RuntimeTestObserver from './native/NativeRuntimeTestObserver';
 import type { ComponentRef, MountedViewProps, ValidPropNames } from './types';
-import { ComparisonMode } from './types';
 import { runOnUIBlocking } from './utils/runOnUIBlocking';
 import { commitsSynchronousProps } from './utils/synchronousProps';
-
-const SYNCHRONOUS_PROP_COMPARISON = {
-  opacity: ComparisonMode.FLOAT_DISTANCE,
-  backgroundColor: ComparisonMode.COLOR,
-} as const;
 
 export class TestComponent {
   constructor(private ref: ComponentRef) {
@@ -36,21 +33,19 @@ export class TestComponent {
   }
 
   /**
-   * Reads the prop from the mounted view. When the prop goes through the
-   * ShadowTree commit, a ShadowTree value that is different gives a text with
-   * both values.
+   * Gives the ShadowTree value when the prop goes through the commit, else the
+   * mounted value. Gives a text with both values when the mounted view and the
+   * ShadowTree are different.
    */
-  public async getSynchronousProp(
-    propName: keyof typeof SYNCHRONOUS_PROP_COMPARISON
-  ) {
+  public async getSynchronousProp(propName: 'opacity' | 'backgroundColor') {
     const mounted = (await this.getMountedViewProps())?.[propName];
     if (!commitsSynchronousProps()) {
       return mounted;
     }
     const shadowTree = await this.getAnimatedStyle(propName);
-    const matches = getComparator(SYNCHRONOUS_PROP_COMPARISON[propName]);
+    const matches = getComparator(getComparisonModeForProp(propName));
     return matches(mounted, shadowTree)
-      ? mounted
+      ? shadowTree
       : `mounted view ${String(mounted)}, ShadowTree ${shadowTree}`;
   }
 
