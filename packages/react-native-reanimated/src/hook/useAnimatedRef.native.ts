@@ -33,7 +33,7 @@ export function useAnimatedRef<
     (ref) => {
       const currentWrapper = getShadowNodeWrapperFromRef(ref);
       const uiWrapper =
-        ReanimatedModule.createDetachedShadowNodeWrapper(currentWrapper);
+        ReanimatedModule.createUIShadowNodeWrapper(currentWrapper);
 
       scheduleOnUI(() => {
         (sharedWrapper as AnimatedRefOnUI).value = uiWrapper;

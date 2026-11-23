@@ -274,7 +274,7 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
-  createDetachedShadowNodeWrapper(
+  createUIShadowNodeWrapper(
     shadowNodeWrapper: ShadowNodeWrapper
   ): ShadowNodeWrapper {
     return shadowNodeWrapper;
