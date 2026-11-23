@@ -57,6 +57,6 @@ module.exports = {
 
 ## Worklet modules in Jest
 
-The Worklet Syntax plugin runs under Jest too. Without a bundler it writes each worklet module into `react-native-worklets/.worklets/<hash>.js`, which Jest resolves like any other file of the package. Those files use `export default`, so Jest has to transform them like the rest of `react-native-worklets`: if your `transformIgnorePatterns` excludes `node_modules`, add an exception for `react-native-worklets`.
+The Worklet Syntax plugin runs under Jest too. Without a Metro caller it emits each worklet in place, in the file that defines it, so no files are written and no extra setup is needed.
 
 If you pass `caller: { supportsInlineModules: true }` to `babel-jest`, the plugin emits the modules inline instead, as it does under a Metro with inline module support. Use `react-native-worklets/jest/resolver` then: it writes those modules to a `.jest-inline-modules` directory under Jest's `rootDir` so that Jest can load them. Add that directory to your `.gitignore`.

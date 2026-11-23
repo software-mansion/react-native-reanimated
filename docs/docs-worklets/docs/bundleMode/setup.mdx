@@ -114,7 +114,7 @@ module.exports = getBundleModeMetroConfig(
 
 ## Let Metro see the worklet modules
 
-The plugin emits each worklet module in one of two ways, depending on the Metro version it runs under. Metro tells the plugin which one it supports through the `supportsInlineModules` Babel caller flag.
+The plugin emits each worklet in one of three ways, depending on the bundler it runs under. It reads the Babel caller: Metro tells the plugin that it supports inline modules through the `supportsInlineModules` flag, and a Metro without the flag is still recognized as Metro.
 
 ### Metro with inline modules
 
@@ -135,6 +135,10 @@ dark: useBaseUrl('/img/sha-dark.png'),
 />
 
 Apply the `metro` patch for your Metro version from the [Worklets repository](https://github.com/software-mansion/react-native-reanimated/tree/main/packages/react-native-worklets/bundleMode/patches). **This patch does not require building React Native from source**.
+
+### Bundlers other than Metro
+
+Under any other bundler, such as webpack, Turbopack or Babel run on its own, the plugin emits each worklet in place, as a factory function in the file that defines it. Nothing is written to disk and no module has to be resolved. Such a bundle has no Worklet Runtimes, so this output serves the web and tooling; running worklets on native requires Metro.
 
 ## Enable fast refresh on Worklet Runtimes
 
