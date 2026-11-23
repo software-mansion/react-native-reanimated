@@ -135,12 +135,23 @@ export default class AnimatedComponent
       } else if (element.style) {
         element.style.visibility = 'initial';
       }
-    } else if (this._isHiddenUntilEntering()) {
-      // There is no element to show. Render again without the hiding style.
-      this.forceUpdate();
+    } else if (this._isFirstRender && this.props.entering) {
+      this._skipEnteringWithoutElement(
+        this.props.entering as BaseAnimationBuilder
+      );
     }
 
     this._isFirstRender = false;
+  }
+
+  _skipEnteringWithoutElement(entering: BaseAnimationBuilder) {
+    if (getReducedMotionFromConfig(entering as CustomConfig)) {
+      entering.callbackV?.(true);
+      return;
+    }
+    // Render again without the hiding style.
+    this.forceUpdate();
+    entering.callbackV?.(false);
   }
 
   _isHiddenUntilEntering() {

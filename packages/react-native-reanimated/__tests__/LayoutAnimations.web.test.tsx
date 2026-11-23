@@ -15,7 +15,7 @@ import {
 import { Button, View, type ViewProps } from 'react-native';
 
 import type { EntryOrExitLayoutType } from '../src';
-import Animated, { FadeIn, FadeOut } from '../src';
+import Animated, { FadeIn, FadeOut, ReduceMotion } from '../src';
 
 function Example({
   initialVisible = false,
@@ -173,14 +173,36 @@ describe('Layout Animations', () => {
     });
 
     describe('on mount without a DOM element', () => {
-      test('view with entering does not stay hidden', () => {
+      test('view with entering shows and reports that it did not animate', () => {
+        const callback = jest.fn();
         const screen = render(
-          <AnimatedClassHost entering={FadeIn} testID="class-host" />
+          <AnimatedClassHost
+            entering={FadeIn.withCallback(callback)}
+            testID="class-host"
+          />
         );
+
+        act(() => {
+          jest.advanceTimersByTime(1000);
+        });
 
         expect(screen.getByTestId('class-host').style.visibility).not.toBe(
           'hidden'
         );
+        expect(callback.mock.calls).toEqual([[false]]);
+      });
+
+      test('reduced motion reports a finished entering', () => {
+        const callback = jest.fn();
+        render(
+          <AnimatedClassHost
+            entering={FadeIn.reduceMotion(ReduceMotion.Always).withCallback(
+              callback
+            )}
+          />
+        );
+
+        expect(callback.mock.calls).toEqual([[true]]);
       });
     });
 
