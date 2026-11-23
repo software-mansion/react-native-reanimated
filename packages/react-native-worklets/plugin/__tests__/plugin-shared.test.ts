@@ -29,10 +29,11 @@ jest.mock('fs', () => {
       stagedFiles.set(String(filepath), String(content));
     },
     renameSync: (from: string, to: string) => {
-      capturedFiles.push({
-        path: String(to),
-        content: stagedFiles.get(String(from))!,
-      });
+      const content = stagedFiles.get(String(from));
+      if (content === undefined) {
+        throw new Error(`renameSync: ${String(from)} was never written`);
+      }
+      capturedFiles.push({ path: String(to), content });
       stagedFiles.delete(String(from));
     },
   };
