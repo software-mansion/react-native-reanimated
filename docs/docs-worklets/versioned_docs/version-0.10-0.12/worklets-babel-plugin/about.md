@@ -4,11 +4,7 @@ title: 'About'
 sidebar_label: 'About'
 ---
 
-import Anchor from '@site/src/components/Anchor';
-
 # Worklets Babel Plugin
-
-<Anchor id="experimental-worklet-classes" />
 
 ## What is Worklets Babel Plugin?
 
