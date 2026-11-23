@@ -29,7 +29,12 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-import { REMOVES_TRACKS_OUT_OF_WINDOW } from '../layoutAnimations/nativeLayoutTestKit';
+import {
+  END_REPORT_BAND_MS,
+  narrowClockOffset,
+  REMOVES_TRACKS_OUT_OF_WINDOW,
+  takeTraceUntil,
+} from '../layoutAnimations/nativeLayoutTestKit';
 import type { TraceEvent } from '../nativeAnimationObservation';
 import {
   CSS_HOST_TIMING_KINDS,
@@ -355,27 +360,45 @@ describe('CSS transitions on the shared native animation host', () => {
     const tag = findNodeHandle(inputRef.current) ?? -1;
 
     inputRef.current?.focus();
-    await wait(DURATION / 2);
-    const holdStart = await takeTraceOf(tag);
-    expect(summarize(holdStart)).toBe('Received > TrackStarted > Admitted');
-    expect(holdStart[1].endpointPolicy).toBe('HoldWithoutCommit');
-
-    await wait(DURATION);
-    expect(summarize(await takeTraceOf(tag))).toBe('TrackEnded:true');
+    const hold = (
+      await takeTraceUntil((events) =>
+        events.some(
+          (event) => event.tag === tag && event.event === 'TrackEnded'
+        )
+      )
+    ).filter((event) => event.tag === tag);
+    expect(summarize(hold)).toBe(
+      'Received > TrackStarted > Admitted > TrackEnded:true'
+    );
+    expect(hold[1]?.endpointPolicy).toBe('HoldWithoutCommit');
+    const clockOffset = await narrowClockOffset(tag);
+    const endsAtDeclaredEnd = (events: TraceEvent[], endIndex: number) => {
+      const declaredEndMs = (events[0]?.originTimestampMs ?? NaN) + DURATION;
+      const endMs = events[endIndex]?.monotonicTimeMs ?? NaN;
+      return (
+        endMs >= declaredEndMs + clockOffset.from + END_REPORT_BAND_MS.from &&
+        endMs <= declaredEndMs + clockOffset.to + END_REPORT_BAND_MS.to
+      );
+    };
+    expect(endsAtDeclaredEnd(hold, 3)).toBe(true);
 
     inputRef.current?.blur();
-    await wait(DURATION / 4);
-    const release = await takeTraceOf(tag);
+    const release = (
+      await takeTraceUntil((events) =>
+        events.some(
+          (event) =>
+            event.tag === tag &&
+            event.event === 'Ended' &&
+            event.outcome === 'Finished'
+        )
+      )
+    ).filter((event) => event.tag === tag);
     expect(summarize(release)).toBe(
-      'Received > Ended:Interrupted:None > TrackStarted > Admitted'
+      'Received > Ended:Interrupted:None > TrackStarted > Admitted > TrackEnded:true > Ended:Finished:None'
     );
-    expect(release[1].generation).toBe(holdStart[0].generation);
-    expect(release[2].endpointPolicy).toBe('ExecutorCommitsEndpoint');
-
-    await wait(DURATION);
-    expect(summarize(await takeTraceOf(tag))).toBe(
-      'TrackEnded:true > Ended:Finished:None'
-    );
+    expect(release[1]?.generation).toBe(hold[0]?.generation);
+    expect(release[2]?.endpointPolicy).toBe('ExecutorCommitsEndpoint');
+    expect(endsAtDeclaredEnd(release, 4)).toBe(true);
   });
 
   test('the host rejects a run on a tag with no native view', async () => {

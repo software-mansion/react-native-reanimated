@@ -271,6 +271,11 @@ export const FILTER_OPACITY = 0.5;
 // The travel of two display frames at 60 fps.
 export const FIRST_FRAME_TRAVEL = ((END_LEFT - START_LEFT) / DURATION) * 34;
 export const FRAME_MS = 1000 / 60;
+/**
+ * The time of an end report of a track that plays to its end, after its
+ * declared end.
+ */
+export const END_REPORT_BAND_MS: Band = { from: -FRAME_MS, to: 2 * FRAME_MS };
 // The presentation layer has a new animation only after the first display frame of its commit.
 export const FIRST_FRAMES_MS = 3 * FRAME_MS;
 /**
@@ -976,7 +981,10 @@ export type NativeResidual = {
   edgeHoldMs?: number;
   /** The read is on the timeline only by `asReplacedTrack` of its tracks. */
   showsReplaced?: boolean;
-  /** The residual is of `asTrackFromStartPass` of its tracks. */
+  /**
+   * The replacing track owns its key from its start pass or its first animator
+   * frame.
+   */
   showsStartPass?: boolean;
 };
 
@@ -1117,23 +1125,29 @@ function shownPassMsAt(readTimeMs: number, tracks: NativeTrack[]) {
   return passesMs.length > 0 ? Math.max(...passesMs) : undefined;
 }
 
-const asTrackFromStartPass = (track: NativeTrack): NativeTrack =>
-  track.replaced
-    ? {
-        ...track,
-        played: {
-          ...track.played,
-          from: track.startPassMs ?? track.played.from,
-        },
-      }
-    : track;
+/**
+ * Android: a read shows the first frame of the frame clock that ran after a
+ * time.
+ */
+function showsFirstFrameAfter(readTimeMs: number, timeMs: number) {
+  const shown = shownFrameAt(readTimeMs);
+  return (
+    shown.ranMs >= timeMs &&
+    clockFrames.every(({ ranMs }) => ranMs < timeMs || ranMs >= shown.ranMs)
+  );
+}
+
+const asTrackFrom =
+  (fromMs: number) =>
+  (track: NativeTrack): NativeTrack =>
+    hasStartPass(track)
+      ? { ...track, played: { ...track.played, from: fromMs } }
+      : track;
 
 /**
- * The residual of a read at `shownPassMsAt` it, else `nativeResidualOf` the
- * read, of a read in `isInReplacementWindow` also of the replaced tracks up to
- * the time of the read, and of a track that replaced a track and has a start
- * pass also of that track from its start pass: its first frame can have an
- * animation clock before `TrackStarted`.
+ * The residual of a read. Android: in the first frame after its start pass, a
+ * track that replaced a track shows the value of the pass or of its first
+ * animator update, whose animation clock can be before the pass.
  */
 export function readResidualOf(
   values: number[],
@@ -1148,7 +1162,7 @@ export function readResidualOf(
         { from: passMs, to: passMs },
         values,
         readTimeMs,
-        tracks.map(asTrackFromStartPass)
+        tracks.map(asTrackFrom(passMs))
       ),
       showsStartPass: true,
     };
@@ -1174,12 +1188,22 @@ export function readResidualOf(
   if (!tracks.some(hasStartPass)) {
     return own;
   }
-  const fromStartPass = nativeResidualOf(
-    values,
-    readTimeMs,
-    tracks.map(asTrackFromStartPass)
-  );
-  return fromStartPass.isOnTimeline
+  const { animationTimeMs } = shownFrameAt(readTimeMs);
+  const startPassBands = [
+    possibleBandOf({ from: animationTimeMs, to: animationTimeMs }, tracks),
+    ...tracks
+      .filter(hasStartPass)
+      .filter(({ startPassMs }) =>
+        showsFirstFrameAfter(readTimeMs, startPassMs)
+      )
+      .map(({ startPassMs }) => ({ from: startPassMs, to: startPassMs })),
+  ];
+  const fromStartPass = startPassBands
+    .map((band) =>
+      residualIn(band, values, readTimeMs, tracks.map(asTrackFrom(band.from)))
+    )
+    .find(({ isOnTimeline }) => isOnTimeline);
+  return fromStartPass
     ? {
         ...fromStartPass,
         crossesReplacement: own.crossesReplacement,
@@ -2016,7 +2040,7 @@ function expectNativeReads(
       playing,
       tracks,
       matrixTolerance,
-      layerOf(targetSample),
+      layerOf(targetSample, endedFromMsOf(playing)),
       samples
     );
     const checked = isTransform
@@ -2169,9 +2193,35 @@ function cellsProductOf(first: number[], second: number[]) {
 
 export type Layer = 'playing' | 'rest';
 
-/** The layer of a sample has an animation of its target, or it is at rest. */
-export const layerOf = ({ members }: TargetSample): Layer =>
-  members.length > 0 ? 'playing' : 'rest';
+/**
+ * The layer of a sample has an animation of its target, or it is at rest. From
+ * `endedFromMs` a member can stay on the layer after the end of its animation,
+ * and a presentation that is the model then shows the layer at rest.
+ */
+export const layerOf = (
+  { members, model, presentation, monotonicTimeMs }: TargetSample,
+  endedFromMs = Infinity
+): Layer =>
+  members.length > 0 &&
+  (monotonicTimeMs < endedFromMs ||
+    presentation.some((value, cell) => value !== model[cell]))
+    ? 'playing'
+    : 'rest';
+
+/**
+ * The first time of the sample clock at which the platform can have ended the
+ * animations of tracks of one command that end by their own duration.
+ */
+export function endedFromMsOf(tracks: TimedTrack[]) {
+  const ends = tracks.flatMap(({ ownEndsMs = [] }) => ownEndsMs);
+  const [{ origin }] = tracks;
+  return ends.length > 0
+    ? middleOf(origin) +
+        Math.max(...ends) -
+        REMOVAL_LEAD_MS -
+        uncertaintyOf(origin)
+    : Infinity;
+}
 
 /**
  * The cells of a `Transform` sample for the values of the operations of a

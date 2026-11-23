@@ -12,9 +12,9 @@
  * run of its frame function. In each other timeline a phase starts at or after its declared start.
  *
  * The pair: at one request step, the value that the native box shows at the time t of its sample and the
- * value of its twin at the time t' of its sample differ by the tolerance of the key plus the largest
- * distance between a declared value of the key that the read of the native box can show and a declared
- * value of the key in the frames of the twin:
+ * value of its twin at the time t' of the frame that its sample shows (`shownFrameTimeAt`) differ by the
+ * tolerance of the key plus the largest distance between a declared value of the key that the read of the
+ * native box can show and a declared value of the key in the frames of the twin:
  *
  *   bound = tolerance + the largest |d(a) - d(b)|, a in `shownBandAt` t widened by u, b from t' - n F to t' + F
  *
@@ -156,8 +156,10 @@ import {
   declaredValueOf,
   describeLeaf,
   END_LEFT,
+  END_REPORT_BAND_MS,
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
+  endedFromMsOf,
   FRAME_MS,
   framesMissedBy,
   HAS_FRAME_CLOCK,
@@ -180,6 +182,7 @@ import {
   PLAYS_3D_OPERATIONS,
   playsSizeChangeOf,
   SAMPLED_OPACITY_TOLERANCE,
+  shownFrameTimeAt,
   sampleOpacity,
   sampleRows,
   shownTrackOf,
@@ -442,7 +445,7 @@ describe('native layout live clock', () => {
         expectIn(
           `end report of the track ${trackName} after its declared end, ms`,
           afterEndMs,
-          { from: -FRAME_MS, to: 2 * FRAME_MS }
+          END_REPORT_BAND_MS
         );
       }
       for (const track of played.tracks) {
@@ -607,11 +610,12 @@ function pairBoundOf(
   const shown = shownTrackOf(track, played.tracks, samples);
   const { tolerance } = track;
   const twin = twinStartOf(track, played);
+  const twinShownMs = shownFrameTimeAt(twinTimeMs);
   const declaredChange = declaredPairChangeAt(
     shown,
     timeMs,
-    twinTimeMs,
-    Math.max(1, startedPhasesOf(track, twinTimeMs - middleOf(track.origin))),
+    twinShownMs,
+    Math.max(1, startedPhasesOf(track, twinShownMs - middleOf(track.origin))),
     twin &&
       ((stepTimeMs) =>
         twin.declared(stepTimeMs - twin.timeMs) +
@@ -945,9 +949,9 @@ function cellsPairsOf(
     );
   }
   const timeMs = native.monotonicTimeMs;
-  const twinFromOriginMs =
-    twin.monotonicTimeMs - middleOf(operations[0].origin);
-  const layer = layerOf(native);
+  const twinShownMs = shownFrameTimeAt(twin.monotonicTimeMs);
+  const twinFromOriginMs = twinShownMs - middleOf(operations[0].origin);
+  const layer = layerOf(native, endedFromMsOf(operations));
   const framesBeforeOf = (track: PlayedTrack) =>
     Math.max(1, startedPhasesOf(track, twinFromOriginMs));
   const changes = operationPairChangesAt(
@@ -956,7 +960,7 @@ function cellsPairsOf(
     matrixTolerance,
     layer,
     timeMs,
-    twin.monotonicTimeMs,
+    twinShownMs,
     framesBeforeOf,
     samples
   );

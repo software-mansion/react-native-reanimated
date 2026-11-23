@@ -103,7 +103,6 @@ import {
   layoutRefusalOf,
   layoutRefusalReason,
   playsSizeChangeOf,
-  layerOf,
   layerPositionOf,
   layoutOf,
   middleOf,
@@ -2563,7 +2562,7 @@ function describeNativeReads(reads: RowRead[], { clockOffset }: Played) {
     `reads after a gap ${checked.filter(({ afterGap }) => afterGap).length}, ${held.length} of them off the band and accepted after a gap`,
     `reads in a removal window only ${checked.filter(({ residual }) => residual.removalEndMs !== undefined).length}`,
     `reads at an edge hold only ${checked.filter(({ residual }) => residual.edgeHoldMs !== undefined).length}`,
-    `reads of a layer with no animation of the target ${checked.filter(({ sampled }) => layerOf(sampled) === 'rest').length}`,
+    `reads of a layer with no animation of the target ${checked.filter(({ sampled }) => sampled.members.length === 0).length}`,
     describeLongestEqualRun(checked),
   ];
 }
