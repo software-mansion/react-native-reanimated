@@ -86,6 +86,21 @@ describe('babel plugin without a Metro caller', () => {
     expect(code).toContain('return helper()');
   });
 
+  test('renames the in-place factory when a forwarded import takes its name', () => {
+    const input = html`<script>
+      import { helper as foo_testJs1Factory } from 'react-native-worklets';
+      function foo() {
+        'worklet';
+        return foo_testJs1Factory();
+      }
+    </script>`;
+
+    const code = runPlugin(input);
+    expect(code).not.toContain('require(');
+    expect(code).toContain('function _foo_testJs1Factory(');
+    expect(code).toContain('return foo_testJs1Factory()');
+  });
+
   test('writes worklet files for a Metro caller without inline module support', () => {
     const code = runPlugin(
       html`<script>

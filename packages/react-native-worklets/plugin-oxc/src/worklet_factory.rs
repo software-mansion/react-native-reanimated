@@ -70,6 +70,14 @@ pub fn make_worklet_factory<'a>(
 
     let closure = get_closure(&input, scoping, state, filename);
 
+    while closure
+        .imports
+        .iter()
+        .any(|import| import.local == names.factory_name)
+    {
+        names.factory_name.insert(0, '_');
+    }
+
     // Closure-free worklets share module scope with forwarded imports.
     if closure.closure_variables.is_empty() {
         while MODULE_SCOPE_RESERVED_NAMES.contains(&names.react_name.as_str())
