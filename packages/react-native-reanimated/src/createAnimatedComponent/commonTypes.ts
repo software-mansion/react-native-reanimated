@@ -71,7 +71,7 @@ export interface IJSPropsUpdater {
 export interface INativeEventsManager {
   attachEvents(): void;
   detachEvents(): void;
-  updateEvents(prevProps: AnimatedComponentProps<InitialComponentProps>): void;
+  updateEvents(prevProps?: AnimatedComponentProps<InitialComponentProps>): void;
 }
 
 export type LayoutAnimationStaticContext = {
@@ -133,6 +133,12 @@ export interface IAnimatedComponentInternalBase {
   _viewInfo?: ViewInfo;
 
   /**
+   * Re-resolves `getAnimatableRef()` of the wrapped component so event
+   * registration follows the host instance it currently points at.
+   */
+  _refreshComponentRef: () => void;
+
+  /**
    * Resolves the tag of the host view backing this component. Used for Layout
    * Animations, Animated Styles and event registration.
    */
@@ -154,7 +160,7 @@ export interface IAnimatedComponentInternal extends IAnimatedComponentInternalBa
   _NativeEventsManager?: INativeEventsManager;
   context: React.ContextType<typeof SkipEnteringContext>;
   setNativeProps: (props: StyleProps) => void;
-  _syncStylePropsBackToReact: (props: StyleProps) => void;
+  _syncStylePropsBackToReact: (props: StyleProps, style: StyleProps) => void;
 }
 
 export type NestedArray<T> = T | NestedArray<T>[];

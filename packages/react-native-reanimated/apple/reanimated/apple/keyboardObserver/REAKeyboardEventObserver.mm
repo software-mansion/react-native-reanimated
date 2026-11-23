@@ -1,7 +1,6 @@
 #import <Foundation/Foundation.h>
 
 #import <React/RCTAssert.h>
-#import <React/RCTBridgeConstants.h>
 #import <React/RCTUtils.h>
 
 #import <reanimated/apple/READisplayLink.h>
@@ -40,12 +39,6 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
   _animationStartTimestamp = 0;
   _isKeyboardObserverAttached = false;
   _isInteractiveDismissalCanceled = false;
-  NSNotificationCenter *notificationCenter = [NSNotificationCenter defaultCenter];
-
-  [notificationCenter addObserver:self
-                         selector:@selector(cleanupListeners)
-                             name:RCTBridgeDidInvalidateModulesNotification
-                           object:nil];
   return self;
 }
 
@@ -71,6 +64,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
   NSLog(@"Keyboard handling is not supported on tvOS");
 }
 
+- (void)invalidate
+{
+}
+
 #elif TARGET_OS_OSX
 
 - (int)subscribeForKeyboardEvents:(KeyboardEventListenerBlock)listener
@@ -82,6 +79,10 @@ typedef NS_ENUM(NSUInteger, KeyboardState) { // NOLINT(performance-enum-size,cpp
 - (void)unsubscribeFromKeyboardEvents:(int)listenerId
 {
   NSLog(@"Keyboard handling is not supported on macOS");
+}
+
+- (void)invalidate
+{
 }
 
 #else
@@ -298,12 +299,14 @@ static UIWindow *_Nullable REAFindKeyWindow(void)
   });
 }
 
-- (void)cleanupListeners
+- (void)invalidate
 {
-  RCTUnsafeExecuteOnMainQueueSync(^() {
+  RCTExecuteOnMainQueue(^() {
     [self->_listeners removeAllObjects];
-    [[self getDisplayLink] invalidate];
+    [self->_displayLink invalidate];
     self->_displayLink = nil;
+    [self detachKeyboardViewObserver];
+    [self->_measuringView removeFromSuperview];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
   });
 }
@@ -342,13 +345,17 @@ static UIWindow *_Nullable REAFindKeyWindow(void)
 
 - (void)keyboardWillHide:(NSNotification *)notification
 {
+  [self detachKeyboardViewObserver];
+  _state = CLOSING;
+  [self keyboardWillChangeFrame:notification];
+}
+
+- (void)detachKeyboardViewObserver
+{
   if (_isKeyboardObserverAttached) {
     [_keyboardView removeObserver:self forKeyPath:@"center"];
     _isKeyboardObserverAttached = false;
   }
-
-  _state = CLOSING;
-  [self keyboardWillChangeFrame:notification];
 }
 
 - (void)keyboardDidHide:(NSNotification *)notification
@@ -437,8 +444,7 @@ static UIWindow *_Nullable REAFindKeyWindow(void)
 - (REAUIView *_Nullable)getKeyboardView
 {
   if (!_keyboardView) {
-    // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
-    auto window = [self findView:[UIApplication sharedApplication].windows
+    auto window = [self findView:REAFindKeyWindow().windowScene.windows
                        condition:[self withPrefix:@[ @"<UITextEffectsWindow" ]]];
     auto container = [self findView:window.subviews
                           condition:[self withPrefix:@[ @"<UIInputSetContainerView", @"<UITrackingWindowView" ]]];

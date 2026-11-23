@@ -6,7 +6,7 @@ use oxc_codegen::{Codegen, CodegenOptions};
 use oxc_span::SPAN;
 
 use crate::ast::{
-    closure_binding_pattern, const_decl, identifier_binding_pattern,
+    closure_binding_pattern, const_decl, identifier_binding_pattern, let_decl,
     replace_implicit_return_with_block,
 };
 use crate::directives::strip_worklet_directives;
@@ -95,5 +95,5 @@ fn prepend_closure<'a>(builder: AstBuilder<'a>, closure_variables: &[String]) ->
         false,
     ));
 
-    const_decl(builder, array_pattern, this_closure)
+    let_decl(builder, array_pattern, this_closure)
 }

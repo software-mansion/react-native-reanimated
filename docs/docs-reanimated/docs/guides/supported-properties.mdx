@@ -6,7 +6,7 @@ id: supported-properties
 
 Not all CSS properties are available and animatable in React Native. The following table lists, in alphabetical order, which style properties can be animated on which platform. A supported cell without a version label means the property has been animatable on that platform since Reanimated 4.0.0; a label shows the version that added the support.
 
-For animating `react-native-svg` components, see [Animating SVG](/docs/guides/animating-svg).
+For animating `react-native-svg` components, see [Animating SVG](./animating-svg.mdx).
 
 <div className="compatibility fixed">
   | Property                | Android            | iOS                | Web    |
@@ -28,7 +28,7 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
   | borderBottomStartRadius | <Yes/>             | <Yes/>             | <Yes/> |
   | borderBottomWidth       | <Yes/>             | <Yes/>             | <Yes/> |
   | borderColor             | <Yes/>             | <Yes/>             | <Yes/> |
-  | borderCurve             | <No/>              | <No/>              | <No/>  |
+  | borderCurve             | <No/>              | <Yes since="4.8"/> | <No/>  |
   | borderEndColor          | <Yes/>             | <Yes/>             | <Yes/> |
   | borderEndEndRadius      | <Yes/>             | <Yes/>             | <Yes/> |
   | borderEndStartRadius    | <Yes/>             | <Yes/>             | <Yes/> |
@@ -107,7 +107,7 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
   | minHeight               | <Yes/>             | <Yes/>             | <Yes/> |
   | minWidth                | <Yes/>             | <Yes/>             | <Yes/> |
   | mixBlendMode            | <Yes/>             | <Yes/>             | <Yes/> |
-  | objectFit               | <No/>              | <No/>              | <No/>  |
+  | objectFit               | <Yes since="4.8"/> | <Yes since="4.8"/> | <No/>  |
   | opacity                 | <Yes/>             | <Yes/>             | <Yes/> |
   | outlineColor            | <Yes/>             | <Yes/>             | <Yes/> |
   | outlineOffset           | <Yes/>             | <Yes/>             | <Yes/> |
@@ -160,9 +160,9 @@ For animating `react-native-svg` components, see [Animating SVG](/docs/guides/an
   | translateX              | <No/>              | <No/>              | <No/>  |
   | translateY              | <No/>              | <No/>              | <No/>  |
   | userSelect              | <No/>              | <No/>              | <Yes/> |
-  | verticalAlign           | <No/>              | <No/>              | <Yes/> |
+  | verticalAlign           | <Yes since="4.8"/> | <No/>              | <Yes/> |
   | width                   | <Yes/>             | <Yes/>             | <Yes/> |
-  | writingDirection        | <No/>              | <No/>              | <No/>  |
+  | writingDirection        | <No/>              | <Yes since="4.8"/> | <No/>  |
   | zIndex                  | <Yes/>             | <Yes/>             | <Yes/> |
 </div>
 
@@ -174,7 +174,7 @@ Style inheritance is not supported. Properties that would normally inherit value
 
 ### Invalid values
 
-A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](/docs/debugging/logger-configuration) as long as its strict mode is enabled.
+A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](../debugging/logger-configuration.mdx) as long as its strict mode is enabled.
 
 ### Relative Margins
 

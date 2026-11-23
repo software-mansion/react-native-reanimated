@@ -1,0 +1,122 @@
+import React from 'react';
+import clsx from 'clsx';
+
+import type { CoreSnapshot } from '@site/src/simulation';
+
+import styles from './styles.module.css';
+import AnimatedGrid from './AnimatedGrid';
+import { runtimeClass, shortName, threadName } from './runtimeColors';
+import type { RuntimeDescriptor } from './runtimeColors';
+
+interface CpuPanelProps {
+  runtimes: RuntimeDescriptor[];
+  cores: CoreSnapshot[];
+  rawToDisplayLine: number[];
+  coreCount?: number;
+}
+
+export default function CpuPanel({
+  runtimes,
+  cores,
+  rawToDisplayLine,
+  coreCount = 0,
+}: CpuPanelProps) {
+  const emptyCores = Array.from(
+    { length: Math.max(0, coreCount - runtimes.length) },
+    (_, index) => runtimes.length + index
+  );
+  return (
+    <AnimatedGrid animateResize className={styles.coreGrid}>
+      {runtimes.map((runtime) => {
+        const core = cores.find((candidate) => candidate.id === runtime.id);
+        const running = core?.status === 'running';
+        const blockedOn =
+          core?.waitingFor == null
+            ? undefined
+            : (runtimes.find((candidate) => candidate.id === core.waitingFor)
+                ?.label ?? core.waitingFor);
+        return (
+          <div
+            key={runtime.id}
+            data-sim-node={`thread:${runtime.id}`}
+            className={clsx(
+              styles.box,
+              styles.core,
+              runtimeClass(runtime),
+              running && styles.boxActive,
+              blockedOn !== undefined && styles.coreBlocked,
+              core?.status === 'error' && styles.coreStopped
+            )}>
+            <div className={styles.coreHeader}>
+              <span className={styles.boxTitle} data-sim-port>
+                Core {runtime.coreIndex}
+              </span>
+              <span className={styles.coreStatus}>
+                {blockedOn !== undefined
+                  ? 'Waiting'
+                  : running
+                    ? 'Running'
+                    : core?.status === 'error'
+                      ? 'Stopped'
+                      : 'Idle'}
+              </span>
+            </div>
+            <span className={styles.boxDetail}>
+              {threadName(runtime)}
+              {runtime.kind === 'worker' && ` · ${shortName(runtime.id)}`}
+            </span>
+            {blockedOn !== undefined && (
+              <div className={styles.coreLine}>
+                <span className={styles.coreLineText}>
+                  Waiting for {blockedOn}
+                </span>
+              </div>
+            )}
+            {blockedOn === undefined && (
+              <div className={styles.coreLine}>
+                <span className={styles.coreLineText}>
+                  {describeExecution(core, rawToDisplayLine)}
+                </span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+      {emptyCores.map((coreIndex) => (
+        <div
+          key={`empty-${coreIndex}`}
+          data-sim-obstacle
+          className={clsx(styles.box, styles.core, styles.coreEmpty)}>
+          <div className={styles.coreHeader}>
+            <span className={styles.boxTitle}>Core {coreIndex}</span>
+            <span className={styles.coreStatus}>Idle</span>
+          </div>
+          <span className={styles.boxDetail}>No thread</span>
+          <div className={styles.coreLine}>
+            <span className={styles.coreLineText}>Not used</span>
+          </div>
+        </div>
+      ))}
+    </AnimatedGrid>
+  );
+}
+
+function describeExecution(
+  core: CoreSnapshot | undefined,
+  rawToDisplayLine: number[]
+): string {
+  if (core === undefined || core.status === 'idle') {
+    return 'Ready for the next job';
+  }
+  if (core.status === 'error') {
+    return core.error ?? 'Execution stopped';
+  }
+  const displayLine =
+    core.line === null ? -1 : (rawToDisplayLine[core.line] ?? -1);
+  if (displayLine < 0) {
+    return core.nativeFrame ? 'Native code' : 'Framework code';
+  }
+  return core.currentFn === null
+    ? `Line ${displayLine}`
+    : `${core.currentFn} · line ${displayLine}`;
+}

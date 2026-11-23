@@ -272,7 +272,7 @@ export function scheduleOnRN<Args extends unknown[], ReturnValue>(
  * @param fun - A function you want to run on the RN Runtime.
  * @param args - Arguments to pass to the function.
  * @returns The return value of the function passed as the first argument.
- * @see https://docs.swmansion.com/react-native-worklets/docs/threading/runOnRNSync
+ * @see https://docs.swmansion.com/react-native-worklets/docs/unreleased/threading/runOnRNSync/
  */
 export function runOnRNSync<Args extends unknown[], ReturnValue>(
   fun:

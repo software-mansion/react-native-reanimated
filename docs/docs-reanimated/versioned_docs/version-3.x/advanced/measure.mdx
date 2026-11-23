@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # measure
 
-`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](/docs/fundamentals/glossary#ui-thread).
+`measure` lets you synchronously get the dimensions and position of a view on the screen, all on the [UI thread](../fundamentals/glossary.mdx#ui-thread).
 
 ## Reference
 
@@ -52,7 +52,7 @@ function App() {
 
 #### `animatedRef`
 
-An [animated ref](/docs/core/useAnimatedRef#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](/docs/fundamentals/glossary#animated-component) or a React Native built-in component.
+An [animated ref](../core/useAnimatedRef.mdx#returns) connected to the component you'd want to get the measurements from. The animated ref has to be passed either to an [Animated component](../fundamentals/glossary.mdx#animated-component) or a React Native built-in component.
 
 ### Returns
 
@@ -76,9 +76,9 @@ import MeasureBasicSrc from '!!raw-loader!@site/src/examples/MeasureBasic';
 
 ## Remarks
 
-- `measure` is implemented only on the [UI thread](/docs/fundamentals/glossary#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`runOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI) function.
+- `measure` is implemented only on the [UI thread](../fundamentals/glossary.mdx#ui-thread). When using `measure` inside [event handlers](https://react.dev/learn/responding-to-events#adding-event-handlers), it has to be wrapped with the [`runOnUI`](https://docs.swmansion.com/react-native-worklets/docs/threading/runOnUI) function.
 
-- The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](/docs/fundamentals/glossary#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
+- The `useAnimatedStyle` function is first evaluated on the [JavaScript thread](../fundamentals/glossary.mdx#javascript-thread) just before the views are attached to the native side. For this reason, to safely use the measure within `useAnimatedStyle`, a condition similar to the one below must be added to the code:
 
 <Indent>
   ```jsx

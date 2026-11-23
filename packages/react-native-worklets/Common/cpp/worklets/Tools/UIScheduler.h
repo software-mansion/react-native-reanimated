@@ -2,7 +2,7 @@
 
 #include <worklets/Tools/ThreadSafeQueue.h>
 
-#include <ReactCommon/CallInvoker.h>
+#include <worklets/Compat/ReactNativeCallInvoker.h>
 
 #include <atomic>
 
@@ -18,6 +18,7 @@ class UIScheduler {
  protected:
   virtual bool queryIsOnUIThread() const = 0;
 
+  bool drainingUI_{false};
   std::atomic<bool> scheduledOnUI_{false};
   ThreadSafeQueue<std::function<void()>> uiJobs_;
 };

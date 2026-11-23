@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -119,7 +120,7 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
 
     if (legacyLayoutAnimationsProxy && sharedElementTransitions) {
         throw GradleException(
-            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json."
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. If you want to use the legacy layout animations proxy, you need to explicitly disable `ENABLE_SHARED_ELEMENT_TRANSITIONS` feature flag (enabled by default) in your package.json."
         )
     }
 
@@ -170,7 +171,7 @@ if (project == rootProject) {
 
 apply(from = "./generate-stub-pch.gradle.kts")
 
-android {
+extensions.configure<LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.reanimated"
@@ -275,6 +276,9 @@ if (project != rootProject) {
     extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
+            if (IS_REANIMATED_EXAMPLE_APP) {
+                freeCompilerArgs.add("-Xwarning-level=DEPRECATION:error")
+            }
         }
     }
 }

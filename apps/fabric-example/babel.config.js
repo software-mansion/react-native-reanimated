@@ -6,6 +6,9 @@ const workletsPluginOptions = {
   getHBCBinary,
   importForwarding: {
     moduleNames: ['axios'],
+    relativePaths: [
+      'runtime-tests/worklets/tests/runtimes/reentrantModuleLoad.test.tsx',
+    ],
   },
 };
 

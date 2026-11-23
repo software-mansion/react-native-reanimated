@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import {
   clampText,
+  configurationLabel,
   detailsBlock,
   escapeSlack,
   extractVerdict,
@@ -14,7 +15,10 @@ import {
   requireEnv,
   screenshotsSection,
   staticFeatureFlagsLabel,
+  commentFooter,
+  reportForComment,
   summaryOfOutput,
+  writeCommentFile,
 } from './argent-cloud-report.ts';
 import type {
   Screenshots,
@@ -65,6 +69,7 @@ type Plan = {
   library?: string;
   reactNativeVersion?: string;
   architecture?: string;
+  configuration?: string;
   staticFeatureFlags?: StaticFeatureFlags;
   appKind?: string;
   reproductionSteps?: string[];
@@ -107,9 +112,12 @@ async function main(): Promise<void> {
     case 'notify':
       await notify(readContext());
       break;
+    case 'comment':
+      writeComment(readContext());
+      break;
     default:
       throw new Error(
-        `usage: argent-cloud-pr-verify-report.ts <report|publish|notify>, got '${command ?? ''}'`
+        `usage: argent-cloud-pr-verify-report.ts <report|publish|notify|comment>, got '${command ?? ''}'`
       );
   }
 }
@@ -271,7 +279,7 @@ function writeReport(context: Context): void {
       `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`
     );
     lines.push(
-      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, Release |`
+      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, iOS simulator, ${configurationLabel(context.plan.configuration)} |`
     );
   }
   lines.push(`| Cost | ${costLine(context.costs)} |`, '');
@@ -361,6 +369,60 @@ function planSection(plan: Plan): string[] {
     lines.push('### Limitations', '', plan.limitations, '');
   }
   return lines;
+}
+
+function writeComment(context: Context): void {
+  const lines = [
+    '## Argent Cloud verification',
+    '',
+    `An AI agent followed the same steps in a small app built with the library from the base commit and from the head commit of this pull request, on an iOS simulator. Outcome: **${context.outcome}**.`,
+    '',
+    OUTCOME_SENTENCES[context.outcome],
+    '',
+    '| | |',
+    '|---|---|',
+    `| ${VARIANT_TITLES.base} | ${verdictLabel(context.runs.base)} |`,
+    `| ${VARIANT_TITLES.head} | ${verdictLabel(context.runs.head)} |`,
+  ];
+  if (context.plan) {
+    lines.push(
+      `| React Native | ${context.plan.reactNativeVersion ?? 'unknown'} |`,
+      `| Architecture | ${context.plan.architecture ?? 'unknown'} |`,
+      `| Static feature flags | ${staticFeatureFlagsLabel(context.plan.staticFeatureFlags)} |`,
+      `| App | ${context.plan.appKind ?? 'unknown'} scaffold, ${configurationLabel(context.plan.configuration)} |`
+    );
+  }
+  lines.push('');
+  if (context.plan?.verification) {
+    lines.push(
+      `- Expected ${VARIANT_TITLES.base.toLowerCase()}: ${context.plan.verification.failSignal ?? ''}`,
+      `- Expected ${VARIANT_TITLES.head.toLowerCase()}: ${context.plan.verification.passSignal ?? ''}`,
+      ''
+    );
+  }
+  for (const variant of ['base', 'head'] as const) {
+    const run = context.runs[variant];
+    lines.push(
+      ...detailsBlock(
+        `Report of the agent: ${VARIANT_TITLES[variant].toLowerCase()}`,
+        run.output
+          ? reportForComment(run.output)
+          : 'The agent produced no output.'
+      ),
+      ''
+    );
+  }
+  lines.push(...commentFooter(context.runUrl), '');
+  const counts = (['base', 'head'] as const).map(
+    (variant) => context.runs[variant].screenshots?.files.length ?? 0
+  );
+  if (counts[0] + counts[1] > 0) {
+    lines.push(
+      `The screenshots follow below: first the ${counts[0]} of the run ${VARIANT_TITLES.base.toLowerCase()} (\`1-base/\`), then the ${counts[1]} of the run ${VARIANT_TITLES.head.toLowerCase()} (\`2-head/\`).`,
+      ''
+    );
+  }
+  writeCommentFile(lines);
 }
 
 async function publish(context: Context): Promise<void> {

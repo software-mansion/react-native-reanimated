@@ -1,11 +1,19 @@
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+  StackActions,
+  useIsFocused,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useEffect, useState } from 'react';
+import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
   LinearTransition,
+  SharedTransition,
+  SharedTransitionBoundary,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -14,11 +22,16 @@ import Animated, {
 
 import {
   describe,
+  expectEventually,
+  getTestComponent,
+  isViewMountedNatively,
   notify,
   render,
   test,
+  useTestRef,
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const SIGN_OUTS = 6;
 const DELAYS = [60, 180, 420, 900, 30, 1300];
@@ -120,9 +133,9 @@ function App() {
 function SignInLoop() {
   const [step, setStep] = useState(0);
   const signedIn = step % 2 === 1;
+  const lastSignOut = step === SIGN_OUTS * 2;
   useEffect(() => {
-    if (step === SIGN_OUTS * 2) {
-      notify(SIGNED_OUT);
+    if (lastSignOut) {
       return;
     }
     const timeout = setTimeout(
@@ -130,7 +143,7 @@ function SignInLoop() {
       DELAYS[step % DELAYS.length]
     );
     return () => clearTimeout(timeout);
-  }, [step]);
+  }, [lastSignOut, step]);
   return (
     <View style={styles.root}>
       <NavigationContainer>
@@ -146,9 +159,148 @@ function SignInLoop() {
               name="SignIn"
               component={SignIn}
               options={headerOptions('SignIn')}
+              listeners={{
+                // On iOS, a stack removed during its animation makes the next stack drop pushes and pops.
+                transitionEnd: (event) => {
+                  if (lastSignOut && !event.data.closing) {
+                    notify(SIGNED_OUT);
+                  }
+                },
+              }}
             />
           )}
         </Outer.Navigator>
+      </NavigationContainer>
+    </View>
+  );
+}
+
+const SharedOuter = createNativeStackNavigator<{
+  Target: undefined;
+  Source: undefined;
+}>();
+const SharedInner = createNativeStackNavigator<{ Content: undefined }>();
+const sharedNavigation = createNavigationContainerRef<{
+  Target: undefined;
+  Source: undefined;
+}>();
+const sharedTransition = SharedTransition.duration(300);
+// React clears the ref of a deleted source, so a moving view is only readable by its tag.
+function readMountedY(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false)?.y;
+  });
+}
+
+const SHARED_STACKS_READY = 'sharedStacksReady';
+
+function appeared(routeName: string) {
+  return `${routeName}Appeared`;
+}
+
+const notifyAppearances = ({ route }: { route: { name: string } }) => ({
+  transitionEnd: ({ data }: { data: { closing: boolean } }) => {
+    if (!data.closing) {
+      notify(appeared(route.name));
+    }
+  },
+});
+
+function SharedBox({
+  name,
+  style,
+}: {
+  name: string;
+  style: StyleProp<ViewStyle>;
+}) {
+  const ref = useTestRef(name);
+  const isFocused = useIsFocused();
+  return (
+    <SharedTransitionBoundary isActive={isFocused}>
+      <View collapsable={false} style={styles.content}>
+        <Animated.View
+          ref={ref}
+          sharedTransitionTag="nestedSource"
+          sharedTransitionStyle={sharedTransition}
+          style={style}
+        />
+      </View>
+    </SharedTransitionBoundary>
+  );
+}
+
+function SharedTarget() {
+  return <SharedBox name="target" style={styles.box} />;
+}
+
+function SharedSource() {
+  return <SharedBox name="source" style={styles.sharedSource} />;
+}
+
+async function expectShown(name: string) {
+  const component = getTestComponent(name);
+  await expectEventually(async () => {
+    const props = await component.getMountedViewProps();
+    return props?.opacity === 1
+      ? 'shown'
+      : `${name} not shown: ${JSON.stringify(props)}`;
+  }).toBe('shown');
+}
+
+const PopToTop = createNativeStackNavigator<{
+  Target: undefined;
+  Middle: undefined;
+  Source: undefined;
+}>();
+const popToTopNavigation = createNavigationContainerRef<{
+  Target: undefined;
+  Middle: undefined;
+  Source: undefined;
+}>();
+
+function PopToTopMiddle() {
+  return <SharedBox name="middle" style={styles.box} />;
+}
+
+function PopToTopStacks() {
+  return (
+    <View style={styles.root}>
+      <NavigationContainer
+        ref={popToTopNavigation}
+        onReady={() => notify(SHARED_STACKS_READY)}>
+        <PopToTop.Navigator screenListeners={notifyAppearances}>
+          <PopToTop.Screen name="Target" component={SharedTarget} />
+          <PopToTop.Screen name="Middle" component={PopToTopMiddle} />
+          <PopToTop.Screen name="Source" component={SharedSource} />
+        </PopToTop.Navigator>
+      </NavigationContainer>
+    </View>
+  );
+}
+
+function NestedSource() {
+  return (
+    <SharedInner.Navigator>
+      <SharedInner.Screen name="Content" component={SharedSource} />
+    </SharedInner.Navigator>
+  );
+}
+
+function SharedStacks() {
+  return (
+    <View style={styles.root}>
+      <NavigationContainer
+        ref={sharedNavigation}
+        onReady={() => notify(SHARED_STACKS_READY)}>
+        <SharedOuter.Navigator screenListeners={notifyAppearances}>
+          <SharedOuter.Screen name="Target" component={SharedTarget} />
+          <SharedOuter.Screen
+            name="Source"
+            component={NestedSource}
+            options={{ headerShown: false }}
+          />
+        </SharedOuter.Navigator>
       </NavigationContainer>
     </View>
   );
@@ -162,6 +314,59 @@ describe('Layout animations on native stack removal', () => {
     await waitForNotification(SIGNED_OUT, 30_000);
     await render(null);
   });
+
+  // On Android the outer and the nested screen both hold the source of the transition.
+  test('moves a shared source out of a nested stack on an outer pop', async () => {
+    await render(<SharedStacks />);
+    await waitForNotification(SHARED_STACKS_READY);
+    await waitForNotification(appeared('Target'));
+    sharedNavigation.navigate('Source');
+    await waitForNotification(appeared('Source'));
+    const sourceTag = getTestComponent('source').getTag();
+    await expectShown('source');
+    const yInScreen = await readMountedY(sourceTag);
+
+    sharedNavigation.goBack();
+    // The frame is relative to the parent, so it changes when the view moves to the root.
+    await expectEventually(async () => {
+      const y = await readMountedY(sourceTag);
+      return y !== undefined && y !== yInScreen
+        ? 'moved'
+        : `source y ${y} (in screen ${yInScreen})`;
+    }).toBe('moved');
+    await expectEventually(async () =>
+      (await isViewMountedNatively(sourceTag))
+        ? 'source still mounted'
+        : 'source gone'
+    ).toBe('source gone');
+    const targetTag = getTestComponent('target').getTag();
+    await expectEventually(async () =>
+      (await isViewMountedNatively(targetTag))
+        ? 'target mounted'
+        : 'target not mounted'
+    ).toBe('target mounted');
+    await render(null);
+  });
+
+  test('moves a shared source when pop to top also removes a screen without it', async () => {
+    await render(<PopToTopStacks />);
+    await waitForNotification(SHARED_STACKS_READY);
+    await waitForNotification(appeared('Target'));
+    popToTopNavigation.navigate('Middle');
+    await waitForNotification(appeared('Middle'));
+    await expectShown('middle');
+    const middleTag = getTestComponent('middle').getTag();
+    popToTopNavigation.navigate('Source');
+    await waitForNotification(appeared('Source'));
+    await expectShown('source');
+    popToTopNavigation.dispatch(StackActions.popToTop());
+    await expectEventually(async () =>
+      (await isViewMountedNatively(middleTag))
+        ? 'middle still mounted'
+        : 'middle gone'
+    ).toBe('middle gone');
+    await render(null);
+  });
 });
 
 const styles = StyleSheet.create({
@@ -173,5 +378,11 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, backgroundColor: '#dd2222' },
   box: { width: 100, height: 40, backgroundColor: '#2277dd' },
   other: { width: 100, height: 40, backgroundColor: '#dd5522' },
+  sharedSource: {
+    width: 160,
+    height: 90,
+    marginTop: 60,
+    backgroundColor: '#2277dd',
+  },
   nested: { width: 50, height: 20, backgroundColor: '#ddaa22' },
 });

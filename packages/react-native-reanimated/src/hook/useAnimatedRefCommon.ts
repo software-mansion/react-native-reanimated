@@ -13,10 +13,16 @@ import type {
   MaybeObserverCleanup,
 } from './commonTypes';
 
+type ObserverRun = {
+  readonly tag: number | null;
+  readonly cleanup: MaybeObserverCleanup;
+};
+
 export function useAnimatedRefBase<TRef extends InstanceOrElement>(
-  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper
+  getWrapper: (ref: InternalHostInstance) => ShadowNodeWrapper,
+  onDetach?: () => void
 ): AnimatedRef<TRef> {
-  const observers = useRef<Map<AnimatedRefObserver, MaybeObserverCleanup>>(
+  const observers = useRef<Map<AnimatedRefObserver, ObserverRun>>(
     new Map()
   ).current;
   const wrapperRef = useRef<ShadowNodeWrapper | null>(null);
@@ -34,32 +40,67 @@ export function useAnimatedRefBase<TRef extends InstanceOrElement>(
 
         if (observers.size) {
           const currentTag = fun?.getTag?.() ?? null;
-          observers.forEach((cleanup, observer) => {
+          observers.forEach(({ tag, cleanup }, observer) => {
+            // React calls the ref again for the same view whenever the ref passed to it changes.
+            if (tag === currentTag) {
+              return;
+            }
             // Perform the cleanup before calling the observer again.
             // This ensures that all events that were set up in the observer
             // are cleaned up before the observer sets up new events during
             // the next call.
             cleanup?.();
-            observers.set(observer, observer(currentTag));
+            observers.set(observer, {
+              tag: currentTag,
+              cleanup: observer(currentTag),
+            });
           });
         }
+      } else if (ref === null) {
+        // React calls a callback ref with null when the element unmounts.
+        // Calling the ref with no argument only reads the wrapper, so it must
+        // not detach.
+        // Drop the instance so that this ref, which the owner's closures often
+        // keep reachable, does not retain the unmounted component and
+        // everything its props reach.
+        wrapperRef.current = null;
+        fun.getTag = () => null;
+        fun.current = null;
+        if (observers.size) {
+          queueMicrotask(cleanUpObserversIfDetached);
+        }
+        onDetach?.();
       }
 
       return wrapperRef.current;
     });
 
+    const cleanUpObserversIfDetached = () => {
+      if (fun.current !== null) {
+        return;
+      }
+      observers.forEach(({ tag, cleanup }, observer) => {
+        if (tag === null) {
+          return;
+        }
+        cleanup?.();
+        observers.set(observer, { tag: null, cleanup: undefined });
+      });
+    };
+
     fun.observe = (observer: AnimatedRefObserver) => {
       // Call observer immediately to get the initial value
-      const cleanup = observer(fun?.getTag?.() ?? null);
-      observers.set(observer, cleanup);
+      const tag = fun?.getTag?.() ?? null;
+      observers.set(observer, { tag, cleanup: observer(tag) });
 
       return () => {
-        observers.get(observer)?.();
+        observers.get(observer)?.cleanup?.();
         observers.delete(observer);
       };
     };
 
     fun.current = null;
+    fun.getTag = () => null;
     resultRef.current = fun;
   }
 

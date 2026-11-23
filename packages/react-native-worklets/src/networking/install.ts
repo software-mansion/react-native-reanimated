@@ -5,6 +5,7 @@ import { Blob } from './Blob';
 import { DOMException } from './DOMException';
 import { FileReader } from './FileReader';
 import { FormData } from './FormData';
+import { WebSocket } from './WebSocket';
 import { XMLHttpRequest } from './XMLHttpRequest';
 
 /**
@@ -32,7 +33,7 @@ export function installNetworking() {
   global.DOMException ??= DOMException;
   global.AbortController ??= AbortController;
   global.AbortSignal ??= AbortSignal;
+  global.WebSocket ??= WebSocket;
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   require('whatwg-fetch');
 }

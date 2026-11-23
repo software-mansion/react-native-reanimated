@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.LibraryExtension
 import groovy.json.JsonSlurper
 import org.apache.tools.ant.taskdefs.condition.Os
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -164,7 +165,7 @@ if (project == rootProject) {
 apply(from = "./fix-prefab.gradle.kts")
 apply(from = "./generate-stub-pch.gradle.kts")
 
-android {
+extensions.configure<LibraryExtension> {
     compileSdk = safeExtGet("compileSdkVersion", 37) as Int
 
     namespace = "com.swmansion.worklets"
@@ -286,6 +287,9 @@ if (project != rootProject) {
     extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension> {
         compilerOptions {
             jvmTarget = JvmTarget.fromTarget("17")
+            if (IS_REANIMATED_EXAMPLE_APP) {
+                freeCompilerArgs.add("-Xwarning-level=DEPRECATION:error")
+            }
         }
     }
 }

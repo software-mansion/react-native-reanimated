@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/RunLoop/AsyncQueue.h>
+#include <worklets/RunLoop/RuntimeTaskState.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -36,7 +37,8 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
       AbortToken abortToken,
       const std::shared_ptr<jsi::Runtime> &runtime,
       const std::shared_ptr<AsyncQueue> &queue,
-      const std::shared_ptr<std::recursive_mutex> &runtimeMutex);
+      const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
+      const std::shared_ptr<RuntimeTaskState> &taskState);
   ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
@@ -48,6 +50,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   const std::shared_ptr<jsi::Runtime> runtime_;
   const std::shared_ptr<AsyncQueue> queue_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
+  const std::shared_ptr<RuntimeTaskState> taskState_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
 

@@ -1,6 +1,7 @@
 import { strict as assert } from 'assert';
 import path from 'path';
 
+import { warnAboutDangerousRelativePaths } from './imports';
 import { generatedWorkletsDir, type WorkletsPluginPass } from './types';
 
 const notCapturedIdentifiers = [
@@ -158,6 +159,13 @@ export function initializeState(state: WorkletsPluginPass) {
   }
 
   const userImportForwarding = state.opts.importForwarding;
+
+  if (state.opts.bundleMode) {
+    warnAboutDangerousRelativePaths(
+      userImportForwarding?.relativePaths,
+      state.opts.silenceDangerousPathsWarning
+    );
+  }
 
   assert(
     state.importForwarding === undefined,

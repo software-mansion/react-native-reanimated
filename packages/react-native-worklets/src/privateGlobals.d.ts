@@ -1,5 +1,6 @@
 'use strict';
 
+import type { LazyBundleRegistrar } from './bundleMode/lazyBundles';
 // This file works by accident - currently Builder Bob doesn't move `.d.ts` files to output types.
 // If it ever breaks, we should address it so we'd not pollute the user's global namespace.
 import type { reportFatalRemoteError } from './debug/errors';
@@ -31,6 +32,16 @@ declare global {
   var _toString: (value: unknown) => string;
   var __workletsModuleProxy: WorkletsModuleProxy;
   var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
+  /** The URL of the bundle. Only in Bundle Mode on Worklet Runtimes. */
+  var _WORKLETS_SOURCE_URL: string | undefined;
+  /** Prefix of the Metro runtime globals, defined by the Metro prelude. */
+  var __METRO_GLOBAL_PREFIX__: string | undefined;
+  /** Only in Debug builds on Worklet Runtimes. */
+  var evalWithSourceUrl:
+    | ((code: string, sourceUrl: string) => unknown)
+    | undefined;
+  /** Only in dev builds in Bundle Mode on Worklet Runtimes. */
+  var __workletsLazyBundleRegistrar: LazyBundleRegistrar | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializableString: (value: string) => FlatSerializableRef<string>;
@@ -62,6 +73,12 @@ declare global {
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   /** Available on runtimes with the Hermes microtask queue enabled. */
   var __drainMicrotasks: () => void;
+  /**
+   * Returns the number of outermost native calls into this runtime that have
+   * started. Available on Worklet Runtimes only with the `RUNTIME_TEST_FLAG`
+   * static feature flag.
+   */
+  var __getRootTaskId: (() => number) | undefined;
   /** Available only on the UI Runtime */
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
@@ -73,12 +90,6 @@ declare global {
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
-  /**
-   * @deprecated Kept for backwards compatibility. Remove it after support for
-   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
-   *   synchronously.
-   */
-  var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
   var _startProfiling: (meanHzFreq?: number) => void;
@@ -86,6 +97,7 @@ declare global {
   var _beginSection: (name: string) => void;
   var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
+  var _getTimerTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
@@ -125,6 +137,19 @@ declare global {
         ): number;
         abortRequest(requestId: number): void;
         decodeText(buffer: ArrayBuffer, encoding?: string): string;
+        connectWebSocket(
+          config: {
+            url: string;
+            protocols: string[];
+            headers: Array<[string, string]>;
+          },
+          onEvent: (type: string, payload: unknown) => void
+        ): number;
+        sendWebSocketMessage(
+          socketId: number,
+          message: string | ArrayBuffer
+        ): void;
+        closeWebSocket(socketId: number, code: number, reason: string): void;
       }
     | undefined;
   interface NodeRequire {

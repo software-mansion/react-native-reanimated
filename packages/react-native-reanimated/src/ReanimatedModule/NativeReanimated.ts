@@ -243,8 +243,18 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.unregisterCSSTransition(viewTag);
   }
 
-  getSettledUpdates(): SettledUpdate[] {
-    return this.#reanimatedModuleProxy.getSettledUpdates();
+  getSettledUpdates(
+    isViewRegistered: (viewTag: number) => boolean
+  ): SettledUpdate[] {
+    return this.#reanimatedModuleProxy.getSettledUpdates(isViewRegistered);
+  }
+
+  hasPendingSettledUpdates(
+    isViewRegistered: (viewTag: number) => boolean
+  ): boolean {
+    return this.#reanimatedModuleProxy.hasPendingSettledUpdates(
+      isViewRegistered
+    );
   }
 
   registerPseudoStyles(

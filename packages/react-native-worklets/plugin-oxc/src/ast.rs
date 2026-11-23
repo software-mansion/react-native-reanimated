@@ -15,21 +15,39 @@ pub fn const_decl<'a>(
     Statement::VariableDeclaration(const_declaration(builder, pattern, init))
 }
 
+pub fn let_decl<'a>(
+    builder: AstBuilder<'a>,
+    pattern: oxc_ast::ast::BindingPattern<'a>,
+    init: Expression<'a>,
+) -> Statement<'a> {
+    Statement::VariableDeclaration(let_declaration(builder, pattern, init))
+}
+
 pub fn const_declaration<'a>(
     builder: AstBuilder<'a>,
     pattern: oxc_ast::ast::BindingPattern<'a>,
     init: Expression<'a>,
 ) -> oxc_allocator::Box<'a, oxc_ast::ast::VariableDeclaration<'a>> {
-    let declarator = builder.variable_declarator(
-        SPAN,
-        VariableDeclarationKind::Const,
-        pattern,
-        NONE,
-        Some(init),
-        false,
-    );
+    variable_declaration(builder, VariableDeclarationKind::Const, pattern, init)
+}
+
+pub fn let_declaration<'a>(
+    builder: AstBuilder<'a>,
+    pattern: oxc_ast::ast::BindingPattern<'a>,
+    init: Expression<'a>,
+) -> oxc_allocator::Box<'a, oxc_ast::ast::VariableDeclaration<'a>> {
+    variable_declaration(builder, VariableDeclarationKind::Let, pattern, init)
+}
+
+fn variable_declaration<'a>(
+    builder: AstBuilder<'a>,
+    kind: VariableDeclarationKind,
+    pattern: oxc_ast::ast::BindingPattern<'a>,
+    init: Expression<'a>,
+) -> oxc_allocator::Box<'a, oxc_ast::ast::VariableDeclaration<'a>> {
+    let declarator = builder.variable_declarator(SPAN, kind, pattern, NONE, Some(init), false);
     let declarations = builder.vec1(declarator);
-    builder.alloc_variable_declaration(SPAN, VariableDeclarationKind::Const, declarations, false)
+    builder.alloc_variable_declaration(SPAN, kind, declarations, false)
 }
 
 pub fn identifier_binding_pattern<'a>(

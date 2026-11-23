@@ -1,0 +1,275 @@
+---
+id: supported-properties
+---
+
+# Supported style properties
+
+Not all CSS properties are available and animatable in React Native. The following table lists, in alphabetical order, which style properties can be animated on which platform. A supported cell without a version label means the property has been animatable on that platform since Reanimated 4.0.0; a label shows the version that added the support.
+
+For animating `react-native-svg` components, see [Animating SVG](./animating-svg.mdx).
+
+<div className="compatibility fixed">
+  | Property                | Android            | iOS                | Web    |
+  | ----------------------- | ------------------ | ------------------ | ------ |
+  | alignContent            | <Yes/>             | <Yes/>             | <Yes/> |
+  | alignItems              | <Yes/>             | <Yes/>             | <Yes/> |
+  | alignSelf               | <Yes/>             | <Yes/>             | <Yes/> |
+  | aspectRatio             | <Yes/>             | <Yes/>             | <Yes/> |
+  | backfaceVisibility      | <Yes/>             | <Yes/>             | <Yes/> |
+  | backgroundColor         | <Yes/>             | <Yes/>             | <Yes/> |
+  | backgroundImage         | <Yes since="4.8"/> | <Yes since="4.8"/> | <Yes since="4.8"/> |
+  | borderBlockColor        | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBlockEndColor     | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBlockStartColor   | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBottomColor       | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBottomEndRadius   | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBottomLeftRadius  | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBottomRightRadius | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBottomStartRadius | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBottomWidth       | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderColor             | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderCurve             | <No/>              | <Yes since="4.8"/> | <No/>  |
+  | borderEndColor          | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderEndEndRadius      | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderEndStartRadius    | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderEndWidth          | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderLeftColor         | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderLeftWidth         | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderRadius            | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderRightColor        | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderRightWidth        | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderStartColor        | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderStartEndRadius    | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderStartStartRadius  | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderStartWidth        | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderStyle             | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderTopColor          | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderTopEndRadius      | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderTopLeftRadius     | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderTopRightRadius    | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderTopStartRadius    | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderTopWidth          | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderWidth             | <Yes/>             | <Yes/>             | <Yes/> |
+  | bottom                  | <Yes/>             | <Yes/>             | <Yes/> |
+  | boxShadow               | <Yes/>             | <Yes/>             | <Yes/> |
+  | boxSizing               | <No/>              | <No/>              | <Yes/> |
+  | color                   | <Yes/>             | <Yes/>             | <Yes/> |
+  | columnGap               | <Yes/>             | <Yes/>             | <Yes/> |
+  | cursor                  | <Yes/>             | <Yes/>             | <Yes/> |
+  | direction               | <Yes/>             | <Yes/>             | <No/>  |
+  | display                 | <Yes/>             | <Yes/>             | <Yes/> |
+  | elevation               | <Yes/>             | <No/>              | <No/>  |
+  | end                     | <Yes/>             | <Yes/>             | <No/>  |
+  | filter                  | <Yes since="4.2"/> | <Yes since="4.2"/> | <Yes/> |
+  | flex                    | <Yes/>             | <Yes/>             | <Yes/> |
+  | flexBasis               | <No/>              | <No/>              | <Yes/> |
+  | flexDirection           | <Yes/>             | <Yes/>             | <Yes/> |
+  | flexGrow                | <Yes/>             | <Yes/>             | <Yes/> |
+  | flexShrink              | <Yes/>             | <Yes/>             | <Yes/> |
+  | flexWrap                | <Yes/>             | <Yes/>             | <Yes/> |
+  | fontFamily              | <Yes/>             | <Yes/>             | <Yes/> |
+  | fontSize                | <Yes/>             | <Yes/>             | <Yes/> |
+  | fontStyle               | <Yes/>             | <Yes/>             | <Yes/> |
+  | fontVariant             | <Yes/>             | <Yes/>             | <Yes/> |
+  | fontWeight              | <Yes/>             | <Yes/>             | <Yes/> |
+  | gap                     | <Yes/>             | <Yes/>             | <Yes/> |
+  | height                  | <Yes/>             | <Yes/>             | <Yes/> |
+  | includeFontPadding      | <Yes/>             | <No/>              | <No/>  |
+  | inset                   | <Yes/>             | <Yes/>             | <Yes/> |
+  | insetBlock              | <Yes/>             | <Yes/>             | <Yes/> |
+  | insetBlockEnd           | <Yes/>             | <Yes/>             | <Yes/> |
+  | insetBlockStart         | <Yes/>             | <Yes/>             | <Yes/> |
+  | insetInline             | <Yes/>             | <Yes/>             | <Yes/> |
+  | insetInlineEnd          | <Yes/>             | <Yes/>             | <Yes/> |
+  | insetInlineStart        | <Yes/>             | <Yes/>             | <Yes/> |
+  | isolation               | <No/>              | <No/>              | <Yes/> |
+  | justifyContent          | <Yes/>             | <Yes/>             | <Yes/> |
+  | left                    | <Yes/>             | <Yes/>             | <Yes/> |
+  | letterSpacing           | <Yes/>             | <Yes/>             | <Yes/> |
+  | lineHeight              | <Yes/>             | <Yes/>             | <Yes/> |
+  | margin                  | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginBlock             | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginBlockEnd          | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginBlockStart        | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginBottom            | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginEnd               | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginHorizontal        | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginInline            | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginInlineEnd         | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginInlineStart       | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginLeft              | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginRight             | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginStart             | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginTop               | <Yes/>             | <Yes/>             | <Yes/> |
+  | marginVertical          | <Yes/>             | <Yes/>             | <Yes/> |
+  | maxHeight               | <Yes/>             | <Yes/>             | <Yes/> |
+  | maxWidth                | <Yes/>             | <Yes/>             | <Yes/> |
+  | minHeight               | <Yes/>             | <Yes/>             | <Yes/> |
+  | minWidth                | <Yes/>             | <Yes/>             | <Yes/> |
+  | mixBlendMode            | <Yes/>             | <Yes/>             | <Yes/> |
+  | objectFit               | <Yes since="4.8"/> | <Yes since="4.8"/> | <No/>  |
+  | opacity                 | <Yes/>             | <Yes/>             | <Yes/> |
+  | outlineColor            | <Yes/>             | <Yes/>             | <Yes/> |
+  | outlineOffset           | <Yes/>             | <Yes/>             | <Yes/> |
+  | outlineStyle            | <Yes/>             | <Yes/>             | <Yes/> |
+  | outlineWidth            | <Yes/>             | <Yes/>             | <Yes/> |
+  | overflow                | <Yes/>             | <Yes/>             | <Yes/> |
+  | overlayColor            | <No/>              | <No/>              | <No/>  |
+  | padding                 | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingBlock            | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingBlockEnd         | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingBlockStart       | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingBottom           | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingEnd              | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingHorizontal       | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingInline           | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingInlineEnd        | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingInlineStart      | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingLeft             | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingRight            | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingStart            | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingTop              | <Yes/>             | <Yes/>             | <Yes/> |
+  | paddingVertical         | <Yes/>             | <Yes/>             | <Yes/> |
+  | pointerEvents           | <Yes/>             | <Yes/>             | <Yes/> |
+  | position                | <Yes/>             | <Yes/>             | <Yes/> |
+  | resizeMode              | <Yes/>             | <Yes/>             | <No/>  |
+  | right                   | <Yes/>             | <Yes/>             | <Yes/> |
+  | rotation                | <No/>              | <No/>              | <No/>  |
+  | rowGap                  | <Yes/>             | <Yes/>             | <Yes/> |
+  | scaleX                  | <No/>              | <No/>              | <No/>  |
+  | scaleY                  | <No/>              | <No/>              | <No/>  |
+  | shadowColor             | <Yes/>             | <Yes/>             | <Yes/> |
+  | shadowOffset            | <No/>              | <Yes/>             | <Yes/> |
+  | shadowOpacity           | <No/>              | <Yes/>             | <Yes/> |
+  | shadowRadius            | <No/>              | <Yes/>             | <Yes/> |
+  | start                   | <Yes/>             | <Yes/>             | <No/>  |
+  | textAlign               | <Yes/>             | <Yes/>             | <Yes/> |
+  | textAlignVertical       | <Yes/>             | <No/>              | <No/>  |
+  | textDecorationColor     | <No/>              | <Yes/>             | <Yes/> |
+  | textDecorationLine      | <Yes/>             | <Yes/>             | <Yes/> |
+  | textDecorationStyle     | <No/>              | <Yes/>             | <Yes/> |
+  | textShadowColor         | <Yes/>             | <Yes/>             | <Yes/> |
+  | textShadowOffset        | <Yes/>             | <Yes/>             | <Yes/> |
+  | textShadowRadius        | <Yes/>             | <Yes/>             | <Yes/> |
+  | textTransform           | <Yes/>             | <Yes/>             | <Yes/> |
+  | tintColor               | <Yes/>             | <Yes/>             | <No/>  |
+  | top                     | <Yes/>             | <Yes/>             | <Yes/> |
+  | transform               | <Yes/>             | <Yes/>             | <Yes/> |
+  | transformMatrix         | <No/>              | <No/>              | <No/>  |
+  | transformOrigin         | <Yes/>             | <Yes/>             | <Yes/> |
+  | translateX              | <No/>              | <No/>              | <No/>  |
+  | translateY              | <No/>              | <No/>              | <No/>  |
+  | userSelect              | <No/>              | <No/>              | <Yes/> |
+  | verticalAlign           | <Yes since="4.8"/> | <No/>              | <Yes/> |
+  | width                   | <Yes/>             | <Yes/>             | <Yes/> |
+  | writingDirection        | <No/>              | <Yes since="4.8"/> | <No/>  |
+  | zIndex                  | <Yes/>             | <Yes/>             | <Yes/> |
+</div>
+
+## Remarks
+
+### Style Inheritance
+
+Style inheritance is not supported. Properties that would normally inherit values (e.g., textDecorationColor inheriting from color) must be provided separately, as inheritance is not implemented.
+
+### Invalid values
+
+A style value that Reanimated cannot process on native, such as `backgroundColor: 'notacolor'` or a transform string with an unknown function, is ignored the way an invalid declaration is ignored in CSS: the property is left out of the keyframe or style it appears in, so the view keeps its current value. In development builds a warning describing the value is logged through the [Reanimated logger](../debugging/logger-configuration.mdx) as long as its strict mode is enabled.
+
+### Relative Margins
+
+Yoga applies relative (%) margins in a different way than the web browser does. In React Native, the margin is added as a space between items without changing dimensions of the se items. As a result, the size of the parent container can change if the total size of its children with added margins exceeds the parent container size.
+
+On the other hand, the web browser shrinks items in such a way that the specified relative margin is occupies the correct amount of space in the parent container.
+
+### Mixed-Unit Margins
+
+Interpolation between absolute (numeric) and relative (%) margins may not work properly if dimensions of the parent component are affected by applied margins. This is a problem with our implementation and it can be seen as incorrect animation pacing (the animation can speed up/slow down when the parent size changes).
+
+### Mixed-Unit Border Radius
+
+Yoga calculates borders in different ways for numeric values and relative (%) values. For the first one, it applies the same radius on both edges of the container which are near the rounded corner. For the second one, it applies different radius to the shorter edge and different to the longer one, depending on the length of the container edge. Currently, there is no possibility to properly interpolate between absolute (numeric) and relative (%) values.
+
+### flexBasis
+
+Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexGrow` and `flexShrink` work fine, so they could be used for animations.
+
+### Animating text shadow styles
+
+On the web, all text shadow styles (i.e. `textShadowColor`, `textShadowOffset`, `textShadowRadius`) need to be specified in the animation keyframes to preserve the style during animation.
+
+iOS and Android text shadow styles doesn't have this limitations and work as intended.
+
+So, for example, if we want to have a shadow color and animate the shadow radius, we can't specify `textShadowColor` just in the element style but we also have to add it to every keyframe of the animation, even though only the `textShadowRadius` is the style we want to animate. Consider this:
+
+```jsx
+<Animated.Text
+  style={{
+    animationName: {
+      from: {
+        textShadowRadius: 8, // while the shadow radius correctly animates from 8 ✅
+      },
+      to: {
+        textShadowRadius: 16, // to 16 ✅
+      },
+    },
+    textShadowColor: 'red', // 🚨 the shadow color would be overridden in the animation keyframes
+    // that means the shadow would be black!
+  }}>
+  Reanimated
+</Animated.Text>
+```
+
+To mitigate this limitation, you need to specify the `textShadowColor` in every keyframe definition:
+
+```jsx
+<Animated.Text
+  style={{
+    animationName: {
+      from: {
+        textShadowColor: 'red', // shadows starts 'red'
+        textShadowRadius: 8,
+      },
+      to: {
+        textShadowColor: 'red', // and keeps being 'red' throughout the animation
+        textShadowRadius: 16,
+      },
+    },
+  }}>
+  Reanimated
+</Animated.Text>
+```
+
+<details>
+  <summary>Why do I need this?</summary>
+
+  In CSS the `text-shadow` is a single property but in React Native that's three separate properties for color, offset and radius. Because of that Reanimated has to provide these default values to every keyframe definition:
+
+  ```json
+  {
+    "textShadowColor": "#000",
+    "textShadowRadius": 0,
+    "textShadowOffset": { "width": 0, "height": 0 }
+  }
+  ```
+
+  and the shadow styles aren't inherited from the style object provided to the element. To retain the styles in an animation you need to override these styles to achieve your expected result.
+</details>
+
+### Animating box shadow styles
+
+Similarly to the text shadow styles - all shadow styles (i.e. `shadowColor`, `shadowOffset`, `shadowOpacity`, `shadowRadius`) need to be specified in the animation keyframes to preserve the style during animation on the Web. Keep in mind that `shadowOffset`, `shadowOpacity`, `shadowRadius` style properties [aren't implemented on Android in React Native](https://reactnative.dev/docs/shadow-props#props) so they also can't be animated.
+
+We highly recommend to use [the `boxShadow` property](https://reactnative.dev/blog/2024/10/23/release-0.76-new-architecture#boxshadow) which doesn't have this limitation and also works on Android.
+
+### Animating background image
+
+The `backgroundImage` style property has this name since React Native 0.87. On older React Native versions use `experimental_backgroundImage` instead; both names are supported and animate the same way.
+
+`useAnimatedStyle` supports `backgroundImage` since 4.7 on native and 4.0 on the web.
+
+On the Web, browsers do not interpolate `background-image` values, so the gradient switches at the midpoint between keyframes instead of animating.
+
+### Animating image tint color
+
+To animate the `tintColor` property on iOS, you must ensure that `tintColor` is included in the style object when the `Image` component is first rendered (mounted). If `tintColor` is not set initially, this property won't be updated via CSS animations or transitions.

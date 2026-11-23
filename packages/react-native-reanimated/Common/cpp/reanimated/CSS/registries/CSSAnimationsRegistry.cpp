@@ -1,7 +1,7 @@
 #include <reanimated/CSS/registries/CSSAnimationsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <string>
@@ -85,9 +85,9 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
       continue;
     }
 
-    const auto updates = it->second.computeStyle(true);
+    auto updates = it->second.computeStyle(true);
     if (!updates.empty()) {
-      addUpdatesToBatch(it->second.getShadowNodeFamily(), updates);
+      addUpdatesToBatch(it->second.getShadowNodeFamily(), std::move(updates));
     }
   }
 

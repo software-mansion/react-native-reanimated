@@ -6,7 +6,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <stdexcept>
@@ -104,7 +104,8 @@ void WorkletsModuleProxy::attachToRNRuntime(
       rnRuntimeStatus_,
       RuntimeData::rnRuntimeId);
 
-  RNRuntimeWorkletDecorator::decorate(rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_);
+  RNRuntimeWorkletDecorator::decorate(
+      rnRuntime, rnRuntimeProxy_->toOptimizedObject(rnRuntime), jsLogger_, rnRuntimeStatus_);
 }
 
 WorkletsModuleProxy::~WorkletsModuleProxy() {

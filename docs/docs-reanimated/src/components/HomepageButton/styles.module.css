@@ -42,11 +42,8 @@ a.homepageButtonLink:hover {
 }
 
 .arrow {
-  transition: left 0.3s;
-}
-
-.arrow {
   left: 8px;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .homepageButton svg {
@@ -54,7 +51,16 @@ a.homepageButtonLink:hover {
 }
 
 .homepageButton:hover .arrow {
-  left: 16px;
+  transform: translateX(8px);
+}
+
+a.homepageButtonLink:focus-visible {
+  outline: none;
+}
+
+a.homepageButtonLink:focus-visible .homepageButton {
+  outline: 2px solid var(--swm-landing-button-purple);
+  outline-offset: 3px;
 }
 
 /* Button - transparent styling */
