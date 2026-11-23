@@ -43,6 +43,41 @@ double AnimationProgressProvider::getGlobalProgress() const {
 }
 
 double AnimationProgressProvider::getKeyframeProgress(const double fromOffset, const double toOffset) const {
+  const auto progress = computeKeyframeProgress(fromOffset, toOffset);
+  if (isRecordingInterpolation_) {
+    keyframeProgressSamples_.push_back({fromOffset, toOffset, progress});
+  }
+  return progress;
+}
+
+void AnimationProgressProvider::beginInterpolation() {
+  keyframeProgressSamples_.clear();
+  isRecordingInterpolation_ = true;
+}
+
+void AnimationProgressProvider::endInterpolation() {
+  isRecordingInterpolation_ = false;
+}
+
+bool AnimationProgressProvider::isLastInterpolationUnchanged() const {
+  if (keyframeProgressSamples_.empty()) {
+    return false;
+  }
+  const auto globalProgress = getGlobalProgress();
+  for (const auto &sample : keyframeProgressSamples_) {
+    // Interpolators pick the keyframe from the global progress, with different
+    // rules at the keyframe offsets, so only the inside of the keyframe is safe.
+    if (globalProgress <= sample.fromOffset || globalProgress >= sample.toOffset) {
+      return false;
+    }
+    if (computeKeyframeProgress(sample.fromOffset, sample.toOffset) != sample.progress) {
+      return false;
+    }
+  }
+  return true;
+}
+
+double AnimationProgressProvider::computeKeyframeProgress(const double fromOffset, const double toOffset) const {
   if (fromOffset == toOffset) {
     return 1;
   }
@@ -151,6 +186,8 @@ void AnimationProgressProvider::update(const double timestamp) {
 
 void AnimationProgressProvider::resetProgress() {
   TimeProgressProvider::resetProgress();
+  // Settings changed, so the recorded values no longer describe the animation.
+  keyframeProgressSamples_.clear();
   currentIteration_ = 1;
   previousIterationsDuration_ = 0;
 }

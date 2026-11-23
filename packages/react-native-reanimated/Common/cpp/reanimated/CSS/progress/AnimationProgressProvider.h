@@ -8,6 +8,7 @@
 #include <reanimated/CSS/progress/TimeProgressProvider.h>
 
 #include <memory>
+#include <vector>
 
 namespace reanimated::css {
 
@@ -57,6 +58,14 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   void setMilestoneReporter(RunLifecycle::Reporter reporter);
   void abort(double timestamp);
 
+  /// Starts recording the keyframe progress values that an interpolation reads.
+  void beginInterpolation();
+  void endInterpolation();
+  /// True if the last recorded interpolation would read the same keyframe
+  /// progress values at the current progress, so its result can't have changed.
+  /// This is the case between the steps of a `steps()` easing.
+  bool isLastInterpolationUnchanged() const;
+
   void pause(double timestamp);
   void play(double timestamp);
   void update(double timestamp) override;
@@ -66,6 +75,12 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   std::optional<double> calculateRawProgress(double timestamp) override;
 
  private:
+  struct KeyframeProgressSample {
+    double fromOffset;
+    double toOffset;
+    double progress;
+  };
+
   double iterationCount_;
   AnimationDirection direction_;
   EasingFunction easingFunction_;
@@ -82,6 +97,11 @@ class AnimationProgressProvider final : public KeyframeProgressProvider, public 
   // The lifecycle reports an abort without a timestamp, so abort() leaves one here.
   double cancelTimestamp_ = 0;
 
+  // Written from the const getKeyframeProgress while an interpolation is recorded.
+  mutable std::vector<KeyframeProgressSample> keyframeProgressSamples_;
+  bool isRecordingInterpolation_ = false;
+
+  double computeKeyframeProgress(double fromOffset, double toOffset) const;
   double getTotalPausedTime(double timestamp) const;
   bool shouldFinish(double timestamp) const;
   RunPhase computePhase(double timestamp) const;
