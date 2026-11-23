@@ -9,10 +9,19 @@ class AnimationFrameQueue(
     reactApplicationContext: ReactApplicationContext,
     private val mFrameSource: FrameSource = ReactChoreographerFrameSource(),
 ) {
-    private var mFirstUptime = SystemClock.uptimeMillis()
-    private var mSlowAnimationsEnabled = false
+    private class SlowAnimationsConfig(
+        val enabled: Boolean,
+        val dragFactor: Int,
+        val firstUptime: Long,
+    )
+
+    /**
+     * Written by the thread that toggles slow animations and read by the frame thread, so it is
+     * replaced as a whole.
+     */
+    @Volatile
+    private var mSlowAnimationsConfig = SlowAnimationsConfig(false, 1, SystemClock.uptimeMillis())
     private var lastFrameTimeMs = 0.0
-    private var mAnimationsDragFactor = 1
 
     private val mChoreographerCallback: GuardedFrameCallback =
         object : GuardedFrameCallback(reactApplicationContext) {
@@ -66,11 +75,12 @@ class AnimationFrameQueue(
         animationsDragFactor: Int,
         firstUptime: Long = SystemClock.uptimeMillis(),
     ) {
-        mSlowAnimationsEnabled = slowAnimationsEnabled
-        mAnimationsDragFactor = animationsDragFactor
-        if (slowAnimationsEnabled) {
-            mFirstUptime = firstUptime
-        }
+        mSlowAnimationsConfig =
+            SlowAnimationsConfig(
+                slowAnimationsEnabled,
+                animationsDragFactor,
+                if (slowAnimationsEnabled) firstUptime else mSlowAnimationsConfig.firstUptime,
+            )
     }
 
     private fun scheduleQueueExecution() {
@@ -128,9 +138,10 @@ class AnimationFrameQueue(
     private fun calculateTimestamp(frameTimeNanos: Long): Double {
         val nanosecondsInMilliseconds = 1000000.0
         var currentFrameTimeMs = frameTimeNanos / nanosecondsInMilliseconds
-        if (mSlowAnimationsEnabled) {
+        val config = mSlowAnimationsConfig
+        if (config.enabled) {
             currentFrameTimeMs =
-                mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor
+                config.firstUptime + (currentFrameTimeMs - config.firstUptime) / config.dragFactor
         }
         return currentFrameTimeMs
     }
