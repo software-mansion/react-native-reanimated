@@ -81,6 +81,19 @@ Defaults to an empty array.
 
 This is a list of Babel presets that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
+<Badges version="0.14.0">
+  ### silenceDangerousPathsWarning
+</Badges>
+
+Defaults to `false`.
+
+The plugin prints a warning when an
+[`importForwarding.relativePaths`](#importforwardingrelativepaths) entry has only
+common folder names, such as `src`, `lib`, `app` or `app/src`. Such a path also
+matches folders inside packages in `node_modules`. Set this option to `true` to
+hide the warning, for example when you have checked that the path matches only
+your code.
+
 ### importForwarding
 
 Defaults to no forwarding (an empty object).
