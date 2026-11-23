@@ -1256,8 +1256,8 @@ var require_workletFactoryCall = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactoryCall = makeWorkletFactoryCall;
     var types_12 = require("@babel/types");
-    var workletFactory_1 = require_workletFactory();
     var assert_1 = require("assert");
+    var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
       const { factory, factoryCallParamPack, workletModuleSpecifier } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       if (state.workletModules === "in-place") {
