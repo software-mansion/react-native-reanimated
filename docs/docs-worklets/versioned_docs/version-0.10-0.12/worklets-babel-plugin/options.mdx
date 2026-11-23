@@ -5,7 +5,6 @@ sidebar_label: 'Options'
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import Anchor from '@site/src/components/Anchor';
 
 # Options for Worklets Babel Plugin
 
@@ -16,8 +15,19 @@ Our plugin offers several optional functionalities that you may need to employ a
 
   ```typescript
   interface PluginOptions {
+    bundleMode?: boolean;
+    disableInlineStylesWarning?: boolean;
+    disableSourceMaps?: boolean;
+    disableWorkletClasses?: boolean;
     extraPlugins?: string[];
     extraPresets?: string[];
+    getHBCBinary?: () => string;
+    globals?: string[];
+    hermesBytecode?: boolean;
+    omitNativeOnlyData?: boolean;
+    relativeSourceLocation?: boolean;
+    strictGlobal?: boolean;
+    substituteWebPlatformChecks?: boolean;
     importForwarding?: {
       moduleNames?: string[];
       relativePaths?: string[];
@@ -32,12 +42,13 @@ Using this is straightforward for Babel plugins; you just need to pass an object
 
 Here's an example:
 
-```js {12-15}
+```js {13-16}
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
-  importForwarding: {
-    moduleNames: ['my-library'],
-  },
+  bundleMode: true,
+  disableInlineStylesWarning: true,
+  globals: ['myObjectOnUI'],
+  substituteWebPlatformChecks: true,
 }
 
 module.exports = {
@@ -54,13 +65,13 @@ module.exports = {
 
 ## Options
 
-<Anchor id="disableworkletclasses"/>
+### bundleMode
 
-<Anchor id="disableinlinestyleswarning"/>
+Defaults to `false`.
 
 Enables the [Bundle Mode](../bundleMode/overview.mdx).
 
-<Anchor id="strictglobal"/>
+### disableInlineStylesWarning
 
 Defaults to `false`.
 

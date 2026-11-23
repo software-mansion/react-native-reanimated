@@ -1119,8 +1119,12 @@ var require_workletFactory = __commonJS({
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
       const { workletName, reactName: initialReactName } = makeWorkletName(fun, state);
       let reactName = initialReactName;
+      const importedNames = new Set([...moduleBindingsToImport, ...relativeBindingsToImport].map((binding) => binding.identifier.name));
+      let factoryName = `${workletName}Factory`;
+      while (importedNames.has(factoryName)) {
+        factoryName = `_${factoryName}`;
+      }
       if (closureVariables.length === 0) {
-        const importedNames = new Set([...moduleBindingsToImport, ...relativeBindingsToImport].map((binding) => binding.identifier.name));
         while (importedNames.has(reactName)) {
           reactName = `_${reactName}`;
         }
@@ -1145,7 +1149,7 @@ var require_workletFactory = __commonJS({
       }
       statements.push((0, types_12.returnStatement)((0, types_12.identifier)(reactName)));
       const factoryParams = closureVariables.map((variableId) => (0, types_12.cloneNode)(variableId, true));
-      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(workletName + "Factory"), factoryParams.length > 0 ? [(0, types_12.arrayPattern)(factoryParams.map((param) => (0, types_12.cloneNode)(param, true)))] : [], (0, types_12.blockStatement)(statements));
+      const factory = (0, types_12.functionExpression)((0, types_12.identifier)(factoryName), factoryParams.length > 0 ? [(0, types_12.arrayPattern)(factoryParams.map((param) => (0, types_12.cloneNode)(param, true)))] : [], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.arrayExpression)(factoryCallArgs);
       if (state.workletModules === "file") {
