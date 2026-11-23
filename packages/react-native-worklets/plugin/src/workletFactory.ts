@@ -2,6 +2,7 @@ import type { NodePath } from '@babel/core';
 import generate from '@babel/generator';
 import type {
   ArrayExpression,
+  FunctionExpression,
   ExpressionStatement,
   ReturnStatement,
   VariableDeclaration,
@@ -51,9 +52,10 @@ export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): {
+  factory: FunctionExpression;
   factoryCallParamPack: ArrayExpression;
   workletHash: number;
-  workletModuleSpecifier: string;
+  workletModuleSpecifier: string | undefined;
 } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
@@ -207,15 +209,15 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  let workletModuleSpecifier: string;
-  if (state.inlineModules) {
+  let workletModuleSpecifier: string | undefined;
+  if (state.workletModules === 'inline') {
     workletModuleSpecifier = generateWorkletModuleSpecifier(
       moduleBindingsToImport,
       relativeBindingsToImport,
       factory,
       state
     );
-  } else {
+  } else if (state.workletModules === 'file') {
     updateRelativeRequires(factory, state);
     workletModuleSpecifier = generateWorkletFile(
       moduleBindingsToImport,
@@ -226,7 +228,7 @@ export function makeWorkletFactory(
     );
   }
 
-  return { factoryCallParamPack, workletHash, workletModuleSpecifier };
+  return { factory, factoryCallParamPack, workletHash, workletModuleSpecifier };
 }
 
 function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {

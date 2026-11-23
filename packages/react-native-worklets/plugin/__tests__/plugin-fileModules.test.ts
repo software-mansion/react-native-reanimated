@@ -21,7 +21,7 @@ function runPlugin(
 ): { code: string; modules: WrittenModule[] } {
   const transformed = transformSync(input.replace(/<\/?script[^>]*>/g, ''), {
     filename,
-    caller: { name: 'test' },
+    caller: { name: 'metro', bundler: 'metro' },
     compact: false,
     babelrc: false,
     configFile: false,

@@ -740,13 +740,13 @@ var require_globals = __commonJS({
     var assert_1 = require("assert");
     var imports_1 = require_imports();
     var types_12 = require_types();
-    function initializeState(state, inlineModules) {
+    function initializeState(state, workletModules) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletModule(state.file);
       if (state.skipFile) {
         return;
       }
-      state.inlineModules = inlineModules;
+      state.workletModules = workletModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
       (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
@@ -1182,13 +1182,13 @@ var require_workletFactory = __commonJS({
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.arrayExpression)(factoryCallArgs);
       let workletModuleSpecifier;
-      if (state.inlineModules) {
+      if (state.workletModules === "inline") {
         workletModuleSpecifier = (0, generate_1.generateWorkletModuleSpecifier)(moduleBindingsToImport, relativeBindingsToImport, factory, state);
-      } else {
+      } else if (state.workletModules === "file") {
         (0, imports_1.updateRelativeRequires)(factory, state);
         workletModuleSpecifier = (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       }
-      return { factoryCallParamPack, workletHash, workletModuleSpecifier };
+      return { factory, factoryCallParamPack, workletHash, workletModuleSpecifier };
     }
     function stripWorkletDirectives(fun) {
       fun.traverse({
@@ -1257,8 +1257,15 @@ var require_workletFactoryCall = __commonJS({
     exports2.makeWorkletFactoryCall = makeWorkletFactoryCall;
     var types_12 = require("@babel/types");
     var workletFactory_1 = require_workletFactory();
+    var assert_1 = require("assert");
     function makeWorkletFactoryCall(path, state) {
-      const { factoryCallParamPack, workletModuleSpecifier } = (0, workletFactory_1.makeWorkletFactory)(path, state);
+      const { factory, factoryCallParamPack, workletModuleSpecifier } = (0, workletFactory_1.makeWorkletFactory)(path, state);
+      if (state.workletModules === "in-place") {
+        const inPlaceCall = (0, types_12.callExpression)(factory, factoryCallParamPack.elements.length === 0 ? [] : [factoryCallParamPack]);
+        addStackTraceDataToWorkletFactory(path, inPlaceCall);
+        return inPlaceCall;
+      }
+      (0, assert_1.strict)(workletModuleSpecifier, "`workletModuleSpecifier` is undefined.");
       const workletModule = (0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
         (0, types_12.stringLiteral)(workletModuleSpecifier)
       ]), (0, types_12.identifier)("default"));
@@ -1347,7 +1354,13 @@ var globals_1 = require_globals();
 var types_1 = require_types();
 var workletSubstitution_1 = require_workletSubstitution();
 module.exports = function WorkletsBabelPlugin(api) {
-  const inlineModules = api.caller((caller) => (caller === null || caller === void 0 ? void 0 : caller.supportsInlineModules) === true);
+  const workletModules = api.caller((caller) => {
+    const info = caller;
+    if ((info === null || info === void 0 ? void 0 : info.supportsInlineModules) === true) {
+      return "inline";
+    }
+    return (info === null || info === void 0 ? void 0 : info.bundler) === "metro" || (info === null || info === void 0 ? void 0 : info.name) === "metro" ? "file" : "in-place";
+  });
   function runWithTaggedExceptions(state, fun) {
     if (state.skipFile) {
       return;
@@ -1365,7 +1378,7 @@ module.exports = function WorkletsBabelPlugin(api) {
     name: "worklets",
     pre() {
       runWithTaggedExceptions(this, () => {
-        (0, globals_1.initializeState)(this, inlineModules);
+        (0, globals_1.initializeState)(this, workletModules);
         this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },

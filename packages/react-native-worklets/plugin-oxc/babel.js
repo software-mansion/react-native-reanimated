@@ -22,9 +22,7 @@ let cachedSyntaxTypescript;
  * @returns {import('@babel/core').PluginObj}
  */
 function workletsPluginOxcBabelShim(babelApi) {
-  const inlineModules = babelApi.caller(
-    (caller) => caller?.supportsInlineModules === true
-  );
+  const workletModules = babelApi.caller(workletModulesMode);
   return {
     name: 'worklets-oxc-plugin',
     visitor: {
@@ -47,7 +45,7 @@ function workletsPluginOxcBabelShim(babelApi) {
             state.file.code,
             filename,
             state,
-            inlineModules
+            workletModules
           );
           if (!result.changed) {
             return;
@@ -69,15 +67,17 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @param {import('@babel/core').PluginPass} state
  * @returns {import('./index').TransformResult}
  */
-function transform(sourceText, filename, state, inlineModules) {
+function transform(sourceText, filename, state, workletModules) {
   warnAboutIgnoredOptions(state.opts);
   warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
-      inlineModules,
-      workletsPackageDir: inlineModules ? undefined : resolveWorkletsPkgDir(),
+      inlineModules: workletModules === 'inline',
+      inPlace: workletModules === 'in-place',
+      workletsPackageDir:
+        workletModules === 'file' ? resolveWorkletsPkgDir() : undefined,
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -92,6 +92,20 @@ function transform(sourceText, filename, state, inlineModules) {
     }
     throw error;
   }
+}
+
+/**
+ * @param {{ name?: string; bundler?: string; supportsInlineModules?: boolean }
+ *   | undefined} caller
+ * @returns {'inline' | 'file' | 'in-place'}
+ */
+function workletModulesMode(caller) {
+  if (caller?.supportsInlineModules === true) {
+    return 'inline';
+  }
+  return caller?.bundler === 'metro' || caller?.name === 'metro'
+    ? 'file'
+    : 'in-place';
 }
 
 /**

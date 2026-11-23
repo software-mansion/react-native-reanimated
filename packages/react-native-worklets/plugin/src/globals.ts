@@ -2,17 +2,21 @@ import type { BabelFile } from '@babel/core';
 import { strict as assert } from 'assert';
 
 import { warnAboutDangerousRelativePaths } from './imports';
-import { type WorkletsPluginPass, workletModuleDirective } from './types';
+import {
+  type WorkletModulesMode,
+  type WorkletsPluginPass,
+  workletModuleDirective,
+} from './types';
 
 export function initializeState(
   state: WorkletsPluginPass,
-  inlineModules: boolean
+  workletModules: WorkletModulesMode
 ) {
   state.skipFile = isGeneratedWorkletModule(state.file);
   if (state.skipFile) {
     return;
   }
-  state.inlineModules = inlineModules;
+  state.workletModules = workletModules;
   state.workletNumber = 1;
 
   const userImportForwarding = state.opts.importForwarding;
