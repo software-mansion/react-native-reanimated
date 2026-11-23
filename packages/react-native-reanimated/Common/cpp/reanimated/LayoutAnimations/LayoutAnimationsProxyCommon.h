@@ -37,6 +37,11 @@ struct LayoutAnimation {
   LayoutAnimation &operator=(const LayoutAnimation &other) = default;
 };
 
+/// The layout keys in which the current view of a frame-driven animation differs from its final view.
+struct AnimatedLayoutKeys {
+  bool originX{}, originY{}, width{}, height{};
+};
+
 struct ManagedLayoutAnimationStart {
   Tag tag;
   LayoutAnimationType type;
@@ -48,6 +53,8 @@ struct ManagedLayoutAnimationStart {
   std::optional<uint64_t> buildId;
   /// The leaves of the view that native tracks play at the build. A frame-driven start continues them.
   LiveLayoutLeaves liveLeaves;
+  /// The keys in which `before` differs from the final view of its frame-driven animation.
+  AnimatedLayoutKeys animatedKeys;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -171,12 +178,18 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   /// The sizes of the containers of this class. The lock is held.
   ContainerSizes commonContainerSizes() const;
 #endif
-  /// The values that the builder of the layout animation gets for a view that shows `current`.
+  /// The values that the builder of the layout animation gets for a view that shows `current`. The keys of
+  /// `liveLeaves` and `animatedKeys` have animated values in `current`.
   jsi::Object layoutAnimationValues(
       LayoutAnimationType type,
       const ShadowView &currentView,
       const ShadowView &targetView,
-      Rect window) const;
+      Rect window,
+      const LiveLayoutLeaves &liveLeaves,
+      const AnimatedLayoutKeys &animatedKeys) const;
+  /// The keys in which the current view of the frame-driven animation of a view, running or completed, differs
+  /// from its final view.
+  AnimatedLayoutKeys animatedLayoutKeysOf(Tag tag) const;
   void cancelLayoutAnimation(Tag tag) const;
   void cancelAllLayoutAnimations() const;
   bool hasPendingLayoutAnimation(Tag tag) const;

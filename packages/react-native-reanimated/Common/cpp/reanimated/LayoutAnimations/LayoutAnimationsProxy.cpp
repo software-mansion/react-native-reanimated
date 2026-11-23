@@ -1311,6 +1311,7 @@ bool LayoutAnimationsProxy::mountsInWindow(const std::shared_ptr<LightNode> &nod
 bool LayoutAnimationsProxy::startNativePlayback(ManagedLayoutAnimationStart &start) const {
   ReanimatedSystraceSection s("LayoutAnimationsProxy::startNativePlayback");
   const auto tag = start.tag;
+  start.animatedKeys = animatedLayoutKeysOf(tag);
   if (const auto completedView = takeCompletedLayoutAnimationView(tag)) {
     start.before = *completedView;
   }
@@ -1399,7 +1400,7 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
   return layoutAnimationsManager_->buildLayoutAnimation(
       uiRuntime_,
       *start.buildId,
-      layoutAnimationValues(start.type, capturedView, start.after, window_),
+      layoutAnimationValues(start.type, capturedView, start.after, window_, start.liveLeaves, start.animatedKeys),
       start.config,
       NativeLayoutLimits{},
       NativeLayoutPlatformRules{nativeAnimationHost_->movesOnlyPlanarTransforms()},
