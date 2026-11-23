@@ -17,4 +17,6 @@ pub struct PluginOptions {
     pub plugin_version: Option<String>,
 
     pub worklets_package_dir: Option<String>,
+
+    pub in_place: Option<bool>,
 }

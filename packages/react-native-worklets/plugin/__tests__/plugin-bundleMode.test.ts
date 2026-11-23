@@ -61,6 +61,7 @@ function runPlugin(
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const config = {
     filename,
+    caller: { name: 'metro', bundler: 'metro' },
     compact: false,
     babelrc: false,
     configFile: false,
