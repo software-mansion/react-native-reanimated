@@ -73,8 +73,9 @@
  * native sequence that ends 16 to 33 ms before the frame-driven one passes. Each callback gap and each
  * phase start is a printed row.
  *
- * The twin has a frame in each display frame: no frame comes more than one display frame and a half after
- * the frame before it. This statement and the pair statement assert on each row in each condition: no row
+ * The twin has a frame in each display frame: on Android it gets each frame of the frame clock of the sampler
+ * that runs 2 ms or more after its start, on Apple no frame comes more than one display frame and a half
+ * after the frame before it. This statement and the pair statement assert on each row in each condition: no row
  * is skipped.
  *
  * The rows cover the timelines: each phase of 100 ms or more of each track that plays to the end of the
@@ -158,6 +159,8 @@ import {
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
+  framesMissedBy,
+  HAS_FRAME_CLOCK,
   has3D,
   hasNativeLayoutRoute,
   isSameLeaf,
@@ -405,15 +408,23 @@ describe('native layout live clock', () => {
         const { record, timeline } = check;
         const leaf = describeLeaf(record);
         const frameTimes = record.frames.map(({ timeMs }) => timeMs);
-        expectIn(
-          `largest time from a frame of ${leaf} of the twin to the next, ms`,
-          Math.max(
-            ...frameTimes
-              .slice(1)
-              .map((timeMs, frame) => timeMs - frameTimes[frame])
-          ),
-          { from: -Infinity, to: 1.5 * FRAME_MS }
+        const largestFrameGapMs = Math.max(
+          ...frameTimes
+            .slice(1)
+            .map((timeMs, frame) => timeMs - frameTimes[frame])
         );
+        const largestGapRow = `largest time from a frame of ${leaf} of the twin to the next, ms`;
+        if (HAS_FRAME_CLOCK) {
+          console.log(
+            `LIVE | ${caseName} | ${largestGapRow} | ${largestFrameGapMs.toFixed(3)}`
+          );
+          expect(framesMissedBy(record.frames).join()).toBe('');
+        } else {
+          expectIn(largestGapRow, largestFrameGapMs, {
+            from: -Infinity,
+            to: 1.5 * FRAME_MS,
+          });
+        }
         phaseStartsLateOf(check).forEach((lateMs, phase) =>
           expectIn(
             `computed start of phase ${phase} of ${leaf} of the twin after its declared start, ms`,
@@ -422,7 +433,7 @@ describe('native layout live clock', () => {
               from: startsWithNoDuration(timeline)
                 ? -lagAfterStartCallOf(record) - ROUNDING_MS
                 : 0,
-              to: phase * FRAME_MS + ROUNDING_MS,
+              to: phase * Math.max(FRAME_MS, largestFrameGapMs) + ROUNDING_MS,
             }
           )
         );

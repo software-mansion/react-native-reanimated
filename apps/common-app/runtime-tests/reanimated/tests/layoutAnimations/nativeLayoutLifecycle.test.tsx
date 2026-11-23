@@ -23,7 +23,10 @@ import {
   startSecondSurface,
   stopSecondSurface,
 } from '../../../ReJest/secondSurface';
-import { hasNativeCSSTransitions } from '../nativeAnimationObservation';
+import {
+  hasNativeCSSTransitions,
+  isOfCommand,
+} from '../nativeAnimationObservation';
 import {
   commandsWithoutOneResult,
   growthOf,
@@ -870,20 +873,44 @@ function queuedStartPathOf(events: TraceEvent[], tag: number) {
 
 /**
  * The events of the surface after its `SurfaceClosed` that are not the end of a
- * command or of a track: a start, a mount, or a frame update.
+ * command or of a track: a start, a mount, or a frame update. A queued CSS
+ * start can reach the host after the surface closes.
  */
 function workAfterClose(events: TraceEvent[]) {
   const closeIndex = events.findIndex(({ event }) => event === 'SurfaceClosed');
   if (closeIndex < 0) {
     return 'no SurfaceClosed';
   }
-  return summarize(
-    events
-      .slice(closeIndex + 1)
-      .filter(
-        ({ event }) => !['TrackEnded', 'Ended', 'ClientEnded'].includes(event)
-      )
-  );
+  const afterClose = events.slice(closeIndex + 1);
+  const receivedBeforeClose = events
+    .slice(0, closeIndex)
+    .filter(({ event }) => event === 'Received');
+  const unendedReceipts: TraceEvent[] = [];
+  for (const event of afterClose) {
+    if (event.event === 'Received') {
+      unendedReceipts.push(event);
+    } else if (
+      event.event === 'Ended' &&
+      event.outcome === 'SurfaceDestroyed'
+    ) {
+      const receipt = unendedReceipts.findIndex((received) =>
+        isOfCommand(event, received)
+      );
+      const isFirstReceipt = !receivedBeforeClose.some((received) =>
+        isOfCommand(event, received)
+      );
+      if (receipt >= 0 && isFirstReceipt) {
+        unendedReceipts.splice(receipt, 1);
+      }
+    }
+  }
+  return summarize([
+    ...afterClose.filter(
+      ({ event }) =>
+        !['Received', 'TrackEnded', 'Ended', 'ClientEnded'].includes(event)
+    ),
+    ...unendedReceipts,
+  ]);
 }
 
 /**

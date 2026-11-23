@@ -341,6 +341,39 @@ export const shownFrameTimeAt = (readTimeMs: number) =>
   IS_APPLE ? readTimeMs : shownFrameAt(readTimeMs).frameTimeMs;
 
 /**
+ * Android: the frames of the frame clock that a frame driver record did not
+ * get: each frame that ran 2 ms or more after the first step of the record and
+ * before its last frame of the frame clock, or before its last step when it has
+ * no frame of the frame clock. A start call can step a record at the time of
+ * the call, which is not a frame time. The run time of a step is a whole ms of
+ * the animation clock.
+ */
+export function framesMissedBy(
+  frames: { timeMs: number; ranMs: number }[]
+): number[] {
+  const lastMs = Math.max(...frames.map(({ timeMs }) => timeMs));
+  const clock = clockFramesFor((all) =>
+    all.some(({ frameTimeMs }) => frameTimeMs >= lastMs)
+  );
+  const gotMs = frames
+    .map(({ timeMs }) => timeMs)
+    .filter((timeMs) =>
+      clock.some(({ frameTimeMs }) => frameTimeMs === timeMs)
+    );
+  const lastGotMs = gotMs.length > 0 ? Math.max(...gotMs) : lastMs;
+  const startedMs =
+    Math.min(...frames.map(({ ranMs }) => ranMs)) + 2 * ANIMATION_CLOCK_STEP_MS;
+  return clock
+    .filter(
+      ({ frameTimeMs, ranMs }) =>
+        ranMs > startedMs &&
+        frameTimeMs < lastGotMs &&
+        !gotMs.includes(frameTimeMs)
+    )
+    .map(({ frameTimeMs }) => frameTimeMs);
+}
+
+/**
  * The first time of the sample clock at which a read shows a frame after the
  * frame of `timeMs`: a read before it can show the value of `timeMs` or of an
  * earlier time. Apple: `APPLE_PRESENTATION_STAY_MS` after `timeMs`. Android:
