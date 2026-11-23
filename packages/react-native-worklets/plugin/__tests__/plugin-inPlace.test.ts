@@ -27,10 +27,11 @@ jest.mock('fs', () => {
       stagedFiles.set(String(filepath), String(content));
     },
     renameSync: (from: string, to: string) => {
-      capturedFiles.push({
-        path: String(to),
-        content: stagedFiles.get(String(from))!,
-      });
+      const content = stagedFiles.get(String(from));
+      if (content === undefined) {
+        throw new Error(`renameSync: ${String(from)} was never written`);
+      }
+      capturedFiles.push({ path: String(to), content });
       stagedFiles.delete(String(from));
     },
   };
@@ -119,6 +120,21 @@ describe('babel plugin without a Metro caller', () => {
     expect(code).not.toContain('__closure');
     expect(code).toMatch(/import \{ helper \} from ["']react-native-worklets["'];/);
     expect(code).toContain('return helper()');
+  });
+
+  test('renames the in-place factory when a forwarded import takes its name', () => {
+    const input = html`<script>
+      import { helper as foo_testJs1Factory } from 'react-native-worklets';
+      function foo() {
+        'worklet';
+        return foo_testJs1Factory();
+      }
+    </script>`;
+
+    const { code, files } = runPlugin(input);
+    expect(files).toHaveLength(0);
+    expect(code).toContain('function _foo_testJs1Factory(');
+    expect(code).toContain('return foo_testJs1Factory()');
   });
 
   test('writes worklet files for a Metro caller without inline module support', () => {
