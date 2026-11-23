@@ -53,7 +53,7 @@
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import {
   Easing,
@@ -93,6 +93,7 @@ import {
   TRANSFORM_CASES,
   TRANSFORM_DURATION,
   TRANSFORM_PLACES,
+  TRANSFORM_TOLERANCE,
   transformCaseOf,
   TRANSLATION,
 } from './nativeLayoutLiveClockCases';
@@ -707,6 +708,8 @@ describe('native layout transform continuity', () => {
     }
   );
 
+  const [[, TRANSLATION_FROM, TRANSLATION_TO]] = TRANSLATION;
+  const TRANSLATION_TRAVEL = Number(TRANSLATION_TO) - Number(TRANSLATION_FROM);
   const transfers: [string, ReferenceCase, string][] = [
     [
       'a frame-driven start with no transform leaf',
@@ -742,12 +745,22 @@ describe('native layout transform continuity', () => {
     ],
     [
       'a frame-driven start in the part of a curve below its start value',
-      transferOf(
-        TRANSLATION,
-        { leaves: { originX: { hasCallback: true } } },
-        { easing: Easing.bezier(0.3, -0.4, 0.7, 1.6) },
-        0.1 * TRANSFORM_DURATION
-      ),
+      {
+        ...transferOf(
+          TRANSLATION,
+          { leaves: { originX: { hasCallback: true } } },
+          { easing: Easing.bezier(0.3, -0.4, 0.7, 1.6) },
+          0.1 * TRANSFORM_DURATION
+        ),
+        // Android draws a cubic Bezier with lines within 0.002 of its curve (`PathInterpolator.PRECISION`).
+        matrixTolerance:
+          Platform.OS === 'android'
+            ? {
+                ...TRANSFORM_TOLERANCE,
+                translationX: 0.002 * TRANSLATION_TRAVEL,
+              }
+            : TRANSFORM_TOLERANCE,
+      },
       'UnsupportedTiming',
     ],
   ];
@@ -1612,7 +1625,7 @@ const FORM_END_MS = 300;
 const FORM_PROPERTIES: RecordedProperty[] = [
   'frame',
   'drawnMatrix',
-  'frameTime',
+  'animationTime',
 ];
 const STANDARD_PARTS = [0.1, 0.25, 0.5, 0.75, 0.9, 1];
 const BOUNCE_KEYS = [4 / 11, 8 / 11, 10 / 11];
@@ -1823,7 +1836,7 @@ const FORM_VALUE_COUNT = FORM_PROPERTIES.reduce(
 );
 
 const AGE_STEP_MS = 0.25;
-// The animator reads whole ms of the frame time, and its start is up to 1 ms after the origin.
+// The animator reads whole ms of the animation clock, and its start is up to 1 ms after the origin.
 const FRAME_CLOCK_BAND = { from: -2, to: 1 };
 
 /**
@@ -1879,20 +1892,20 @@ function declaredCornersOf(
 
 /**
  * The smallest largest distance of the drawn corners of the native box from its
- * declared corners in `FRAME_CLOCK_BAND` of the frame time of the draw, and the
- * age of that time.
+ * declared corners in `FRAME_CLOCK_BAND` of the animation clock of the draw,
+ * and the age of that time.
  */
 function nearestDeclaredOf(
   operations: Operation[],
   { timeMs, values }: DrawnSample,
   originMs: number
 ) {
-  const frameTimeMs = values[FORM_VALUE_COUNT - 1];
+  const animationTimeMs = values[FORM_VALUE_COUNT - 1];
   const native = drawnCornersOf(values);
   let nearest = { distance: Infinity, ageMs: NaN };
   for (
-    let ageMs = timeMs - frameTimeMs - FRAME_CLOCK_BAND.to;
-    ageMs <= timeMs - frameTimeMs - FRAME_CLOCK_BAND.from;
+    let ageMs = timeMs - animationTimeMs - FRAME_CLOCK_BAND.to;
+    ageMs <= timeMs - animationTimeMs - FRAME_CLOCK_BAND.from;
     ageMs += AGE_STEP_MS
   ) {
     const declared = declaredCornersOf(

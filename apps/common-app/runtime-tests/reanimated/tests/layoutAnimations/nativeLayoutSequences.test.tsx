@@ -70,7 +70,7 @@ import {
   declaredValueAt,
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
-  FRAME_CALLBACK_LAG_MS,
+  HAS_FRAME_CLOCK,
   FRAME_MS,
   frameDrivenOf,
   frameDriverFrameTime,
@@ -80,6 +80,7 @@ import {
   isNoView,
   layoutBuilderCalls,
   middleOf,
+  shownFrameTimeAt,
   namedBuilderCalls,
   OPACITY_TOLERANCE,
   POSITION_TOLERANCE,
@@ -842,6 +843,12 @@ function completionOf({
     events
       .filter(({ event }) => event === name)
       .map(({ monotonicTimeMs }) => monotonicTimeMs - originMs);
+  const trackEndFrames = events
+    .filter(({ event }) => event === 'TrackEnded')
+    .map(
+      ({ animationTimeMs, monotonicTimeMs }) =>
+        (animationTimeMs ?? monotonicTimeMs) - originMs
+    );
   const emitted = {
     native: callbackTimeOf('native').emittedMs,
     frame: callbackTimeOf('frame').emittedMs,
@@ -849,23 +856,29 @@ function completionOf({
   const twinStartMs = frameChecks.find(
     ({ record }) => record.box === 'frame' && record.key === 'originX'
   )?.record.start?.timeMs;
+  const twinFrames = frameChecks
+    .filter(({ record }) => record.box === 'frame')
+    .flatMap(({ record }) => record.frames);
   const twinEndRanMs =
-    Math.max(
-      ...frameChecks
-        .filter(({ record }) => record.box === 'frame')
-        .flatMap(({ record }) => record.frames)
-        .map(({ ranMs }) => ranMs)
-    ) +
+    Math.max(...twinFrames.map(({ ranMs }) => ranMs)) +
     middleOf(clockOffset) -
     originMs;
+  // The frame clock gets the frame times of the frame driver, with no clock conversion.
+  const twinEndFrameMs =
+    Math.max(...twinFrames.map(({ timeMs }) => timeMs)) - originMs;
+  const nativeCallback = emitted.native + middleOf(clockOffset) - originMs;
   return {
     trackEnds: timesOf('TrackEnded'),
+    trackEndFrames,
     hostEnds: timesOf('Ended'),
-    nativeCallback: emitted.native + middleOf(clockOffset) - originMs,
+    nativeCallback,
+    nativeCallbackFrameMs:
+      shownFrameTimeAt(callbackTimeOf('native').ranMs) - originMs,
     twinCallback: emitted.frame + middleOf(clockOffset) - originMs,
     twinEnd: emitted.frame - (twinStartMs ?? NaN),
     clockWidth: clockOffset.to - clockOffset.from,
     twinEndRanMs,
+    twinEndFrameMs,
   };
 }
 
@@ -885,6 +898,8 @@ function logCompletion(
       caseName,
       `declared ${totalMs} ms`,
       `track ends ${describeTimes(completion.trackEnds)}`,
+      `frames of the track ends ${describeTimes(completion.trackEndFrames)}`,
+      `native callback after the frame ${completion.nativeCallbackFrameMs.toFixed(1)}, end frame of the twin ${completion.twinEndFrameMs.toFixed(1)}`,
       `host end ${describeTimes(completion.hostEnds)}`,
       `native callback ${completion.nativeCallback.toFixed(1)}`,
       `callback of the twin ${completion.twinCallback.toFixed(1)}, ${completion.twinEnd.toFixed(1)} ms after its start`,
@@ -900,11 +915,20 @@ const isAfterTracks = ({ nativeCallback, trackEnds, clockWidth }: Completion) =>
   Math.max(...trackEnds) - clockWidth / 2 - ANIMATION_CLOCK_STEP_MS;
 
 /**
- * A native end comes in the frame of the end of the twin: before one display
- * frame after the run of the last frame function of the twin.
+ * The native callback comes in the frame of the end of the twin. Android: the
+ * last frame that ran before the callback is not after the last frame of the
+ * twin. Apple: before one display frame after the run of the last frame
+ * function of the twin.
  */
-const isInEndFrameOfTwin = (twinEndRanMs: number, timeMs: number) =>
-  timeMs < twinEndRanMs + FRAME_MS;
+const isInEndFrameOfTwin = ({
+  nativeCallback,
+  nativeCallbackFrameMs,
+  twinEndRanMs,
+  twinEndFrameMs,
+}: Completion) =>
+  HAS_FRAME_CLOCK
+    ? nativeCallbackFrameMs <= twinEndFrameMs
+    : nativeCallback < twinEndRanMs + FRAME_MS;
 
 const sortedBuilderCalls = () => [...namedBuilderCalls].sort().join();
 
@@ -1096,9 +1120,7 @@ describe('native layout sequences', () => {
       ).toBe(true);
       expect(completion.twinEnd > totalMs - 0.5).toBe(true);
       expect(isAfterTracks(completion)).toBe(true);
-      expect(
-        isInEndFrameOfTwin(completion.twinEndRanMs, completion.nativeCallback)
-      ).toBe(true);
+      expect(isInEndFrameOfTwin(completion)).toBe(true);
       await render(null);
     });
   }
@@ -1155,16 +1177,12 @@ describe('native layout sequences', () => {
     expect(routeOf(events)).toBe(NATIVE_ROUTES.scalars);
     expect(trackEndsOf(events)).toBe(FINISHED_TRACKS.scalars);
     expect(
-      completion.trackEnds.every(
-        (endMs) =>
-          endMs > totalMs - FRAME_MS &&
-          endMs < totalMs + FRAME_MS + FRAME_CALLBACK_LAG_MS
+      completion.trackEndFrames.every(
+        (endMs) => endMs > totalMs - FRAME_MS && endMs < totalMs + FRAME_MS
       )
     ).toBe(true);
     expect(isAfterTracks(completion)).toBe(true);
-    expect(
-      isInEndFrameOfTwin(completion.twinEndRanMs, completion.nativeCallback)
-    ).toBe(true);
+    expect(isInEndFrameOfTwin(completion)).toBe(true);
 
     // The removal of the view ends the command.
     expect(commandEndsOf(events)).toBe('Cancelled:None');

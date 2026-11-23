@@ -144,7 +144,7 @@ import {
   playbackIdsOf,
   KEEPS_OPACITY_MODEL_IN_RECORD,
   PLAYS_SIZE_CHANGE,
-  PRESENTATION_STAY_MS,
+  afterFrameOfMs,
   isNear,
   requireEvent,
   routeOf,
@@ -156,6 +156,7 @@ import {
   PLAYS_MOVING_GEOMETRY,
   movingGeometryTest,
   MOUNTS_IN_DISPATCHES,
+  readFrameRecords,
   resetFrameRecords,
 } from './nativeLayoutTestKit';
 import type { PairRead, TwinPair, TwinRest } from './nativeLayoutTwinTimeline';
@@ -165,6 +166,7 @@ import {
   positionReadsOf,
   twinPairOf,
   twinRestOf,
+  twinShiftAt,
 } from './nativeLayoutTwinTimeline';
 
 const REST_TOLERANCE = 0.01;
@@ -531,26 +533,39 @@ describe('native layout continuity', () => {
     tags: ReturnType<typeof pairTags>,
     { checkpoints, intervalMs }: PairParity
   ) {
-    const reads: { position: TargetSample; opacity: TargetSample }[] = [];
-    const distances = { position: 0, opacity: 0 };
+    const samples: Awaited<ReturnType<typeof samplePair>>[] = [];
     // The presentation layer shows a change of the playback after the next display frame.
     await wait(2 * FRAME_MS);
     for (let checkpoint = 0; checkpoint < checkpoints; checkpoint++) {
-      const { native, x, y, opacity, frameX, frameY, frameOpacity } =
-        await samplePair(tags);
-      reads.push(native);
+      samples.push(await samplePair(tags));
+      await wait(intervalMs);
+    }
+    const records = readFrameRecords();
+    const distances = { position: 0, opacity: 0 };
+    for (const { native, x, y, opacity, ...frame } of samples) {
+      const shiftOf = (read: TargetSample, target: string, key: string) =>
+        read.playbacks.some((playback) => playback.target === target)
+          ? twinShiftAt(records, 'frame', key, read.monotonicTimeMs)
+          : 0;
       distances.position = Math.max(
         distances.position,
-        Math.abs(x - frameX),
-        Math.abs(y - frameY)
+        Math.abs(
+          x - frame.frameX - shiftOf(native.position, 'PositionX', 'originX')
+        ),
+        Math.abs(
+          y - frame.frameY - shiftOf(native.position, 'PositionY', 'originY')
+        )
       );
       distances.opacity = Math.max(
         distances.opacity,
-        Math.abs(opacity - frameOpacity)
+        Math.abs(
+          opacity -
+            frame.frameOpacity -
+            shiftOf(native.opacity, 'Opacity', 'opacity')
+        )
       );
-      await wait(intervalMs);
     }
-    return { reads, distances };
+    return { reads: samples.map(({ native }) => native), distances };
   }
 
   const AT_START: Place = { left: START_LEFT, top: 0 };
@@ -1037,7 +1052,7 @@ describe('native layout continuity', () => {
       const afterTheEndOfY = readsIn(
         played,
         'PositionX',
-        secondY.played.to + PRESENTATION_STAY_MS,
+        afterFrameOfMs(secondY.played.to),
         middleOf(firstX.origin) + PAIR_DURATION - FRAME_MS
       );
       expect(afterTheEndOfY.length > 0).toBe(true);
@@ -2017,7 +2032,7 @@ describe('native layout size continuity', () => {
     const reads = readsIn(
       played,
       first.target,
-      first.played.from + PRESENTATION_STAY_MS,
+      afterFrameOfMs(first.played.from),
       toMs - FRAME_MS
     );
     expect(reads.length > 0).toBe(true);
@@ -2045,7 +2060,7 @@ describe('native layout size continuity', () => {
     const [after] = readsIn(
       played,
       replaced,
-      newTrack.played.from + PRESENTATION_STAY_MS
+      afterFrameOfMs(newTrack.played.from)
     );
     expectOneTrackReplaced(before[before.length - 1], after);
     expectOneEndForEachTrack(second, replaced, kept);

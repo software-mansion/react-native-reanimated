@@ -104,7 +104,7 @@ import {
   pairLayoutsOf,
   POSITION_TOLERANCE,
   REMOVES_TRACKS_OUT_OF_WINDOW,
-  PRESENTATION_STAY_MS,
+  shownBandAt,
   readFrameRecords,
   resetFrameRecords,
   routeOf,
@@ -218,20 +218,14 @@ function restyleBoxes(style: SizeBoxProps['style']) {
 
 const nativeBoxTag = () => getTestComponent(BOX_REF).getTag();
 
-/**
- * A read shows a value of the curve from `PRESENTATION_STAY_MS` before the read
- * to the read.
- */
+/** A read shows a value of the curve at a time of `shownBandAt` the read. */
 function isInReadBand(
   shown: number,
   valueAt: (timeMs: number) => number,
   readTimeMs: number
 ) {
-  const { low, high } = curveBandOf(
-    valueAt,
-    readTimeMs - PRESENTATION_STAY_MS,
-    readTimeMs
-  );
+  const band = shownBandAt(readTimeMs);
+  const { low, high } = curveBandOf(valueAt, band.from, band.to);
   return (
     shown >= low - SAMPLED_OPACITY_TOLERANCE &&
     shown <= high + SAMPLED_OPACITY_TOLERANCE

@@ -65,7 +65,12 @@ import {
   takeTrace,
   testHookOf,
 } from '../nativeAnimationObservation';
-import { DRAW_TIME_STEP_MS } from '../viewSampler';
+import type { ClockFrame } from '../viewSampler';
+import {
+  DRAW_TIME_STEP_MS,
+  readFrameClock,
+  startFrameClock,
+} from '../viewSampler';
 import { blockUIThread } from './nativeLayoutLoad';
 
 export type {
@@ -220,11 +225,6 @@ export const REFUSES_OPACITY_UNDER_FILTER = IS_APPLE;
  */
 export const MOUNTS_IN_DISPATCHES = !IS_APPLE;
 /**
- * The native tracks run on the UI thread, so a block of that thread stops them:
- * after the block the view can show the last frame from before it.
- */
-export const SHOWS_LAST_FRAME_AFTER_BLOCK = !IS_APPLE;
-/**
  * An Android matrix has no Z row or column: a sample has the six cells of a 2D
  * affine map.
  */
@@ -274,38 +274,91 @@ export const FRAME_MS = 1000 / 60;
 // The presentation layer has a new animation only after the first display frame of its commit.
 export const FIRST_FRAMES_MS = 3 * FRAME_MS;
 /**
- * How late a frame callback runs after its frame time. Apple: no term. Android:
- * the largest direct measurement, 25.7 ms on the emulator in a late frame
- * callback state (8.2 to 9.2 ms on the phone).
+ * Apple: how long a presentation value stays, 15.7 to 17.7 ms in 76 intervals,
+ * plus 0.3 ms. Android reads the frame clock (`shownFrameAt`).
  */
-export const FRAME_CALLBACK_LAG_MS = IS_APPLE ? 0 : 25.7;
+export const APPLE_PRESENTATION_STAY_MS = 18;
+
+/** Android: each read has its frame in the frame clock of the view sampler. */
+export const HAS_FRAME_CLOCK = !IS_APPLE;
+
+if (HAS_FRAME_CLOCK) {
+  startFrameClock();
+}
+
+let clockFrames: ClockFrame[] = [];
+
+/** The frames of the frame clock, read again when they are not `isEnough`. */
+function clockFramesFor(isEnough: (frames: ClockFrame[]) => boolean) {
+  if (!isEnough(clockFrames)) {
+    clockFrames = readFrameClock();
+  }
+  return clockFrames;
+}
+
 /**
- * How long a presentation value stays. Apple: 15.7 to 17.7 ms in 76 intervals,
- * plus 0.3 ms. Android: a sample shows the animator value of the last frame
- * time, so one display frame plus the frame callback lag.
+ * Android: the frame of the frame clock that a read at a time of the sample
+ * clock shows, the last frame that ran before the read. A read runs between two
+ * frames on the UI thread (`NativeAnimationHost::sampleTarget`), and an
+ * animator shows the value of the animation clock of its last frame.
  */
-export const PRESENTATION_STAY_MS = IS_APPLE
-  ? 18
-  : FRAME_MS + FRAME_CALLBACK_LAG_MS;
+export function shownFrameAt(readTimeMs: number): ClockFrame {
+  const frames = clockFramesFor((all) =>
+    all.some(({ ranMs }) => ranMs >= readTimeMs)
+  );
+  for (let index = frames.length - 1; index >= 0; index--) {
+    if (frames[index].ranMs <= readTimeMs) {
+      return frames[index];
+    }
+  }
+  throw new Error(
+    `The frame clock has no frame before ${readTimeMs.toFixed(3)} ms.`
+  );
+}
+
 /**
- * How long after a frame callback run the native box has the model value.
- * Apple: no term. Android: 2.8 ms, the largest in the emulator run with the
- * late frame callback state (phone: up to 6.0 ms, with a lag of up to 9.2 ms).
+ * The times of the sample clock whose declared values a read of a presentation
+ * value can show. Apple: the `APPLE_PRESENTATION_STAY_MS` before the read.
+ * Android: from the animation clock of `shownFrameAt` the read to the read, as
+ * a start writes the value of its own time before the first frame of its track.
+ * The animator reads whole ms of that clock, and its start is a whole ms up to
+ * one ms after the origin (measured: 1.67 ms).
  */
-const CALLBACK_TO_MODEL_MS = IS_APPLE ? 0 : 2.8;
+export function shownBandAt(readTimeMs: number): Band {
+  return {
+    from: IS_APPLE
+      ? readTimeMs - APPLE_PRESENTATION_STAY_MS
+      : shownFrameAt(readTimeMs).animationTimeMs - 2 * ANIMATION_CLOCK_STEP_MS,
+    to: readTimeMs,
+  };
+}
+
 /**
- * How long after its frame time a draw shows the value of that frame: a draw
- * comes after the frame callbacks of its frame.
+ * The frame time of the frame callbacks of the frame that a read shows, on the
+ * sample clock: the clock of the frame driver. Apple: the time of the read.
  */
-export const DRAWN_FRAME_AGE_MS = FRAME_CALLBACK_LAG_MS + CALLBACK_TO_MODEL_MS;
+export const shownFrameTimeAt = (readTimeMs: number) =>
+  IS_APPLE ? readTimeMs : shownFrameAt(readTimeMs).frameTimeMs;
+
 /**
- * How long a frame value can stay in the model in a late frame callback state.
- * Apple: no term. Android: the frame callback lag and the time to the model
- * value, plus one display frame.
+ * The first time of the sample clock at which a read shows a frame after the
+ * frame of `timeMs`: a read before it can show the value of `timeMs` or of an
+ * earlier time. Apple: `APPLE_PRESENTATION_STAY_MS` after `timeMs`. Android:
+ * the run of the second frame at or after `timeMs` on the animation clock,
+ * Infinity before that frame.
  */
-export const LATE_CALLBACK_STAY_MS = IS_APPLE
-  ? 0
-  : FRAME_MS + FRAME_CALLBACK_LAG_MS + CALLBACK_TO_MODEL_MS;
+export function afterFrameOfMs(timeMs: number): number {
+  if (IS_APPLE || !Number.isFinite(timeMs)) {
+    return timeMs + APPLE_PRESENTATION_STAY_MS;
+  }
+  const atOrAfter = (frames: ClockFrame[]) =>
+    frames.filter(({ animationTimeMs }) => animationTimeMs >= timeMs);
+  const [, second] = atOrAfter(
+    clockFramesFor((all) => atOrAfter(all).length >= 2)
+  );
+  return second?.ranMs ?? Infinity;
+}
+
 /**
  * A Fabric write in a frame callback draws from the next frame: its commit
  * mounts after the draw of its own frame (measured on Android, also with no
@@ -818,6 +871,11 @@ type TimedTrack = {
   /** From the start to the end of the track in the trace, on the sample clock. */
   played: Band;
   /**
+   * Android: the time of the start pass on the sample clock. A start writes the
+   * value of that time.
+   */
+  startPassMs?: number;
+  /**
    * The times from the origin at which the platform ended an animation of the
    * sample of the key by its own duration.
    */
@@ -885,88 +943,42 @@ export type NativeResidual = {
   edgeHoldMs?: number;
   /** The read is on the timeline only by `asReplacedTrack` of its tracks. */
   showsReplaced?: boolean;
-  /** The read is on the timeline only by `asTrackFromStartPass` of its tracks. */
+  /** The residual is of `asTrackFromStartPass` of its tracks. */
   showsStartPass?: boolean;
 };
-
-/**
- * A frame of the UI thread on the sample clock: its frame time and the times at
- * which its callback can have run.
- */
-export type UIFrame = { timeMs: number; ran: Band };
 
 /** A read `READ_GAP_MS` or more after the read before of its target. */
 export type ReadAfterGap = {
   gapMs: number;
   /** The presentation of the read before. */
   before: number[];
-  /** The read has exactly the presentation of the read before. */
-  isRepeated: boolean;
-  /**
-   * The read repeats the read before, or with `SHOWS_LAST_FRAME_AFTER_BLOCK`
-   * shows what a read at the last frame of the UI thread before it can show,
-   * when that frame ran after the read before, at a time not before the time of
-   * the read before.
-   */
+  /** Apple: the read has exactly the presentation of the read before. */
   isHeld: boolean;
 };
 
 export function readAfterGapOf(
   { monotonicTimeMs, presentation }: TargetSample,
-  before: TargetSample | undefined,
-  values: number[],
-  valuesBefore: number[] | undefined,
-  tracks: NativeTrack[],
-  uiFrames: UIFrame[]
+  before: TargetSample | undefined
 ): ReadAfterGap | undefined {
-  if (!before || !valuesBefore) {
+  if (!before) {
     return undefined;
   }
   const gapMs = monotonicTimeMs - before.monotonicTimeMs;
   if (gapMs < READ_GAP_MS) {
     return undefined;
   }
-  const isRepeated = presentation.every(
-    (value, cell) => value === before.presentation[cell]
-  );
-  const lastFrameMsWhere = (ranBefore: (ran: Band) => boolean) =>
-    Math.max(
-      ...uiFrames
-        .filter(({ ran }) => ranBefore(ran) && ran.to >= before.monotonicTimeMs)
-        .map(({ timeMs }) => timeMs)
-    );
-  const lastFramesMs = [
-    lastFrameMsWhere((ran) => ran.to < monotonicTimeMs),
-    lastFrameMsWhere((ran) => ran.from < monotonicTimeMs),
-  ].filter(Number.isFinite);
-  const latestFitMsAt = (shown: number[], timeMs: number) => {
-    const residual = residualInBandOf(
-      shown,
-      timeMs,
-      tracks,
-      PRESENTATION_STAY_MS
-    );
-    return residual.isOnTimeline ? timeMs - residual.fitAgeMs : NaN;
-  };
-  const fitBeforeMs = latestFitMsAt(valuesBefore, before.monotonicTimeMs);
   return {
     gapMs,
     before: before.presentation,
-    isRepeated,
     isHeld:
-      isRepeated ||
-      (SHOWS_LAST_FRAME_AFTER_BLOCK &&
-        lastFramesMs.some((frameMs) => {
-          const fitMs = latestFitMsAt(values, frameMs);
-          return !Number.isNaN(fitMs) && !(fitMs < fitBeforeMs);
-        })),
+      !HAS_FRAME_CLOCK &&
+      presentation.every((value, cell) => value === before.presentation[cell]),
   };
 }
 
 /**
- * The values of one read are the declared values of the keys at one time of the
- * `PRESENTATION_STAY_MS` before the read, or the read is after a gap and
- * `isHeld`.
+ * The values of one read are the declared values of the keys at one time of
+ * `shownBandAt` the read, or the read is after a gap and `isHeld`.
  */
 export function expectNativeTimeline(
   values: number[],
@@ -975,14 +987,28 @@ export function expectNativeTimeline(
   afterGap?: ReadAfterGap,
   residual = nativeResidualOf(values, readTimeMs, tracks)
 ) {
-  const row = values
+  expect(
+    residual.isOnTimeline || afterGap?.isHeld
+      ? ''
+      : describeOffTimeline(values, readTimeMs, tracks, residual)
+  ).toBe('');
+  return residual;
+}
+
+function describeOffTimeline(
+  values: number[],
+  readTimeMs: number,
+  tracks: NativeTrack[],
+  residual: NativeResidual
+) {
+  const shown = shownBandAt(readTimeMs);
+  const nearest = residualInBandOf(values, readTimeMs, tracks, READ_GAP_MS);
+  return values
     .map((value, track) => {
       const { origin } = tracks[track];
-      return `${value.toFixed(4)} at ${(readTimeMs - origin.to).toFixed(2)}..${(readTimeMs - origin.from).toFixed(2)} ms is ${residual.distances[track].toFixed(4)} from the declared values of the frame before`;
+      return `${value.toFixed(4)} at ${(readTimeMs - origin.to).toFixed(2)}..${(readTimeMs - origin.from).toFixed(2)} ms, showing ${(shown.from - origin.to).toFixed(2)}..${(shown.to - origin.from).toFixed(2)} ms, is ${residual.distances[track].toFixed(4)} from the declared values of the frame before (nearest declared values ${nearest.ageMs.toFixed(2)} ms before the read)`;
     })
     .join(', ');
-  expect(residual.isOnTimeline || afterGap?.isHeld ? '' : row).toBe('');
-  return residual;
 }
 
 /**
@@ -1015,31 +1041,48 @@ export function nativeResidualOf(
 }
 
 /**
- * A track that replaced a track, read in its first `PRESENTATION_STAY_MS` and
- * before a read of its target showed it: in the display frame of the start the
- * platform shows the replaced animation until its next display tick (measured:
- * 13 of 13 stale first reads with no display tick after the start, 7 of 7 fresh
- * reads after one).
+ * Apple: a track that replaced a track, read before `afterFrameOfMs` its start
+ * and before a read of its target showed it: in the display frame of the start
+ * the platform shows the replaced animation until its next display tick
+ * (measured: 13 of 13 stale first reads with no display tick after the start, 7
+ * of 7 fresh reads after one). Android starts a track on the UI thread, so a
+ * read after the start does not show the replaced animation.
  */
 export const isInReplacementWindow = (
   readTimeMs: number,
   startMs: number,
   hasShownTrack: boolean
 ) =>
+  IS_APPLE &&
   !hasShownTrack &&
   readTimeMs >= startMs &&
-  readTimeMs - startMs < PRESENTATION_STAY_MS;
+  readTimeMs < afterFrameOfMs(startMs);
 
 /** The replaced track of a track, with the tolerance of the track. */
 const asReplacedTrack = (track: NativeTrack): NativeTrack =>
   track.replaced ? { ...track.replaced, tolerance: track.tolerance } : track;
 
+const hasStartPass = (
+  track: NativeTrack
+): track is NativeTrack & { startPassMs: number } =>
+  track.replaced !== undefined && track.startPassMs !== undefined;
+
 /**
- * The start pass writes the value of a track that replaced a track at the time
- * of the pass: on Android a whole ms of the animation clock before
- * `TrackStarted` (measured: 0.95 to 1.55 ms).
+ * Android: the pass time of a track that replaced a track, for a read after its
+ * `TrackStarted` that shows a frame before it. The read shows the value of that
+ * time.
  */
-const START_PASS_LEAD_MS = IS_APPLE ? 0 : 2;
+function shownPassMsAt(readTimeMs: number, tracks: NativeTrack[]) {
+  const passesMs = tracks
+    .filter(hasStartPass)
+    .filter(
+      ({ played }) =>
+        readTimeMs >= played.from &&
+        shownFrameAt(readTimeMs).ranMs < played.from
+    )
+    .map(({ startPassMs }) => startPassMs);
+  return passesMs.length > 0 ? Math.max(...passesMs) : undefined;
+}
 
 const asTrackFromStartPass = (track: NativeTrack): NativeTrack =>
   track.replaced
@@ -1047,16 +1090,17 @@ const asTrackFromStartPass = (track: NativeTrack): NativeTrack =>
         ...track,
         played: {
           ...track.played,
-          from: track.played.from - START_PASS_LEAD_MS,
+          from: track.startPassMs ?? track.played.from,
         },
       }
     : track;
 
 /**
- * `nativeResidualOf` a read, of a read in `isInReplacementWindow` also of the
- * replaced tracks up to the time of the read, and of a read in the first
- * `PRESENTATION_STAY_MS` of a track that replaced a track also of that track
- * from `START_PASS_LEAD_MS` before its start.
+ * The residual of a read at `shownPassMsAt` it, else `nativeResidualOf` the
+ * read, of a read in `isInReplacementWindow` also of the replaced tracks up to
+ * the time of the read, and of a track that replaced a track and has a start
+ * pass also of that track from its start pass: its first frame can have an
+ * animation clock before `TrackStarted`.
  */
 export function readResidualOf(
   values: number[],
@@ -1064,6 +1108,18 @@ export function readResidualOf(
   tracks: NativeTrack[],
   isInWindow: boolean
 ): NativeResidual {
+  const passMs = shownPassMsAt(readTimeMs, tracks);
+  if (passMs !== undefined) {
+    return {
+      ...residualIn(
+        { from: passMs, to: passMs },
+        values,
+        readTimeMs,
+        tracks.map(asTrackFromStartPass)
+      ),
+      showsStartPass: true,
+    };
+  }
   const own = nativeResidualOf(values, readTimeMs, tracks);
   if (own.isOnTimeline) {
     return own;
@@ -1082,13 +1138,7 @@ export function readResidualOf(
       };
     }
   }
-  if (
-    !tracks.some(
-      ({ replaced, played }) =>
-        replaced !== undefined &&
-        readTimeMs - played.from < PRESENTATION_STAY_MS
-    )
-  ) {
+  if (!tracks.some(hasStartPass)) {
     return own;
   }
   const fromStartPass = nativeResidualOf(
@@ -1111,7 +1161,13 @@ export const residualInBandOf = (
   timeMs: number,
   tracks: NativeTrack[],
   bandMs: number
-) => residualIn(possibleBandOf(timeMs, tracks, bandMs), values, timeMs, tracks);
+) =>
+  residualIn(
+    possibleBandOf({ from: timeMs - bandMs, to: timeMs }, tracks),
+    values,
+    timeMs,
+    tracks
+  );
 
 function residualIn(
   band: Band,
@@ -1262,14 +1318,10 @@ export function curveBandOf(
 
 /**
  * The frame times from `origin` that a read in the band `read` of the sample
- * clock can show, when a value shows for at most `ageMs` after its frame time.
+ * clock can show (`shownBandAt`).
  */
-export const frameTimesOf = (
-  read: Band,
-  origin: Band,
-  ageMs = PRESENTATION_STAY_MS
-): Band => ({
-  from: read.from - ageMs - origin.to,
+export const frameTimesOf = (read: Band, origin: Band): Band => ({
+  from: shownBandAt(read.from).from - origin.to,
   to: read.to - origin.from,
 });
 
@@ -1284,8 +1336,11 @@ export const drawnFrameTimesOf = (
   timeMs: number,
   clockOffset: Band,
   origin: Band
-): Band =>
-  frameTimesOf(drawnBandOf(timeMs, clockOffset), origin, DRAWN_FRAME_AGE_MS);
+): Band => {
+  const drawn = drawnBandOf(timeMs, clockOffset);
+  const shown = IS_APPLE ? drawn : shownBandAt(drawn.to);
+  return { from: shown.from - origin.to, to: shown.to - origin.from };
+};
 
 /** For each band of `ShownBands`: a distance of a pair that the band gives. */
 export type PairChanges = Record<keyof ShownBands, number>;
@@ -1412,13 +1467,13 @@ type PresentationBand = Band & {
 
 /**
  * The times of the sample clock that a read of a presentation value can show:
- * the `PRESENTATION_STAY_MS` before the read.
+ * `shownBandAt` the read.
  */
 function presentationBandOf(
   readTimeMs: number,
   tracks: TimedTrack[]
 ): PresentationBand {
-  const band = possibleBandOf(readTimeMs, tracks, PRESENTATION_STAY_MS);
+  const band = possibleBandOf(shownBandAt(readTimeMs), tracks);
   const removalEnds = tracks
     .flatMap(({ origin, ownEndsMs = [] }) =>
       ownEndsMs.map((endMs) => middleOf(origin) + endMs)
@@ -1431,21 +1486,14 @@ function presentationBandOf(
 }
 
 /**
- * The times of the sample clock that values of a time can have: the `bandMs`
- * before it, with the uncertainty of the origins on each side.
+ * The times of the sample clock that values of the times of `band` can have,
+ * with the uncertainty of the origins on each side.
  */
-function possibleBandOf(
-  timeMs: number,
-  tracks: TimedTrack[],
-  bandMs: number
-): Band {
+function possibleBandOf({ from, to }: Band, tracks: TimedTrack[]): Band {
   const uncertaintyMs = Math.max(
     ...tracks.flatMap(withReplacedOf).map(({ origin }) => uncertaintyOf(origin))
   );
-  return {
-    from: timeMs - bandMs - uncertaintyMs,
-    to: timeMs + uncertaintyMs,
-  };
+  return { from: from - uncertaintyMs, to: to + uncertaintyMs };
 }
 
 /**
@@ -1555,8 +1603,7 @@ type DeclaredLeaf = LeafPlace & {
   /**
    * The view shows `from` before the command. A track of a key with another
    * start value that replaces no track has a gate: a read can show the value
-   * before the command for `PRESENTATION_STAY_MS` after the start of the
-   * track.
+   * before the command until `afterFrameOfMs` the start of the track.
    */
   startsOnScreen: boolean;
 };
@@ -1646,11 +1693,8 @@ export function playedTracksOf(
   const origin = nativeOriginOf(events, command, clockOffset);
   const played = keys.map((declared) => {
     const ofTarget = events.filter(({ target }) => target === declared.target);
-    const startedMs = requireEvent(
-      ofTarget,
-      command,
-      'TrackStarted'
-    ).monotonicTimeMs;
+    const started = requireEvent(ofTarget, command, 'TrackStarted');
+    const startedMs = started.monotonicTimeMs;
     const ended = ofTarget.find(
       (event) => event.event === 'TrackEnded' && isOfCommand(event, command)
     );
@@ -1675,6 +1719,10 @@ export function playedTracksOf(
       declared: declaredValueOf(timeline),
       edgesMs: declaredStartsOf(timeline),
       played: { from: startedMs, to: ended?.monotonicTimeMs ?? Infinity },
+      startPassMs:
+        started.passTimestampMs === undefined
+          ? undefined
+          : started.passTimestampMs + middleOf(clockOffset),
       ownEndsMs: ended?.finished ? [declaredDurationOf(timeline)] : [],
       finished: ended?.finished,
       replaced: replacedTrack,
@@ -1682,7 +1730,7 @@ export function playedTracksOf(
       checkedFromMs:
         declared.startsOnScreen || replacedTrack
           ? -Infinity
-          : startedMs + PRESENTATION_STAY_MS,
+          : afterFrameOfMs(startedMs),
     };
   });
   return played.map((track) => ({
@@ -1863,7 +1911,12 @@ export const capturesOf = (
     ];
   });
 
-export type MatrixTolerance = { cells: number; translation: number };
+export type MatrixTolerance = {
+  cells: number;
+  translation: number;
+  /** The X translation cell, when its tolerance is not `translation`. */
+  translationX?: number;
+};
 
 export type NativeRead = {
   target: string;
@@ -1882,14 +1935,12 @@ export type NativeRead = {
 /**
  * `expectNativeReads` of each sample row of one view, in order: each row gets
  * the rows before it, for the tracks that replaced a track and that an earlier
- * read showed. `uiFrames` are the frames of the UI thread that the case
- * recorded.
+ * read showed.
  */
 export function expectNativeReadRows(
   rows: Samples[],
   tracks: PlayedTrack[],
-  matrixTolerance: MatrixTolerance,
-  uiFrames: UIFrame[] = []
+  matrixTolerance: MatrixTolerance
 ): NativeRead[][] {
   const shown = new Set<PlayedTrack>();
   return rows.map((samples, index) => {
@@ -1898,8 +1949,7 @@ export function expectNativeReadRows(
       tracks,
       matrixTolerance,
       rows[index - 1],
-      shown,
-      uiFrames
+      shown
     );
     reads.flatMap(shownReplacingTracksOf).forEach((track) => shown.add(track));
     return reads;
@@ -1917,8 +1967,7 @@ function expectNativeReads(
   tracks: PlayedTrack[],
   matrixTolerance: MatrixTolerance,
   before: Samples | undefined,
-  shown: ReadonlySet<PlayedTrack>,
-  uiFrames: UIFrame[]
+  shown: ReadonlySet<PlayedTrack>
 ): NativeRead[] {
   return Object.entries(samples).flatMap(([target, targetSample]) => {
     const { presentation, monotonicTimeMs: timeMs } = targetSample;
@@ -1927,11 +1976,9 @@ function expectNativeReads(
       return [];
     }
     const isTransform = playing.some(isOperationTrack);
-    const valuesOf = (shown: number[]) =>
-      isTransform
-        ? TRANSFORM_SAMPLE_CELLS.map((cell) => shown[cell])
-        : playing.map(() => shown[0]);
-    const values = valuesOf(presentation);
+    const values = isTransform
+      ? TRANSFORM_SAMPLE_CELLS.map((cell) => presentation[cell])
+      : playing.map(() => presentation[0]);
     const shownTracks = shownTracksOf(
       playing,
       tracks,
@@ -1944,15 +1991,7 @@ function expectNativeReads(
       : shownTracks;
     const isChecked =
       checkedTracksOf(tracks, target, timeMs).length === playing.length;
-    const sampleBefore = before?.[target];
-    const afterGap = readAfterGapOf(
-      targetSample,
-      sampleBefore,
-      values,
-      sampleBefore && valuesOf(sampleBefore.presentation),
-      checked,
-      uiFrames
-    );
+    const afterGap = readAfterGapOf(targetSample, before?.[target]);
     const isInWindow = playing.some(
       (track) =>
         track.replaced !== undefined &&
@@ -2015,12 +2054,18 @@ export const checkedTracksOf = (
 
 const IDENTITY = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
 const TRANSLATION_CELLS = [12, 13, 14];
+const [TRANSLATION_X_CELL] = TRANSLATION_CELLS;
 const PERSPECTIVE_CELL = 11;
 
 export const cellToleranceOf = (
   cell: number,
-  { cells, translation }: MatrixTolerance
-) => (TRANSLATION_CELLS.includes(cell) ? translation : cells);
+  { cells, translation, translationX = translation }: MatrixTolerance
+) =>
+  cell === TRANSLATION_X_CELL
+    ? translationX
+    : TRANSLATION_CELLS.includes(cell)
+      ? translation
+      : cells;
 
 /** The value of one transform operation. A `matrix` operation has its cells. */
 export type OperationValue =
@@ -2383,7 +2428,7 @@ function transformTracksOf(
       .slice(1)
       .map(cellsOfAmounts)
   );
-  const [{ origin, played, replaced }] = operations;
+  const [{ origin, played, startPassMs, replaced }] = operations;
   const edgesMs = operations.flatMap((operation) => operation.edgesMs);
   const ownEndsMs = operations.flatMap(
     (operation) => operation.ownEndsMs ?? []
@@ -2405,6 +2450,7 @@ function transformTracksOf(
     edgesMs,
     origin,
     played,
+    startPassMs,
     ownEndsMs: ownEndsMs.length > 0 ? [Math.max(...ownEndsMs)] : [],
     replaced: replacedCells?.[cell],
     tolerance: cellToleranceOf(cell, matrixTolerance),
@@ -3080,10 +3126,16 @@ export const sortedCallbacks = () => [...callbacks].sort().join();
 export const callbackTimes: Record<string, number> = {};
 /** When the UI runtime gave it, on the animation clock. */
 export const callbackEmissionTimes: Record<string, number> = {};
+/** When the UI runtime gave it, on the sample clock, or NaN. */
+const callbackRunTimes: Record<string, number> = {};
 
 export function resetCallbacks() {
   callbacks.length = 0;
-  for (const times of [callbackTimes, callbackEmissionTimes]) {
+  for (const times of [
+    callbackTimes,
+    callbackEmissionTimes,
+    callbackRunTimes,
+  ]) {
     for (const name of Object.keys(times)) {
       delete times[name];
     }
@@ -3098,22 +3150,31 @@ export function callbackTimeOf(name: string) {
   return {
     receivedMs: callbackTimes[name],
     emittedMs: callbackEmissionTimes[name],
+    ranMs: callbackRunTimes[name],
   };
 }
 export function recordCallback(
   name: string,
   finished: boolean,
-  emittedAtMs: number
+  emittedAtMs: number,
+  ranAtMs?: number
 ) {
   callbacks.push(`${name}:${finished}`);
   callbackTimes[name] = performance.now();
   callbackEmissionTimes[name] = emittedAtMs;
+  callbackRunTimes[name] = ranAtMs ?? NaN;
 }
 
 /** A callback of a layout animation that records its result under `name`. */
 export const callbackOf = (name: string) => (finished: boolean) => {
   'worklet';
-  scheduleOnRN(recordCallback, name, finished, global._getAnimationTimestamp());
+  scheduleOnRN(
+    recordCallback,
+    name,
+    finished,
+    global._getAnimationTimestamp(),
+    performance.now()
+  );
 };
 
 /**

@@ -111,6 +111,7 @@
  * suite `native layout live clock` has the wall-clock statements of the same cases.
  */
 import React from 'react';
+import { Platform } from 'react-native';
 
 import {
   describe,
@@ -136,6 +137,7 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  afterFrameOfMs,
   BOX_REF,
   builderCalls,
   callbacks,
@@ -153,7 +155,6 @@ import {
   PAIR_TOP,
   PLAYS_3D_OPERATIONS,
   PLAYS_MOVING_GEOMETRY,
-  PRESENTATION_STAY_MS,
   readResidualOf,
   REMOVES_TRACKS_OUT_OF_WINDOW,
   renderBox,
@@ -421,6 +422,9 @@ describe('native layout reference at a common time', () => {
 });
 
 describe('native layout reference: the replacement window of the player', () => {
+  if (Platform.OS !== 'ios') {
+    return;
+  }
   // A track from 0 to 80 over 2400 ms, and from 960 ms a track from 50 to 20 over 2400 ms that replaced it.
   const START_MS = 960;
   const replaced: NativeTrack = {
@@ -460,7 +464,7 @@ describe('native layout reference: the replacement window of the player', () => 
   });
 
   test('a read at the end of the window cannot show the replaced track after the start', () => {
-    const readMs = START_MS + PRESENTATION_STAY_MS;
+    const readMs = afterFrameOfMs(START_MS);
     const value = replaced.declared(readMs - 0.05);
     expect(residualOf(value, readMs, false).isOnTimeline).toBe(false);
   });

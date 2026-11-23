@@ -59,13 +59,11 @@ import type {
   TargetSample,
   Timeline,
   TraceEvent,
-  UIFrame,
 } from './nativeLayoutTestKit';
 import {
   CLIPPED_OFFSET,
   scrollClippingViewTo,
   amountOf,
-  ANIMATION_CLOCK_STEP_MS,
   BOX_REF,
   BOX_SIZE,
   callbackOf,
@@ -111,7 +109,6 @@ import {
   middleOf,
   modelWaits,
   LAID_OUT_TOLERANCE,
-  LATE_CALLBACK_STAY_MS,
   narrowClockOffset,
   nativeResidualOf,
   OPACITY_TOLERANCE,
@@ -128,7 +125,8 @@ import {
   PLAYS_MOVING_GEOMETRY,
   PLAYS_SIZE_CHANGE,
   POSITION_TOLERANCE,
-  PRESENTATION_STAY_MS,
+  afterFrameOfMs,
+  shownFrameTimeAt,
   READ_GAP_MS,
   LAYOUT_KEYS,
   LAYOUT_PROPS,
@@ -162,8 +160,8 @@ import type {
 import {
   cellQuantitiesOf,
   expectTwinReads,
-  pairTwinReadsOf,
   KEEPS_PAIR_COMPARISON,
+  pairTwinReadsOf,
   twinRestFrom,
 } from './nativeLayoutTwinTimeline';
 
@@ -1526,8 +1524,7 @@ export function expectNativeTimelineOf(
 ) {
   return expectNativeRows(
     played.drawnOpacity ? withoutNativeOpacityOf(played) : played,
-    matrixToleranceOf(referenceCase),
-    twinFramesOf(played)
+    matrixToleranceOf(referenceCase)
   );
 }
 
@@ -2042,7 +2039,7 @@ export const plannedReadsOf = (rows: TakenRow<Samples>[]): PlannedRead[] =>
 /** Why statement A has no check of a read of a target with a track. */
 const DROP_REASONS = {
   beforeStart: 'before `TrackStarted` of its track',
-  startGate: `in the first ${PRESENTATION_STAY_MS} ms of its track`,
+  startGate: 'before the first read that can show its track',
   afterChecked:
     'from the end of the checked time of its track (a clip, or the removal lead of a written target)',
   afterEnd: 'after the end of its track',
@@ -2371,14 +2368,12 @@ export type RowRead = NativeRead & {
 /** Statement A for each row of the native box, with the samples of each read. */
 export function expectNativeRows(
   { rows, tracks }: Pick<Played, 'rows' | 'tracks'>,
-  matrixTolerance: MatrixTolerance,
-  uiFrames: UIFrame[] = []
+  matrixTolerance: MatrixTolerance
 ): RowRead[] {
   const readRows = expectNativeReadRows(
     rows.map(({ row }) => row.native),
     tracks,
-    matrixTolerance,
-    uiFrames
+    matrixTolerance
   );
   return rows.flatMap(({ row, spacingMs }, index) =>
     readRows[index].map((read) => ({
@@ -2389,19 +2384,6 @@ export function expectNativeRows(
     }))
   );
 }
-
-/** The frames of the frame-driven twin on the sample clock. */
-export const twinFramesOf = ({ frameChecks, clockOffset }: Played): UIFrame[] =>
-  frameChecks
-    .filter(({ record }) => record.box === 'frame')
-    .flatMap(({ record }) => record.frames)
-    .map(({ timeMs, ranMs }) => ({
-      timeMs: timeMs + middleOf(clockOffset),
-      ran: {
-        from: ranMs + clockOffset.from,
-        to: ranMs + ANIMATION_CLOCK_STEP_MS + clockOffset.to,
-      },
-    }));
 
 const isOffBand = ({ isChecked, residual }: RowRead) =>
   isChecked && !residual.isOnTimeline;
@@ -2424,7 +2406,7 @@ const describeReadsAfterGap = (reads: RowRead[]) =>
             `presentation of the read before ${afterGap.before.join()}`,
             `declared ${checked.map((track) => declaredOf(track, timeMs)).join()}`,
             `band ${checked.map((track) => Object.values(declaredBandOf(track, timeMs)).join('..')).join()}`,
-            afterGap.isRepeated ? 'equal' : 'NOT equal',
+            repeatsReadBefore(read) ? 'equal' : 'NOT equal',
           ].join(', '),
         ]
       : [];
@@ -2680,8 +2662,9 @@ const describeReplacementReads = (reads: RowRead[]) =>
     .filter(({ residual }) => residual.crossesReplacement)
     .map(({ target, tracks: [track], timeMs, values, residual }) => {
       const foundMs = timeMs - residual.ageMs;
-      const owner =
-        residual.showsReplaced && track.replaced
+      const owner = residual.showsStartPass
+        ? track
+        : residual.showsReplaced && track.replaced
           ? track.replaced
           : ownerAt(track, foundMs);
       return [
@@ -2827,16 +2810,11 @@ const MODEL_ROWS_IN_FULL = 10;
 const MODEL_READ_FRAMES = 5;
 
 /**
- * The places of the frames of statement M from the last frame at or before a
- * read: that frame, the frame before it, the first frame after the read, and,
- * with a frame callback lag (Android), the frame two before it.
+ * The places of the frames of statement M from the last frame at or before
+ * `shownFrameTimeAt` a read: that frame, the frame before it, and the frame
+ * after it.
  */
-const COMMON_MODEL_LAGS = [0, 1, -1];
-const TWO_BEFORE = 2;
-const MODEL_LAGS =
-  LATE_CALLBACK_STAY_MS > 0
-    ? [...COMMON_MODEL_LAGS, TWO_BEFORE]
-    : COMMON_MODEL_LAGS;
+const MODEL_LAGS = [0, 1, -1];
 
 /** A read of the model of the native box while the frame driver has it. */
 type ModelRead = {
@@ -2853,12 +2831,11 @@ type ModelFrames = { frames: FrameMatrix[]; mountedMs: number };
 /**
  * Statement M, for a native box whose track of `target` the frame driver took:
  * the model of each read, from the mount of the first frame update to the last
- * frame, is the matrix of the last recorded frame at or before the read, of the
- * frame before it, of the first frame after the read whose recorded time is at
- * most `FRAME_MS` and the clock uncertainty after the read, or, with a frame
- * callback lag, of the frame two before it while that frame is at most
- * `LATE_CALLBACK_STAY_MS` before the read. The matrix of an `Opacity` frame is
- * its one value. The statement needs a recorded frame and a read.
+ * frame, is the matrix of the last recorded frame at or before
+ * `shownFrameTimeAt` the read, of the frame before it, or of the first frame
+ * after it whose recorded time is at most `FRAME_MS` and the clock uncertainty
+ * after it. The matrix of an `Opacity` frame is its one value. The statement
+ * needs a recorded frame and a read.
  */
 export function expectModelOnFrames(
   caseName: string,
@@ -2881,11 +2858,8 @@ export function expectModelOnFrames(
           : []
       )
     );
-  const [last, before, after, twoBefore] = [
-    ...COMMON_MODEL_LAGS,
-    TWO_BEFORE,
-  ].map((lag) => agesOf([lag]));
-  const ages = agesOf([0, 1, TWO_BEFORE]);
+  const [last, before, after] = MODEL_LAGS.map((lag) => agesOf([lag]));
+  const ages = agesOf([0, 1]);
   const failed = reads.filter(({ lag }) => lag === undefined);
   const spacings = sortedOf(
     frames.slice(1).map(({ timeMs }, index) => timeMs - frames[index].timeMs)
@@ -2895,7 +2869,7 @@ export function expectModelOnFrames(
       'MODEL',
       caseName,
       `reads ${reads.length} of the ${target} model from the mount of the first frame update to the last frame`,
-      `the model is the matrix of the last frame at or before the read in ${last.length} reads, of the frame before it in ${before.length}, of the first frame after the read in ${after.length}, of the frame two before it at most ${LATE_CALLBACK_STAY_MS.toFixed(3)} ms before the read in ${twoBefore.length} (age ${describeSpread(twoBefore)} ms), of none of the four in ${failed.length}`,
+      `the model is the matrix of the last frame at or before the read in ${last.length} reads, of the frame before it in ${before.length}, of the first frame after the read in ${after.length}, of none of the three in ${failed.length}`,
       `age against a frame at or before the read: ${describeSpread(ages)} ms`,
       `reads of such an age over ${(2 * FRAME_MS).toFixed(2)} ms ${ages.filter((age) => age > 2 * FRAME_MS).length}`,
       `time from the read to the frame after it: ${describeSpread(after.map((age) => -age).reverse())} ms`,
@@ -3008,9 +2982,10 @@ function modelReadsOf(
         monotonicTimeMs >= mountedMs && monotonicTimeMs <= lastMs
     )
     .map(({ monotonicTimeMs: timeMs, model }) => {
+      const frameMs = shownFrameTimeAt(timeMs);
       while (
         framesBefore < frames.length &&
-        frames[framesBefore].timeMs - uncertaintyMs <= timeMs
+        frames[framesBefore].timeMs - uncertaintyMs <= frameMs
       ) {
         framesBefore += 1;
       }
@@ -3019,9 +2994,7 @@ function modelReadsOf(
         return (
           index >= 0 &&
           index < frames.length &&
-          frames[index].timeMs - timeMs <= FRAME_MS + uncertaintyMs &&
-          (each !== TWO_BEFORE ||
-            timeMs - frames[index].timeMs <= LATE_CALLBACK_STAY_MS) &&
+          frames[index].timeMs - frameMs <= FRAME_MS + uncertaintyMs &&
           isSameModel(model, frames[index].cells, target)
         );
       });
@@ -3054,7 +3027,6 @@ function describeModelRead(
     `last frame at or before the read: ${describeFrame(framesBefore - 1)}`,
     `the frame before it: ${describeFrame(framesBefore - 2)}`,
     `first frame after the read: ${describeFrame(framesBefore)}`,
-    `the frame two before the last: ${describeFrame(framesBefore - 3)}`,
     `frames from ${MODEL_READ_FRAMES} before the last to the first after the read: ${frames
       .slice(
         Math.max(0, framesBefore - MODEL_READ_FRAMES - 1),
@@ -3164,10 +3136,7 @@ export function handOversOf(played: Played): HandOver[] {
             startCallMs,
             window: {
               from: startCallMs,
-              to:
-                track.played.to +
-                PRESENTATION_STAY_MS +
-                uncertaintyOf(track.origin),
+              to: afterFrameOfMs(track.played.to) + uncertaintyOf(track.origin),
             },
           },
         ];

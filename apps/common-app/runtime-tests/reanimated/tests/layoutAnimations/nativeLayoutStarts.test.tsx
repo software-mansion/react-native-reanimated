@@ -151,7 +151,8 @@ import {
   REPEATED_STARTS,
   FIRST_FRAME_TRAVEL,
   FRAME_MS,
-  PRESENTATION_STAY_MS,
+  afterFrameOfMs,
+  shownBandAt,
   ORDER_B_WRITE_DRAW_DELAY_MS,
   centerOf,
   curveBandOf,
@@ -1414,7 +1415,7 @@ describe('native layout starts after the mount of the final state', () => {
         .map(({ row }) => row.native.PositionX)
         .filter(
           ({ monotonicTimeMs }) =>
-            monotonicTimeMs >= secondX.played.from + PRESENTATION_STAY_MS &&
+            monotonicTimeMs >= afterFrameOfMs(secondX.played.from) &&
             monotonicTimeMs < middleOf(firstY.origin) + DURATION - FRAME_MS
         );
       for (const read of beforeTheEndOfY) {
@@ -2302,12 +2303,10 @@ describe('a native layout start that is late on its timeline', () => {
   const TRAVEL = END_LEFT - START_LEFT;
   const LATE_DURATION = 4 * DURATION;
   const FRAME_TRAVEL = (FRAME_MS * TRAVEL) / LATE_DURATION;
-  // A presentation is the value of the last animator update, at most `PRESENTATION_STAY_MS` before the read.
-  const STAY_TRAVEL = (PRESENTATION_STAY_MS * TRAVEL) / LATE_DURATION;
-
-  const lateStartFaultOf = (x: number, leastX: number) => {
+  // A presentation is the value of the last animator update, `stayMs` before the read.
+  const lateStartFaultOf = (x: number, leastX: number, stayMs: number) => {
     const band = {
-      from: leastX - STAY_TRAVEL - POSITION_TOLERANCE,
+      from: leastX - (stayMs * TRAVEL) / LATE_DURATION - POSITION_TOLERANCE,
       to: leastX + FRAME_TRAVEL + POSITION_TOLERANCE,
     };
     return x > band.from && x < band.to
@@ -2325,6 +2324,9 @@ describe('a native layout start that is late on its timeline', () => {
     return {
       x: presentation[0],
       leastElapsedMs: monotonicTimeMs - pending!.monotonicTimeMs + blocksForMs,
+      stayMs:
+        monotonicTimeMs -
+        Math.max(shownBandAt(monotonicTimeMs).from, pending!.monotonicTimeMs),
     };
   }
 
@@ -2339,10 +2341,13 @@ describe('a native layout start that is late on its timeline', () => {
       );
       const tag = await renderBox({ layout });
       await render(<Scene left={END_LEFT} layout={layout} />);
-      const { x, leastElapsedMs } = await sampleLateStart(tag, blocksForMs);
+      const { x, leastElapsedMs, stayMs } = await sampleLateStart(
+        tag,
+        blocksForMs
+      );
       const leastX =
         centerOf(START_LEFT) + (leastElapsedMs / duration) * TRAVEL;
-      expect(lateStartFaultOf(x, leastX)).toBe('');
+      expect(lateStartFaultOf(x, leastX, stayMs)).toBe('');
       await wait(duration);
       await render(null);
     }
@@ -2360,11 +2365,14 @@ describe('a native layout start that is late on its timeline', () => {
       );
       const tag = await renderBox({ layout });
       await render(<Scene left={END_LEFT} layout={layout} />);
-      const { x, leastElapsedMs } = await sampleLateStart(tag, blocksForMs);
+      const { x, leastElapsedMs, stayMs } = await sampleLateStart(
+        tag,
+        blocksForMs
+      );
       const leastX =
         centerOf(START_LEFT) +
         ((leastElapsedMs - DURATION / 2) / duration) * TRAVEL;
-      expect(lateStartFaultOf(x, leastX)).toBe('');
+      expect(lateStartFaultOf(x, leastX, stayMs)).toBe('');
       await wait(duration);
       await render(null);
     }
@@ -2487,7 +2495,7 @@ describe('native layout timing against the curve and the frame driver', () => {
           .map(({ row }) => row.native.PositionX)
           .filter(
             ({ monotonicTimeMs }) =>
-              monotonicTimeMs >= firstX.played.from + PRESENTATION_STAY_MS &&
+              monotonicTimeMs >= afterFrameOfMs(firstX.played.from) &&
               monotonicTimeMs < firstX.played.to
           );
         expect(beforeTheReplacement.length > 0).toBe(true);
@@ -2932,7 +2940,7 @@ describe('native layout size', () => {
       for (const { presentation } of shownFrom(
         played,
         'Width',
-        from + PRESENTATION_STAY_MS
+        afterFrameOfMs(from)
       )) {
         expect(presentation[0]).toBe(MOVED_AND_RESIZED.width);
       }
@@ -3203,7 +3211,7 @@ describe('native layout size', () => {
     for (const { presentation } of shownFrom(
       played,
       'Width',
-      from + PRESENTATION_STAY_MS
+      afterFrameOfMs(from)
     )) {
       expect(presentation[0]).toBe(WIDE.width);
     }
@@ -3479,7 +3487,7 @@ describe('native layout size', () => {
       const playing = shownFrom(
         played,
         'Width',
-        band.from + PRESENTATION_STAY_MS
+        afterFrameOfMs(band.from)
       ).filter(
         ({ monotonicTimeMs }) =>
           monotonicTimeMs < middleOf(origin) + SIZE_DURATION - FRAME_MS
@@ -4295,7 +4303,7 @@ describe('native layout geometry on the animation matrix', () => {
           .map(({ row }) => row.native[keptTarget])
           .filter(
             ({ monotonicTimeMs }) =>
-              monotonicTimeMs >= replacing.played.from + PRESENTATION_STAY_MS &&
+              monotonicTimeMs >= afterFrameOfMs(replacing.played.from) &&
               monotonicTimeMs < kept.played.to - FRAME_MS
           );
         expect(whileKept.length > 0).toBe(true);

@@ -16,12 +16,11 @@
  * distance between a declared value of the key that the read of the native box can show and a declared
  * value of the key in the frames of the twin:
  *
- *   bound = tolerance + the largest |d(a) - d(b)|, a from t - 18 ms - u to t + u, b from t' - n F to t' + F
+ *   bound = tolerance + the largest |d(a) - d(b)|, a in `shownBandAt` t widened by u, b from t' - n F to t' + F
  *
  * d is the declared value of the key at a time, u the uncertainty of the origin of its track, F one
  * display frame, n the count of the started phases of the twin, one at the least. The times a are the band
- * of statement A of `native layout reference`: a presentation value stays 18 ms (`PRESENTATION_STAY_MS`,
- * measured). The read can also show the values of the two other rules of statement A, in the order of that
+ * of statement A of `native layout reference`. The read can also show the values of the two other rules of statement A, in the order of that
  * statement: the held values of the edge hold of the animations of the read, then the values of the removal
  * window. A pair that is in its bound only with the held values is an `EDGE-HOLD` row; a pair that is in its
  * bound only with the removal window is a `REMOVAL-WINDOW` row. The declared value of a key is the value of
@@ -36,9 +35,9 @@
  * of one operation that cancels a change of another operation in one cell at a common time does not make
  * the bound smaller.
  *
- * So the pair statement does not reject a native value that is up to 18 ms plus u older than the step: on
- * a track of one speed the bound has the travel of 18 ms plus u plus F, or of n F plus u when that is
- * longer. Statement A of `native layout reference`, which this suite also asserts on each checked read, is the
+ * So the pair statement does not reject a native value that is up to the age of `shownBandAt` plus u older
+ * than the step: on a track of one speed the bound has the travel of that age plus u plus F, or of n F plus u
+ * when that is longer. Statement A of `native layout reference`, which this suite also asserts on each checked read, is the
  * strict check of the native box, on its own clock. Each test prints the smallest and
  * the largest margin of each pair: the margin is the bound minus the distance of the two boxes. A cell of a
  * `Transform` pair whose bound has no declared change has the margin of its tolerance when the two boxes
@@ -53,8 +52,8 @@
  * at its start call, and each term of its bound.
  *
  * The hand-over window of a track that the frame driver took is from the start call of the frame driver for
- * its key on the native box to 18 ms and the uncertainty of its origin after the end report of the track: a
- * read can show the track to that time. Each request step in it is a `LIVE` row with its sample times, the
+ * its key on the native box to `afterFrameOfMs` the end report of the track plus the uncertainty of its
+ * origin: a read can show the track to that time. Each request step in it is a `LIVE` row with its sample times, the
  * origin and the generation of the track, the playback keys, the value that the native box shows, its model
  * value, the value of the twin, the pair gap with its bound, and the values that a read of the track can
  * show at the step. The statement of such a row: the native

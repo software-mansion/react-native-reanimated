@@ -27,6 +27,11 @@ export type TraceEvent = {
   target?: string;
   endpointPolicy?: string;
   finished?: boolean;
+  /**
+   * Android, `TrackEnded`: the animation clock of the frame of the last update
+   * of the track, in ms.
+   */
+  animationTimeMs?: number;
   outcome?: string;
   reason?: string;
   buildFailure?: string;
@@ -46,6 +51,11 @@ export type TraceEvent = {
   transactionNumber?: number;
   /** Of a `Received` event: the start of the timelines on the animation clock. */
   originTimestampMs?: number;
+  /**
+   * Android, of a `TrackStarted` event: the time of the start pass on the
+   * animation clock. A start writes the value of that time.
+   */
+  passTimestampMs?: number;
   leafValue?: number;
   layoutAnimationType?: string;
 };
