@@ -76,7 +76,7 @@ pub fn run(
     Ok(TransformResult {
         code: printed.code,
         map: printed.map.map(|map| map.to_json_string()),
-        changed: !files.is_empty(),
+        changed: state.changed || !files.is_empty(),
         files,
     })
 }
