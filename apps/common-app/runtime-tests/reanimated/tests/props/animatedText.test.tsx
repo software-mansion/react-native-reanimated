@@ -34,6 +34,8 @@ import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const TEXT_REF = 'AnimatedText';
 const ANIMATION_FINISHED = 'ANIMATED_TEXT_FINISHED';
+const BLOCKED_ANIMATION_FINISHED = 'ANIMATED_TEXT_BLOCKED_FINISHED';
+const BLOCKED_FRAMES = 16;
 const DURATION = 500;
 const FRAME_MS = 16;
 const MAX_STEP_PER_FRAME = 4;
@@ -940,7 +942,6 @@ describe('Animated.Text with a shared value as children', () => {
       await mockAnimationTimer();
 
       const updates = await recordAnimationUpdates();
-      // A write from JS would not start until the busy loop ends.
       await runOnUIBlocking(() => {
         'worklet';
         progress.value = withTiming(
@@ -948,7 +949,7 @@ describe('Animated.Text with a shared value as children', () => {
           { duration: 2000, easing: Easing.linear },
           (finished) => {
             if (finished) {
-              notify('ANIMATED_TEXT_BLOCKED_FINISHED');
+              notify(BLOCKED_ANIMATION_FINISHED);
             }
           }
         );
@@ -983,21 +984,25 @@ describe('Animated.Text with a shared value as children', () => {
         const onFrame = () => {
           frames += 1;
           uiFramesWhileBlocked.setBlocking(frames);
-          if (frames < 16) {
+          if (frames < BLOCKED_FRAMES * 4) {
             requestAnimationFrame(onFrame);
           }
         };
         requestAnimationFrame(onFrame);
       });
       const blockStart = performance.now();
+      const framesBeforeBlock = uiFramesWhileBlocked.getBlocking();
       let blockedFrames = 0;
-      while (blockedFrames < 16 && performance.now() - blockStart < 10000) {
-        blockedFrames = uiFramesWhileBlocked.getBlocking();
+      while (
+        blockedFrames < BLOCKED_FRAMES &&
+        performance.now() - blockStart < 10000
+      ) {
+        blockedFrames = uiFramesWhileBlocked.getBlocking() - framesBeforeBlock;
       }
-      expect(blockedFrames >= 16).toBe(true);
+      expect(blockedFrames >= BLOCKED_FRAMES).toBe(true);
 
       const after = await read();
-      await waitForNotification('ANIMATED_TEXT_BLOCKED_FINISHED', 60000);
+      await waitForNotification(BLOCKED_ANIMATION_FINISHED, 60000);
       await stopRecordingAnimationUpdates();
       await unmockAnimationTimer();
 

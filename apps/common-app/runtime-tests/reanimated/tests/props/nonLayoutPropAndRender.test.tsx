@@ -32,7 +32,6 @@ import { convertDecimalColor } from '../../../ReJest/utils/util';
 
 const BOX_REF = 'NON_LAYOUT_PROP_BOX';
 const DURATION_MS = 300;
-const RECORDED_FRAMES = 12;
 const FRAME_INTERVAL_MS = 16;
 const ANIMATION_FRAMES = Math.ceil(DURATION_MS / FRAME_INTERVAL_MS);
 
@@ -138,23 +137,6 @@ function colorOf(frame: SingleViewSnapshot[number]): string {
 function toColorFrames(snapshot: SingleViewSnapshot): SingleViewSnapshot {
   return snapshot.map((update) => {
     return { backgroundColor: colorOf(update) };
-  });
-}
-
-function dropRepeatedFrames(frames: SingleViewSnapshot): SingleViewSnapshot {
-  return frames.filter(
-    (frame, index) =>
-      index === 0 || colorOf(frame) !== colorOf(frames[index - 1])
-  );
-}
-
-function progressFrames(
-  frames: SingleViewSnapshot,
-  toColor: string
-): Array<number> {
-  return frames.map((frame) => {
-    const red = parseInt(colorOf(frame).slice(1, 3), 16);
-    return toColor === COLOR_ON ? red : 255 - red;
   });
 }
 
@@ -290,32 +272,7 @@ describe('animation of a non-layout prop across React renders', () => {
         0
       );
 
-      expect(reference.frames.length).toBeWithinRange(
-        RECORDED_FRAMES,
-        Infinity
-      );
-      expect(observed.frames.length).toBeWithinRange(RECORDED_FRAMES, Infinity);
-      const expected = dropRepeatedFrames(
-        reference.frames.slice(0, RECORDED_FRAMES)
-      );
-      const received = dropRepeatedFrames(
-        observed.frames.slice(0, RECORDED_FRAMES)
-      );
-      expect(received.length).toBeWithinRange(expected.length - 1, Infinity);
-
-      const compared = Math.min(expected.length, received.length);
-      expect(received.slice(0, compared)).toMatchSnapshots(
-        expected.slice(0, compared)
-      );
-
-      const progress = progressFrames(observed.frames, toColor);
-      for (let i = 1; i < progress.length; i++) {
-        expect(progress[i]).toBeWithinRange(progress[i - 1], 255);
-      }
-      expect(progress[progress.length - 1]).toBeWithinRange(
-        progress[resizeFrame] + 1,
-        255
-      );
+      expect(observed.frames).toMatchSnapshots(reference.frames);
 
       await expectBox(SIZE_SMALL, toColor);
     }

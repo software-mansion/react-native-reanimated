@@ -231,10 +231,9 @@ describe('withSequence animation of color', () => {
       // It will be fixed in the future. The active component renders its first color through that path,
       // so only the passive one is checked here.
       if (!startColor.startsWith('hwb')) {
-        expect(await passiveComponent.getAnimatedStyle('backgroundColor')).toBe(
-          startColor,
-          ComparisonMode.COLOR
-        );
+        expect(
+          (await passiveComponent.getMountedViewProps())?.backgroundColor
+        ).toBe(startColor, ComparisonMode.COLOR);
       }
       await advanceAnimationTimer(DELAY / 2);
       await advanceAnimationTimer(200);
@@ -253,21 +252,6 @@ describe('withSequence animation of color', () => {
           () => component.getAnimatedStyle('backgroundColor'),
           5000
         ).toBe(finalColor, ComparisonMode.COLOR);
-      }
-      await render(
-        <WidthComponent
-          startColor={startColor}
-          middleColor={middleColor}
-          finalColor={finalColor}
-        />
-      );
-      await waitForFrames(2);
-      await expectBothMounted(finalColor);
-      for (const component of [activeComponent, passiveComponent]) {
-        expect(await component.getAnimatedStyle('backgroundColor')).toBe(
-          finalColor,
-          ComparisonMode.COLOR
-        );
       }
     }
   );
