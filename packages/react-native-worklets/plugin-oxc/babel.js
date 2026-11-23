@@ -22,6 +22,7 @@ let cachedSyntaxTypescript;
  * @returns {import('@babel/core').PluginObj}
  */
 function workletsPluginOxcBabelShim(babelApi) {
+  const inPlace = !babelApi.caller(isMetroCaller);
   return {
     name: 'worklets-oxc-plugin',
     visitor: {
@@ -40,7 +41,7 @@ function workletsPluginOxcBabelShim(babelApi) {
             );
           }
 
-          const result = transform(state.file.code, filename, state);
+          const result = transform(state.file.code, filename, state, inPlace);
           if (!result.changed) {
             return;
           }
@@ -61,14 +62,15 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @param {import('@babel/core').PluginPass} state
  * @returns {import('./index').TransformResult}
  */
-function transform(sourceText, filename, state) {
+function transform(sourceText, filename, state, inPlace) {
   warnAboutIgnoredOptions(state.opts);
   warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
-      workletsPackageDir: resolveWorkletsPkgDir(),
+      workletsPackageDir: inPlace ? undefined : resolveWorkletsPkgDir(),
+      inPlace,
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -83,6 +85,14 @@ function transform(sourceText, filename, state) {
     }
     throw error;
   }
+}
+
+/**
+ * @param {{ name?: string; bundler?: string } | undefined} caller
+ * @returns {boolean}
+ */
+function isMetroCaller(caller) {
+  return caller?.bundler === 'metro' || caller?.name === 'metro';
 }
 
 /**

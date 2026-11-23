@@ -3,6 +3,7 @@ import generate from '@babel/generator';
 import type {
   ArrayExpression,
   ExpressionStatement,
+  FunctionExpression,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
@@ -47,6 +48,7 @@ export function makeWorkletFactory(
   fun: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): {
+  factory: FunctionExpression;
   factoryCallParamPack: ArrayExpression;
   workletHash: number;
 } {
@@ -199,17 +201,18 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  updateRelativeRequires(factory, state);
+  if (state.workletModules === 'file') {
+    updateRelativeRequires(factory, state);
+    generateWorkletFile(
+      moduleBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      workletHash,
+      state
+    );
+  }
 
-  generateWorkletFile(
-    moduleBindingsToImport,
-    relativeBindingsToImport,
-    factory,
-    workletHash,
-    state
-  );
-
-  return { factoryCallParamPack, workletHash };
+  return { factory, factoryCallParamPack, workletHash };
 }
 
 function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
