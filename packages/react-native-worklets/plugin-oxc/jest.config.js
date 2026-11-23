@@ -8,6 +8,7 @@ module.exports = {
   testMatch: [
     '<rootDir>/__tests__/plugin-bundleMode.test.ts',
     '<rootDir>/__tests__/plugin-shared.test.ts',
+    '<rootDir>/__tests__/plugin-inPlace.test.ts',
   ],
   testNamePattern: '^(?!.*bundleless)',
   setupFilesAfterEnv: [
