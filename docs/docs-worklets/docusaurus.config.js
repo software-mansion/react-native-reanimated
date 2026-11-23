@@ -242,6 +242,14 @@ const config = {
             to: '/docs/concepts/sharing-memory',
           },
           {
+            from: '/docs/getting-started',
+            to: '/docs/',
+          },
+          {
+            from: '/docs/unreleased/getting-started',
+            to: '/docs/unreleased/',
+          },
+          {
             from: '/docs/worklets-babel-plugin/about',
             to: '/docs/worklets-plugin/about',
           },

@@ -13,7 +13,8 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 
 const ITERATIONS = isFullRun() ? 150 : 10;
-const MAX_COLLECTION_ATTEMPTS = 20;
+const DESTRUCTION_TIMEOUT_MS = 5000;
+const COLLECTION_RETRY_DELAY_MS = 20;
 
 describe('Shareable whose host Worker Runtime was destroyed', () => {
   test('is a guest on new Worker Runtimes after its host is collected', async () => {
@@ -58,13 +59,19 @@ function makeOrphanShareable(index: number) {
 }
 
 async function waitUntilRuntimeIsDestroyed(runtimeId: number) {
-  for (let attempt = 0; attempt < MAX_COLLECTION_ATTEMPTS; attempt++) {
+  const deadline = Date.now() + DESTRUCTION_TIMEOUT_MS;
+  for (;;) {
     await collectGarbage();
     if (!isRuntimeAlive(runtimeId)) {
       return true;
     }
+    if (Date.now() >= deadline) {
+      return false;
+    }
+    await new Promise((resolve) =>
+      setTimeout(resolve, COLLECTION_RETRY_DELAY_MS)
+    );
   }
-  return false;
 }
 
 function isRuntimeAlive(runtimeId: number) {

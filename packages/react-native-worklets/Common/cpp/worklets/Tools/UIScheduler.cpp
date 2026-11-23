@@ -12,11 +12,21 @@ void UIScheduler::scheduleOnUI(std::function<void()> job) {
 }
 
 void UIScheduler::triggerUI() {
-  scheduledOnUI_ = false;
-  while (!uiJobs_.empty()) {
-    const auto job = uiJobs_.pop();
-    job();
+  if (drainingUI_) {
+    return;
   }
+  drainingUI_ = true;
+  try {
+    scheduledOnUI_ = false;
+    while (!uiJobs_.empty()) {
+      const auto job = uiJobs_.pop();
+      job();
+    }
+  } catch (...) {
+    drainingUI_ = false;
+    throw;
+  }
+  drainingUI_ = false;
 }
 
 bool UIScheduler::isOnUIThread() const {

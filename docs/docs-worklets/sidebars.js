@@ -37,7 +37,7 @@ const sidebars = {
         {
           type: 'doc',
           id: 'worklets-plugin/about',
-          label: 'Worklets plugin',
+          label: 'Worklet Syntax plugin',
         },
       ],
     },
