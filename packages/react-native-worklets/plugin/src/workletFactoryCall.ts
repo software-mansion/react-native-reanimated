@@ -19,7 +19,19 @@ export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): CallExpression | MemberExpression {
-  const { factoryCallParamPack, workletHash } = makeWorkletFactory(path, state);
+  const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
+    path,
+    state
+  );
+
+  if (state.workletModules === 'in-place') {
+    const inPlaceCall = callExpression(
+      factory,
+      factoryCallParamPack.elements.length === 0 ? [] : [factoryCallParamPack]
+    );
+    addStackTraceDataToWorkletFactory(path, inPlaceCall);
+    return inPlaceCall;
+  }
 
   const workletModule: Expression = memberExpression(
     callExpression(identifier('require'), [

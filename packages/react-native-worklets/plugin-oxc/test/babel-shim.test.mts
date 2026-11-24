@@ -34,8 +34,26 @@ test(
       assert.ok(result && result.code);
       assert.match(
         result.code,
-        /require\(["']react-native-worklets\/\.worklets\/\d+\.js["']\)\.default/,
+        /const foo = function foo_\w+Factory\(\) \{/,
         `got:\n${result?.code}`
+      );
+      assert.doesNotMatch(result.code, /require\(/);
+
+      const metroResult = babelCore.transformSync(
+        `function foo(x) { 'worklet'; return x + 1; }`,
+        {
+          filename: 'test.js',
+          babelrc: false,
+          configFile: false,
+          caller: { name: 'metro', bundler: 'metro' },
+          plugins: [shim],
+        }
+      );
+      assert.ok(metroResult && metroResult.code);
+      assert.match(
+        metroResult.code,
+        /require\(["']react-native-worklets\/\.worklets\/\d+\.js["']\)\.default/,
+        `got:\n${metroResult?.code}`
       );
     } finally {
       fs.writeFileSync = originalWrite;
