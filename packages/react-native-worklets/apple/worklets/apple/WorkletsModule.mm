@@ -10,6 +10,7 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/Networking/AppleNetworkingBackend.h>
 #import <worklets/apple/ScriptLoader.h>
+#import <worklets/apple/VSyncAsyncQueue.h>
 #import <worklets/apple/WorkletsModule.h>
 
 #import <Foundation/Foundation.h>
@@ -27,15 +28,6 @@ using namespace worklets;
 @end
 
 namespace {
-
-struct WorkerAnimationFrameQueueHolder {
-  AnimationFrameQueue *const queue = [[AnimationFrameQueue alloc] initOnFrameThread];
-
-  ~WorkerAnimationFrameQueueHolder()
-  {
-    [queue invalidate];
-  }
-};
 
 BundleModeConfig makeBundleModeConfig(NSURL *bundleURL, NSURL *downloadedBundleFileURL)
 {
@@ -184,11 +176,8 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
       },
-      .createWorkerAnimationFrameSource = []() -> RuntimeBindings::RequestAnimationFrame {
-        const auto holder = std::make_shared<WorkerAnimationFrameQueueHolder>();
-        return [holder](std::function<void(const double)> &&callback) -> void {
-          [holder->queue requestAnimationFrame:callback];
-        };
+      .createVSyncQueue = [](const std::string &name) -> std::shared_ptr<VSyncAsyncQueue> {
+        return std::make_shared<AppleVSyncAsyncQueue>(name);
       },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AppleNetworkingBackend>()});

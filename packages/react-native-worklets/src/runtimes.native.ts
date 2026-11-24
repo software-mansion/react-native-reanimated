@@ -168,7 +168,8 @@ export function createWorkletRuntime(
     enableEventLoop,
     enableLocking,
     enableNetworking,
-    abortable
+    abortable,
+    enableVSync
   );
 }
 

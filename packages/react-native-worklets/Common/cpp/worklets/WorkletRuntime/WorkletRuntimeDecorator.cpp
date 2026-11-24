@@ -85,6 +85,7 @@ void WorkletRuntimeDecorator::decorate(
     const bool enableMicrotaskQueue,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
+    const std::shared_ptr<AsyncQueue> &queue,
     const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
     const RuntimeBindings::CreateWorkerAnimationFrameSource &createWorkerAnimationFrameSource) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
@@ -264,6 +265,26 @@ void WorkletRuntimeDecorator::decorate(
         }
         return jsi::Value::undefined();
       });
+
+  if (const auto vsyncQueue = std::dynamic_pointer_cast<VSyncAsyncQueue>(queue); eventLoop && vsyncQueue) {
+    jsi_utils::installJsiFunction(
+        rt,
+        "_scheduleAnimationFrameCallback",
+        [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop),
+         weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](jsi::Runtime &) {
+          if (const auto strongQueue = weakQueue.lock()) {
+            strongQueue->requestAnimationFrame([weakEventLoop](const double timestampMs) {
+              if (const auto strongEventLoop = weakEventLoop.lock()) {
+                strongEventLoop->runTask([timestampMs](jsi::Runtime &rt) {
+                  rt.global().getPropertyAsFunction(rt, "__runAnimationFrameCallback").call(rt, timestampMs);
+                });
+              }
+            });
+          }
+          return jsi::Value::undefined();
+        });
+    return;
+  }
 
   if (eventLoop && createWorkerAnimationFrameSource) {
     /**

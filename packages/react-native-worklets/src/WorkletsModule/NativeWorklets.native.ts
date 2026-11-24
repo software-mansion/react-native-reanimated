@@ -283,7 +283,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     enableEventLoop: boolean,
     enableLocking: boolean,
     enableNetworking: boolean,
-    abortable: boolean
+    abortable: boolean,
+    enableVSync: boolean
   ) {
     return this.#workletsModuleProxy.createWorkletRuntime(
       name,
@@ -293,7 +294,8 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
       enableEventLoop,
       enableLocking,
       enableNetworking,
-      abortable
+      abortable,
+      enableVSync
     );
   }
 

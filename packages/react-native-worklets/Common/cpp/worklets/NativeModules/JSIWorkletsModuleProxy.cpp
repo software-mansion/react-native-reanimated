@@ -692,18 +692,22 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return serializedResult->toJSValue(rt);
       });
 
-  jsi_utils::addMethod<8>(
+  jsi_utils::addMethod<9>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[8]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[9]) {
         const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
         const auto useDefaultQueue = at<2>(args).getBool();
+        const auto enableVSync = at<8>(args).getBool();
+        const auto createVSyncQueue = sourceProxy->getRuntimeBindings()->createVSyncQueue;
 
         std::shared_ptr<AsyncQueue> asyncQueue;
-        if (useDefaultQueue) {
+        if (useDefaultQueue && enableVSync && createVSyncQueue) {
+          asyncQueue = createVSyncQueue(name + "_queue");
+        } else if (useDefaultQueue) {
           asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
         } else {
           asyncQueue = extractAsyncQueue(rt, at<3>(args));

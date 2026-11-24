@@ -107,6 +107,19 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
       abortToken_);
 }
 
+void EventLoop::runTask(const std::function<void(jsi::Runtime &rt)> &job) {
+  std::unique_lock lock(*runtimeMutex_);
+  if (!timeoutsQueueState_->running) [[unlikely]] {
+    return;
+  }
+  taskState_->rootTaskRunning = true;
+  taskState_->rootTaskId++;
+  job(*runtime_);
+  runtime_->drainMicrotasks();
+  taskState_->microtaskCheckpointRequested = false;
+  taskState_->rootTaskRunning = false;
+}
+
 void EventLoop::abortPending() {
   std::vector<Timeout> pendingTimeouts;
   {

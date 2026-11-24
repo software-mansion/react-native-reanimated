@@ -164,6 +164,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       microtaskQueueEnabled_,
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
+      queue_,
       nativeLoggingHook,
       runtimeBindings->createWorkerAnimationFrameSource);
 

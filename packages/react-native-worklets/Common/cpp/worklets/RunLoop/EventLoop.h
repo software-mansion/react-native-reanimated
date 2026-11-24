@@ -42,6 +42,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
+  void runTask(const std::function<void(jsi::Runtime &rt)> &job);
   void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
   void abortPending();
 

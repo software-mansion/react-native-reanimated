@@ -2,6 +2,7 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Networking/NetworkingBackend.h>
+#include <worklets/RunLoop/VSyncAsyncQueue.h>
 
 #include <functional>
 #include <memory>
@@ -21,6 +22,7 @@ namespace worklets {
 struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
   using CreateWorkerAnimationFrameSource = std::function<RequestAnimationFrame()>;
+  using CreateVSyncQueue = std::function<std::shared_ptr<VSyncAsyncQueue>(const std::string &name)>;
   // Host function extracted from RN runtime's `global.nativeLoggingHook`, used
   // to forward logs from Worklet runtimes to the native console in Bundle Mode.
   // Signature:
@@ -38,6 +40,7 @@ struct RuntimeBindings {
    * released together with the returned function.
    */
   const CreateWorkerAnimationFrameSource createWorkerAnimationFrameSource;
+  const CreateVSyncQueue createVSyncQueue;
   const NativeLoggingHook nativeLoggingHook;
   const std::shared_ptr<NetworkingBackend> networkingBackend;
 };
