@@ -2,6 +2,7 @@ import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import { join } from 'path';
 
 import { version as packageVersion } from '../../package.json';
 import type { PluginOptions } from '../index';
@@ -9,7 +10,7 @@ import plugin from '../index';
 import { generatedModules, INLINE_MODULE_PREFIX } from '../jest/inlineModules';
 import { countOccurrences } from '../jest/pluginTestUtils';
 
-const MOCK_LOCATION = '/dev/null';
+const MOCK_LOCATION = join(process.cwd(), 'dev', 'null');
 const REQUIRE_PREFIX = `require("${INLINE_MODULE_PREFIX}`;
 
 expect.addSnapshotSerializer({
@@ -211,7 +212,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, '/source.js');
+      const { code, files } = runPlugin(input, {}, {}, join(process.cwd(), 'source.js'));
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_sourceJs[0-9]+Factory\(/gm
@@ -233,7 +234,7 @@ describe('babel plugin', () => {
         input,
         {},
         {},
-        '/node_modules/library/source.js'
+        join(process.cwd(), 'node_modules', 'library', 'source.js')
       );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
@@ -252,7 +253,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, '/-source.js');
+      const { code, files } = runPlugin(input, {}, {}, join(process.cwd(), '-source.js'));
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_SourceJs[0-9]+Factory\(/gm
