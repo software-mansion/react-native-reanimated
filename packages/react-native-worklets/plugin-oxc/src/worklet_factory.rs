@@ -3,7 +3,7 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{Argument, Expression, FormalParameters, FunctionBody};
 use oxc_semantic::Scoping;
-use oxc_span::SPAN;
+use oxc_span::{SPAN, Span};
 use oxc_syntax::node::NodeId;
 use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
@@ -96,8 +96,7 @@ pub fn make_worklet_factory<'a>(
     let hash = worklet_hash(&worklet_hash_key(
         filename,
         state.opts.hash_root.as_deref(),
-        &state.source_text,
-        input.body.span.start,
+        &raw_function_text(&input, &state.source_text),
     ));
     state.changed = true;
 
@@ -236,4 +235,28 @@ fn make_worklet_factory_call<'a>(
         closure.iter().map(|(name, id)| (name.as_str(), *id)),
     )));
     builder.expression_call(SPAN, dot_default, NONE, args, false)
+}
+
+fn raw_function_text(input: &WorkletInput<'_, '_>, source_text: &str) -> String {
+    let slice = |span: Span| {
+        source_text
+            .get(span.start as usize..span.end as usize)
+            .unwrap_or_default()
+    };
+    let mut params: Vec<&str> = input
+        .params
+        .items
+        .iter()
+        .map(|param| slice(param.span))
+        .collect();
+    if let Some(rest) = &input.params.rest {
+        params.push(slice(rest.span));
+    }
+    format!(
+        "{}{}({}){}",
+        if input.is_async { "async " } else { "" },
+        if input.is_generator { "*" } else { "" },
+        params.join(","),
+        slice(input.body.span)
+    )
 }
