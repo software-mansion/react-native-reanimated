@@ -15,6 +15,14 @@ import { ReanimatedModule } from '../ReanimatedModule';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useAnimatedRefBase } from './useAnimatedRefCommon';
 
+function setAnimatedRefOnUI(
+  sharedWrapper: AnimatedRefOnUI,
+  currentWrapper: ShadowNodeWrapper | null
+): void {
+  'worklet';
+  sharedWrapper.value = currentWrapper;
+}
+
 /**
  * Lets you get a reference of a view that you can use inside a worklet.
  *
@@ -35,16 +43,16 @@ export function useAnimatedRef<
       const uiWrapper =
         ReanimatedModule.createDetachedShadowNodeWrapper(currentWrapper);
 
-      scheduleOnUI(() => {
-        (sharedWrapper as AnimatedRefOnUI).value = uiWrapper;
-      });
+      scheduleOnUI(
+        setAnimatedRefOnUI,
+        sharedWrapper as AnimatedRefOnUI,
+        uiWrapper
+      );
 
       return currentWrapper;
     },
     () => {
-      scheduleOnUI(() => {
-        (sharedWrapper as AnimatedRefOnUI).value = null;
-      });
+      scheduleOnUI(setAnimatedRefOnUI, sharedWrapper as AnimatedRefOnUI, null);
     }
   );
 

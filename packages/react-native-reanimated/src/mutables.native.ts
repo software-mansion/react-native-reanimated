@@ -19,6 +19,29 @@ import {
   mutableHostDecorator,
 } from './mutablesCommon';
 
+function readMutableOnUI<TValue>(mutable: Mutable<TValue>): TValue {
+  'worklet';
+  mutable.setDirtyFlag(false);
+  return mutable.value;
+}
+
+function writeMutableOnUI<TValue>(
+  mutable: Mutable<TValue>,
+  newValue: TValue
+): void {
+  'worklet';
+  mutable.value = newValue;
+}
+
+function modifyMutableOnUI<TValue>(
+  mutable: Mutable<TValue>,
+  modifier: (value: TValue) => TValue,
+  forceUpdate: boolean
+): void {
+  'worklet';
+  mutable.modify(modifier, forceUpdate);
+}
+
 function mutableGuestDecorator<TValue>(
   initial: TValue,
   mutable: ShareableGuest<TValue> & Mutable<TValue>,
@@ -35,12 +58,7 @@ function mutableGuestDecorator<TValue>(
         } else {
           checkInvalidReadDuringRender();
           if (dirtyFlag.getDirty()) {
-            const uiValueGetter = (svArg: Mutable<TValue>) =>
-              runOnUISync((sv) => {
-                sv.setDirtyFlag(false);
-                return sv.value;
-              }, svArg);
-            latest = uiValueGetter(mutable as Mutable<TValue>);
+            latest = runOnUISync(readMutableOnUI, mutable as Mutable<TValue>);
           }
         }
         return latest;
@@ -48,9 +66,7 @@ function mutableGuestDecorator<TValue>(
       set(newValue) {
         if (globalThis.__RUNTIME_KIND === 1) {
           checkInvalidWriteDuringRender();
-          scheduleOnUI(() => {
-            mutable.value = newValue;
-          });
+          scheduleOnUI(writeMutableOnUI, mutable, newValue);
         } else {
           mutable.setAsync(newValue);
         }
@@ -99,9 +115,7 @@ function mutableGuestDecorator<TValue>(
 
     modify: {
       value: (modifier: (value: TValue) => TValue, forceUpdate = true) => {
-        scheduleOnUI(() => {
-          mutable.modify(modifier, forceUpdate);
-        });
+        scheduleOnUI(modifyMutableOnUI, mutable, modifier, forceUpdate);
       },
       writable: true,
       enumerable: true,

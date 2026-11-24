@@ -206,6 +206,25 @@ function createMapperRegistry() {
 
 let MAPPER_ID = 9999;
 
+function startMapperOnUI(
+  mapperID: number,
+  worklet: () => void,
+  inputs: MapperRawInputs,
+  outputs: MapperOutputs
+): void {
+  'worklet';
+  let mapperRegistry = global.__mapperRegistry;
+  if (mapperRegistry === undefined) {
+    mapperRegistry = global.__mapperRegistry = createMapperRegistry();
+  }
+  mapperRegistry.start(mapperID, worklet, inputs, outputs);
+}
+
+function stopMapperOnUI(mapperID: number): void {
+  'worklet';
+  global.__mapperRegistry?.stop(mapperID);
+}
+
 export function startMapper(
   worklet: () => void,
   inputs: MapperRawInputs = [],
@@ -213,20 +232,11 @@ export function startMapper(
 ): number {
   const mapperID = (MAPPER_ID += 1);
 
-  scheduleOnUI(() => {
-    let mapperRegistry = global.__mapperRegistry;
-    if (mapperRegistry === undefined) {
-      mapperRegistry = global.__mapperRegistry = createMapperRegistry();
-    }
-    mapperRegistry.start(mapperID, worklet, inputs, outputs);
-  });
+  scheduleOnUI(startMapperOnUI, mapperID, worklet, inputs, outputs);
 
   return mapperID;
 }
 
 export function stopMapper(mapperID: number): void {
-  scheduleOnUI(() => {
-    const mapperRegistry = global.__mapperRegistry;
-    mapperRegistry?.stop(mapperID);
-  });
+  scheduleOnUI(stopMapperOnUI, mapperID);
 }

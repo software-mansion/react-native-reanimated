@@ -75,6 +75,11 @@ export function defineAnimation<
   return create;
 }
 
+function cancelAnimationOnUI<TValue>(sharedValue: SharedValue<TValue>): void {
+  'worklet';
+  sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
+}
+
 /**
  * Lets you cancel a running animation paired to a shared value. The
  * cancellation is asynchronous.
@@ -91,9 +96,6 @@ export function cancelAnimation<TValue>(
   if (globalThis.__RUNTIME_KIND !== RuntimeKind.ReactNative) {
     sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
   } else {
-    scheduleOnUI(() => {
-      'worklet';
-      sharedValue.value = sharedValue.value; // eslint-disable-line no-self-assign
-    });
+    scheduleOnUI(cancelAnimationOnUI, sharedValue);
   }
 }

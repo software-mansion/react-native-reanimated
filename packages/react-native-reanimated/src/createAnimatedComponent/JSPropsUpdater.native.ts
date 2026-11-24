@@ -7,6 +7,18 @@ import type {
   JSPropsOperation,
 } from './commonTypes';
 
+function registerJSPropsOnUI(viewTag: number, jsProps: string[]): void {
+  'worklet';
+  global._tagToJSPropNamesMapping[viewTag] = Object.fromEntries(
+    jsProps.map((propName) => [propName, true])
+  );
+}
+
+function unregisterJSPropsOnUI(viewTag: number): void {
+  'worklet';
+  delete global._tagToJSPropNamesMapping[viewTag];
+}
+
 class JSPropsUpdaterNative implements IJSPropsUpdater {
   private static _tagToComponentMapping = new Map<
     number,
@@ -20,20 +32,14 @@ class JSPropsUpdaterNative implements IJSPropsUpdater {
     const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterNative._tagToComponentMapping.set(viewTag, animatedComponent);
 
-    scheduleOnUI(() => {
-      global._tagToJSPropNamesMapping[viewTag] = Object.fromEntries(
-        jsProps.map((propName) => [propName, true])
-      );
-    });
+    scheduleOnUI(registerJSPropsOnUI, viewTag, jsProps);
   }
 
   public unregisterComponent(animatedComponent: AnimatedComponentTypeInternal) {
     const viewTag = animatedComponent.getComponentViewTag();
     JSPropsUpdaterNative._tagToComponentMapping.delete(viewTag);
 
-    scheduleOnUI(() => {
-      delete global._tagToJSPropNamesMapping[viewTag];
-    });
+    scheduleOnUI(unregisterJSPropsOnUI, viewTag);
   }
 
   public updateProps(operations: JSPropsOperation[]) {
