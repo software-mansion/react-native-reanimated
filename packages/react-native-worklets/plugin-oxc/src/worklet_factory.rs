@@ -3,7 +3,7 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{Argument, Expression, FormalParameters, FunctionBody};
 use oxc_semantic::Scoping;
-use oxc_span::SPAN;
+use oxc_span::{SPAN, Span};
 use oxc_syntax::node::NodeId;
 use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
@@ -14,7 +14,7 @@ use crate::factory_expression::{
 };
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
-use crate::naming::worklet_hash;
+use crate::naming::{worklet_hash, worklet_hash_key};
 use crate::types::State;
 use crate::worklet_file::{generate_worklet_file, write_worklet_file};
 use crate::worklet_string_code::build_worklet_string;
@@ -105,7 +105,11 @@ pub fn make_worklet_factory<'a>(
         &state.source_text,
     );
 
-    let hash = worklet_hash(&body_string);
+    let hash = worklet_hash(&worklet_hash_key(
+        filename,
+        state.opts.hash_root.as_deref(),
+        &raw_function_text(&input, &closure.closure_variables, &state.source_text),
+    ));
 
     let mut factory_expr = build_factory_expression(
         builder,
@@ -220,4 +224,35 @@ fn make_worklet_factory_call<'a>(
         closure.iter().map(|(name, id)| (name.as_str(), *id)),
     )));
     builder.expression_call(SPAN, dot_default, NONE, args, false)
+}
+
+fn raw_function_text(
+    input: &WorkletInput<'_, '_>,
+    closure_variables: &[String],
+    source_text: &str,
+) -> String {
+    let slice = |span: Span| {
+        source_text
+            .get(span.start as usize..span.end as usize)
+            .unwrap_or_default()
+    };
+    let mut params: Vec<&str> = input
+        .params
+        .items
+        .iter()
+        .map(|param| slice(param.span))
+        .collect();
+    if let Some(rest) = &input.params.rest {
+        params.push(slice(rest.span));
+    }
+    format!(
+        "{}[{}]{}{}({}){}{}",
+        input.self_name.unwrap_or_default(),
+        closure_variables.join(","),
+        if input.is_async { "async " } else { "" },
+        if input.is_generator { "*" } else { "" },
+        params.join(","),
+        if input.is_expression_body { "=>" } else { "" },
+        slice(input.body.span)
+    )
 }

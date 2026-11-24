@@ -56,6 +56,12 @@ export function addDirective(node: BlockStatement, dir: string): void {
  */
 function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
   if (!isBlockStatement(path.body)) {
-    path.body = blockStatement([returnStatement(path.body)]);
+    const expression = path.body;
+    const block = blockStatement([returnStatement(expression)]);
+    block.start = expression.start;
+    block.end = expression.end;
+    block.loc = expression.loc;
+    block.extra = { ...block.extra, workletsExpressionBody: true };
+    path.body = block;
   }
 }
