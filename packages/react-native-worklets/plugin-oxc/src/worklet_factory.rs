@@ -257,11 +257,12 @@ fn raw_function_text(
         params.push(slice(rest.span));
     }
     format!(
-        "[{}]{}{}({}){}",
+        "[{}]{}{}({}){}{}",
         closure_variables.join(","),
         if input.is_async { "async " } else { "" },
         if input.is_generator { "*" } else { "" },
         params.join(","),
+        if input.is_expression_body { "=>" } else { "" },
         slice(input.body.span)
     )
 }
