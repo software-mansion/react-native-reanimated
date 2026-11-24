@@ -1,21 +1,5 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
-exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
-""worklet-module";
-
-const __workletModuleId = module.id;
-const foo = function (x) {
-  "use no memo";
-
-  const bar = "worklet";
-  const baz = "worklet";
-};
-foo.__workletHash = 1;
-foo.__pluginVersion = "x.y.z";
-foo.__moduleId = __workletModuleId;
-export default foo;"
-`;
-
 exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoeCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIHJldHVybiB4ICsgMjsKfTsKZm9vLl9fd29ya2xldEhhc2ggPSA3NzE2MjIwNTcxNTQ4Owpmb28uX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKZm9vLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgZm9vOw==").default;"`;
 
 exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoeCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIHJldHVybiB4ICsgMjsKfTsKZm9vLl9fd29ya2xldEhhc2ggPSAxNjQzNjU0MTYxMDk3MjsKZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IGZvbzs=").default;"`;
@@ -39,21 +23,6 @@ exports[`babel plugin for Layout Animations workletizes callback functions on un
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxNzI2MTIwMjk0MjU4MTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
 
 exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxNzI2MTIwMjk0MjU4MTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
-
-exports[`babel plugin for async functions makes an async worklet factory 1`] = `
-""worklet-module";
-
-const __workletModuleId = module.id;
-const foo = async function () {
-  "use no memo";
-
-  await Promise.resolve();
-};
-foo.__workletHash = 1;
-foo.__pluginVersion = "x.y.z";
-foo.__moduleId = __workletModuleId;
-export default foo;"
-`;
 
 exports[`babel plugin for closure capturing captures worklets environment 1`] = `
 "const x = 5;
@@ -153,22 +122,6 @@ null1.__moduleId = __workletModuleId;
 export default null1;"
 `;
 
-exports[`babel plugin for generators makes a generator worklet factory 1`] = `
-""worklet-module";
-
-const __workletModuleId = module.id;
-const foo = function* () {
-  "use no memo";
-
-  yield "hello";
-  yield "world";
-};
-foo.__workletHash = 1;
-foo.__pluginVersion = "x.y.z";
-foo.__moduleId = __workletModuleId;
-export default foo;"
-`;
-
 exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDQxNzM3NTQyNTkxNTY7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default);"`;
 
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
@@ -223,14 +176,6 @@ exports[`babel plugin for react-native-gesture-handler workletizes possibly chai
 exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
 "const onStart = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
 const foo = Gesture.Tap().onStart(onStart);"
-`;
-
-exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
-"const onBegin = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTEwMTU4NTA5Mzc3MTQ7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
-const foo = useTapGesture({
-  numberOfTaps: 2,
-  onBegin: onBegin
-});"
 `;
 
 exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
@@ -453,12 +398,6 @@ export default (function foo_SourceJs1Factory([x]) {
   foo.__moduleId = __workletModuleId;
   return foo;
 });"
-`;
-
-exports[`babel plugin for worklet names names ObjectMethod with expression key 1`] = `
-"const obj = {
-  "foo": require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTI5MDM1MzMyOTkzODA7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
-};"
 `;
 
 exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgZm9vKDEpOwp9Owpmb28uX193b3JrbGV0SGFzaCA9IDUwNTY5MjM2MDI1NDk7CmZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpmb28uX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBmb287").default;"`;
