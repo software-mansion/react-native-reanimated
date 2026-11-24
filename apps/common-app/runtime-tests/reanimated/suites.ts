@@ -80,6 +80,12 @@ const SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'shadow node wrapper race',
+    importTest: () => require('./tests/core/shadowNodeWrapperRace.test'),
+    // A stress test for TSan, which runs in the nightly full runs.
+    fullRunOnly: true,
+  },
+  {
     testSuiteName: 'event handlers',
     importTest: () => {
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
@@ -311,7 +317,8 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES.map(
   (suite) => ({
     ...suite,
     fullRunOnly:
-      !isBundleModeEnabled() &&
-      !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName),
+      suite.fullRunOnly ||
+      (!isBundleModeEnabled() &&
+        !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName)),
   })
 );
