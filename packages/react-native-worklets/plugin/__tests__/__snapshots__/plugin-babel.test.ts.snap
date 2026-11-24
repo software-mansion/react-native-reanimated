@@ -1,0 +1,594 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`babel plugin for DirectiveLiterals doesn't transform string literals 1`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (x) {
+  "use no memo";
+
+  const bar = "worklet";
+  const baz = "worklet";
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoeCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIHJldHVybiB4ICsgMjsKfTsKZm9vLl9fd29ya2xldEhhc2ggPSA5ODA3NTEwMTU4MjAyOwpmb28uX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKZm9vLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgZm9vOw==").default;"`;
+
+exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoeCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIHJldHVybiB4ICsgMjsKfTsKZm9vLl9fd29ya2xldEhhc2ggPSAxMzMyMzQ2MDQ1MDEwNjsKZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IGZvbzs=").default;"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDk0Mjc5Mjk5MjQ2MTM7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default).build();"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDExOTg2MTc0NjkwMzA5OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default).build();"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `"FadeIn.build().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYmVmb3JlJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjUxNDQ2MDEzOTQ0ODsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `"new FadeIn().build().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQgYmVmb3JlJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjUxNDQ2MDEzOTQ0ODsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `"FadeIn.build().duration().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQnKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDExMDUxMzY1NTQzNzc3OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `"new FadeIn().build().duration().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggYnVpbGQnKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDExMDUxMzY1NTQzNzc3OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggQW1vZ3VzSW4gYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDE3MjkwMjUxNDEzMTc0OwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default).AmogusIn();"`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluIHdpdGggQW1vZ3VzSW4gYWZ0ZXInKTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDY0ODUwNjQ2ODcyODY7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default).AmogusIn();"`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `"FadeIn.withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxNzI2MTIwMjk0MjU4MTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `"new FadeIn().withCallback(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnRmFkZUluJyk7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxNzI2MTIwMjk0MjU4MTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default);"`;
+
+exports[`babel plugin for async functions makes an async worklet factory 1`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = async function () {
+  "use no memo";
+
+  await Promise.resolve();
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 1`] = `
+"const x = 5;
+const objX = {
+  x
+};
+const f = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZl9udWxsMUZhY3RvcnkoW3gsIG9ialhdKSB7CiAgY29uc3QgZiA9IGZ1bmN0aW9uICgpIHsKICAgICJ1c2Ugbm8gbWVtbyI7CgogICAgcmV0dXJuIHsKICAgICAgcmVzOiB4ICsgb2JqWC54CiAgICB9OwogIH07CiAgZi5fX2Nsb3N1cmUgPSBbeCwgb2JqWF07CiAgZi5fX3dvcmtsZXRIYXNoID0gMTQyNzUxMTI5MTYwNzA7CiAgZi5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIGYuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwogIHJldHVybiBmOwp9KTs=").default([x, objX]);"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function f_null1Factory([x, objX]) {
+  const f = function () {
+    "use no memo";
+
+    return {
+      res: x + objX.x
+    };
+  };
+  f.__closure = [x, objX];
+  f.__workletHash = 1;
+  f.__pluginVersion = "x.y.z";
+  f.__moduleId = __workletModuleId;
+  return f;
+});"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `"const f = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmID0gZnVuY3Rpb24gKGEsIGIsIGMpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZyhhcmd1bWVudHMpOwp9OwpmLl9fd29ya2xldEhhc2ggPSA4MDU1NDkwMTc5MzUzOwpmLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmYuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBmOw==").default;"`;
+
+exports[`babel plugin for closure capturing doesn't capture objects' properties 1`] = `
+"const foo = {
+  bar: 42
+};
+const f = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZl9udWxsMUZhY3RvcnkoW2Zvb10pIHsKICBjb25zdCBmID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICBjb25zb2xlLmxvZyhmb28uYmFyKTsKICB9OwogIGYuX19jbG9zdXJlID0gW2Zvb107CiAgZi5fX3dvcmtsZXRIYXNoID0gMzIxNDc1NDgyMjU5ODsKICBmLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CiAgZi5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGY7Cn0pOw==").default([foo]);"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgcmV0dXJuIHsKICAgIHdpZHRoOiA1MAogIH07Cn07CmZvby5fX3dvcmtsZXRIYXNoID0gMTA0ODU3MDA2ODIzMjE7CmZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpmb28uX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBmb287").default);"`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `"const animatedStyle = useAnimatedStyle(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gewogICAgd2lkdGg6IDUwCiAgfTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEwNDg1NzAwNjgyMzIxOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default);"`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
+"const style = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gewogICAgY29sb3I6ICdyZWQnLAogICAgYmFja2dyb3VuZENvbG9yOiAnYmx1ZScKICB9Owp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNDA4MjQ3NDc5OTMwOTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+const animatedStyle = useAnimatedStyle(style);"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {
+    color: "red",
+    backgroundColor: "blue"
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for generators makes a generator worklet factory 1`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function* () {
+  "use no memo";
+
+  yield "hello";
+  yield "world";
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDQxNzM3NTQyNTkxNTY7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default);"`;
+
+exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default,
+  onBeginDrag: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDIuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDIuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMjs=").default,
+  onEndDrag: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMy5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDMuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDMuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMzs=").default,
+  onMomentumBegin: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsNCA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsNC5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDQuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDQuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsNDs=").default,
+  onMomentumEnd: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsNSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsNS5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDUuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDUuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsNTs=").default
+});"
+`;
+
+exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoZXZlbnQpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZyhldmVudCk7Cn07CmZvby5fX3dvcmtsZXRIYXNoID0gNDE3Mzc1NDI1OTE1NjsKZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CmZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IGZvbzs=").default);"`;
+
+exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDQxNzM3NTQyNTkxNTY7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default);"`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDU3MDA5NDgyMzIxNDg7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblNjcm9sbCA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKb25TY3JvbGwuX193b3JrbGV0SGFzaCA9IDU3MDA5NDgyMzIxNDg7Cm9uU2Nyb2xsLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU2Nyb2xsLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgb25TY3JvbGw7").default
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblNjcm9sbCA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKb25TY3JvbGwuX193b3JrbGV0SGFzaCA9IDU3MDA5NDgyMzIxNDg7Cm9uU2Nyb2xsLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU2Nyb2xsLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgb25TY3JvbGw7").default
+});"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uIChldmVudCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGNvbnNvbGUubG9nKGV2ZW50KTsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDU3MDA5NDgyMzIxNDg7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
+"const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTA2MDE0NTkyNTg0ODI7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default,
+  onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uIChfZXZlbnQpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25TdGFydCcpOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gMTYyODI1MDA4MjgyOTQ7Cm51bGwyLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwyLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDI7").default,
+  onEnd: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uIChfZXZlbnQsIF9zdWNjZXNzKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgY29uc29sZS5sb2coJ29uRW5kJyk7Cn07Cm51bGwzLl9fd29ya2xldEhhc2ggPSAzMzI5MTY5NTg3Mjg5OwpudWxsMy5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMy5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwzOw==").default
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `"const foo = Gesture.Tap().numberOfTaps(2).onBegin(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTA2MDE0NTkyNTg0ODI7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default).onStart(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uIChfZXZlbnQpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25TdGFydCcpOwp9OwpudWxsMi5fX3dvcmtsZXRIYXNoID0gMTYyODI1MDA4MjgyOTQ7Cm51bGwyLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwyLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDI7").default).onEnd(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uIChfZXZlbnQsIF9zdWNjZXNzKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgY29uc29sZS5sb2coJ29uRW5kJyk7Cn07Cm51bGwzLl9fd29ya2xldEhhc2ggPSAzMzI5MTY5NTg3Mjg5OwpudWxsMy5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMy5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwzOw==").default);"`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
+"const onStart = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+const foo = Gesture.Tap().onStart(onStart);"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api 1`] = `
+"const onBegin = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTEwMTU4NTA5Mzc3MTQ7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
+const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: onBegin
+});"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
+"const onBegin = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnb25CZWdpbicpOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTEwMTU4NTA5Mzc3MTQ7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
+const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin
+});"
+`;
+
+exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
+"let styleFactory = () => 1;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEwNzYyMjM2NTgzMjIzOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
+"const styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBzdHlsZUZhY3RvcnkgPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgcmV0dXJuICdGdW5jdGlvbkRlY2xhcmF0aW9uJzsKfTsKc3R5bGVGYWN0b3J5Ll9fd29ya2xldEhhc2ggPSA1ODEzMDk0NDYwMTI4OwpzdHlsZUZhY3RvcnkuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKc3R5bGVGYWN0b3J5Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgc3R5bGVGYWN0b3J5Ow==").default;
+styleFactory = () => "AssignmentExpression";
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzUxODM5NTg4ODYyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
+"let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzUxODM5NTg4ODYyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+const animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression only on last AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = () => 1;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEwNzYyMjM2NTgzMjIzOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
+"const styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBzdHlsZUZhY3RvcnkgPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgcmV0dXJuIHt9Owp9OwpzdHlsZUZhY3RvcnkuX193b3JrbGV0SGFzaCA9IDEyNDE3NjAxNDEzMTU2OwpzdHlsZUZhY3RvcnkuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKc3R5bGVGYWN0b3J5Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgc3R5bGVGYWN0b3J5Ow==").default;
+const animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQxNzYwMTQxMzE1NjsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
+"let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMjQxNzYwMTQxMzE1NjsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+const animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression only on last AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = function () {
+  return 1;
+};
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDI0NTM2NDYwMzY0MTk7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
+"let handler;
+handler = {
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
+"let handler = {
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression only on last AssignmentExpression 1`] = `
+"let handler;
+handler = {
+  onScroll: () => 1
+};
+handler = {
+  onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRFeHByZXNzaW9uJzsKfTsKbnVsbDEuX193b3JrbGV0SGFzaCA9IDEwNzYyMjM2NTgzMjIzOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes assignments that appear after the worklet is used 1`] = `
+"let styleFactory = () => ({});
+animatedStyle = useAnimatedStyle(styleFactory);
+styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4gJ0Fzc2lnbm1lbnRBZnRlclVzZSc7Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzE2ODkxMDc3OTEwOwpudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwxOw==").default;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
+"let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzUxODM5NTg4ODYyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+animatedStyle = useAnimatedStyle(styleFactory);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
+"function outerScope() {
+  let styleFactory = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzUxODM5NTg4ODYyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+  function innerScope() {
+    animatedStyle = useAnimatedStyle(styleFactory);
+  }
+}"
+`;
+
+exports[`babel plugin for referenced worklets workletizes multiple referencing 1`] = `
+"const secondReference = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICByZXR1cm4ge307Cn07Cm51bGwxLl9fd29ya2xldEhhc2ggPSAxMzUxODM5NTg4ODYyNDsKbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDEuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMTs=").default;
+const firstReference = secondReference;
+const animatedStyle = useAnimatedStyle(firstReference);"
+`;
+
+exports[`babel plugin for referenced worklets workletizes recursion 1`] = `"const recursiveWorklet = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCByZWN1cnNpdmVXb3JrbGV0ID0gZnVuY3Rpb24gKCkgewogICJ1c2Ugbm8gbWVtbyI7CgogIGlmICghZ2xvYmFsVGhpcy5fV09SS0xFVCkgewogICAgcnVuT25VSShyZWN1cnNpdmVXb3JrbGV0KSgpOwogIH0KfTsKcmVjdXJzaXZlV29ya2xldC5fX3dvcmtsZXRIYXNoID0gNzQ2NTI5NzIxNjkxNTsKcmVjdXJzaXZlV29ya2xldC5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpyZWN1cnNpdmVXb3JrbGV0Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgcmVjdXJzaXZlV29ya2xldDs=").default;"`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
+"function App() {
+  (0, 3, fun)({
+    onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblN0YXJ0ID0gZnVuY3Rpb24gKCkgewogICJ1c2Ugbm8gbWVtbyI7Cn07Cm9uU3RhcnQuX193b3JrbGV0SGFzaCA9IDE0MjA0NzU1NjY2ODY4OwpvblN0YXJ0Ll9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU3RhcnQuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBvblN0YXJ0Ow==").default
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
+"function App() {
+  (0, useAnimatedScrollHandler)({
+    onScroll: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblNjcm9sbCA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpvblNjcm9sbC5fX3dvcmtsZXRIYXNoID0gNDM1MDQwNjM2OTA3NTsKb25TY3JvbGwuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKb25TY3JvbGwuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBvblNjcm9sbDs=").default
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
+"function App() {
+  (0, fun)({
+    onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBvblN0YXJ0ID0gZnVuY3Rpb24gKCkgewogICJ1c2Ugbm8gbWVtbyI7Cn07Cm9uU3RhcnQuX193b3JrbGV0SGFzaCA9IDE0MjA0NzU1NjY2ODY4OwpvblN0YXJ0Ll9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm9uU3RhcnQuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBvblN0YXJ0Ow==").default
+  }, []);
+}"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
+"function App() {
+  const obj = {
+    a: 1,
+    b: 2
+  };
+  (0, fun)({
+    onStart: require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gb25TdGFydF9udWxsMUZhY3RvcnkoW29ial0pIHsKICBjb25zdCBvblN0YXJ0ID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICBjb25zdCBhID0gb2JqLmE7CiAgfTsKICBvblN0YXJ0Ll9fY2xvc3VyZSA9IFtvYmpdOwogIG9uU3RhcnQuX193b3JrbGV0SGFzaCA9IDEwMTEwNzIxMTA1MTcxOwogIG9uU3RhcnQuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKICBvblN0YXJ0Ll9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKICByZXR1cm4gb25TdGFydDsKfSk7").default([obj])
+  }, []);
+}"
+`;
+
+exports[`babel plugin for worklet names appends file name to function name 1`] = `
+"const x = 1;
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX3NvdXJjZUpzMUZhY3RvcnkoW3hdKSB7CiAgY29uc3QgZm9vID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIGZvby5fX2Nsb3N1cmUgPSBbeF07CiAgZm9vLl9fd29ya2xldEhhc2ggPSA0MTE2MDM0OTcwODg2OwogIGZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIGZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGZvbzsKfSk7").default([x]);"
+`;
+
+exports[`babel plugin for worklet names appends file name to function name 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 1`] = `
+"const x = 1;
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX2xpYnJhcnlfc291cmNlSnMxRmFjdG9yeShbeF0pIHsKICBjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgICAidXNlIG5vIG1lbW8iOwoKICAgIHJldHVybiB4OwogIH07CiAgZm9vLl9fY2xvc3VyZSA9IFt4XTsKICBmb28uX193b3JrbGV0SGFzaCA9IDY5ODMwOTM1ODUxOTk7CiAgZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CiAgZm9vLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKICByZXR1cm4gZm9vOwp9KTs=").default([x]);"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_library_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 1`] = `
+"const x = 1;
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX1NvdXJjZUpzMUZhY3RvcnkoW3hdKSB7CiAgY29uc3QgZm9vID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIGZvby5fX2Nsb3N1cmUgPSBbeF07CiAgZm9vLl9fd29ya2xldEhhc2ggPSAxMzU5MDE5ODcwMjgzOwogIGZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIGZvby5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIGZvbzsKfSk7").default([x]);"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_SourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names names ObjectMethod with expression key 1`] = `
+"const obj = {
+  "foo": require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMSA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwp9OwpudWxsMS5fX3dvcmtsZXRIYXNoID0gMTI5MDM1MzMyOTkzODA7Cm51bGwxLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDE7").default
+};"
+`;
+
+exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBmb28gPSBmdW5jdGlvbiAoKSB7CiAgInVzZSBubyBtZW1vIjsKCiAgZm9vKDEpOwp9Owpmb28uX193b3JrbGV0SGFzaCA9IDkyNDQ2ODY0NzEyODM7CmZvby5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpmb28uX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBmb287").default;"`;
+
+exports[`babel plugin for worklet names preserves recursion 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
+  "use no memo";
+
+  foo(1);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
+"const x = 1;
+require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gbnVsbDFGYWN0b3J5KFt4XSkgewogIGNvbnN0IG51bGwxID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIG51bGwxLl9fY2xvc3VyZSA9IFt4XTsKICBudWxsMS5fX3dvcmtsZXRIYXNoID0gMTIwODgxNTczMzc1ODM7CiAgbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKICBudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIG51bGwxOwp9KTs=").default([x]);"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
+"const x = 1;
+[require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gbnVsbDFGYWN0b3J5KFt4XSkgewogIGNvbnN0IG51bGwxID0gZnVuY3Rpb24gKCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICByZXR1cm4geDsKICB9OwogIG51bGwxLl9fY2xvc3VyZSA9IFt4XTsKICBudWxsMS5fX3dvcmtsZXRIYXNoID0gNjYzOTAxMDIyMDM5OTsKICBudWxsMS5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwogIG51bGwxLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKICByZXR1cm4gbnVsbDE7Cn0pOw==").default([x])]();"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zdCBiYXIgPSByZXF1aXJlKCJtZXRybzppbmxpbmU7YmFzZTY0LEluZHZjbXRzWlhRdGJXOWtkV3hsSWpzS0NtTnZibk4wSUY5ZmQyOXlhMnhsZEUxdlpIVnNaVWxrSUQwZ2JXOWtkV3hsTG1sa093cGpiMjV6ZENCdWRXeHNNU0E5SUdaMWJtTjBhVzl1SUNncElIc0tJQ0FpZFhObElHNXZJRzFsYlc4aU93b0tJQ0JqYjI1emIyeGxMbXh2WnlnblltRnlKeWs3Q24wN0NtNTFiR3d4TGw5ZmQyOXlhMnhsZEVoaGMyZ2dQU0EyTWprMU56a3pORGt4TWpjeU93cHVkV3hzTVM1ZlgzQnNkV2RwYmxabGNuTnBiMjRnUFNBaWVDNTVMbm9pT3dwdWRXeHNNUzVmWDIxdlpIVnNaVWxrSUQwZ1gxOTNiM0pyYkdWMFRXOWtkV3hsU1dRN0NtVjRjRzl5ZENCa1pXWmhkV3gwSUc1MWJHd3hPdz09IikuZGVmYXVsdDsKICBiYXIoKTsKfTsKbnVsbDIuX193b3JrbGV0SGFzaCA9IDIyMDc1MjY2MzAzMjI7Cm51bGwyLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7Cm51bGwyLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKZXhwb3J0IGRlZmF1bHQgbnVsbDI7").default;"`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `"runOnUI(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMiA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnSGVsbG8gZnJvbSBVSSB0aHJlYWQnKTsKICBydW5PbkpTKHJlcXVpcmUoIm1ldHJvOmlubGluZTtiYXNlNjQsSW5kdmNtdHNaWFF0Ylc5a2RXeGxJanNLQ21OdmJuTjBJRjlmZDI5eWEyeGxkRTF2WkhWc1pVbGtJRDBnYlc5a2RXeGxMbWxrT3dwamIyNXpkQ0J1ZFd4c01TQTlJR1oxYm1OMGFXOXVJQ2dwSUhzS0lDQWlkWE5sSUc1dklHMWxiVzhpT3dvS0lDQmpiMjV6YjJ4bExteHZaeWduU0dWc2JHOGdabkp2YlNCS1V5QjBhSEpsWVdRbktUc0tmVHNLYm5Wc2JERXVYMTkzYjNKcmJHVjBTR0Z6YUNBOUlERXdNelEwTmpVME5qRTBPVGc3Q201MWJHd3hMbDlmY0d4MVoybHVWbVZ5YzJsdmJpQTlJQ0o0TG5rdWVpSTdDbTUxYkd3eExsOWZiVzlrZFd4bFNXUWdQU0JmWDNkdmNtdHNaWFJOYjJSMWJHVkpaRHNLWlhod2IzSjBJR1JsWm1GMWJIUWdiblZzYkRFNyIpLmRlZmF1bHQpKCk7Cn07Cm51bGwyLl9fd29ya2xldEhhc2ggPSA5MDMwMDc4NTMxODM5OwpudWxsMi5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMi5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwyOw==").default)();"`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `"runOnUI(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zb2xlLmxvZygnSGVsbG8gZnJvbSBVSSB0aHJlYWQnKTsKICBydW5PbkpTKHJlcXVpcmUoIm1ldHJvOmlubGluZTtiYXNlNjQsSW5kdmNtdHNaWFF0Ylc5a2RXeGxJanNLQ21OdmJuTjBJRjlmZDI5eWEyeGxkRTF2WkhWc1pVbGtJRDBnYlc5a2RXeGxMbWxrT3dwamIyNXpkQ0J1ZFd4c01pQTlJR1oxYm1OMGFXOXVJQ2dwSUhzS0lDQWlkWE5sSUc1dklHMWxiVzhpT3dvS0lDQmpiMjV6YjJ4bExteHZaeWduU0dWc2JHOGdabkp2YlNCS1V5QjBhSEpsWVdRbktUc0tJQ0J5ZFc1UGJsVkpLSEpsY1hWcGNtVW9JbTFsZEhKdk9tbHViR2x1WlR0aVlYTmxOalFzU1c1a2RtTnRkSE5hV0ZGMFlsYzVhMlJYZUd4SmFuTkxRMjFPZG1KdVRqQkpSamxtWkRJNWVXRXllR3hrUlRGMldraFdjMXBWYkd0SlJEQm5ZbGM1YTJSWGVHeE1iV3hyVDNkd2FtSXlOWHBrUTBKMVpGZDRjMDFUUVRsSlIxb3hZbTFPTUdGWE9YVkpRMmR3U1VoelMwbERRV2xrV0U1c1NVYzFka2xITVd4aVZ6aHBUM2R2UzBsRFFtcGlNalY2WWpKNGJFeHRlSFphZVdkdVUwZFdjMkpIT0dkYWJrcDJZbE5DVmxOVFFqQmhTRXBzV1ZkUloxbFhaR2hoVnpSdVMxUnpTMlpVYzB0aWJsWnpZa1JGZFZneE9UTmlNMHB5WWtkV01GTkhSbnBoUTBFNVNVUlZORTU2WjNoT1JFbDVUV3BCTTA5RVdUZERiVFV4WWtkM2VFeHNPV1pqUjNneFdqSnNkVlp0Vm5sak1teDJZbWxCT1VsRFNqUk1ibXQxWldsSk4wTnROVEZpUjNkNFRHdzVabUpYT1d0a1YzaHNVMWRSWjFCVFFtWllNMlIyWTIxMGMxcFlVazVpTWxJeFlrZFdTbHBFYzB0YVdHaDNZak5LTUVsSFVteGFiVVl4WWtoUloySnVWbk5pUkVVM0lpa3VaR1ZtWVhWc2RDa29LVHNLZlRzS2JuVnNiREl1WDE5M2IzSnJiR1YwU0dGemFDQTlJREUyTWpFeE9EazNPVFUwTmpneU93cHVkV3hzTWk1ZlgzQnNkV2RwYmxabGNuTnBiMjRnUFNBaWVDNTVMbm9pT3dwdWRXeHNNaTVmWDIxdlpIVnNaVWxrSUQwZ1gxOTNiM0pyYkdWMFRXOWtkV3hsU1dRN0NtVjRjRzl5ZENCa1pXWmhkV3gwSUc1MWJHd3lPdz09IikuZGVmYXVsdCkoKTsKfTsKbnVsbDMuX193b3JrbGV0SGFzaCA9IDE2NDY2ODc0MjA4NjM5OwpudWxsMy5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMy5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwzOw==").default)();"`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `"const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zdCBiYXIgPSByZXF1aXJlKCJtZXRybzppbmxpbmU7YmFzZTY0LEluZHZjbXRzWlhRdGJXOWtkV3hsSWpzS0NtTnZibk4wSUY5ZmQyOXlhMnhsZEUxdlpIVnNaVWxrSUQwZ2JXOWtkV3hsTG1sa093cGpiMjV6ZENCdWRXeHNNaUE5SUdaMWJtTjBhVzl1SUNncElIc0tJQ0FpZFhObElHNXZJRzFsYlc4aU93b0tJQ0JqYjI1emRDQm1iMjlpWVhJZ1BTQnlaWEYxYVhKbEtDSnRaWFJ5YnpwcGJteHBibVU3WW1GelpUWTBMRWx1WkhaamJYUnpXbGhSZEdKWE9XdGtWM2hzU1dwelMwTnRUblppYms0d1NVWTVabVF5T1hsaE1uaHNaRVV4ZGxwSVZuTmFWV3hyU1VRd1oySlhPV3RrVjNoc1RHMXNhMDkzY0dwaU1qVjZaRU5DZFdSWGVITk5VMEU1U1VkYU1XSnRUakJoVnpsMVNVTm5jRWxJYzB0SlEwRnBaRmhPYkVsSE5YWkpSekZzWWxjNGFVOTNiMHRKUTBKcVlqSTFlbUl5ZUd4TWJYaDJXbmxuYmxwdE9YWlpiVVo1U25sck4wTnVNRGREYlRVeFlrZDNlRXhzT1daa01qbDVZVEo0YkdSRmFHaGpNbWRuVUZOQmVFMVVVWGhOVkdzelQxUk5kMDU2U1ROUFJITkxZbTVXYzJKRVJYVllNVGwzWWtoV2JtRlhOVmRhV0VwNllWYzVkVWxFTUdkSmJtZDFaVk0xTmtscWMwdGlibFp6WWtSRmRWZ3hPWFJpTWxJeFlrZFdTbHBEUVRsSlJqbG1aREk1ZVdFeWVHeGtSVEYyV2toV2MxcFZiR3RQZDNCc1pVaENkbU51VVdkYVIxWnRXVmhXYzJSRFFuVmtWM2h6VFZSelBTSXBMbVJsWm1GMWJIUTdDbjA3Q201MWJHd3lMbDlmZDI5eWEyeGxkRWhoYzJnZ1BTQXpOall6TXpjeU9Ua3hNemM1T3dwdWRXeHNNaTVmWDNCc2RXZHBibFpsY25OcGIyNGdQU0FpZUM1NUxub2lPd3B1ZFd4c01pNWZYMjF2WkhWc1pVbGtJRDBnWDE5M2IzSnJiR1YwVFc5a2RXeGxTV1E3Q21WNGNHOXlkQ0JrWldaaGRXeDBJRzUxYkd3eU93PT0iKS5kZWZhdWx0OwogIGJhcigpOwp9OwpudWxsMy5fX3dvcmtsZXRIYXNoID0gMTY4NDY3ODc0NzY1NzsKbnVsbDMuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKbnVsbDMuX19tb2R1bGVJZCA9IF9fd29ya2xldE1vZHVsZUlkOwpleHBvcnQgZGVmYXVsdCBudWxsMzs=").default;"`;
+
+exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `"runOnUI(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpjb25zdCBudWxsMyA9IGZ1bmN0aW9uICgpIHsKICAidXNlIG5vIG1lbW8iOwoKICBjb25zdCBhID0gcmVxdWlyZSgibWV0cm86aW5saW5lO2Jhc2U2NCxJbmR2Y210c1pYUXRiVzlrZFd4bElqc0tDbU52Ym5OMElGOWZkMjl5YTJ4bGRFMXZaSFZzWlVsa0lEMGdiVzlrZFd4bExtbGtPd3BqYjI1emRDQnVkV3hzTVNBOUlHWjFibU4wYVc5dUlDZ3BJSHNLSUNBaWRYTmxJRzV2SUcxbGJXOGlPd29LSUNCamIyNXpiMnhsTG14dlp5Z25SMjl2WkNCdGIzSnVhVzVuSUdaeWIyMGdTbE1nZEdoeVpXRmtJU2NwT3dwOU93cHVkV3hzTVM1ZlgzZHZjbXRzWlhSSVlYTm9JRDBnTlRJMk5Ua3pNekEwTnpjeU93cHVkV3hzTVM1ZlgzQnNkV2RwYmxabGNuTnBiMjRnUFNBaWVDNTVMbm9pT3dwdWRXeHNNUzVmWDIxdlpIVnNaVWxrSUQwZ1gxOTNiM0pyYkdWMFRXOWtkV3hsU1dRN0NtVjRjRzl5ZENCa1pXWmhkV3gwSUc1MWJHd3hPdz09IikuZGVmYXVsdDsKICBjb25zdCBiID0gcmVxdWlyZSgibWV0cm86aW5saW5lO2Jhc2U2NCxJbmR2Y210c1pYUXRiVzlrZFd4bElqc0tDbU52Ym5OMElGOWZkMjl5YTJ4bGRFMXZaSFZzWlVsa0lEMGdiVzlrZFd4bExtbGtPd3BqYjI1emRDQnVkV3hzTWlBOUlHWjFibU4wYVc5dUlDZ3BJSHNLSUNBaWRYTmxJRzV2SUcxbGJXOGlPd29LSUNCamIyNXpiMnhsTG14dlp5Z25SMjl2WkNCaFpuUmxjbTV2YjI0Z1puSnZiU0JLVXlCMGFISmxZV1FuS1RzS2ZUc0tiblZzYkRJdVgxOTNiM0pyYkdWMFNHRnphQ0E5SURFMk5qSXpORE01TmpVd01ERTFPd3B1ZFd4c01pNWZYM0JzZFdkcGJsWmxjbk5wYjI0Z1BTQWllQzU1TG5vaU93cHVkV3hzTWk1ZlgyMXZaSFZzWlVsa0lEMGdYMTkzYjNKcmJHVjBUVzlrZFd4bFNXUTdDbVY0Y0c5eWRDQmtaV1poZFd4MElHNTFiR3d5T3c9PSIpLmRlZmF1bHQ7CiAgY29uc3QgZnVuYyA9IE1hdGgucmFuZG9tKCkgPCAwLjUgPyBhIDogYjsKICBydW5PbkpTKGZ1bmMpKCk7Cn07Cm51bGwzLl9fd29ya2xldEhhc2ggPSA5ODI0NDM4OTczMjEzOwpudWxsMy5fX3BsdWdpblZlcnNpb24gPSAieC55LnoiOwpudWxsMy5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CmV4cG9ydCBkZWZhdWx0IG51bGwzOw==").default)();"`;
+
+exports[`babel plugin generally supports recursive calls 1`] = `
+"const a = 1;
+const foo = require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gZm9vX251bGwxRmFjdG9yeShbYV0pIHsKICBjb25zdCBmb28gPSBmdW5jdGlvbiAodCkgewogICAgInVzZSBubyBtZW1vIjsKCiAgICBpZiAodCA+IDApIHsKICAgICAgcmV0dXJuIGEgKyBmb28odCAtIDEpOwogICAgfQogIH07CiAgZm9vLl9fY2xvc3VyZSA9IFthXTsKICBmb28uX193b3JrbGV0SGFzaCA9IDU4ODU0MjQyOTU4ODU7CiAgZm9vLl9fcGx1Z2luVmVyc2lvbiA9ICJ4LnkueiI7CiAgZm9vLl9fbW9kdWxlSWQgPSBfX3dvcmtsZXRNb2R1bGVJZDsKICByZXR1cm4gZm9vOwp9KTs=").default([a]);"
+`;
+
+exports[`babel plugin generally supports recursive calls 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_null1Factory([a]) {
+  const foo = function (t) {
+    "use no memo";
+
+    if (t > 0) {
+      return a + foo(t - 1);
+    }
+  };
+  foo.__closure = [a];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin generally transforms 1`] = `
+"import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+function Box() {
+  const offset = useSharedValue(0);
+  const animatedStyles = useAnimatedStyle(require("metro:inline;base64,IndvcmtsZXQtbW9kdWxlIjsKCmNvbnN0IF9fd29ya2xldE1vZHVsZUlkID0gbW9kdWxlLmlkOwpleHBvcnQgZGVmYXVsdCAoZnVuY3Rpb24gbnVsbDFGYWN0b3J5KFtvZmZzZXRdKSB7CiAgY29uc3QgbnVsbDEgPSBmdW5jdGlvbiAoKSB7CiAgICAidXNlIG5vIG1lbW8iOwoKICAgIHJldHVybiB7CiAgICAgIHRyYW5zZm9ybTogW3sKICAgICAgICB0cmFuc2xhdGVYOiBvZmZzZXQudmFsdWUgKiAyNTUKICAgICAgfV0KICAgIH07CiAgfTsKICBudWxsMS5fX2Nsb3N1cmUgPSBbb2Zmc2V0XTsKICBudWxsMS5fX3dvcmtsZXRIYXNoID0gMTE2MDAwODM3NzQ4ODc7CiAgbnVsbDEuX19wbHVnaW5WZXJzaW9uID0gIngueS56IjsKICBudWxsMS5fX21vZHVsZUlkID0gX193b3JrbGV0TW9kdWxlSWQ7CiAgcmV0dXJuIG51bGwxOwp9KTs=").default([offset]));
+  return <>
+              <Animated.View style={[styles.box, animatedStyles]} />
+              <Button onPress={() => offset.value = Math.random()} title="Move" />
+            </>;
+}"
+`;
+
+exports[`babel plugin generally transforms 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([offset]) {
+  const null1 = function () {
+    "use no memo";
+
+    return {
+      transform: [{
+        translateX: offset.value * 255
+      }]
+    };
+  };
+  null1.__closure = [offset];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
