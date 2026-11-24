@@ -105,7 +105,7 @@ function joinedFiles(files: { path: string; content: string }[]) {
   return files.map((file) => file.content).join('\n');
 }
 
-test('extraPlugins is accepted and ignored by the transform', () => {
+test('extraPlugins has no effect on the transform', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', {
     extraPlugins: ['babel-plugin-foo'],

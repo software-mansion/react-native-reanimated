@@ -10,7 +10,7 @@ import plugin from '../index';
 import { generatedModules, INLINE_MODULE_PREFIX } from '../jest/inlineModules';
 import { countOccurrences } from '../jest/pluginTestUtils';
 
-const MOCK_LOCATION = join(process.cwd(), 'dev', 'null');
+const MOCK_LOCATION = join(__dirname, 'dev', 'null');
 const REQUIRE_PREFIX = `require("${INLINE_MODULE_PREFIX}`;
 
 expect.addSnapshotSerializer({
@@ -212,7 +212,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, join(process.cwd(), 'source.js'));
+      const { code, files } = runPlugin(input, {}, {}, join(__dirname, 'source.js'));
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_sourceJs[0-9]+Factory\(/gm
@@ -234,7 +234,7 @@ describe('babel plugin', () => {
         input,
         {},
         {},
-        join(process.cwd(), 'node_modules', 'library', 'source.js')
+        join(__dirname, 'node_modules', 'library', 'source.js')
       );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
@@ -253,7 +253,7 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, join(process.cwd(), '-source.js'));
+      const { code, files } = runPlugin(input, {}, {}, join(__dirname, '-source.js'));
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_SourceJs[0-9]+Factory\(/gm

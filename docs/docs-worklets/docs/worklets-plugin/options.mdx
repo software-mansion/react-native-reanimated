@@ -9,19 +9,18 @@ sidebar_label: 'Babel plugin options'
 
 import CodeBlock from '@theme/CodeBlock';
 
-The plugin needs no options to work. The ones it offers let you run third party code inside worklet functions and extend the transform it applies to them:
+The plugin needs no options to work. The ones it offers let you run third party code inside worklet functions:
 
 <details>
   <summary>Type definitions</summary>
 
   ```typescript
   interface PluginOptions {
-    extraPlugins?: string[];
-    extraPresets?: string[];
     importForwarding?: {
       moduleNames?: string[];
       relativePaths?: string[];
     };
+    silenceDangerousPathsWarning?: boolean;
   }
   ```
 </details>
@@ -53,18 +52,6 @@ module.exports = {
 ## Options
 
 If you are using the Oxc plugin, refer to [Oxc plugin options](./oxc.mdx#options).
-
-### extraPlugins
-
-Defaults to an empty array.
-
-This is a list of Babel plugins that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
-
-### extraPresets
-
-Defaults to an empty array.
-
-This is a list of Babel presets that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
 <Badges version="0.14.0">
   ### silenceDangerousPathsWarning
