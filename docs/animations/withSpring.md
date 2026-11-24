@@ -18,7 +18,7 @@ Type definitions
 ```typescript
 type AnimatableValue = number | string | number[];
 
-export type SpringConfig = {
+export type WithSpringConfig = {
   mass?: number;
   overshootClamping?: boolean;
   energyThreshold?: number;
@@ -71,10 +71,11 @@ Available for physics-based spring:
 
 Available for duration-based spring:
 
-| Name                      | Type     | Default | Description                                                                                                                                                          |
-| ------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| duration      | `number` | 550     | Perceptual duration of the animation in milliseconds. Actual duration is 1.5 times the value of perceptual duration.                                                 |
-| dampingRatio  | `number` | 1       | How damped the spring is. Value `1` means the spring is critically damped, value `>1` means the spring is overdamped and value `<1` means the spring is underdamped. |
+| Name                     | Type                             | Default     | Description                                                                                                                                                          |
+| ------------------------ | -------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| duration      | `number`                         | 550         | Perceptual duration of the animation in milliseconds. Actual duration is 1.5 times the value of perceptual duration.                                                 |
+| dampingRatio  | `number`                         | 1           | How damped the spring is. Value `1` means the spring is critically damped, value `>1` means the spring is overdamped and value `<1` means the spring is underdamped. |
+| clamp         | `{ min?: number; max?: number }` | `undefined` | Increases `dampingRatio` when needed so the spring bounces less past `min` and `max`. It is not a hard limit.                                                        |
 
 > **Info**
 >
@@ -84,14 +85,13 @@ Available for duration-based spring:
 
 Available for every spring animation:
 
-| Name                           | Type               | Default               | Description                                                                                                                                   |
-| ------------------------------ | ------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| mass               | `number`           | 4                     | The weight of the spring. Reducing this value makes the animation faster.                                                                     |
-| velocity           | `number`           | 0                     | Initial velocity applied to the spring equation.                                                                                              |
-| overshootClamping  | `boolean`          | false                 | Whether a spring can bounce over the `toValue`.                                                                                               |
-| energyThreshold    | `number`           | 6e-9                  | Relative energy threshold below which the spring will snap without further oscillations.                                                      |
-| reduceMotion       | `ReduceMotion`     | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting.                                  |
-| clamp              | `[number, number]` | `undefined`           | Limit of the scope of movement. If your spring would exceed this limit, then `dampingRatio` will be reduced (to make the spring less bouncy). |
+| Name                          | Type           | Default               | Description                                                                                                  |
+| ----------------------------- | -------------- | --------------------- | ------------------------------------------------------------------------------------------------------------ |
+| mass               | `number`       | 4                     | The weight of the spring. Reducing this value makes the animation faster.                                    |
+| velocity           | `number`       | 0                     | Initial velocity applied to the spring equation.                                                             |
+| overshootClamping  | `boolean`      | false                 | Whether a spring can bounce over the `toValue`.                                                              |
+| energyThreshold    | `number`       | 6e-9                  | Relative energy threshold below which the spring will snap without further oscillations.                     |
+| reduceMotion       | `ReduceMotion` | `ReduceMotion.System` | A parameter that determines how the animation responds to the device's reduced motion accessibility setting. |
 
 #### `callback`&#x20;
 
