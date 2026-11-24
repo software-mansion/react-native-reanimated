@@ -67,20 +67,10 @@
     "react-native": "0.87 - 0.89"
   },
   "dependencies": {
-    "@babel/generator": "^7.27.1",
-    "@babel/plugin-transform-arrow-functions": "^7.27.1",
-    "@babel/plugin-transform-class-properties": "^7.28.6",
-    "@babel/plugin-transform-classes": "^7.28.6",
-    "@babel/plugin-transform-nullish-coalescing-operator": "^7.28.6",
-    "@babel/plugin-transform-optional-chaining": "^7.28.6",
-    "@babel/plugin-transform-shorthand-properties": "^7.27.1",
-    "@babel/plugin-transform-template-literals": "^7.27.1",
-    "@babel/plugin-transform-unicode-regex": "^7.27.1",
     "@babel/preset-typescript": "^7.28.5",
     "@babel/traverse": "^7.27.1",
     "@babel/types": "^7.27.1",
     "@jridgewell/remapping": "^2.3.5",
-    "convert-source-map": "^2.0.0",
     "semver": "^7.7.4",
     "whatwg-fetch": "^3.6.20"
   },
