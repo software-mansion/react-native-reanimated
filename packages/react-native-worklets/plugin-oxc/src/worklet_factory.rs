@@ -115,6 +115,13 @@ pub fn make_worklet_factory<'a>(
         .unwrap_or_else(|| scoping.root_scope_id());
     let bound_closure = bind_closure_references(scoping, call_scope, &closure.closure_variables);
 
+    if state.opts.in_place == Some(true) {
+        return FactoryOutput {
+            factory_call: make_in_place_factory_call(builder, factory_expr, &bound_closure),
+            react_name: names.react_name,
+        };
+    }
+
     if let Expression::FunctionExpression(func) = &mut factory_expr
         && let Some(body) = func.body.as_mut()
     {
@@ -175,6 +182,21 @@ fn bind_closure_references(
             (name.clone(), reference_id)
         })
         .collect()
+}
+
+fn make_in_place_factory_call<'a>(
+    builder: AstBuilder<'a>,
+    factory_expr: Expression<'a>,
+    closure: &[(String, Option<ReferenceId>)],
+) -> Expression<'a> {
+    let mut args = builder.vec_with_capacity(1);
+    if !closure.is_empty() {
+        args.push(Argument::from(build_closure_array(
+            builder,
+            closure.iter().map(|(name, id)| (name.as_str(), *id)),
+        )));
+    }
+    builder.expression_call(SPAN, factory_expr, NONE, args, false)
 }
 
 fn make_worklet_factory_call<'a>(

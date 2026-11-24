@@ -7,6 +7,7 @@ module.exports = {
   rootDir: pluginDir,
   testMatch: [
     '<rootDir>/__tests__/plugin.test.ts',
+    '<rootDir>/__tests__/plugin-inPlace.test.ts',
   ],
   testNamePattern: '^(?!.*bundleless)',
   setupFilesAfterEnv: [
