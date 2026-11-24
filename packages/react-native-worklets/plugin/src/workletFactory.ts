@@ -218,10 +218,21 @@ function makeWorkletHashKey(
   const source = filename
     ? relative(root, filename).split(sep).join('/')
     : 'unknownFile';
-  const position = fun.node.body.start;
-  return position === null || position === undefined
-    ? `${source}#${state.workletNumber}`
-    : `${source}:${position}`;
+  const code = state.file.code;
+  const parts = [...fun.node.params, fun.node.body].map((node) =>
+    node.start === null ||
+    node.start === undefined ||
+    node.end === null ||
+    node.end === undefined
+      ? null
+      : code.slice(node.start, node.end)
+  );
+  if (parts.some((part) => part === null)) {
+    return `${source}#${state.workletNumber}`;
+  }
+  const body = parts.pop();
+  const prefix = `${fun.node.async ? 'async ' : ''}${fun.node.generator ? '*' : ''}`;
+  return `${source}:${prefix}(${parts.join(',')})${body}`;
 }
 
 let cachedWorkletsPackageDir: string | null | undefined;
