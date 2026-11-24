@@ -1,1 +1,1 @@
-Throw a JavaScript error instead of crashing when a Worklets API receives an invalid runtime id.
+Report "\[Worklets] Runtime id must be a number." in Debug builds when a Worklets API receives a runtime id that is not a number.
