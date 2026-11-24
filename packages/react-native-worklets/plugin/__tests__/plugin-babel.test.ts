@@ -3,7 +3,6 @@ import { transformSync } from '@babel/core';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 
-import { countOccurrences } from '../jest/pluginTestUtils';
 
 type CapturedFile = { path: string; content: string };
 
@@ -35,7 +34,6 @@ import type { PluginOptions } from '../index';
 import plugin from '../index';
 
 const MOCK_LOCATION = '/dev/null';
-const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
 
 expect.addSnapshotSerializer({
   test: (v: unknown): v is string =>
