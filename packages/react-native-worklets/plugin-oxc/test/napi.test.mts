@@ -95,10 +95,10 @@ test('windows-style paths are normalised before use', () => {
   const input = `const x = 1; function foo() { 'worklet'; return x; }`;
   const { files } = transform(
     input,
-    'C:\\proj\\node_modules\\some-lib\\src\\index.ts',
+    'C:\\proj\\node_modules\\react-native-worklets\\src\\index.ts',
     {}
   );
-  assert.match(joinedFiles(files), /function foo_someLib_indexTs1Factory\(/);
+  assert.match(joinedFiles(files), /function foo_reactNativeWorklets_indexTs1Factory\(/);
 });
 
 function joinedFiles(files: { path: string; content: string }[]) {

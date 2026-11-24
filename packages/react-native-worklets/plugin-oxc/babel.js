@@ -12,7 +12,6 @@ const remapping = require('@jridgewell/remapping');
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
 
-let warnedAboutIgnoredOptions = false;
 let cachedWorkletsPkgDir;
 let cachedSyntaxJsx;
 let cachedSyntaxTypescript;
@@ -68,7 +67,6 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @returns {import('./index').TransformResult}
  */
 function transform(sourceText, filename, state, workletModules) {
-  warnAboutIgnoredOptions(state.opts);
   warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
@@ -107,26 +105,6 @@ function workletModulesMode(caller) {
   return caller?.bundler === 'metro' || caller?.name === 'metro'
     ? 'file'
     : 'in-place';
-}
-
-/**
- * @param {import('./index').PluginOptions} options
- * @returns {void}
- */
-function warnAboutIgnoredOptions(options) {
-  if (warnedAboutIgnoredOptions) {
-    return;
-  }
-  const hasRemovedOptions =
-    options != null && ('extraPlugins' in options || 'extraPresets' in options);
-  if (!hasRemovedOptions) {
-    return;
-  }
-  warnedAboutIgnoredOptions = true;
-  console.warn(
-    '[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 ' +
-      'and have no effect. Remove them from your Babel config.'
-  );
 }
 
 const COMMON_FOLDER_NAMES = new Set([

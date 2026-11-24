@@ -8,21 +8,6 @@ import {
   workletModuleDirective,
 } from './types';
 
-let warnedAboutRemovedOptions = false;
-
-function warnAboutRemovedOptions(options: object): void {
-  if (
-    warnedAboutRemovedOptions ||
-    !('extraPlugins' in options || 'extraPresets' in options)
-  ) {
-    return;
-  }
-  warnedAboutRemovedOptions = true;
-  console.warn(
-    '[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 and have no effect. Remove them from your Babel config.'
-  );
-}
-
 export function initializeState(
   state: WorkletsPluginPass,
   workletModules: WorkletModulesMode
@@ -35,8 +20,6 @@ export function initializeState(
   state.workletNumber = 1;
 
   const userImportForwarding = state.opts.importForwarding;
-
-  warnAboutRemovedOptions(state.opts);
 
   warnAboutDangerousRelativePaths(
     userImportForwarding?.relativePaths,
