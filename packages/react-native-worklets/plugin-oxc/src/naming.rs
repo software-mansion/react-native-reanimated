@@ -39,6 +39,11 @@ fn relative_path(from: &str, to: &str) -> String {
     };
     let from_parts = normalized_segments(from);
     let to_parts = normalized_segments(&to);
+    if let (Some(from_drive), Some(to_drive)) = (drive_of(&from_parts), drive_of(&to_parts))
+        && !from_drive.eq_ignore_ascii_case(to_drive)
+    {
+        return to_parts.join("/");
+    }
     let common = from_parts
         .iter()
         .zip(to_parts.iter())
@@ -47,6 +52,10 @@ fn relative_path(from: &str, to: &str) -> String {
     let mut parts: Vec<&str> = std::iter::repeat_n("..", from_parts.len() - common).collect();
     parts.extend_from_slice(&to_parts[common..]);
     parts.join("/")
+}
+
+fn drive_of<'p>(parts: &[&'p str]) -> Option<&'p str> {
+    parts.first().filter(|part| part.ends_with(':')).copied()
 }
 
 fn same_segment(a: &str, b: &str) -> bool {
@@ -126,6 +135,10 @@ mod tests {
         assert_eq!(
             worklet_hash_key("C:/project/src/a.js", Some("C:\\project"), "", 0),
             "src/a.js:0"
+        );
+        assert_eq!(
+            worklet_hash_key("D:/lib/a.js", Some("C:/project"), "", 0),
+            "D:/lib/a.js:0"
         );
     }
 
