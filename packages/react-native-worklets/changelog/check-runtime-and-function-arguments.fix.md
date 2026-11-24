@@ -1,0 +1,1 @@
+Throw a JavaScript error instead of crashing when `runOnRuntimeSync` or `scheduleOnRuntime` receives an object that is not a worklet runtime, or when `runOnRNSync` receives a function that is not an object.

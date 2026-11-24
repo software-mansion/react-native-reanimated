@@ -126,7 +126,7 @@ jsi::Value runOnRuntimeSync(
     const std::optional<std::string> &scheduleStack
 #endif // NDEBUG
 ) {
-  auto workletRuntime = workletRuntimeObject.getHostObject<WorkletRuntime>(rt);
+  auto workletRuntime = workletRuntimeObject.asHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
   if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
@@ -168,7 +168,7 @@ jsi::Value runOnRNSync(
     const std::optional<std::string> &scheduleStack
 #endif // NDEBUG
 ) {
-  const auto funObject = funValue.getObject(rt);
+  const auto funObject = funValue.asObject(rt);
   std::shared_ptr<Serializable> serializableFun;
   std::optional<jsi::HostFunctionType> hostFun;
   if (!funObject.getProperty(rt, "__remoteFunction").isUndefined()) [[likely]] {
@@ -795,7 +795,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
          [[maybe_unused]] const jsi::Value &scheduleStackValue,
          const jsi::Value &resolve,
          const jsi::Value &reject) {
-        const auto workletRuntime = extractWorkletRuntime(rt, workletRuntimeValue);
+        const auto workletRuntime = workletRuntimeValue.asObject(rt).asHostObject<WorkletRuntime>(rt);
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, workletValue, "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
 #ifndef NDEBUG
