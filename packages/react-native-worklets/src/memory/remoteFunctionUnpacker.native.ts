@@ -2,7 +2,6 @@
 
 export function installRemoteFunctionUnpacker() {
   'worklet';
-  'no-worklet-closure';
 
   function remoteFunctionUnpacker(
     remoteFunctionName: string | undefined
