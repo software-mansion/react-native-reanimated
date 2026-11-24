@@ -13,16 +13,16 @@ pub fn worklet_hash(s: &str) -> u64 {
 
 pub fn worklet_hash_key(
     filename: &str,
-    cwd: Option<&str>,
+    hash_root: Option<&str>,
     source_text: &str,
     body_start: u32,
 ) -> String {
-    let cwd = cwd.map(str::to_owned).unwrap_or_else(|| {
+    let root = hash_root.map(str::to_owned).unwrap_or_else(|| {
         std::env::current_dir()
             .map(|dir| dir.to_string_lossy().into_owned())
             .unwrap_or_default()
     });
-    let source = relative_path(&cwd.replace('\\', "/"), filename);
+    let source = relative_path(&root.replace('\\', "/"), filename);
     let byte_offset = (body_start as usize).min(source_text.len());
     let position = source_text
         .get(..byte_offset)

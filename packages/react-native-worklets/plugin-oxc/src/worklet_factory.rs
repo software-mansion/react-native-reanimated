@@ -107,7 +107,7 @@ pub fn make_worklet_factory<'a>(
 
     let hash = worklet_hash(&worklet_hash_key(
         filename,
-        state.opts.cwd.as_deref(),
+        state.opts.hash_root.as_deref(),
         &state.source_text,
         input.body.span.start,
     ));

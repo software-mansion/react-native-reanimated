@@ -18,5 +18,5 @@ pub struct PluginOptions {
 
     pub worklets_package_dir: Option<String>,
 
-    pub cwd: Option<String>,
+    pub hash_root: Option<String>,
 }
