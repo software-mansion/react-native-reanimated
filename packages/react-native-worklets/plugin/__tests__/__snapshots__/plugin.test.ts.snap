@@ -232,10 +232,10 @@ exports[`babel plugin for object hooks transforms ArrowFunctionExpression as arg
 exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
 "useAnimatedScrollHandler({
   onScroll: require("react-native-worklets/.worklets/1.js").default,
-  onBeginDrag: require("react-native-worklets/.worklets/2.js").default,
-  onEndDrag: require("react-native-worklets/.worklets/3.js").default,
-  onMomentumBegin: require("react-native-worklets/.worklets/4.js").default,
-  onMomentumEnd: require("react-native-worklets/.worklets/5.js").default
+  onBeginDrag: require("react-native-worklets/.worklets/1.js").default,
+  onEndDrag: require("react-native-worklets/.worklets/1.js").default,
+  onMomentumBegin: require("react-native-worklets/.worklets/1.js").default,
+  onMomentumEnd: require("react-native-worklets/.worklets/1.js").default
 });"
 `;
 
