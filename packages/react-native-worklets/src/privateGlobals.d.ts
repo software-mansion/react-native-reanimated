@@ -107,9 +107,6 @@ declare global {
     handlerId: number,
     frameAligned: boolean
   ) => void;
-  var _scheduleImmediate:
-    | ((callback: (...args: unknown[]) => void, ...args: unknown[]) => number)
-    | undefined;
   var __runTimeoutCallback: (handlerId: number) => void;
   /**
    * Requests the next display v-sync for a Worker Runtime created with

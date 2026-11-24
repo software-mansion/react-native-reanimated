@@ -35,16 +35,10 @@ export function setupSetTimeout(enableVSync: boolean) {
     ...args: unknown[]
   ) => schedule(callback, delay, args, enableVSync);
 
-  const scheduleImmediate = (
-    callback: (...args: unknown[]) => void,
-    ...args: unknown[]
-  ) => schedule(callback, 0, args, false);
-
   const clearTimeoutPolyfill = (timeoutHandle: number) => {
     pendingHandlers.delete(timeoutHandle);
   };
 
   globalThis.setTimeout = setTimeoutPolyfill as typeof setTimeout;
   globalThis.clearTimeout = clearTimeoutPolyfill as typeof clearTimeout;
-  globalThis._scheduleImmediate = scheduleImmediate;
 }

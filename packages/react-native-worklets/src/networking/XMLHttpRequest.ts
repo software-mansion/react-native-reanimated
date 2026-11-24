@@ -277,7 +277,7 @@ export class XMLHttpRequest extends EventTargetLite {
     if (!isSupportedRequestUrl(this.url)) {
       const token = ++this.requestToken;
       this.__dispatch('loadstart');
-      setImmediate(() => {
+      setTimeout(() => {
         if (token === this.requestToken) {
           this.handleRequestError(
             'network',
