@@ -21,7 +21,6 @@ let cachedSyntaxTypescript;
  * @returns {import('@babel/core').PluginObj}
  */
 function workletsPluginOxcBabelShim(babelApi) {
-  const inPlace = !babelApi.caller(isMetroCaller);
   return {
     name: 'worklets-oxc-plugin',
     visitor: {
@@ -40,7 +39,7 @@ function workletsPluginOxcBabelShim(babelApi) {
             );
           }
 
-          const result = transform(state.file.code, filename, state, inPlace);
+          const result = transform(state.file.code, filename, state);
           if (!result.changed) {
             return;
           }
@@ -61,14 +60,13 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @param {import('@babel/core').PluginPass} state
  * @returns {import('./index').TransformResult}
  */
-function transform(sourceText, filename, state, inPlace) {
+function transform(sourceText, filename, state) {
   warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
-      workletsPackageDir: inPlace ? undefined : resolveWorkletsPkgDir(),
-      inPlace,
+      workletsPackageDir: resolveWorkletsPkgDir(),
       hashRoot: resolveHashRoot(state),
     });
   } catch (error) {
@@ -84,14 +82,6 @@ function transform(sourceText, filename, state, inPlace) {
     }
     throw error;
   }
-}
-
-/**
- * @param {{ name?: string; bundler?: string } | undefined} caller
- * @returns {boolean}
- */
-function isMetroCaller(caller) {
-  return caller?.bundler === 'metro' || caller?.name === 'metro';
 }
 
 const COMMON_FOLDER_NAMES = new Set([

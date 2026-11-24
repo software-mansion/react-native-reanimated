@@ -741,13 +741,12 @@ var require_globals = __commonJS({
     var path_1 = __importDefault(require("path"));
     var imports_1 = require_imports();
     var types_12 = require_types();
-    function initializeState(state, workletModules) {
+    function initializeState(state) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
       if (state.skipFile) {
         return;
       }
-      state.workletModules = workletModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
       (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
@@ -1013,10 +1012,8 @@ var require_workletFactory = __commonJS({
       const factory = (0, types_12.functionExpression)((0, types_12.identifier)(factoryName), factoryParams.length > 0 ? [(0, types_12.arrayPattern)(factoryParams.map((param) => (0, types_12.cloneNode)(param, true)))] : [], (0, types_12.blockStatement)(statements));
       const factoryCallArgs = factoryParams.map((param) => (0, types_12.cloneNode)(param, true));
       const factoryCallParamPack = (0, types_12.arrayExpression)(factoryCallArgs);
-      if (state.workletModules === "file") {
-        (0, imports_1.updateRelativeRequires)(factory, state);
-        (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
-      }
+      (0, imports_1.updateRelativeRequires)(factory, state);
+      (0, generate_1.generateWorkletFile)(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state);
       return { factory, factoryCallParamPack, workletHash };
     }
     function stripWorkletDirectives(fun) {
@@ -1105,12 +1102,7 @@ var require_workletFactoryCall = __commonJS({
     var types_2 = require_types();
     var workletFactory_1 = require_workletFactory();
     function makeWorkletFactoryCall(path, state) {
-      const { factory, factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
-      if (state.workletModules === "in-place") {
-        const inPlaceCall = (0, types_12.callExpression)(factory, factoryCallParamPack.elements.length === 0 ? [] : [factoryCallParamPack]);
-        addStackTraceDataToWorkletFactory(path, inPlaceCall);
-        return inPlaceCall;
-      }
+      const { factoryCallParamPack, workletHash } = (0, workletFactory_1.makeWorkletFactory)(path, state);
       const workletModule = (0, types_12.memberExpression)((0, types_12.callExpression)((0, types_12.identifier)("require"), [
         (0, types_12.stringLiteral)(`react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`)
       ]), (0, types_12.identifier)("default"));
@@ -1198,8 +1190,7 @@ var directives_1 = require_directives();
 var globals_1 = require_globals();
 var types_1 = require_types();
 var workletSubstitution_1 = require_workletSubstitution();
-module.exports = function WorkletsBabelPlugin(api) {
-  const workletModules = api.caller((caller) => isMetroCaller(caller) ? "file" : "in-place");
+module.exports = function WorkletsBabelPlugin() {
   function runWithTaggedExceptions(state, fun) {
     if (state.skipFile) {
       return;
@@ -1217,7 +1208,7 @@ module.exports = function WorkletsBabelPlugin(api) {
     name: "worklets",
     pre() {
       runWithTaggedExceptions(this, () => {
-        (0, globals_1.initializeState)(this, workletModules);
+        (0, globals_1.initializeState)(this);
         this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },
@@ -1257,8 +1248,5 @@ function getAutoworkletizationMicroPlugin() {
       }
     }
   };
-}
-function isMetroCaller(caller) {
-  return (caller === null || caller === void 0 ? void 0 : caller.bundler) === "metro" || (caller === null || caller === void 0 ? void 0 : caller.name) === "metro";
 }
 //# sourceMappingURL=index.js.map

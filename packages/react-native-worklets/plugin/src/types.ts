@@ -17,8 +17,6 @@ import {
 
 import type { PluginOptions } from './options';
 
-export type WorkletModulesMode = 'file' | 'in-place';
-
 export interface WorkletsPluginPass {
   file: BabelFile;
   key: string;
@@ -28,7 +26,6 @@ export interface WorkletsPluginPass {
   workletNumber: number;
   skipFile: boolean;
   importForwarding: InitializedImportForwarding;
-  workletModules: WorkletModulesMode;
 }
 
 export type WorkletizableFunction =

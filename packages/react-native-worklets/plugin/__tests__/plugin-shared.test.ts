@@ -3,6 +3,7 @@ import { transformSync } from '@babel/core';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import * as path from 'path';
 
 type CapturedFile = { path: string; content: string };
 
@@ -593,6 +594,128 @@ describe('babel plugin core', () => {
       },
     ])('does not workletize $name', ({ input }) => {
       expect(factoryCount(input)).toBe(0);
+    });
+  });
+
+  describe('worklet hash', () => {
+    function workletHashes(input: string, filename = MOCK_LOCATION) {
+      const { files } = runPlugin(
+        input,
+        {},
+        { filename: path.join(__dirname, filename) }
+      );
+      const output = files.map((file) => file.content).join('\n');
+      return [
+        ...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi),
+      ].map((match) => Number(match[1]));
+    }
+
+    function workletHash(input: string, filename = MOCK_LOCATION) {
+      const hashes = workletHashes(input, filename);
+      expect(hashes).toHaveLength(1);
+      return hashes[0];
+    }
+
+    test('gives identical worklets in one file the same hash', () => {
+      const hashes = workletHashes(
+        "function foo() {\n  'worklet';\n  return 1;\n}\nfunction bar() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).toBe(hashes[1]);
+    });
+
+    test('changes the hash when the worklet body changes', () => {
+      const before = workletHash(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "function foo() {\n  'worklet';\n  return 2;\n}\n"
+      );
+      expect(after).not.toBe(before);
+    });
+
+    test('changes the hash when a parameter changes', () => {
+      const before = workletHash(
+        "function foo(x) {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "function foo(y) {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).not.toBe(before);
+    });
+
+    test('keeps the hash when the worklet moves in the file', () => {
+      const before = workletHash(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "\n\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).toBe(before);
+    });
+
+    test('separates identical text that captures different variables', () => {
+      const hashes = workletHashes(
+        "function a(value) {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\nfunction b() {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('changes the hash for the same code in another file', () => {
+      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+      const first = workletHash(input, 'first.js');
+      const second = workletHash(input, 'nested/first.js');
+      expect(second).not.toBe(first);
+    });
+
+    test('gives the same file in two Metro projects different hashes', () => {
+      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+      const hashes = ['first-app', 'second-app'].map((app) => {
+        const { files } = runPlugin(
+          input,
+          {},
+          {
+            cwd: path.join(__dirname, app),
+            filename: path.join(__dirname, app, 'src', 'App.js'),
+          }
+        );
+        const output = files.map((file) => file.content).join('\n');
+        return [
+          ...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi),
+        ].map((match) => Number(match[1]));
+      });
+      expect(hashes[0]).toHaveLength(1);
+      expect(hashes[1]).toHaveLength(1);
+      expect(hashes[0][0]).not.toBe(hashes[1][0]);
+    });
+
+    test('separates an expression body from a block body with the same text', () => {
+      const hashes = workletHashes(
+        "import { useDerivedValue } from 'react-native-reanimated';\nconst a = useDerivedValue(() => ({ value: 1 }));\nconst b = useDerivedValue(() => { value: 1 });\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('hashes the source text of autoworkletized concise arrows', () => {
+      expect(
+        workletHash(
+          "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
+        )
+      ).toBe(7304007199455);
+      expect(
+        workletHash(
+          "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
+        )
+      ).toBe(16245832944540);
+    });
+
+    test('derives the hash from the relative path and the raw function text', () => {
+      const value = workletHash(
+        "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
+      );
+      expect(value).toBe(6803356437101);
     });
   });
 

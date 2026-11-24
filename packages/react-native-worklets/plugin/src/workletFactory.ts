@@ -180,17 +180,14 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  if (state.workletModules === 'file') {
-    updateRelativeRequires(factory, state);
-    generateWorkletFile(
-      moduleBindingsToImport,
-      relativeBindingsToImport,
-      factory,
-      workletHash,
-      state
-    );
-  }
-
+  updateRelativeRequires(factory, state);
+  generateWorkletFile(
+    moduleBindingsToImport,
+    relativeBindingsToImport,
+    factory,
+    workletHash,
+    state
+  );
   return { factory, factoryCallParamPack, workletHash };
 }
 

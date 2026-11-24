@@ -1,4 +1,4 @@
-import type { ConfigAPI, NodePath, PluginItem, Visitor } from '@babel/core';
+import type { NodePath, PluginItem, Visitor } from '@babel/core';
 import type { CallExpression, ClassMethod, Directive } from '@babel/types';
 
 import {
@@ -8,15 +8,11 @@ import {
 import { processIfWorkletMethod } from './classMethod';
 import { handleWorkletDirective } from './directives';
 import { initializeState } from './globals';
-import type { WorkletModulesMode, WorkletsPluginPass } from './types';
+import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
-module.exports = function WorkletsBabelPlugin(api: ConfigAPI): PluginItem {
-  const workletModules: WorkletModulesMode = api.caller((caller) =>
-    isMetroCaller(caller) ? 'file' : 'in-place'
-  );
-
+module.exports = function WorkletsBabelPlugin(): PluginItem {
   function runWithTaggedExceptions(state: WorkletsPluginPass, fun: () => void) {
     if (state.skipFile) {
       return;
@@ -36,7 +32,7 @@ module.exports = function WorkletsBabelPlugin(api: ConfigAPI): PluginItem {
 
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(this, () => {
-        initializeState(this, workletModules);
+        initializeState(this);
         /**
          * We run the micro-plugin in the `pre` step of the whole pipeline to
          * add all 'worklet' directives before React Compiler kicks in.
@@ -86,10 +82,4 @@ export function getAutoworkletizationMicroPlugin(): Visitor<WorkletsPluginPass> 
       },
     },
   };
-}
-
-function isMetroCaller(
-  caller: { name?: string; bundler?: string } | undefined
-): boolean {
-  return caller?.bundler === 'metro' || caller?.name === 'metro';
 }
