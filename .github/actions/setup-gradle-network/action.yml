@@ -1,0 +1,16 @@
+name: Set up Gradle network access
+description: Resolve Maven Central artifacts from Google's mirror and retry throttled or failed downloads longer
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install the Maven Central mirror init script and retry settings
+      shell: bash
+      run: |
+        gradle_home="${GRADLE_USER_HOME:-$HOME/.gradle}"
+        mkdir -p "$gradle_home/init.d"
+        cp "$GITHUB_ACTION_PATH/maven-central-mirror.init.gradle" "$gradle_home/init.d/"
+        {
+          echo "systemProp.org.gradle.internal.network.retry.max.attempts=6"
+          echo "systemProp.org.gradle.internal.network.retry.initial.backOff=5000"
+        } >> "$gradle_home/gradle.properties"

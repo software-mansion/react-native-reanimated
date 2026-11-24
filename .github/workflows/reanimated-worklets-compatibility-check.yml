@@ -80,6 +80,9 @@ jobs:
           distribution: 'zulu'
           java-version: ${{ env.JAVA_VERSION }}
 
+      - name: Set up Gradle network access
+        uses: $/.github/actions/setup-gradle-network
+
       - name: Restore result cache
         id: result-cache
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
