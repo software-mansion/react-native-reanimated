@@ -274,6 +274,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  createDetachedShadowNodeWrapper(
+    shadowNodeWrapper: ShadowNodeWrapper
+  ): ShadowNodeWrapper {
+    return shadowNodeWrapper;
+  }
+
   markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
     throw new Error(
       '[Reanimated] markNodeAsRemovable is not available in JSReanimated.'

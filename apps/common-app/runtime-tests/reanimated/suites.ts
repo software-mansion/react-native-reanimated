@@ -52,6 +52,7 @@ const SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/core/useAnimatedRef.test');
       require('./tests/core/useAnimatedRefRetention.test');
+      require('./tests/core/useAnimatedRefNewestClone.test');
       require('./tests/core/getAnimatableRef.test');
       // TODO: update expected values
       // require('./tests/core/cancelAnimation.test');
@@ -77,6 +78,12 @@ const SUITES: RuntimeTestSuite[] = [
       // TODO: onLayout event isn't working on Android
       // require('./tests/core/onLayout.test');
     },
+  },
+  {
+    testSuiteName: 'shadow node wrapper race',
+    importTest: () => require('./tests/core/shadowNodeWrapperRace.test'),
+    // A stress test for TSan, which runs in the nightly full runs.
+    fullRunOnly: true,
   },
   {
     testSuiteName: 'event handlers',
@@ -310,7 +317,8 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES.map(
   (suite) => ({
     ...suite,
     fullRunOnly:
-      !isBundleModeEnabled() &&
-      !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName),
+      suite.fullRunOnly ||
+      (!isBundleModeEnabled() &&
+        !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName)),
   })
 );
