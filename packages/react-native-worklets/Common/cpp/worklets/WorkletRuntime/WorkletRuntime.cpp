@@ -85,11 +85,13 @@ WorkletRuntime::WorkletRuntime(
     bool enableEventLoop,
     bool enableLocking,
     bool enableNetworking,
-    bool abortable)
+    bool abortable,
+    bool enableVSync)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       enableNetworking_(enableNetworking),
       abortable_(abortable),
+      enableVSync_(enableVSync),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
       runtime_(makeRuntime(
@@ -165,6 +167,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
       queue_,
+      enableVSync_,
       nativeLoggingHook,
       runtimeBindings->createWorkerAnimationFrameSource);
 

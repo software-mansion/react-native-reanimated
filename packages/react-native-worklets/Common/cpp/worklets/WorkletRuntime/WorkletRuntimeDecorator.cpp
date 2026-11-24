@@ -86,6 +86,7 @@ void WorkletRuntimeDecorator::decorate(
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
     const std::shared_ptr<AsyncQueue> &queue,
+    const bool enableVSync,
     const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
     const RuntimeBindings::CreateWorkerAnimationFrameSource &createWorkerAnimationFrameSource) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
@@ -254,29 +255,42 @@ void WorkletRuntimeDecorator::decorate(
       rt,
       "_scheduleTimeoutCallback",
       [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop)](
-          jsi::Runtime &rt, const jsi::Value &delayJs, const jsi::Value &handlerIdJs) -> jsi::Value {
+          jsi::Runtime &rt, const jsi::Value &delayJs, const jsi::Value &handlerIdJs, const jsi::Value &frameAlignedJs)
+          -> jsi::Value {
         const auto delay = delayJs.asNumber();
         const auto handlerId = handlerIdJs.asNumber();
+        const auto frameAligned = frameAlignedJs.isBool() && frameAlignedJs.getBool();
         const auto job = [handlerId](jsi::Runtime &rt) {
           rt.global().getPropertyAsFunction(rt, "__runTimeoutCallback").call(rt, handlerId);
         };
         if (auto strongEventLoop = weakEventLoop.lock()) {
-          strongEventLoop->pushTimeout(job, delay);
+          strongEventLoop->pushTimeout(job, delay, frameAligned);
         }
         return jsi::Value::undefined();
       });
 
-  if (const auto vsyncQueue = std::dynamic_pointer_cast<VSyncAsyncQueue>(queue); eventLoop && vsyncQueue) {
+  if (!enableVSync || !eventLoop) {
+    return;
+  }
+
+  if (const auto vsyncQueue = std::dynamic_pointer_cast<VSyncAsyncQueue>(queue)) {
+    eventLoop->setFrameSource(
+        [weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](std::function<void(double)> &&onFrame) {
+          if (const auto strongQueue = weakQueue.lock()) {
+            strongQueue->requestVSync(std::move(onFrame));
+          }
+        },
+        true);
     jsi_utils::installJsiFunction(
         rt,
-        "_scheduleAnimationFrameCallback",
+        "_scheduleVSyncCallback",
         [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop),
          weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](jsi::Runtime &) {
           if (const auto strongQueue = weakQueue.lock()) {
             strongQueue->requestVSync([weakEventLoop](const double timestampMs) {
               if (const auto strongEventLoop = weakEventLoop.lock()) {
                 strongEventLoop->runTask([timestampMs](jsi::Runtime &rt) {
-                  rt.global().getPropertyAsFunction(rt, "__runAnimationFrameCallback").call(rt, timestampMs);
+                  rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
                 });
               }
             });
@@ -286,16 +300,24 @@ void WorkletRuntimeDecorator::decorate(
     return;
   }
 
-  if (eventLoop && createWorkerAnimationFrameSource) {
+  if (createWorkerAnimationFrameSource) {
     /**
      * The frame source is created with the first request, so that only the
      * runtimes that use it own one. The function is called only from the
      * runtime it is installed on.
      */
     const auto requestWorkerAnimationFrame = std::make_shared<RuntimeBindings::RequestAnimationFrame>();
+    eventLoop->setFrameSource(
+        [createWorkerAnimationFrameSource, requestWorkerAnimationFrame](std::function<void(double)> &&onFrame) {
+          if (!*requestWorkerAnimationFrame) {
+            *requestWorkerAnimationFrame = createWorkerAnimationFrameSource();
+          }
+          (*requestWorkerAnimationFrame)(std::move(onFrame));
+        },
+        false);
     jsi_utils::installJsiFunction(
         rt,
-        "_scheduleAnimationFrameCallback",
+        "_scheduleVSyncCallback",
         [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop),
          createWorkerAnimationFrameSource,
          requestWorkerAnimationFrame](jsi::Runtime &) {
@@ -305,7 +327,7 @@ void WorkletRuntimeDecorator::decorate(
           (*requestWorkerAnimationFrame)([weakEventLoop](const double timestampMs) {
             if (auto strongEventLoop = weakEventLoop.lock()) {
               strongEventLoop->pushTask([timestampMs](jsi::Runtime &rt) {
-                rt.global().getPropertyAsFunction(rt, "__runAnimationFrameCallback").call(rt, timestampMs);
+                rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
               });
             }
           });

@@ -40,7 +40,7 @@ export function setupRequestAnimationFrame(
   }
 
   if (enableVSync) {
-    globalThis.__runAnimationFrameCallback = flushAnimationFrame;
+    globalThis.__runVSyncCallback = flushAnimationFrame;
   }
 
   globalThis.requestAnimationFrame = (
@@ -53,7 +53,7 @@ export function setupRequestAnimationFrame(
       flushRequested = true;
 
       if (enableVSync) {
-        globalThis._scheduleAnimationFrameCallback();
+        globalThis._scheduleVSyncCallback?.();
       } else {
         setTimeout(flushAnimationFrameOnTimeout, timeoutInterval);
       }

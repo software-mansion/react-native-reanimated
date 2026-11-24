@@ -293,7 +293,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       bool enableEventLoop = true,
       bool enableLocking = true,
       bool enableNetworking = true,
-      bool abortable = false);
+      bool abortable = false,
+      bool enableVSync = false);
 
   ~WorkletRuntime() override;
 
@@ -523,6 +524,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const bool enableLocking_;
   const bool enableNetworking_;
   const bool abortable_;
+  const bool enableVSync_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;

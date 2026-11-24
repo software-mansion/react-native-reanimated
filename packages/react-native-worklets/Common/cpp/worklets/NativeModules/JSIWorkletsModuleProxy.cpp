@@ -234,9 +234,10 @@ inline jsi::Value createWorkletRuntime(
     bool enableEventLoop,
     bool enableLocking,
     bool enableNetworking,
-    bool abortable) {
+    bool abortable,
+    bool enableVSync) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking, abortable);
+      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking, abortable, enableVSync);
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -729,7 +730,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             enableEventLoop,
             enableLocking,
             enableNetworking,
-            abortable);
+            abortable,
+            enableVSync);
       });
 
   jsi_utils::addMethod<5>(

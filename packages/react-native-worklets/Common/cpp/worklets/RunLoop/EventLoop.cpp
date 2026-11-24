@@ -56,14 +56,15 @@ void EventLoop::run() {
 
       const auto currentTime = getCurrentTimeInMs();
       std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
+      std::vector<std::function<void(jsi::Runtime & rt)>> frameAlignedJobs;
       auto &timeouts = state->queue;
       timeouts.erase(
           std::remove_if(
               timeouts.begin(),
               timeouts.end(),
-              [currentTime, &jobs](const Timeout &timeout) {
+              [currentTime, &jobs, &frameAlignedJobs](const Timeout &timeout) {
                 if (currentTime >= timeout.targetTime) {
-                  jobs.emplace_back(timeout.callback);
+                  (timeout.frameAligned ? frameAlignedJobs : jobs).emplace_back(timeout.callback);
                   return true;
                 }
                 return false;
@@ -74,6 +75,9 @@ void EventLoop::run() {
       if (auto strongThis = weakThis.lock()) {
         for (auto &job : jobs) {
           strongThis->pushTask(std::move(job));
+        }
+        if (!frameAlignedJobs.empty()) {
+          strongThis->deferToNextFrame(std::move(frameAlignedJobs));
         }
       }
     }
@@ -130,14 +134,76 @@ void EventLoop::abortPending() {
   timeoutsQueueState_->cv.notify_all();
 }
 
-void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay) {
+void EventLoop::setFrameSource(FrameRequester &&requestFrame, bool deliversOnRuntimeThread) {
+  std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
+  requestFrame_ = std::move(requestFrame);
+  deliversOnRuntimeThread_ = deliversOnRuntimeThread;
+}
+
+void EventLoop::deferToNextFrame(std::vector<std::function<void(jsi::Runtime &rt)>> &&jobs) {
+  bool shouldRequestFrame = false;
+  {
+    std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
+    if (!requestFrame_) {
+      for (auto &job : jobs) {
+        pushTask(std::move(job));
+      }
+      return;
+    }
+    for (auto &job : jobs) {
+      frameTimeouts_.push_back(std::move(job));
+    }
+    shouldRequestFrame = !frameRequested_;
+    frameRequested_ = true;
+  }
+  if (shouldRequestFrame) {
+    pushTask([weakThis = weak_from_this()](jsi::Runtime &) {
+      if (const auto strongThis = weakThis.lock()) {
+        strongThis->requestFrame();
+      }
+    });
+  }
+}
+
+void EventLoop::requestFrame() {
+  FrameRequester requestFrame;
+  {
+    std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
+    requestFrame = requestFrame_;
+  }
+  requestFrame([weakThis = weak_from_this()](double) {
+    if (const auto strongThis = weakThis.lock()) {
+      strongThis->runFrameTimeouts();
+    }
+  });
+}
+
+void EventLoop::runFrameTimeouts() {
+  std::vector<std::function<void(jsi::Runtime & rt)>> timeouts;
+  bool deliversOnRuntimeThread;
+  {
+    std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
+    std::swap(timeouts, frameTimeouts_);
+    frameRequested_ = false;
+    deliversOnRuntimeThread = deliversOnRuntimeThread_;
+  }
+  for (auto &timeout : timeouts) {
+    if (deliversOnRuntimeThread) {
+      runTask(timeout);
+    } else {
+      pushTask(std::move(timeout));
+    }
+  }
+}
+
+void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay, bool frameAligned) {
   {
     std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
     if (!timeoutsQueueState_->running) {
       return;
     }
     const auto targetTime = getCurrentTimeInMs() + delay;
-    const auto timeout = Timeout{std::move(job), targetTime};
+    const auto timeout = Timeout{std::move(job), targetTime, frameAligned};
     auto &queue = timeoutsQueueState_->queue;
     auto it = std::upper_bound(queue.begin(), queue.end(), timeout);
     queue.insert(it, timeout);

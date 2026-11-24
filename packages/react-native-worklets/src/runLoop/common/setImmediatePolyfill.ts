@@ -7,7 +7,10 @@ export function setupSetImmediate() {
     callback: (...args: unknown[]) => void,
     ...args: unknown[]
   ) => {
-    return setTimeout(callback, 0, ...args);
+    const scheduleImmediate = globalThis._scheduleImmediate;
+    return scheduleImmediate
+      ? scheduleImmediate(callback, ...args)
+      : setTimeout(callback, 0, ...args);
   };
 
   const clearImmediatePolyfill = (immediateHandle: number) => {

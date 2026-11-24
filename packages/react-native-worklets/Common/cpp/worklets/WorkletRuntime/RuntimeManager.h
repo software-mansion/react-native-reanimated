@@ -46,7 +46,8 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
       bool enableEventLoop = true,
       bool enableLocking = true,
       bool enableNetworking = true,
-      bool abortable = false);
+      bool abortable = false,
+      bool enableVSync = false);
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 

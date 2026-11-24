@@ -18,6 +18,7 @@ namespace worklets {
 struct Timeout {
   std::function<void(jsi::Runtime &rt)> callback;
   int64_t targetTime;
+  bool frameAligned;
   bool operator<(const Timeout &v) const {
     return targetTime < v.targetTime;
   }
@@ -43,8 +44,11 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
   void runTask(const std::function<void(jsi::Runtime &rt)> &job);
-  void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
+  void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay, bool frameAligned = false);
   void abortPending();
+
+  using FrameRequester = std::function<void(std::function<void(double)> &&onFrame)>;
+  void setFrameSource(FrameRequester &&requestFrame, bool deliversOnRuntimeThread);
 
  private:
   const AbortToken abortToken_;
@@ -54,6 +58,16 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   const std::shared_ptr<RuntimeTaskState> taskState_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
+
+  void deferToNextFrame(std::vector<std::function<void(jsi::Runtime &rt)>> &&jobs);
+  void requestFrame();
+  void runFrameTimeouts();
+
+  FrameRequester requestFrame_;
+  bool deliversOnRuntimeThread_ = false;
+  std::mutex frameTimeoutsMutex_;
+  std::vector<std::function<void(jsi::Runtime &rt)>> frameTimeouts_;
+  bool frameRequested_ = false;
 
   static int64_t getCurrentTimeInMs();
 };

@@ -102,10 +102,27 @@ declare global {
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
   ) => void;
-  var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
+  var _scheduleTimeoutCallback: (
+    delay: number,
+    handlerId: number,
+    frameAligned: boolean
+  ) => void;
+  var _scheduleImmediate:
+    | ((callback: (...args: unknown[]) => void, ...args: unknown[]) => number)
+    | undefined;
   var __runTimeoutCallback: (handlerId: number) => void;
-  var _scheduleAnimationFrameCallback: () => void;
-  var __runAnimationFrameCallback: (timestamp: number) => void;
+  /**
+   * Requests the next display v-sync for a Worker Runtime created with
+   * `enableVSync`. Installed by native code only on such runtimes.
+   */
+  var _scheduleVSyncCallback: (() => void) | undefined;
+  /**
+   * Called by native code on the next display v-sync, with the frame
+   * timestamp, after `_scheduleVSyncCallback`. Set by the
+   * `requestAnimationFrame` polyfill only on runtimes created with
+   * `enableVSync`.
+   */
+  var __runVSyncCallback: ((timestamp: number) => void) | undefined;
   var _taskQueue: Queue;
   /** Only in Debug builds. */
   var __hasNativeState: (value: object) => boolean;

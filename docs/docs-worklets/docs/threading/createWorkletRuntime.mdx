@@ -106,7 +106,8 @@ When enabled:
 - The frames come from a dedicated thread, so a blocked UI thread does not delay them. On macOS they come from the main thread.
 - `animationQueuePollingRate` cannot be set. TypeScript rejects the combination and `createWorkletRuntime` throws.
 - Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background.
-- `setTimeout`, `setInterval` and `setImmediate` are not affected.
+- `setTimeout` and `setInterval` callbacks run on the first frame after they are due, as on the React Native JavaScript thread. For example, `setTimeout(callback, 4)` runs on the next frame, up to one frame later than 4 ms.
+- `setImmediate` and microtasks are not affected.
 - The order of a frame callback relative to a timer scheduled in the same task is not defined, because it depends on when the next frame arrives.
 
 ##### `enableEventLoop`
