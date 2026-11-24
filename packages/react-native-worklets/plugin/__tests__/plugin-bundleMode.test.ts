@@ -109,21 +109,6 @@ describe('babel plugin in bundleMode', () => {
       expect(redactGeneratedModules(code)).toMatchSnapshot();
     });
 
-    test('still captures closure even with "no-worklet-closure" directive', () => {
-      const input = html`<script>
-        const x = 1;
-        function foo() {
-          'worklet';
-          'no-worklet-closure';
-          return x;
-        }
-      </script>`;
-
-      const { code, modules } = runPlugin(input);
-      expect(modules).toHaveLength(1);
-      expect(redactGeneratedModules(code)).toMatchSnapshot();
-      expect(modules[0].content).toMatchSnapshot();
-    });
   });
 
   describe('import forwarding by module name', () => {

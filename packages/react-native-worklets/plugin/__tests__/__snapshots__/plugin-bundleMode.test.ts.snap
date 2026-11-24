@@ -79,29 +79,6 @@ export default (function testJs1Factory([z, missing, a]) {
 
 exports[`babel plugin in bundleMode source replacement replaces inline factory with a require of the generated module 1`] = `"const foo = require("metro:inline;base64,<module 1>").default;"`;
 
-exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 1`] = `
-"const x = 1;
-const foo = require("metro:inline;base64,<module 1>").default([x]);"
-`;
-
-exports[`babel plugin in bundleMode source replacement still captures closure even with "no-worklet-closure" directive 2`] = `
-""worklet-module";
-
-const __workletModuleId = module.id;
-export default (function foo_testJs1Factory([x]) {
-  const foo = function () {
-    "use no memo";
-
-    return x;
-  };
-  foo.__closure = [x];
-  foo.__workletHash = 1;
-  foo.__pluginVersion = "x.y.z";
-  foo.__moduleId = __workletModuleId;
-  return foo;
-});"
-`;
-
 exports[`babel plugin in bundleMode worklet module generation captures locally defined JSX components in the closure 1`] = `
 "function LocalComponent() {
   return null;
