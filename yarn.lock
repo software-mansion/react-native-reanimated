@@ -312,7 +312,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/generator@npm:^7.20.5, @babel/generator@npm:^7.25.0, @babel/generator@npm:^7.25.9, @babel/generator@npm:^7.27.1, @babel/generator@npm:^7.27.5, @babel/generator@npm:^7.28.5, @babel/generator@npm:^7.29.1, @babel/generator@npm:^7.29.12, @babel/generator@npm:^7.29.13, @babel/generator@npm:^7.29.6, @babel/generator@npm:^7.7.2":
+"@babel/generator@npm:7.29.13, @babel/generator@npm:^7.20.5, @babel/generator@npm:^7.25.0, @babel/generator@npm:^7.25.9, @babel/generator@npm:^7.27.1, @babel/generator@npm:^7.27.5, @babel/generator@npm:^7.28.5, @babel/generator@npm:^7.29.1, @babel/generator@npm:^7.29.12, @babel/generator@npm:^7.29.13, @babel/generator@npm:^7.29.6, @babel/generator@npm:^7.7.2":
   version: 7.29.13
   resolution: "@babel/generator@npm:7.29.13"
   dependencies:
@@ -1076,18 +1076,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-class-properties@npm:7.27.1":
-  version: 7.27.1
-  resolution: "@babel/plugin-transform-class-properties@npm:7.27.1"
-  dependencies:
-    "@babel/helper-create-class-features-plugin": "npm:^7.27.1"
-    "@babel/helper-plugin-utils": "npm:^7.27.1"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 10/475a6e5a9454912fe1bdc171941976ca10ea4e707675d671cdb5ce6b6761d84d1791ac61b6bca81a2e5f6430cb7b9d8e4b2392404110e69c28207a754e196294
-  languageName: node
-  linkType: hard
-
 "@babel/plugin-transform-class-properties@npm:^7.25.4, @babel/plugin-transform-class-properties@npm:^7.27.1, @babel/plugin-transform-class-properties@npm:^7.28.6":
   version: 7.28.6
   resolution: "@babel/plugin-transform-class-properties@npm:7.28.6"
@@ -1109,22 +1097,6 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.12.0
   checksum: 10/bea7836846deefd02d9976ad1b30b5ade0d6329ecd92866db789dcf6aacfaf900b7a77031e25680f8de5ad636a771a5bdca8961361e6218d45d538ec5d9b71cc
-  languageName: node
-  linkType: hard
-
-"@babel/plugin-transform-classes@npm:7.28.4":
-  version: 7.28.4
-  resolution: "@babel/plugin-transform-classes@npm:7.28.4"
-  dependencies:
-    "@babel/helper-annotate-as-pure": "npm:^7.27.3"
-    "@babel/helper-compilation-targets": "npm:^7.27.2"
-    "@babel/helper-globals": "npm:^7.28.0"
-    "@babel/helper-plugin-utils": "npm:^7.27.1"
-    "@babel/helper-replace-supers": "npm:^7.27.1"
-    "@babel/traverse": "npm:^7.28.4"
-  peerDependencies:
-    "@babel/core": ^7.0.0-0
-  checksum: 10/1f8423d0ba287ba4ae3aac89299e704a666ef2fc5950cd581e056c068486917a460efd5731fdd0d0fb0a8a08852e13b31c1add089028e89a8991a7fdfaff5c43
   languageName: node
   linkType: hard
 
@@ -1758,7 +1730,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-unicode-regex@npm:7.27.1, @babel/plugin-transform-unicode-regex@npm:^7.0.0, @babel/plugin-transform-unicode-regex@npm:^7.24.7, @babel/plugin-transform-unicode-regex@npm:^7.27.1":
+"@babel/plugin-transform-unicode-regex@npm:^7.0.0, @babel/plugin-transform-unicode-regex@npm:^7.24.7, @babel/plugin-transform-unicode-regex@npm:^7.27.1":
   version: 7.27.1
   resolution: "@babel/plugin-transform-unicode-regex@npm:7.27.1"
   dependencies:
@@ -2080,7 +2052,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/traverse@npm:^7.25.3, @babel/traverse@npm:^7.25.9, @babel/traverse@npm:^7.26.8, @babel/traverse@npm:^7.27.1, @babel/traverse@npm:^7.28.3, @babel/traverse@npm:^7.28.4, @babel/traverse@npm:^7.28.5, @babel/traverse@npm:^7.28.6, @babel/traverse@npm:^7.29.0, @babel/traverse@npm:^7.29.10, @babel/traverse@npm:^7.29.7":
+"@babel/traverse@npm:^7.25.3, @babel/traverse@npm:^7.25.9, @babel/traverse@npm:^7.26.8, @babel/traverse@npm:^7.27.1, @babel/traverse@npm:^7.28.3, @babel/traverse@npm:^7.28.5, @babel/traverse@npm:^7.28.6, @babel/traverse@npm:^7.29.0, @babel/traverse@npm:^7.29.10, @babel/traverse@npm:^7.29.7":
   version: 7.29.13
   resolution: "@babel/traverse@npm:7.29.13"
   dependencies:
@@ -12455,9 +12427,7 @@ __metadata:
   dependencies:
     "@babel/cli": "npm:7.28.3"
     "@babel/core": "npm:7.29.6"
-    "@babel/plugin-transform-class-properties": "npm:7.27.1"
-    "@babel/plugin-transform-classes": "npm:7.28.4"
-    "@babel/plugin-transform-unicode-regex": "npm:7.27.1"
+    "@babel/generator": "npm:7.29.13"
     "@babel/traverse": "npm:7.29.12"
     "@babel/types": "npm:7.29.11"
     "@types/node": "npm:24.0.14"
@@ -27490,15 +27460,6 @@ __metadata:
   dependencies:
     "@babel/cli": "npm:7.28.3"
     "@babel/core": "npm:7.29.6"
-    "@babel/generator": "npm:^7.27.1"
-    "@babel/plugin-transform-arrow-functions": "npm:^7.27.1"
-    "@babel/plugin-transform-class-properties": "npm:^7.28.6"
-    "@babel/plugin-transform-classes": "npm:^7.28.6"
-    "@babel/plugin-transform-nullish-coalescing-operator": "npm:^7.28.6"
-    "@babel/plugin-transform-optional-chaining": "npm:^7.28.6"
-    "@babel/plugin-transform-shorthand-properties": "npm:^7.27.1"
-    "@babel/plugin-transform-template-literals": "npm:^7.27.1"
-    "@babel/plugin-transform-unicode-regex": "npm:^7.27.1"
     "@babel/preset-typescript": "npm:^7.28.5"
     "@babel/traverse": "npm:^7.27.1"
     "@babel/types": "npm:^7.27.1"
@@ -27508,7 +27469,6 @@ __metadata:
     "@types/node": "npm:24.7.0"
     "@types/react": "npm:19.2.18"
     clang-format-node: "npm:1.3.5"
-    convert-source-map: "npm:^2.0.0"
     is-tree-shakable: "npm:0.5.0"
     knip: "npm:5.61.3"
     madge: "npm:8.0.0"
