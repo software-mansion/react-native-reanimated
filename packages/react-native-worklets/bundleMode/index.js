@@ -47,6 +47,7 @@ function bundleModeCustomizeFrame(/** @type {any} */ frame) {
     return undefined;
   }
   const file = path.resolve(frame.file);
+  // `frame.file` comes from the /symbolicate request, so without this check it could read an arbitrary file.
   if (path.dirname(file) !== generatedWorkletsDir || !file.endsWith('.js')) {
     return undefined;
   }
