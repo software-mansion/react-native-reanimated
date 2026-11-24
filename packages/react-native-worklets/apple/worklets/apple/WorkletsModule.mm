@@ -10,6 +10,7 @@
 #import <worklets/apple/IOSUIScheduler.h>
 #import <worklets/apple/Networking/AppleNetworkingBackend.h>
 #import <worklets/apple/ScriptLoader.h>
+#import <worklets/apple/VSyncAsyncQueue.h>
 #import <worklets/apple/WorkletsModule.h>
 
 #import <Foundation/Foundation.h>
@@ -174,6 +175,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
+      },
+      .createVSyncQueue = [](const std::string &name) -> std::shared_ptr<VSyncAsyncQueue> {
+        return std::make_shared<AppleVSyncAsyncQueue>(name);
       },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AppleNetworkingBackend>()});
