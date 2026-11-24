@@ -179,10 +179,7 @@ fn write_worklet_file(
         .map_err(|error| format!("could not create {}: {error}", dir.display()))?;
     let name = file_path.rsplit('/').next().unwrap_or(file_path);
     let path = dir.join(name);
-    let temporary = dir.join(format!("{name}.{}.tmp", std::process::id()));
-    std::fs::write(&temporary, content)
-        .map_err(|error| format!("could not write {}: {error}", temporary.display()))?;
-    std::fs::rename(&temporary, &path)
+    std::fs::write(&path, content)
         .map_err(|error| format!("could not write {}: {error}", path.display()))
 }
 

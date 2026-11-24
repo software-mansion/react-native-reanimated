@@ -25,7 +25,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import assert from 'assert';
-import { renameSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { dirname, resolve } from 'path';
 
 import { createImportPathLiteral } from './imports';
@@ -74,9 +74,7 @@ export function generateWorkletFile(
     generatedWorkletsDir
   );
   const dedicatedFilePath = resolve(filesDirPath, `${workletHash}.js`);
-  const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
-  writeFileSync(temporaryFilePath, code);
-  renameSync(temporaryFilePath, dedicatedFilePath);
+  writeFileSync(dedicatedFilePath, code);
   return `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`;
 }
 

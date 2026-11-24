@@ -746,14 +746,6 @@ var require_globals = __commonJS({
     var assert_1 = require("assert");
     var imports_1 = require_imports();
     var types_12 = require_types();
-    var warnedAboutRemovedOptions = false;
-    function warnAboutRemovedOptions(options) {
-      if (warnedAboutRemovedOptions || !("extraPlugins" in options || "extraPresets" in options)) {
-        return;
-      }
-      warnedAboutRemovedOptions = true;
-      console.warn("[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 and have no effect. Remove them from your Babel config.");
-    }
     function initializeState(state, workletModules) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletModule(state.file);
@@ -763,7 +755,6 @@ var require_globals = __commonJS({
       state.workletModules = workletModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
-      warnAboutRemovedOptions(state.opts);
       (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
       state.importForwarding = {
@@ -924,9 +915,7 @@ var require_generate = __commonJS({
       const code = generateWorkletModule(moduleBindingsToImport, relativeBindingsToImport, factory, state, true);
       const filesDirPath = (0, path_1.resolve)((0, path_1.dirname)(require.resolve("react-native-worklets/package.json")), types_2.generatedWorkletsDir);
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
-      const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
-      (0, fs_1.writeFileSync)(temporaryFilePath, code);
-      (0, fs_1.renameSync)(temporaryFilePath, dedicatedFilePath);
+      (0, fs_1.writeFileSync)(dedicatedFilePath, code);
       return `react-native-worklets/${types_2.generatedWorkletsDir}/${workletHash}.js`;
     }
     function generateWorkletModule(moduleBindingsToImport, relativeBindingsToImport, factory, state, rebaseRelativeImports) {
