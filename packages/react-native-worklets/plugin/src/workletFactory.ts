@@ -490,7 +490,11 @@ function makeWorkletHashKey(
   }
   const body = parts.pop();
   const prefix = `${fun.node.async ? 'async ' : ''}${fun.node.generator ? '*' : ''}`;
-  return `${source}:[${closureNames.join(',')}]${prefix}(${parts.join(',')})${body}`;
+  const isExpressionBody =
+    !isBlockStatement(fun.node.body) ||
+    fun.node.body.extra?.workletsExpressionBody === true;
+  const arrow = isExpressionBody ? '=>' : '';
+  return `${source}:[${closureNames.join(',')}]${prefix}(${parts.join(',')})${arrow}${body}`;
 }
 
 let cachedWorkletsPackageDir: string | null | undefined;

@@ -626,6 +626,22 @@ describe.each([
       expect(hashes[0]).not.toBe(hashes[1]);
     });
 
+    test('separates an expression body from a block body with the same text', () => {
+      const hashes = workletHashes(
+        "import { useDerivedValue } from 'react-native-reanimated';\nconst a = useDerivedValue(() => ({ value: 1 }));\nconst b = useDerivedValue(() => { value: 1 });\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('hashes the source text of autoworkletized concise arrows', () => {
+      expect(
+        workletHash(
+          "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
+        )
+      ).toBe(16245832944540);
+    });
+
     test('derives the hash from the relative path and the raw function text', () => {
       expect(
         workletHash(
