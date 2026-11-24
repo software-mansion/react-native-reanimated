@@ -41,7 +41,7 @@ export interface WorkletsModuleProxy {
   ): void;
 
   createSerializableImport<TValue>(
-    source: string,
+    source: number,
     imported: string
   ): SerializableRef<TValue>;
 
