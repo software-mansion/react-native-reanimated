@@ -203,14 +203,18 @@ describe('Test requestAnimationFrame with enableVSync', () => {
 
   test('runs callbacks while the UI thread is blocked', async () => {
     // Arrange
-    const [workerNotification, uiNotification] = [
-      'vsyncWorkerUnblocked',
+    const [readyNotification, uiNotification, workerNotification] = [
+      'vsyncWorkerReady',
       'vsyncUIBlocked',
+      'vsyncWorkerUnblocked',
     ];
     const runtime = createWorkletRuntime({ name: 'vsync', enableVSync: true });
     let workerCallbackTimes: number[] = [];
     let blockStart = 0;
     let blockEnd = 0;
+    const onWorkerReady = () => {
+      notify(readyNotification);
+    };
     const onWorkerDone = (times: number[]) => {
       workerCallbackTimes = times;
       notify(workerNotification);
@@ -224,19 +228,22 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     // Act
     scheduleOnRuntime(runtime, () => {
       'worklet';
+      const globals = globalThis as unknown as { __vsyncTestStop?: boolean };
       const times: number[] = [];
-      const start = performance.now();
       const onFrame = () => {
-        const now = performance.now();
-        times.push(now);
-        if (now - start < 3 * UI_BLOCK_MS) {
-          requestAnimationFrame(onFrame);
-        } else {
+        times.push(performance.now());
+        if (times.length === 1) {
+          scheduleOnRN(onWorkerReady);
+        }
+        if (globals.__vsyncTestStop) {
           scheduleOnRN(onWorkerDone, times);
+        } else {
+          requestAnimationFrame(onFrame);
         }
       };
       requestAnimationFrame(onFrame);
     });
+    await waitForNotification(readyNotification);
     scheduleOnUI(() => {
       'worklet';
       const start = performance.now();
@@ -245,7 +252,13 @@ describe('Test requestAnimationFrame with enableVSync', () => {
       }
       scheduleOnRN(onUIDone, start, performance.now());
     });
-    await waitForNotifications([workerNotification, uiNotification]);
+    await waitForNotification(uiNotification);
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      (globalThis as unknown as { __vsyncTestStop?: boolean }).__vsyncTestStop =
+        true;
+    });
+    await waitForNotification(workerNotification);
 
     // Assert
     const duringBlock = workerCallbackTimes.filter(
