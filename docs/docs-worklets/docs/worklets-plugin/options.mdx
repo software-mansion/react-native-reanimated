@@ -16,24 +16,11 @@ Our plugin offers several optional functionalities that you may need to employ a
 
   ```typescript
   interface PluginOptions {
-    bundleMode?: boolean;
-    disableInlineStylesWarning?: boolean;
-    disableSourceMaps?: boolean;
-    disableWorkletClasses?: boolean;
-    extraPlugins?: string[];
-    extraPresets?: string[];
-    getHBCBinary?: () => string;
-    globals?: string[];
-    hermesBytecode?: boolean;
-    omitNativeOnlyData?: boolean;
-    relativeSourceLocation?: boolean;
-    silenceDangerousPathsWarning?: boolean;
-    strictGlobal?: boolean;
-    substituteWebPlatformChecks?: boolean;
     importForwarding?: {
       moduleNames?: string[];
       relativePaths?: string[];
     };
+    silenceDangerousPathsWarning?: boolean;
   }
   ```
 </details>
@@ -68,18 +55,6 @@ module.exports = {
 ## Options
 
 If you are using the Oxc plugin, refer to [Oxc plugin options](./oxc.mdx#options).
-
-### extraPlugins
-
-Defaults to an empty array.
-
-This is a list of Babel plugins that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
-
-### extraPresets
-
-Defaults to an empty array.
-
-This is a list of Babel presets that will be used when transforming worklet functions' code with the Worklet Syntax Babel plugin.
 
 <Badges version="0.14.0">
   ### silenceDangerousPathsWarning
