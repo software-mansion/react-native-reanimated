@@ -357,7 +357,6 @@ describe('babel plugin', () => {
       expect(files[0].content).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('for closure capturing', () => {
@@ -1336,11 +1335,9 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for generators', () => {
-  });
+  describe('for generators', () => {});
 
-  describe('for async functions', () => {
-  });
+  describe('for async functions', () => {});
 
   describe('for referenced worklets', () => {
     test('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
@@ -1589,7 +1586,12 @@ describe('babel plugin core', () => {
   ): RunResult {
     capturedFiles.length = 0;
     nativelyEmittedFiles().length = 0;
-    const code = transformWithPlugin(input, transformOpts, pluginOpts, TEST_LOCATION);
+    const code = transformWithPlugin(
+      input,
+      transformOpts,
+      pluginOpts,
+      TEST_LOCATION
+    );
     return { code, files: emittedFiles() };
   }
 
@@ -2129,9 +2131,9 @@ describe('babel plugin core', () => {
         { filename: path.join(__dirname, filename) }
       );
       const output = files.map((file) => file.content).join('\n');
-      return [
-        ...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi),
-      ].map((match) => Number(match[1]));
+      return [...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi)].map(
+        (match) => Number(match[1])
+      );
     }
 
     function workletHash(input: string, filename = TEST_LOCATION) {
@@ -2140,12 +2142,28 @@ describe('babel plugin core', () => {
       return hashes[0];
     }
 
-    test('gives identical worklets in one file the same hash', () => {
+    test('gives identical anonymous worklets in one file the same hash', () => {
       const hashes = workletHashes(
-        "function foo() {\n  'worklet';\n  return 1;\n}\nfunction bar() {\n  'worklet';\n  return 1;\n}\n"
+        "const foo = () => {\n  'worklet';\n  return 1;\n};\nconst bar = () => {\n  'worklet';\n  return 1;\n};\n"
       );
       expect(hashes).toHaveLength(2);
       expect(hashes[0]).toBe(hashes[1]);
+    });
+
+    test('separates named functions with the same body', () => {
+      const hashes = workletHashes(
+        "scheduleOnUI(function functionNameA() {\n  'worklet';\n  throw new Error();\n});\nscheduleOnUI(function functionNameB() {\n  'worklet';\n  throw new Error();\n});\nfunction functionNameC() {\n  'worklet';\n  throw new Error();\n}\n"
+      );
+      expect(hashes).toHaveLength(3);
+      expect(new Set(hashes).size).toBe(3);
+    });
+
+    test('separates object methods with the same body', () => {
+      const hashes = workletHashes(
+        "const obj = {\n  foo() {\n    'worklet';\n    return 1;\n  },\n  bar() {\n    'worklet';\n    return 1;\n  },\n};\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
     });
 
     test('changes the hash when the worklet body changes', () => {
@@ -2313,7 +2331,12 @@ describe('babel plugin in bundleMode', () => {
     pluginOpts: PluginOptions = {},
     filename: string = TEST_LOCATION
   ): RunResult {
-    const code = transformWithPlugin(input, transformOpts, pluginOpts, filename);
+    const code = transformWithPlugin(
+      input,
+      transformOpts,
+      pluginOpts,
+      filename
+    );
     return { code, files: emittedFiles() };
   }
 
@@ -2383,13 +2406,16 @@ describe('babel plugin in bundleMode', () => {
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('import forwarding by module name', () => {
     test.each([
       ['forwards an import of the module itself', 'some-library', true],
-      ['does not forward an import of a subpath', 'some-library/sub/file', false],
+      [
+        'does not forward an import of a subpath',
+        'some-library/sub/file',
+        false,
+      ],
       [
         'does not forward a module that only shares the prefix',
         'some-library-extra',
@@ -2496,7 +2522,9 @@ describe('babel plugin in bundleMode', () => {
         runBundleModePlugin(input, {}, pluginOpts);
         return warn.mock.calls
           .map(([message]) => String(message))
-          .filter((message) => message.includes('importForwarding.relativePaths'));
+          .filter((message) =>
+            message.includes('importForwarding.relativePaths')
+          );
       } finally {
         warn.mockRestore();
       }
@@ -2896,7 +2924,12 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(input, {}, {}, generatedFilename);
+      const { code, files } = runBundleModePlugin(
+        input,
+        {},
+        {},
+        generatedFilename
+      );
       expect(files).toHaveLength(0);
       expect(code).not.toContain(REQUIRE_PREFIX);
     });
