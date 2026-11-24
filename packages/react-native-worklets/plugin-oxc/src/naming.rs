@@ -95,6 +95,32 @@ pub fn make_worklet_name(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn worklet_hash_key_uses_relative_path_and_utf16_position() {
+        let source = "const text = 'zażółć';\nconst foo = () => {};\n";
+        let body_start = source.find('{').unwrap() as u32;
+        assert_eq!(
+            worklet_hash_key("/project/src/test.js", Some("/project"), source, body_start),
+            "src/test.js:41"
+        );
+    }
+
+    #[test]
+    fn worklet_hash_key_resolves_relative_filenames_and_parent_directories() {
+        assert_eq!(
+            worklet_hash_key("test.js", Some("/project"), "", 0),
+            "test.js:0"
+        );
+        assert_eq!(
+            worklet_hash_key("/node_modules/lib/index.js", Some("/project"), "", 0),
+            "../node_modules/lib/index.js:0"
+        );
+        assert_eq!(
+            worklet_hash_key("C:/project/src/a.js", Some("C:\\project"), "", 0),
+            "src/a.js:0"
+        );
+    }
+
     use super::*;
 
     #[test]
