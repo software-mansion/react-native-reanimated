@@ -107,7 +107,7 @@ When enabled:
 - `animationQueuePollingRate` cannot be set. TypeScript rejects the combination and `createWorkletRuntime` throws.
 - Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background. Due `setTimeout` and `setInterval` callbacks wait for the next frame too.
 - `setTimeout` and `setInterval` callbacks run on the first frame after they are due, as on the React Native JavaScript thread. For example, `setTimeout(callback, 4)` runs on the next frame, up to one frame later than 4 ms.
-- `setImmediate` is a timer with no delay, so its callbacks also run on the next frame. Microtasks are not affected.
+- `setImmediate` and microtasks are not affected.
 - The order of a frame callback relative to a timer scheduled in the same task is not defined, because it depends on when the next frame arrives.
 
 ##### `enableEventLoop`

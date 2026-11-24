@@ -396,4 +396,45 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     // Assert
     expect(framesDuringChain >= CHAIN_LENGTH - FRAME_TOLERANCE).toBe(true);
   });
+
+  test('runs setImmediate callbacks without waiting for a frame', async () => {
+    // Arrange
+    const notification = 'vsyncImmediateChain';
+    const runtime = createWorkletRuntime({ name: 'vsync', enableVSync: true });
+    let framesDuringChain = Infinity;
+    const onDone = (frames: number) => {
+      framesDuringChain = frames;
+      notify(notification);
+    };
+
+    // Act
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      let frames = 0;
+      let counting = true;
+      const countFrames = () => {
+        frames++;
+        if (counting) {
+          requestAnimationFrame(countFrames);
+        }
+      };
+      requestAnimationFrame(countFrames);
+      const startFrame = frames;
+      let remaining = CHAIN_LENGTH;
+      const next = () => {
+        remaining--;
+        if (remaining === 0) {
+          counting = false;
+          scheduleOnRN(onDone, frames - startFrame);
+        } else {
+          setImmediate(next);
+        }
+      };
+      setImmediate(next);
+    });
+    await waitForNotification(notification);
+
+    // Assert
+    expect(framesDuringChain < CHAIN_LENGTH - FRAME_TOLERANCE).toBe(true);
+  });
 });
