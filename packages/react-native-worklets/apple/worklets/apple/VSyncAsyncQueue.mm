@@ -20,6 +20,7 @@ struct AppleVSyncAsyncQueueState {
   CFRunLoopRef runLoop = nullptr;
   std::deque<std::function<void()>> jobs;
   WorkletsDisplayLink *displayLink = nil;
+  NSObject *frameTarget = nil;
   std::vector<std::function<void(double)>> frameCallbacks;
 
   ~AppleVSyncAsyncQueueState()
@@ -84,8 +85,10 @@ using worklets::AppleVSyncAsyncQueueState;
       return;
     }
   }
-  for (const auto &callback : frameCallbacks) {
-    callback(timestampMs);
+  @autoreleasepool {
+    for (const auto &callback : frameCallbacks) {
+      callback(timestampMs);
+    }
   }
 }
 
@@ -124,6 +127,7 @@ void finishThread(const std::shared_ptr<AppleVSyncAsyncQueueState> &state)
     std::lock_guard<std::mutex> lock(state->mutex);
     displayLink = state->displayLink;
     state->displayLink = nil;
+    state->frameTarget = nil;
     CFRelease(state->runLoop);
     state->runLoop = nullptr;
   }
@@ -145,9 +149,9 @@ AppleVSyncAsyncQueue::AppleVSyncAsyncQueue(const std::string &name)
     NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
     [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
 
-    WorkletsDisplayLink *displayLink =
-        [WorkletsDisplayLink displayLinkWithTarget:[[WorkletsVSyncQueueFrameTarget alloc] initWithState:state]
-                                          selector:@selector(onFrame:)];
+    WorkletsVSyncQueueFrameTarget *frameTarget = [[WorkletsVSyncQueueFrameTarget alloc] initWithState:state];
+    WorkletsDisplayLink *displayLink = [WorkletsDisplayLink displayLinkWithTarget:frameTarget
+                                                                         selector:@selector(onFrame:)];
 #if TARGET_OS_OSX
     [displayLink setPaused:YES];
     [displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
@@ -162,6 +166,7 @@ AppleVSyncAsyncQueue::AppleVSyncAsyncQueue(const std::string &name)
       state->runLoop = CFRunLoopGetCurrent();
       CFRetain(state->runLoop);
       state->displayLink = displayLink;
+      state->frameTarget = frameTarget;
     }
     dispatch_semaphore_signal(ready);
 
