@@ -32,6 +32,8 @@ jest.mock('fs', () => {
 });
 
 // eslint-disable-next-line import/first
+import { version as packageVersion } from '../../package.json';
+// eslint-disable-next-line import/first
 import type { PluginOptions } from '../index';
 // eslint-disable-next-line import/first
 import plugin from '../index';
@@ -115,6 +117,22 @@ describe('babel plugin', () => {
   });
 
   describe('generally', () => {
+    test('injects its version', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(
+        `__pluginVersion = "${packageVersion}"`
+      );
+    });
+
     test('transforms', () => {
       const input = html`<script>
         import Animated, {
@@ -191,6 +209,22 @@ describe('babel plugin', () => {
   });
 
   describe('for worklet names', () => {
+    test('names ObjectMethod with expression key', () => {
+      const input = html`<script>
+        const obj = {
+          ['foo']() {
+            'worklet';
+          },
+        };
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatch(
+        /(\[(['"])foo\2\]|(['"])foo\3): require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
+      );
+    });
+
     test('unnamed ArrowFunctionExpression', () => {
       const input = html`<script>
         const x = 1;
@@ -301,6 +335,22 @@ describe('babel plugin', () => {
   });
 
   describe('for DirectiveLiterals', () => {
+    test("doesn't transform string literals", () => {
+      const input = html`<script>
+        function foo(x) {
+          'worklet';
+          const bar = 'worklet'; // prettier-ignore
+          const baz = "worklet"; // prettier-ignore
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const bar = (['"])worklet\1;/);
+      expect(files[0].content).toMatch(/const baz = (['"])worklet\1;/);
+      expect(files[0].content).not.toMatch(/^\s*(['"])worklet\1;/m);
+    });
+
     test("doesn't bother other Directive Literals", () => {
       const input = html`<script>
         function foo() {
@@ -584,6 +634,27 @@ describe('babel plugin', () => {
   });
 
   describe('for react-native-gesture-handler', () => {
+    test('workletizes referenced gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: onBegin,
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatch(
+        /const onBegin = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default;/
+      );
+      expect(code).toMatch(
+        /useTapGesture\(\{\s*numberOfTaps: 2,\s*onBegin(: onBegin)?\s*\}\)/
+      );
+    });
+
     test('workletizes gesture callbacks using the hooks api', () => {
       const input = html`<script>
         const foo = useTapGesture({
@@ -1335,9 +1406,39 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for generators', () => {});
+  describe('for generators', () => {
+    test('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
 
-  describe('for async functions', () => {});
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const foo = function\* ?\(\) \{/);
+      expect(files[0].content).toMatch(/yield (['"])hello\1;/);
+      expect(files[0].content).toMatch(/yield (['"])world\1;/);
+    });
+  });
+
+  describe('for async functions', () => {
+    test('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const foo = async function ?\(\) \{/);
+      expect(files[0].content).toContain('await Promise.resolve();');
+    });
+  });
 
   describe('for referenced worklets', () => {
     test('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
