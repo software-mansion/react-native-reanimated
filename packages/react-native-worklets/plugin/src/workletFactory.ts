@@ -151,7 +151,13 @@ export function makeWorkletFactory(
     transformed.map
   );
   assert(funString, '`funString` is undefined.');
-  const workletHash = hash(makeWorkletHashKey(fun, state));
+  const workletHash = hash(
+    makeWorkletHashKey(
+      fun,
+      state,
+      closureVariables.map((variable) => variable.name)
+    )
+  );
 
   let lineOffset = 1;
   if (closureVariables.length > 0) {
@@ -461,7 +467,8 @@ function shouldMockVersion(): boolean {
 
 function makeWorkletHashKey(
   fun: NodePath<WorkletizableFunction>,
-  state: WorkletsPluginPass
+  state: WorkletsPluginPass,
+  closureNames: string[]
 ): string {
   const filename = state.file.opts.filename;
   const root =
@@ -483,7 +490,7 @@ function makeWorkletHashKey(
   }
   const body = parts.pop();
   const prefix = `${fun.node.async ? 'async ' : ''}${fun.node.generator ? '*' : ''}`;
-  return `${source}:${prefix}(${parts.join(',')})${body}`;
+  return `${source}:[${closureNames.join(',')}]${prefix}(${parts.join(',')})${body}`;
 }
 
 let cachedWorkletsPackageDir: string | null | undefined;
