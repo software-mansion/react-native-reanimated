@@ -7,7 +7,6 @@ mod class_method;
 mod closure;
 mod directives;
 mod factory_expression;
-mod file_directive;
 mod gesture_handler_autoworkletization;
 mod imports;
 mod layout_animation_autoworkletization;

@@ -5,7 +5,6 @@ import type {
   Directive,
   ExpressionStatement,
   JSXAttribute,
-  Program,
 } from '@babel/types';
 
 import {
@@ -15,7 +14,6 @@ import {
 import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletMethod } from './classMethod';
 import { handleWorkletDirective } from './directives';
-import { processIfWorkletFile } from './file';
 import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
 import type { WorkletsPluginPass } from './types';
@@ -77,13 +75,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         enter(path: NodePath<ClassMethod>, state: WorkletsPluginPass) {
           runWithTaggedExceptions(state, () => {
             processIfWorkletMethod(path);
-          });
-        },
-      },
-      Program: {
-        enter(path: NodePath<Program>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            processIfWorkletFile(path, state);
           });
         },
       },
