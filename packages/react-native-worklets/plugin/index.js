@@ -1033,12 +1033,23 @@ var require_workletFactory = __commonJS({
       return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function makeWorkletHashKey(fun, state) {
-      var _a;
+      var _a, _b;
       const filename = state.file.opts.filename;
-      const cwd = (_a = state.file.opts.cwd) !== null && _a !== void 0 ? _a : process.cwd();
-      const source = filename ? (0, path_1.relative)(cwd, filename).split(path_1.sep).join("/") : "unknownFile";
+      const root = (_b = (_a = resolveWorkletsPackageDir()) !== null && _a !== void 0 ? _a : state.file.opts.cwd) !== null && _b !== void 0 ? _b : process.cwd();
+      const source = filename ? (0, path_1.relative)(root, filename).split(path_1.sep).join("/") : "unknownFile";
       const position = fun.node.body.start;
       return position === null || position === void 0 ? `${source}#${state.workletNumber}` : `${source}:${position}`;
+    }
+    var cachedWorkletsPackageDir;
+    function resolveWorkletsPackageDir() {
+      if (cachedWorkletsPackageDir === void 0) {
+        try {
+          cachedWorkletsPackageDir = (0, path_1.dirname)(require.resolve("react-native-worklets/package.json"));
+        } catch (_a) {
+          cachedWorkletsPackageDir = null;
+        }
+      }
+      return cachedWorkletsPackageDir;
     }
     function hash(str) {
       let i = str.length;
