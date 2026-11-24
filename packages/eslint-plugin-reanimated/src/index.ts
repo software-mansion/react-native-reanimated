@@ -2,6 +2,7 @@ import type { TSESLint } from '@typescript-eslint/utils';
 
 import noAnimatedStyleToNonAnimatedComponent from './noAnimatedStyleToNonAnimatedComponent';
 import noLoggerMessagePrefix from './noLoggerMessagePrefix';
+import noSharedValueInInlineStyle from './noSharedValueInInlineStyle';
 import useGlobalThis from './useGlobalThis';
 import useLogger from './useLogger';
 import useReanimatedError from './useReanimatedError';
@@ -15,4 +16,5 @@ export const rules = {
   'use-reanimated-error': useReanimatedError,
   'use-worklets-error': useWorkletsError,
   'use-global-this': useGlobalThis,
+  'no-shared-value-in-inline-style': noSharedValueInInlineStyle,
 } satisfies Record<string, TSESLint.RuleModule<string, Array<unknown>>>;

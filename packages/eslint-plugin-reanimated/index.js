@@ -273,9 +273,91 @@ var rule2 = {
 };
 var noLoggerMessagePrefix_default = rule2;
 
-// public/useGlobalThis.js
+// public/noSharedValueInInlineStyle.js
 var import_utils3 = require('@typescript-eslint/utils');
 var rule3 = {
+  create: function (context) {
+    return {
+      JSXAttribute: function (node) {
+        var _a;
+        if (
+          node.name.type !== import_utils3.AST_NODE_TYPES.JSXIdentifier ||
+          node.name.name !== 'style' ||
+          ((_a = node.value) === null || _a === void 0 ? void 0 : _a.type) !==
+            import_utils3.AST_NODE_TYPES.JSXExpressionContainer
+        ) {
+          return;
+        }
+        var expression = node.value.expression;
+        if (expression.type === import_utils3.AST_NODE_TYPES.ArrayExpression) {
+          checkStyleObjects(expression);
+        } else if (
+          expression.type === import_utils3.AST_NODE_TYPES.ObjectExpression
+        ) {
+          checkStyleObject(expression);
+        }
+      },
+    };
+    function checkStyleObjects(array) {
+      for (var _i = 0, _a = array.elements; _i < _a.length; _i++) {
+        var element = _a[_i];
+        if (
+          (element === null || element === void 0 ? void 0 : element.type) ===
+          import_utils3.AST_NODE_TYPES.ObjectExpression
+        ) {
+          checkStyleObject(element);
+        }
+      }
+    }
+    function checkStyleObject(object) {
+      for (var _i = 0, _a = object.properties; _i < _a.length; _i++) {
+        var property = _a[_i];
+        if (property.type !== import_utils3.AST_NODE_TYPES.Property) {
+          continue;
+        }
+        if (
+          property.key.type === import_utils3.AST_NODE_TYPES.Identifier &&
+          property.key.name === 'transform'
+        ) {
+          if (
+            property.value.type === import_utils3.AST_NODE_TYPES.ArrayExpression
+          ) {
+            checkStyleObjects(property.value);
+          }
+        } else {
+          checkPropertyValue(property.value);
+        }
+      }
+    }
+    function checkPropertyValue(value) {
+      if (
+        value.type === import_utils3.AST_NODE_TYPES.MemberExpression &&
+        !value.computed &&
+        value.property.type === import_utils3.AST_NODE_TYPES.Identifier &&
+        value.property.name === 'value'
+      ) {
+        context.report({ node: value, messageId: 'sharedValueInInlineStyle' });
+      }
+    }
+  },
+  meta: {
+    docs: {
+      description:
+        "Don't read a shared value's `.value` in an inline style. Pass the shared value itself.",
+    },
+    messages: {
+      sharedValueInInlineStyle:
+        "It looks like you might be using shared value's .value inside an inline style. If you want a component to update when the shared value changes, use the shared value directly instead of its current state represented by `.value`. See https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary/#animations-in-inline-styling",
+    },
+    type: 'suggestion',
+    schema: [],
+  },
+};
+var noSharedValueInInlineStyle_default = rule3;
+
+// public/useGlobalThis.js
+var import_utils4 = require('@typescript-eslint/utils');
+var rule4 = {
   create: function (context) {
     return {
       Identifier: function (node) {
@@ -283,7 +365,7 @@ var rule3 = {
         if (
           node.name === '_WORKLET' &&
           ((_a = node.parent) === null || _a === void 0 ? void 0 : _a.type) !==
-            import_utils3.AST_NODE_TYPES.MemberExpression
+            import_utils4.AST_NODE_TYPES.MemberExpression
         ) {
           context.report({
             node,
@@ -309,21 +391,21 @@ var rule3 = {
     fixable: 'code',
   },
 };
-var useGlobalThis_default = rule3;
+var useGlobalThis_default = rule4;
 
 // public/useLogger.js
-var import_utils4 = require('@typescript-eslint/utils');
-var rule4 = {
+var import_utils5 = require('@typescript-eslint/utils');
+var rule5 = {
   create: function (context) {
     return {
       CallExpression: function (node) {
         var callee = node.callee;
         if (
-          callee.type === import_utils4.AST_NODE_TYPES.MemberExpression &&
+          callee.type === import_utils5.AST_NODE_TYPES.MemberExpression &&
           !callee.computed &&
-          callee.object.type === import_utils4.AST_NODE_TYPES.Identifier &&
+          callee.object.type === import_utils5.AST_NODE_TYPES.Identifier &&
           callee.object.name === 'console' &&
-          callee.property.type === import_utils4.AST_NODE_TYPES.Identifier &&
+          callee.property.type === import_utils5.AST_NODE_TYPES.Identifier &&
           (callee.property.name === 'warn' || callee.property.name === 'error')
         ) {
           var method = callee.property.name;
@@ -352,12 +434,12 @@ var rule4 = {
     fixable: 'code',
   },
 };
-var useLogger_default = rule4;
+var useLogger_default = rule5;
 
 // public/createErrorPrefixRule.js
-var import_utils5 = require('@typescript-eslint/utils');
+var import_utils6 = require('@typescript-eslint/utils');
 function leftmostOperand(node) {
-  return node.type === import_utils5.AST_NODE_TYPES.BinaryExpression &&
+  return node.type === import_utils6.AST_NODE_TYPES.BinaryExpression &&
     node.operator === '+'
     ? leftmostOperand(node.left)
     : node;
@@ -371,7 +453,7 @@ function createErrorPrefixRule(prefix, messageId) {
         NewExpression: function (node) {
           var _a2;
           if (
-            node.callee.type !== import_utils5.AST_NODE_TYPES.Identifier ||
+            node.callee.type !== import_utils6.AST_NODE_TYPES.Identifier ||
             node.callee.name !== 'Error'
           ) {
             return;
@@ -382,7 +464,7 @@ function createErrorPrefixRule(prefix, messageId) {
           }
           var first = leftmostOperand(args[0]);
           if (
-            first.type === import_utils5.AST_NODE_TYPES.Literal &&
+            first.type === import_utils6.AST_NODE_TYPES.Literal &&
             typeof first.value === 'string'
           ) {
             if (first.value.startsWith(prefix)) {
@@ -399,7 +481,7 @@ function createErrorPrefixRule(prefix, messageId) {
               },
             });
           } else if (
-            first.type === import_utils5.AST_NODE_TYPES.TemplateLiteral
+            first.type === import_utils6.AST_NODE_TYPES.TemplateLiteral
           ) {
             var firstQuasi_1 = first.quasis[0];
             var cooked =
@@ -477,6 +559,7 @@ var rules = {
   'use-reanimated-error': useReanimatedError_default,
   'use-worklets-error': useWorkletsError_default,
   'use-global-this': useGlobalThis_default,
+  'no-shared-value-in-inline-style': noSharedValueInInlineStyle_default,
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 &&
