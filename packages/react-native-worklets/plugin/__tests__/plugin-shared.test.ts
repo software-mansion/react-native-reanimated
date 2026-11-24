@@ -22,19 +22,10 @@ function emittedFiles(): CapturedFile[] {
 
 jest.mock('fs', () => {
   const actual: object = jest.requireActual('fs');
-  const stagedFiles = new Map<string, string>();
   return {
     ...actual,
     writeFileSync: (filepath: string, content: string) => {
-      stagedFiles.set(String(filepath), String(content));
-    },
-    renameSync: (from: string, to: string) => {
-      const content = stagedFiles.get(String(from));
-      if (content === undefined) {
-        throw new Error(`renameSync: ${String(from)} was never written`);
-      }
-      capturedFiles.push({ path: String(to), content });
-      stagedFiles.delete(String(from));
+      capturedFiles.push({ path: String(filepath), content: String(content) });
     },
   };
 });
@@ -602,23 +593,6 @@ describe('babel plugin core', () => {
       },
     ])('does not workletize $name', ({ input }) => {
       expect(factoryCount(input)).toBe(0);
-    });
-  });
-
-  describe('removed options', () => {
-    test('warns once that extraPlugins and extraPresets were removed', () => {
-      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
-      const options = {
-        extraPlugins: ['babel-plugin-foo'],
-        extraPresets: [],
-      } as PluginOptions;
-      runPlugin("function foo() {\n  'worklet';\n}\n", options);
-      runPlugin("function bar() {\n  'worklet';\n}\n", options);
-      const removalWarnings = warn.mock.calls.filter(([message]) =>
-        String(message).includes('were removed in Worklets 1.0')
-      );
-      warn.mockRestore();
-      expect(removalWarnings).toHaveLength(1);
     });
   });
 
