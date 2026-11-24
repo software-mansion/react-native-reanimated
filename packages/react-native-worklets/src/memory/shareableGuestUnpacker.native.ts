@@ -29,6 +29,15 @@ export function installShareableGuestUnpacker() {
   let scheduleOnRuntimeFromId: typeof BundleScheduleOnRuntimeWithId;
   let serializer: (value: unknown) => SerializableRef<unknown>;
 
+  function runSyncShareableJob(
+    worklet: WorkletFunction,
+    args: unknown[]
+  ): SerializableRef<unknown> {
+    'worklet';
+    'limit-init-data-hoisting';
+    return globalThis.__serializer(worklet(...args));
+  }
+
   if (
     globalThis.__RUNTIME_KIND === 1 ||
     globalThis._WORKLETS_BUNDLE_MODE_ENABLED
@@ -54,12 +63,11 @@ export function installShareableGuestUnpacker() {
       worklet: WorkletFunction,
       ...args: unknown[]
     ) => {
-      const serializedWorklet = serializer(() => {
-        'worklet';
-        'limit-init-data-hoisting';
-        return globalThis.__serializer(worklet(...args));
-      });
-      return proxy.runOnRuntimeSyncWithId(hostId, serializedWorklet);
+      return proxy.runOnRuntimeSyncWithId(
+        hostId,
+        serializer(runSyncShareableJob),
+        serializer([worklet, args]) as SerializableRef<unknown[]>
+      );
     }) as typeof BundleRunOnRuntimeSyncWithId;
 
     scheduleOnRuntimeFromId = ((
@@ -69,11 +77,8 @@ export function installShareableGuestUnpacker() {
     ) => {
       proxy.scheduleOnRuntimeWithId(
         hostId,
-        serializer(() => {
-          'worklet';
-          'limit-init-data-hoisting';
-          return globalThis.__serializer(worklet(...args));
-        })
+        serializer(worklet),
+        serializer(args) as SerializableRef<unknown[]>
       );
     }) as typeof BundleScheduleOnRuntimeWithId;
 

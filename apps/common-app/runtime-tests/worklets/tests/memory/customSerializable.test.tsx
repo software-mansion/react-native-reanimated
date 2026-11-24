@@ -7,6 +7,7 @@ import {
   createSynchronizable,
   createWorkletRuntime,
   registerCustomSerializable,
+  runOnRuntimeSync,
   runOnUISync,
   scheduleOnRN,
   scheduleOnRuntime,
@@ -158,6 +159,43 @@ describe('Test CustomSerializables', () => {
 
     // Assert
     expect(pass.getBlocking()).toBe(true);
+  });
+
+  test('throws when deserializing an argument on a custom Worklet Runtime fails', async () => {
+    // Arrange
+    type ThrowingArgument = { __throwsDuringArgumentUnpack: true };
+    registerCustomSerializable({
+      name: 'throwing argument test',
+      determine: (value: object): value is ThrowingArgument => {
+        'worklet';
+        return (
+          (value as Partial<ThrowingArgument>).__throwsDuringArgumentUnpack ===
+          true
+        );
+      },
+      pack: () => {
+        'worklet';
+        return {};
+      },
+      unpack: () => {
+        'worklet';
+        throw new Error('argument unpack failed');
+      },
+    });
+    const throwingArgument = Object.create({}) as ThrowingArgument;
+    throwingArgument.__throwsDuringArgumentUnpack = true;
+
+    // Act & Assert
+    await expect(() =>
+      runOnRuntimeSync(
+        workletRuntime,
+        (_value: ThrowingArgument) => {
+          'worklet';
+          return true;
+        },
+        throwingArgument
+      )
+    ).toThrow('argument unpack failed');
   });
 
   test('serializes custom object on custom Worklet Runtime and deserializes on RN', async () => {

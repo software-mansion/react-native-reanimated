@@ -49,6 +49,16 @@ function runAsyncUIJob<Args extends unknown[], ReturnValue>(
 
 let serializableRunAsyncUIJob: SerializableRef | undefined;
 
+function runSyncUIJob<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args
+): SerializableRef<ReturnValue> {
+  'worklet';
+  return makeShareableCloneOnUIRecursive(
+    worklet(...args)
+  ) as SerializableRef<ReturnValue>;
+}
+
 /**
  * Lets you schedule a function to be executed on the [UI
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -173,11 +183,8 @@ export function runOnUISync<Args extends unknown[], ReturnValue>(
   ...args: Args
 ): ReturnValue {
   return WorkletsModule.runOnUISync(
-    createSerializable(() => {
-      'worklet';
-      const result = worklet(...args);
-      return makeShareableCloneOnUIRecursive(result);
-    }),
+    createSerializable(runSyncUIJob),
+    createSerializable([worklet, args]),
     SHOULD_CAPTURE_SCHEDULE_STACK ? (new Error().stack ?? '') : undefined
   );
 }
