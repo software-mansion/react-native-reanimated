@@ -3,50 +3,37 @@ id: call-tables
 sidebar_label: Call tables
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
 import * as CallTableBundleModeSnippet from './_call-tables/callTableBundleMode';
 import CallTableBundleModeSource from '!!raw-loader!./_call-tables/callTableBundleMode';
 
 # Call tables
 
-Call tables are quick references that show **where a given scheduling function can be called from**, depending on whether [Bundle Mode](../bundleMode/overview.mdx) is enabled or not.
-
-### Why does Bundle Mode matter?
-
-In [Legacy Eval Mode](../bundleMode/overview.mdx#legacy-eval-mode), Worklet Runtimes only have a subset of functionalities of the RN Runtime, due to limitations of serialization of worklet functions. With Bundle Mode enabled, every runtime has access to the full JavaScript bundle, so most threading APIs become available on all runtimes.
+Call tables are quick references that show **from which runtimes a given scheduling function can be called**. Since worklets run in [Bundle Mode](../bundleMode/overview.mdx), every runtime has access to the full JavaScript bundle and most threading APIs are available on all runtimes - however, some functions can still be called only from specific runtimes.
 
 ### How to read a call table
 
 Take [scheduleOnUI](../threading/scheduleOnUI.mdx) as an example:
 
 <CallTable
-  bundleMode={{
+  calls={{
 rnRuntime: true,
 uiRuntime: true,
 workerRuntime: true,
 }}
-  noBundleMode={{
+/>
+
+A green check mark in the table means that the function can be called from that runtime, while a red cross means that the function is not supported on that runtime. In development builds such a call throws an error. So in this case, `scheduleOnUI` can be called from any runtime.
+
+In the following example, the RN Runtime schedules a worker, and that worker schedules a function on the UI Runtime. The UI Runtime receives the task and logs the result.
+
+<ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource} bundleMode/>
+
+Compare it with [registerCustomSerializable](../memory/registerCustomSerializable.mdx), which can be called only from the RN Runtime:
+
+<CallTable
+  calls={{
 rnRuntime: true,
 uiRuntime: false,
 workerRuntime: false,
 }}
 />
-
-A green check mark in the table means that the function can be called from that runtime, while a red cross means that calling the function from that runtime will throw an error. So in this case, `scheduleOnUI` can be called from any runtime when Bundle Mode is on, but only from the RN Runtime when Bundle Mode is off:
-
-The following example runs the same code in both modes: the RN Runtime schedules a worker, and that worker tries to schedule a function on the UI Runtime.
-
-<Tabs lazy>
-  <TabItem value="legacy" label="Legacy Eval Mode">
-    The worker starts, but its call to `scheduleOnUI` throws. The UI function never runs.
-
-    <ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource}/>
-  </TabItem>
-
-  <TabItem value="bundle" label="Bundle Mode">
-    The worker can call `scheduleOnUI`, so the UI Runtime receives the task and logs the result.
-
-    <ThreadingSimulation module={CallTableBundleModeSnippet} source={CallTableBundleModeSource} bundleMode/>
-  </TabItem>
-</Tabs>

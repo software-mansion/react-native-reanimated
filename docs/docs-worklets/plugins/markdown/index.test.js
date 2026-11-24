@@ -68,14 +68,28 @@ test('API exports retain call and platform support tables', async () => {
   const markdown = await convertDoc('docs/threading/runOnRuntimeAsync.mdx');
   assert.match(
     markdown,
-    /Bundle Mode\s*\| Supported\s*\| Supported\s*\| Supported/
+    /RN Runtime\s*\| UI Runtime\s*\| Worker Runtime[\s\S]*\| Supported\s*\| Supported\s*\| Supported\s*\|/
   );
-  assert.match(
-    markdown,
-    /Legacy Eval Mode\s*\| Supported\s*\| Not supported\s*\| Not supported/
-  );
-  assert.match(markdown, /\| Supported\s*\| Not supported\s*\|/);
+  assert.doesNotMatch(markdown, /Legacy Eval Mode/);
   assert.match(markdown, /```js[\s\S]*runOnRuntimeAsync/);
+});
+
+test('CallTable reads quoted keys in the calls object', async () => {
+  const { literal } = require('./index.js');
+  const expression = {
+    type: 'ObjectExpression',
+    properties: [
+      {
+        key: { type: 'Literal', value: 'rnRuntime' },
+        value: { type: 'Literal', value: true },
+      },
+      {
+        key: { type: 'Identifier', name: 'uiRuntime' },
+        value: { type: 'Literal', value: false },
+      },
+    ],
+  };
+  assert.deepEqual(literal(expression), { rnRuntime: true, uiRuntime: false });
 });
 
 test('admonitions keep their title and exported code', async () => {
