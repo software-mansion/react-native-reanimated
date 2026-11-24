@@ -5,6 +5,7 @@
 #import <Foundation/Foundation.h>
 #import <QuartzCore/QuartzCore.h>
 
+#import <deque>
 #import <memory>
 #import <mutex>
 #import <string>
@@ -16,8 +17,8 @@ namespace worklets {
 struct AppleVSyncAsyncQueueState {
   std::mutex mutex;
   bool running = true;
-  uint64_t generation = 0;
   CFRunLoopRef runLoop = nullptr;
+  std::deque<std::function<void()>> jobs;
   WorkletsDisplayLink *displayLink = nil;
   std::vector<std::function<void(double)>> frameCallbacks;
 
@@ -55,19 +56,6 @@ using worklets::AppleVSyncAsyncQueueState;
 
 - (void)onFrame:(WorkletsDisplayLink *)displayLink
 {
-  std::vector<std::function<void(double)>> frameCallbacks;
-  CFRunLoopRef runLoop;
-  {
-    std::lock_guard<std::mutex> lock(state_->mutex);
-    if (!state_->running) {
-      return;
-    }
-    frameCallbacks = std::move(state_->frameCallbacks);
-    state_->frameCallbacks.clear();
-    [state_->displayLink setPaused:YES];
-    runLoop = state_->runLoop;
-  }
-
 #if TARGET_OS_OSX
   auto targetTimestamp = displayLink.timestamp + displayLink.duration;
 #else // TARGET_OS_OSX
@@ -75,21 +63,30 @@ using worklets::AppleVSyncAsyncQueueState;
 #endif // TARGET_OS_OSX
   const double timestampMs = worklets::calculateTimestampWithSlowAnimations(targetTimestamp);
 
-  auto runCallbacks = [frameCallbacks = std::move(frameCallbacks), timestampMs]() {
-    for (const auto &callback : frameCallbacks) {
-      callback(timestampMs);
+  std::vector<std::function<void(double)>> frameCallbacks;
+  {
+    std::lock_guard<std::mutex> lock(state_->mutex);
+    if (!state_->running || state_->runLoop == nullptr) {
+      return;
     }
-  };
-  if (CFRunLoopGetCurrent() == runLoop) {
-    runCallbacks();
-    return;
+    frameCallbacks = std::move(state_->frameCallbacks);
+    state_->frameCallbacks.clear();
+    [state_->displayLink setPaused:YES];
+    if (CFRunLoopGetCurrent() != state_->runLoop) {
+      CFRunLoopPerformBlock(state_->runLoop, kCFRunLoopDefaultMode, ^{
+        @autoreleasepool {
+          for (const auto &callback : frameCallbacks) {
+            callback(timestampMs);
+          }
+        }
+      });
+      CFRunLoopWakeUp(state_->runLoop);
+      return;
+    }
   }
-  CFRunLoopPerformBlock(runLoop, kCFRunLoopDefaultMode, ^{
-    @autoreleasepool {
-      runCallbacks();
-    }
-  });
-  CFRunLoopWakeUp(runLoop);
+  for (const auto &callback : frameCallbacks) {
+    callback(timestampMs);
+  }
 }
 
 @end
@@ -102,6 +99,39 @@ bool isRunning(const std::shared_ptr<AppleVSyncAsyncQueueState> &state)
 {
   std::lock_guard<std::mutex> lock(state->mutex);
   return state->running;
+}
+
+void runNextJob(const std::shared_ptr<AppleVSyncAsyncQueueState> &state)
+{
+  std::function<void()> job;
+  {
+    std::lock_guard<std::mutex> lock(state->mutex);
+    if (!state->running || state->jobs.empty()) {
+      return;
+    }
+    job = std::move(state->jobs.front());
+    state->jobs.pop_front();
+  }
+  @autoreleasepool {
+    job();
+  }
+}
+
+void finishThread(const std::shared_ptr<AppleVSyncAsyncQueueState> &state)
+{
+  WorkletsDisplayLink *displayLink;
+  {
+    std::lock_guard<std::mutex> lock(state->mutex);
+    displayLink = state->displayLink;
+    state->displayLink = nil;
+    CFRelease(state->runLoop);
+    state->runLoop = nullptr;
+  }
+#if TARGET_OS_OSX
+  dispatch_async(dispatch_get_main_queue(), ^{ [displayLink invalidate]; });
+#else // TARGET_OS_OSX
+  [displayLink invalidate];
+#endif // TARGET_OS_OSX
 }
 
 } // namespace
@@ -140,6 +170,7 @@ AppleVSyncAsyncQueue::AppleVSyncAsyncQueue(const std::string &name)
         CFRunLoopRunInMode(kCFRunLoopDefaultMode, [[NSDate distantFuture] timeIntervalSinceNow], false);
       }
     }
+    finishThread(state);
   }];
   thread.name = [NSString stringWithUTF8String:name.c_str()];
   thread.qualityOfService = NSQualityOfServiceUserInteractive;
@@ -154,69 +185,40 @@ AppleVSyncAsyncQueue::~AppleVSyncAsyncQueue()
 
 void AppleVSyncAsyncQueue::push(std::function<void()> &&job)
 {
-  uint64_t generation;
-  CFRunLoopRef runLoop;
-  {
-    std::lock_guard<std::mutex> lock(state_->mutex);
-    if (!state_->running) [[unlikely]] {
-      return;
-    }
-    generation = state_->generation;
-    runLoop = state_->runLoop;
+  std::lock_guard<std::mutex> lock(state_->mutex);
+  if (!state_->running) [[unlikely]] {
+    return;
   }
+  state_->jobs.push_back(std::move(job));
   auto state = state_;
-  auto pendingJob = std::move(job);
-  CFRunLoopPerformBlock(runLoop, kCFRunLoopDefaultMode, ^{
-    {
-      std::lock_guard<std::mutex> lock(state->mutex);
-      if (!state->running || state->generation != generation) {
-        return;
-      }
-    }
-    @autoreleasepool {
-      pendingJob();
-    }
-  });
-  CFRunLoopWakeUp(runLoop);
+  CFRunLoopPerformBlock(state_->runLoop, kCFRunLoopDefaultMode, ^{ runNextJob(state); });
+  CFRunLoopWakeUp(state_->runLoop);
 }
 
 void AppleVSyncAsyncQueue::abortPending(AbortToken /* abortToken */)
 {
+  std::deque<std::function<void()>> pendingJobs;
   std::vector<std::function<void(double)>> pendingFrameCallbacks;
   std::lock_guard<std::mutex> lock(state_->mutex);
-  state_->generation++;
+  std::swap(pendingJobs, state_->jobs);
   std::swap(pendingFrameCallbacks, state_->frameCallbacks);
   [state_->displayLink setPaused:YES];
 }
 
 void AppleVSyncAsyncQueue::stop(AbortToken abortToken)
 {
-  CFRunLoopRef runLoop;
   {
     std::lock_guard<std::mutex> lock(state_->mutex);
     if (!state_->running) {
       return;
     }
     state_->running = false;
-    runLoop = state_->runLoop;
+    if (state_->runLoop != nullptr) {
+      CFRunLoopPerformBlock(state_->runLoop, kCFRunLoopDefaultMode, ^{ CFRunLoopStop(CFRunLoopGetCurrent()); });
+      CFRunLoopWakeUp(state_->runLoop);
+    }
   }
   abortPending(abortToken);
-  auto state = state_;
-  CFRunLoopPerformBlock(runLoop, kCFRunLoopDefaultMode, ^{
-    WorkletsDisplayLink *displayLink;
-    {
-      std::lock_guard<std::mutex> lock(state->mutex);
-      displayLink = state->displayLink;
-      state->displayLink = nil;
-    }
-#if TARGET_OS_OSX
-    dispatch_async(dispatch_get_main_queue(), ^{ [displayLink invalidate]; });
-#else // TARGET_OS_OSX
-    [displayLink invalidate];
-#endif // TARGET_OS_OSX
-    CFRunLoopStop(CFRunLoopGetCurrent());
-  });
-  CFRunLoopWakeUp(runLoop);
 }
 
 void AppleVSyncAsyncQueue::requestAnimationFrame(std::function<void(double)> &&callback)
