@@ -9,6 +9,7 @@ import * as path from 'path';
 import { join } from 'path';
 
 import type { PluginOptions } from '../index';
+import { version as packageVersion } from '../../package.json';
 import plugin from '../index';
 import {
   generatedModules,
@@ -89,6 +90,105 @@ function workletText(result: RunResult): string {
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
+  });
+
+  describe('independent of output formatting', () => {
+    test('injects its version', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain(
+        `__pluginVersion = "${packageVersion}"`
+      );
+    });
+
+    test('names ObjectMethod with expression key', () => {
+      const input = html`<script>
+        const obj = {
+          ['foo']() {
+            'worklet';
+          },
+        };
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatch(
+        /(\[(['"])foo\2\]|(['"])foo\3): require\("[^"]+"\)\.default/
+      );
+    });
+
+    test("doesn't transform string literals", () => {
+      const input = html`<script>
+        function foo(x) {
+          'worklet';
+          const bar = 'worklet'; // prettier-ignore
+          const baz = "worklet"; // prettier-ignore
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const bar = (['"])worklet\1;/);
+      expect(files[0].content).toMatch(/const baz = (['"])worklet\1;/);
+      expect(files[0].content).not.toMatch(/^\s*(['"])worklet\1;/m);
+    });
+
+    test('workletizes referenced gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: onBegin,
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatch(/const onBegin = require\("[^"]+"\)\.default;/);
+      expect(code).toMatch(
+        /useTapGesture\(\{\s*numberOfTaps: 2,\s*onBegin(: onBegin)?\s*\}\)/
+      );
+    });
+
+    test('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const foo = function\* ?\(\) \{/);
+      expect(files[0].content).toMatch(/yield (['"])hello\1;/);
+      expect(files[0].content).toMatch(/yield (['"])world\1;/);
+    });
+
+    test('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const foo = async function ?\(\) \{/);
+      expect(files[0].content).toContain('await Promise.resolve();');
+    });
   });
 
   describe('generally', () => {

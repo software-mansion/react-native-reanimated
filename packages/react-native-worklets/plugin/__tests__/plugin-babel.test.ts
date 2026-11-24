@@ -4,7 +4,6 @@ import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 import { join } from 'path';
 
-import { version as packageVersion } from '../../package.json';
 import type { PluginOptions } from '../index';
 import plugin from '../index';
 import { generatedModules, INLINE_MODULE_PREFIX } from '../jest/inlineModules';
@@ -100,21 +99,6 @@ describe('babel plugin', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
-    test('injects its version', () => {
-      process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
-      const input = html`<script>
-        function foo() {
-          'worklet';
-          var foo = 'bar';
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(
-        `__pluginVersion = "${packageVersion}"`
-      );
-    });
 
     test('supports recursive calls', () => {
       const input = html`<script>
@@ -170,19 +154,6 @@ describe('babel plugin', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
-    test('names ObjectMethod with expression key', () => {
-      const input = html`<script>
-        const obj = {
-          ['foo']() {
-            'worklet';
-          },
-        };
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(code).toMatchSnapshot();
-    });
 
     test('appends file name to function name', () => {
       const input = html`<script>
@@ -290,21 +261,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test("doesn't transform string literals", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          const bar = 'worklet'; // prettier-ignore
-          const baz = "worklet"; // prettier-ignore
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain("bar = 'worklet';");
-      expect(files[0].content).toContain('baz = "worklet";');
-      expect(files[0].content).toMatchSnapshot();
-    });
   });
 
   describe('for closure capturing', () => {
@@ -543,21 +499,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('workletizes referenced gesture callbacks using the hooks api', () => {
-      const input = html`<script>
-        const onBegin = () => {
-          console.log('onBegin');
-        };
-        const foo = useTapGesture({
-          numberOfTaps: 2,
-          onBegin: onBegin,
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(code).toMatchSnapshot();
-    });
 
     test('workletizes referenced gesture callbacks using the hooks api and shorthand syntax', () => {
       const input = html`<script>
@@ -913,38 +854,9 @@ describe('babel plugin', () => {
   });
 
   describe('for generators', () => {
-    test('makes a generator worklet factory', () => {
-      const input = html`<script>
-        function* foo() {
-          'worklet';
-          yield 'hello';
-          yield 'world';
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('const foo = function* () {');
-      expect(files[0].content).toContain("yield 'hello';");
-      expect(files[0].content).toMatchSnapshot();
-    });
   });
 
   describe('for async functions', () => {
-    test('makes an async worklet factory', () => {
-      const input = html`<script>
-        async function foo() {
-          'worklet';
-          await Promise.resolve();
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('const foo = async function () {');
-      expect(files[0].content).toContain('await Promise.resolve();');
-      expect(files[0].content).toMatchSnapshot();
-    });
   });
 
   describe('for referenced worklets', () => {
