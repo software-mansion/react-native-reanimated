@@ -337,7 +337,7 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     await waitForNotification(notification);
 
     // Act
-    abortWorkletRuntime(runtime);
+    abortWorkletRuntime(runtime.runtimeId);
     const framesAtAbort = frames;
     await wait(ABORT_SETTLE_MS);
 
