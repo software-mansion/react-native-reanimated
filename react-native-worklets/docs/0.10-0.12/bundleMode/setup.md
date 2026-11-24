@@ -24,6 +24,14 @@ To use `react-native-worklets`'s Bundle Mode feature, you need to make the follo
    };
    ```
 
+If you use Expo, `babel-preset-expo` already adds the Worklets Babel Plugin on its own, without your options. With Reanimated installed, it adds the same plugin through `react-native-reanimated/plugin`. Turn both off in the preset, so the plugin doesn't run twice:
+
+```javascript
+presets: [
+  ['babel-preset-expo', { worklets: false, reanimated: false }],
+],
+```
+
 ## Configure Metro
 
 2. **Modify your Metro configuration**. Metro needs to be configured pre-load Bundle Mode entry points into your JavaScript bundle. In your `metro.config.js` file, apply the config required for the bundle mode. For example:

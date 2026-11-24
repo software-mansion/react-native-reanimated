@@ -42,10 +42,12 @@ module.exports = {
 };
 ```
 
-If you use Expo, `babel-preset-expo` already adds the Worklet Syntax plugin on its own, without your options. Turn it off in the preset, so the plugin doesn't run twice:
+If you use Expo, `babel-preset-expo` already adds the Worklet Syntax plugin on its own, without your options. With Reanimated installed, it adds the same plugin through `react-native-reanimated/plugin`. Turn both off in the preset, so the plugin doesn't run twice:
 
 ```javascript
-presets: [['babel-preset-expo', { worklets: false }]],
+presets: [
+  ['babel-preset-expo', { worklets: false, reanimated: false }],
+],
 ```
 
 ## Configure Metro
