@@ -97,7 +97,7 @@ pub fn make_worklet_factory<'a>(
     let hash = worklet_hash(&worklet_hash_key(
         filename,
         state.opts.hash_root.as_deref(),
-        &raw_function_text(&input, &state.source_text),
+        &raw_function_text(&input, &closure.closure_variables, &state.source_text),
     ));
     state.changed = true;
 
@@ -253,7 +253,11 @@ fn make_worklet_factory_call<'a>(
     builder.expression_call(SPAN, dot_default, NONE, args, false)
 }
 
-fn raw_function_text(input: &WorkletInput<'_, '_>, source_text: &str) -> String {
+fn raw_function_text(
+    input: &WorkletInput<'_, '_>,
+    closure_variables: &[String],
+    source_text: &str,
+) -> String {
     let slice = |span: Span| {
         source_text
             .get(span.start as usize..span.end as usize)
@@ -269,7 +273,8 @@ fn raw_function_text(input: &WorkletInput<'_, '_>, source_text: &str) -> String 
         params.push(slice(rest.span));
     }
     format!(
-        "{}{}({}){}",
+        "[{}]{}{}({}){}",
+        closure_variables.join(","),
         if input.is_async { "async " } else { "" },
         if input.is_generator { "*" } else { "" },
         params.join(","),
