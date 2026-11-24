@@ -8,8 +8,8 @@ import * as os from 'os';
 import * as path from 'path';
 import { join } from 'path';
 
-import type { PluginOptions } from '../index';
 import { version as packageVersion } from '../../package.json';
+import type { PluginOptions } from '../index';
 import plugin from '../index';
 import {
   generatedModules,
@@ -210,7 +210,6 @@ describe('babel plugin', () => {
       expect(files[0].content).not.toContain('other comment');
       expect(files[0].content).toMatchSnapshot();
     });
-
   });
 
   describe('for DirectiveLiterals', () => {
@@ -240,7 +239,6 @@ describe('babel plugin', () => {
       expect(code).not.toContain(REQUIRE_PREFIX);
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('for object hooks', () => {
@@ -253,7 +251,6 @@ describe('babel plugin', () => {
       expect(files).toHaveLength(0);
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('for react-native-gesture-handler', () => {
@@ -366,7 +363,6 @@ describe('babel plugin', () => {
       });
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('for sequence expressions', () => {
@@ -381,7 +377,6 @@ describe('babel plugin', () => {
       expect(files).toHaveLength(0);
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('is idempotent', () => {
@@ -613,7 +608,6 @@ describe('babel plugin', () => {
       expect(files).toHaveLength(0);
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('for debugging', () => {
@@ -641,7 +635,6 @@ describe('babel plugin', () => {
       expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
-
 
   describe('generally', () => {
     test('transforms', () => {
@@ -680,7 +673,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
     });
-
 
     test('supports recursive calls', () => {
       const input = html`<script>
@@ -736,7 +728,6 @@ describe('babel plugin', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
-
     test('appends file name to function name', () => {
       const input = html`<script>
         const x = 1;
@@ -746,7 +737,12 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, join(__dirname, 'source.js'));
+      const { code, files } = runPlugin(
+        input,
+        {},
+        {},
+        join(__dirname, 'source.js')
+      );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_sourceJs[0-9]+Factory\(/gm
@@ -787,7 +783,12 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, join(__dirname, '-source.js'));
+      const { code, files } = runPlugin(
+        input,
+        {},
+        {},
+        join(__dirname, '-source.js')
+      );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_SourceJs[0-9]+Factory\(/gm
@@ -842,7 +843,6 @@ describe('babel plugin', () => {
       expect(files[0].content).not.toContain("'worklet';");
       expect(code).toMatchSnapshot();
     });
-
   });
 
   describe('for closure capturing', () => {
@@ -1080,7 +1080,6 @@ describe('babel plugin', () => {
       expect(files).toHaveLength(3);
       expect(code).toMatchSnapshot();
     });
-
 
     test('workletizes referenced gesture callbacks using the hooks api and shorthand syntax', () => {
       const input = html`<script>
@@ -1435,11 +1434,9 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for generators', () => {
-  });
+  describe('for generators', () => {});
 
-  describe('for async functions', () => {
-  });
+  describe('for async functions', () => {});
 
   describe('for referenced worklets', () => {
     test('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
@@ -1686,7 +1683,12 @@ describe('babel plugin core', () => {
     pluginOpts: PluginOptions = {},
     transformOpts: TransformOptions = {}
   ): RunResult {
-    const code = transformWithPlugin(input, transformOpts, pluginOpts, TEST_LOCATION);
+    const code = transformWithPlugin(
+      input,
+      transformOpts,
+      pluginOpts,
+      TEST_LOCATION
+    );
     return { code, modules: generatedModules(code) };
   }
 
@@ -2286,7 +2288,12 @@ describe('babel plugin in bundleMode', () => {
     pluginOpts: PluginOptions = {},
     filename: string = TEST_LOCATION
   ): RunResult {
-    const code = transformWithPlugin(input, transformOpts, pluginOpts, filename);
+    const code = transformWithPlugin(
+      input,
+      transformOpts,
+      pluginOpts,
+      filename
+    );
     return { code, modules: generatedModules(code) };
   }
 
@@ -2354,13 +2361,16 @@ describe('babel plugin in bundleMode', () => {
       expect(modules).toHaveLength(1);
       expect(redactGeneratedModules(code)).toMatchSnapshot();
     });
-
   });
 
   describe('import forwarding by module name', () => {
     test.each([
       ['forwards an import of the module itself', 'some-library', true],
-      ['does not forward an import of a subpath', 'some-library/sub/file', false],
+      [
+        'does not forward an import of a subpath',
+        'some-library/sub/file',
+        false,
+      ],
       [
         'does not forward a module that only shares the prefix',
         'some-library-extra',
@@ -2467,7 +2477,9 @@ describe('babel plugin in bundleMode', () => {
         runBundleModePlugin(input, {}, pluginOpts);
         return warn.mock.calls
           .map(([message]) => String(message))
-          .filter((message) => message.includes('importForwarding.relativePaths'));
+          .filter((message) =>
+            message.includes('importForwarding.relativePaths')
+          );
       } finally {
         warn.mockRestore();
       }
@@ -2859,7 +2871,12 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { modules } = runBundleModePlugin(input, {}, {}, '/some-library/file.js');
+      const { modules } = runBundleModePlugin(
+        input,
+        {},
+        {},
+        '/some-library/file.js'
+      );
       expect(modules).toHaveLength(1);
       expect(modules[0].content).toMatch(/import\(["']\.\/helper["']\)/);
       expect(modules[0].content).toMatchSnapshot();
