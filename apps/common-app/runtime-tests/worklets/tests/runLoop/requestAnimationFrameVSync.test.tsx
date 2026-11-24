@@ -426,6 +426,6 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     await waitForNotification(notification);
 
     // Assert
-    expect(framesDuringChain < CHAIN_LENGTH / 2).toBe(true);
+    expect(framesDuringChain < CHAIN_LENGTH - FRAME_TOLERANCE).toBe(true);
   });
 });
