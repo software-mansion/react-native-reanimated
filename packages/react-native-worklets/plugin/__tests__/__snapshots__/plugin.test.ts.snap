@@ -588,6 +588,12 @@ exports[`babel plugin for worklet names handles names with illegal characters 2`
 });"
 `;
 
+exports[`babel plugin for worklet names names ObjectMethod with expression key 1`] = `
+"const obj = {
+  "foo": require("react-native-worklets/.worklets/1.js").default
+};"
+`;
+
 exports[`babel plugin for worklet names preserves recursion 1`] = `"const foo = require("react-native-worklets/.worklets/1.js").default;"`;
 
 exports[`babel plugin for worklet names preserves recursion 2`] = `

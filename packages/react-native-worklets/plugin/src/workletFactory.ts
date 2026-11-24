@@ -1,5 +1,4 @@
 import type { NodePath } from '@babel/core';
-import generate from '@babel/generator';
 import type {
   ArrayExpression,
   ExpressionStatement,
@@ -30,15 +29,13 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename } from 'path';
+import { basename, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
 import { updateRelativeRequires } from './imports';
-import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { isRelease } from './utils';
-import { buildWorkletString } from './workletStringCode';
 
 const REAL_VERSION = require('../../package.json').version;
 
@@ -60,27 +57,6 @@ export function makeWorkletFactory(
   // We use copy because some of the plugins don't update bindings and
   // some even break them
   assert(state.file.opts.filename, '`state.file.opts.filename` is undefined.');
-
-  const codeObject = generate(fun.node);
-
-  // We need to add a newline at the end, because there could potentially be a
-  // comment after the function that gets included here, and then the closing
-  // bracket would become part of the comment thus resulting in an error, since
-  // there is a missing closing bracket.
-  codeObject.code =
-    '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
-
-  const transformed = workletTransformSync(codeObject.code, {
-    extraPlugins: [...extraPlugins, ...(state.opts.extraPlugins ?? [])],
-    extraPresets: state.opts.extraPresets,
-    filename: state.file.opts.filename,
-    ast: true,
-    babelrc: false,
-    configFile: false,
-  });
-
-  assert(transformed, '`transformed` is undefined.');
-  assert(transformed.ast, '`transformed.ast` is undefined.');
 
   const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } =
     getClosure(fun, state);
@@ -117,13 +93,6 @@ export function makeWorkletFactory(
     }
   }
 
-  const funString = buildWorkletString(
-    transformed.ast,
-    state,
-    closureVariables,
-    workletName
-  );
-  assert(funString, '`funString` is undefined.');
   const workletHash = hash(makeWorkletHashKey(fun, state));
 
   assert(

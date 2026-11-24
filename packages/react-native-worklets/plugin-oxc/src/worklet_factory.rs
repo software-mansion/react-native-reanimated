@@ -9,15 +9,12 @@ use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
 
 use crate::closure::get_closure;
-use crate::factory_expression::{
-    body_references_name, build_closure_array, build_factory_expression,
-};
+use crate::factory_expression::{build_closure_array, build_factory_expression};
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
 use crate::naming::{worklet_hash, worklet_hash_key};
 use crate::types::State;
 use crate::worklet_file::{generate_worklet_file, write_worklet_file};
-use crate::worklet_string_code::build_worklet_string;
 
 pub struct WorkletInput<'a, 'b> {
     pub params: &'b FormalParameters<'a>,
@@ -89,29 +86,12 @@ pub fn make_worklet_factory<'a>(
         }
     }
 
-    let recursive_name = input.recursion_name().and_then(|name| {
-        if body_references_name(input.body, name, scoping, input.function_scope_id) {
-            Some(names.react_name.as_str())
-        } else {
-            None
-        }
-    });
-
     if state.error.is_none() && closure.closure_variables.contains(&names.react_name) {
         state.error = Some(format!(
             "the `{}` worklet shadows a captured binding of the same name",
             names.react_name
         ));
     }
-
-    let body_string = build_worklet_string(
-        &names.worklet_name,
-        &input,
-        &closure.closure_variables,
-        recursive_name,
-        allocator,
-        &state.source_text,
-    );
 
     let hash = worklet_hash(&worklet_hash_key(
         filename,

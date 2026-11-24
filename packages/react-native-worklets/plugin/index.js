@@ -955,165 +955,24 @@ ${transformedProg}` : transformedProg;
   }
 });
 
-// lib/transform.js
-var require_transform = __commonJS({
-  "lib/transform.js"(exports2) {
-    "use strict";
-    var __rest = exports2 && exports2.__rest || function(s, e) {
-      var t = {};
-      for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-      if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-          if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-            t[p[i]] = s[p[i]];
-        }
-      return t;
-    };
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.workletTransformSync = workletTransformSync;
-    var core_1 = require("@babel/core");
-    function workletTransformSync(code, opts) {
-      const { extraPlugins = [], extraPresets = [] } = opts, rest = __rest(opts, ["extraPlugins", "extraPresets"]);
-      return (0, core_1.transformSync)(code, Object.assign(Object.assign({}, rest), { plugins: [...defaultPlugins, ...extraPlugins], presets: [...defaultPresets, ...extraPresets] }));
-    }
-    var defaultPresets = [
-      require.resolve("@babel/preset-typescript")
-    ];
-    var defaultPlugins = [];
-  }
-});
-
-// lib/workletStringCode.js
-var require_workletStringCode = __commonJS({
-  "lib/workletStringCode.js"(exports2) {
-    "use strict";
-    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
-    Object.defineProperty(exports2, "__esModule", { value: true });
-    exports2.buildWorkletString = buildWorkletString;
-    var core_1 = require("@babel/core");
-    var generator_1 = __importDefault(require("@babel/generator"));
-    var types_12 = require("@babel/types");
-    var assert_1 = require("assert");
-    var transform_1 = require_transform();
-    function buildWorkletString(fun, state, closureVariables, workletName) {
-      var _a;
-      restoreRecursiveCalls(fun, workletName);
-      const draftExpression = fun.program.body.find((obj) => (0, types_12.isFunctionDeclaration)(obj)) || fun.program.body.find((obj) => (0, types_12.isExpressionStatement)(obj));
-      (0, assert_1.strict)(draftExpression, "`draftExpression` is undefined.");
-      const expression = (0, types_12.isFunctionDeclaration)(draftExpression) ? draftExpression : draftExpression.expression;
-      (0, assert_1.strict)("params" in expression, "'params' property is undefined in 'expression'");
-      (0, assert_1.strict)((0, types_12.isBlockStatement)(expression.body), "`expression.body` is not a `BlockStatement`");
-      const workletFunction = (0, types_12.functionExpression)((0, types_12.identifier)(workletName), expression.params, expression.body, expression.generator, expression.async);
-      (0, core_1.traverse)(fun, {
-        Directive(path) {
-          path.remove();
-        }
-      });
-      const code = (0, generator_1.default)(workletFunction).code;
-      const transformed = (0, transform_1.workletTransformSync)(code, {
-        filename: state.file.opts.filename,
-        extraPlugins: [
-          getClosurePlugin(closureVariables),
-          ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []
-        ],
-        extraPresets: state.opts.extraPresets,
-        compact: true,
-        ast: false,
-        babelrc: false,
-        configFile: false,
-        comments: false
-      });
-      (0, assert_1.strict)(transformed, "`transformed` is null.");
-      return `(${transformed.code})`;
-    }
-    function restoreRecursiveCalls(file, newName) {
-      (0, core_1.traverse)(file, {
-        FunctionExpression(path) {
-          if (!path.node.id) {
-            path.stop();
-            return;
-          }
-          const oldName = path.node.id.name;
-          const scope = path.scope;
-          scope.rename(oldName, newName);
-        }
-      });
-    }
-    function prependClosure(path, closureVariables, closureDeclaration) {
-      if (closureVariables.length === 0 || !(0, types_12.isProgram)(path.parent)) {
-        return;
-      }
-      if (!(0, types_12.isExpression)(path.node.body)) {
-        path.node.body.body.unshift(closureDeclaration);
-      }
-    }
-    function prependRecursiveDeclaration(path) {
-      var _a;
-      if ((0, types_12.isProgram)(path.parent) && !(0, types_12.isArrowFunctionExpression)(path.node) && !(0, types_12.isObjectMethod)(path.node) && path.node.id && path.scope.parent) {
-        const hasRecursiveCalls = ((_a = path.scope.parent.bindings[path.node.id.name]) === null || _a === void 0 ? void 0 : _a.references) > 0;
-        if (hasRecursiveCalls) {
-          path.node.body.body.unshift((0, types_12.variableDeclaration)("const", [
-            (0, types_12.variableDeclarator)((0, types_12.identifier)(path.node.id.name), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("_recur")))
-          ]));
-        }
-      }
-    }
-    function getClosurePlugin(closureVariables) {
-      const closureDeclaration = (0, types_12.variableDeclaration)("let", [
-        (0, types_12.variableDeclarator)((0, types_12.arrayPattern)(closureVariables.map((variable) => (0, types_12.identifier)(variable.name))), (0, types_12.memberExpression)((0, types_12.thisExpression)(), (0, types_12.identifier)("__closure")))
-      ]);
-      return {
-        visitor: {
-          "FunctionDeclaration|FunctionExpression|ArrowFunctionExpression|ObjectMethod": (path) => {
-            prependClosure(path, closureVariables, closureDeclaration);
-            prependRecursiveDeclaration(path);
-          }
-        }
-      };
-    }
-  }
-});
-
 // lib/workletFactory.js
 var require_workletFactory = __commonJS({
   "lib/workletFactory.js"(exports2) {
     "use strict";
-    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.makeWorkletFactory = makeWorkletFactory;
-    var generator_1 = __importDefault(require("@babel/generator"));
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
     var path_1 = require("path");
     var closure_1 = require_closure();
     var generate_1 = require_generate();
     var imports_1 = require_imports();
-    var transform_1 = require_transform();
     var utils_1 = require_utils();
-    var workletStringCode_1 = require_workletStringCode();
     var REAL_VERSION = require("../package.json").version;
     var MOCK_VERSION = "x.y.z";
     function makeWorkletFactory(fun, state) {
-      var _a;
       stripWorkletDirectives(fun);
       (0, assert_1.strict)(state.file.opts.filename, "`state.file.opts.filename` is undefined.");
-      const codeObject = (0, generator_1.default)(fun.node);
-      codeObject.code = "(" + (fun.isObjectMethod() ? "function " : "") + codeObject.code + "\n)";
-      const transformed = (0, transform_1.workletTransformSync)(codeObject.code, {
-        extraPlugins: [...extraPlugins, ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []],
-        extraPresets: state.opts.extraPresets,
-        filename: state.file.opts.filename,
-        ast: true,
-        babelrc: false,
-        configFile: false
-      });
-      (0, assert_1.strict)(transformed, "`transformed` is undefined.");
-      (0, assert_1.strict)(transformed.ast, "`transformed.ast` is undefined.");
       const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } = (0, closure_1.getClosure)(fun, state);
       const clone = (0, types_12.cloneNode)(fun.node);
       const funExpression = (0, types_12.isBlockStatement)(clone.body) ? (0, types_12.functionExpression)(null, clone.params, clone.body, clone.generator, clone.async) : clone;
@@ -1129,9 +988,7 @@ var require_workletFactory = __commonJS({
           reactName = `_${reactName}`;
         }
       }
-      const funString = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, closureVariables, workletName);
-      (0, assert_1.strict)(funString, "`funString` is undefined.");
-      const workletHash = hash(funString);
+      const workletHash = hash(makeWorkletHashKey(fun, state));
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "`funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "`funExpression` is an `ObjectMethod`.");
       const statements = [
@@ -1169,6 +1026,14 @@ var require_workletFactory = __commonJS({
     }
     function shouldMockVersion() {
       return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
+    }
+    function makeWorkletHashKey(fun, state) {
+      var _a;
+      const filename = state.file.opts.filename;
+      const cwd = (_a = state.file.opts.cwd) !== null && _a !== void 0 ? _a : process.cwd();
+      const source = filename ? (0, path_1.relative)(cwd, filename).split(path_1.sep).join("/") : "unknownFile";
+      const position = fun.node.body.start;
+      return position === null || position === void 0 ? `${source}#${state.workletNumber}` : `${source}:${position}`;
     }
     function hash(str) {
       let i = str.length;
