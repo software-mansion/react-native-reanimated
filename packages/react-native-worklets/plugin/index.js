@@ -1035,7 +1035,7 @@ var require_workletFactory = __commonJS({
           reactName = `_${reactName}`;
         }
       }
-      const workletHash = hash(makeWorkletHashKey(fun, state));
+      const workletHash = hash(makeWorkletHashKey(fun, state, closureVariables.map((variable) => variable.name)));
       (0, assert_1.strict)(!(0, types_12.isFunctionDeclaration)(funExpression), "`funExpression` is a `FunctionDeclaration`.");
       (0, assert_1.strict)(!(0, types_12.isObjectMethod)(funExpression), "`funExpression` is an `ObjectMethod`.");
       const statements = [
@@ -1077,7 +1077,7 @@ var require_workletFactory = __commonJS({
     function shouldMockVersion() {
       return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
     }
-    function makeWorkletHashKey(fun, state) {
+    function makeWorkletHashKey(fun, state, closureNames) {
       var _a, _b;
       const filename = state.file.opts.filename;
       const root = (_b = (_a = resolveWorkletsPackageDir()) !== null && _a !== void 0 ? _a : state.file.opts.cwd) !== null && _b !== void 0 ? _b : process.cwd();
@@ -1089,7 +1089,7 @@ var require_workletFactory = __commonJS({
       }
       const body = parts.pop();
       const prefix = `${fun.node.async ? "async " : ""}${fun.node.generator ? "*" : ""}`;
-      return `${source}:${prefix}(${parts.join(",")})${body}`;
+      return `${source}:[${closureNames.join(",")}]${prefix}(${parts.join(",")})${body}`;
     }
     var cachedWorkletsPackageDir;
     function resolveWorkletsPackageDir() {
