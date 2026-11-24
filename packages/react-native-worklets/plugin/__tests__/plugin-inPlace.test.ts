@@ -131,4 +131,55 @@ describe('babel plugin without a Metro caller', () => {
     expect(code).toContain('require("metro:inline;base64,');
     expect(code).not.toContain('.worklets');
   });
+
+  describe('worklet hash', () => {
+    function workletHashes(input: string, filename = MOCK_LOCATION) {
+      const code = runPlugin(input, { filename });
+      return [...code.matchAll(/__workletHash = (0x[\da-f]+|\d+)/gi)].map(
+        (match) => Number(match[1])
+      );
+    }
+
+    test('gives identical worklets at different positions different hashes', () => {
+      const hashes = workletHashes(
+        "function foo() {\n  'worklet';\n  return 1;\n}\nfunction bar() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('keeps the hash when the worklet body changes in place', () => {
+      const [before] = workletHashes(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const [after] = workletHashes(
+        "function foo() {\n  'worklet';\n  return 2 + 2;\n}\n"
+      );
+      expect(after).toBe(before);
+    });
+
+    test('changes the hash when the worklet moves in the file', () => {
+      const [before] = workletHashes(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const [after] = workletHashes(
+        "\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).not.toBe(before);
+    });
+
+    test('changes the hash for the same code in another file', () => {
+      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+      const [first] = workletHashes(input, 'first.js');
+      const [second] = workletHashes(input, 'nested/first.js');
+      expect(second).not.toBe(first);
+    });
+
+    test('derives the hash from the relative path and the UTF-16 position', () => {
+      const [value] = workletHashes(
+        "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
+      );
+      expect(value).toBe(13998117260665);
+    });
+  });
 });

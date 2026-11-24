@@ -78,6 +78,7 @@ function transform(sourceText, filename, state, workletModules) {
       inPlace: workletModules === 'in-place',
       workletsPackageDir:
         workletModules === 'file' ? resolveWorkletsPkgDir() : undefined,
+      cwd: state.file.opts.cwd ?? process.cwd(),
     });
   } catch (error) {
     const message = (error && error.message) || '';

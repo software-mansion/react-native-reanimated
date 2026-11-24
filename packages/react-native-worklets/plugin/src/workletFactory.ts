@@ -1,5 +1,4 @@
 import type { NodePath } from '@babel/core';
-import generate from '@babel/generator';
 import type {
   ArrayExpression,
   FunctionExpression,
@@ -30,7 +29,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename } from 'path';
+import { basename, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import {
@@ -38,11 +37,9 @@ import {
   generateWorkletModuleSpecifier,
 } from './generate';
 import { updateRelativeRequires } from './imports';
-import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { moduleScopeReservedNames } from './types';
 import { isRelease } from './utils';
-import { buildWorkletString } from './workletStringCode';
 
 const REAL_VERSION = require('../../package.json').version;
 
@@ -65,27 +62,6 @@ export function makeWorkletFactory(
   // We use copy because some of the plugins don't update bindings and
   // some even break them
   assert(state.file.opts.filename, '`state.file.opts.filename` is undefined.');
-
-  const codeObject = generate(fun.node);
-
-  // We need to add a newline at the end, because there could potentially be a
-  // comment after the function that gets included here, and then the closing
-  // bracket would become part of the comment thus resulting in an error, since
-  // there is a missing closing bracket.
-  codeObject.code =
-    '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
-
-  const transformed = workletTransformSync(codeObject.code, {
-    extraPlugins: [...extraPlugins, ...(state.opts.extraPlugins ?? [])],
-    extraPresets: state.opts.extraPresets,
-    filename: state.file.opts.filename,
-    ast: true,
-    babelrc: false,
-    configFile: false,
-  });
-
-  assert(transformed, '`transformed` is undefined.');
-  assert(transformed.ast, '`transformed.ast` is undefined.');
 
   const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } =
     getClosure(fun, state);
@@ -125,14 +101,7 @@ export function makeWorkletFactory(
     }
   }
 
-  const funString = buildWorkletString(
-    transformed.ast,
-    state,
-    closureVariables,
-    workletName
-  );
-  assert(funString, '`funString` is undefined.');
-  const workletHash = hash(funString);
+  const workletHash = hash(makeWorkletHashKey(fun, state));
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -255,6 +224,21 @@ function shouldMockVersion(): boolean {
   return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1';
 }
 
+function makeWorkletHashKey(
+  fun: NodePath<WorkletizableFunction>,
+  state: WorkletsPluginPass
+): string {
+  const filename = state.file.opts.filename;
+  const cwd = state.file.opts.cwd ?? process.cwd();
+  const source = filename
+    ? relative(cwd, filename).split(sep).join('/')
+    : 'unknownFile';
+  const position = fun.node.body.start;
+  return position === null || position === undefined
+    ? `${source}#${state.workletNumber}`
+    : `${source}:${position}`;
+}
+
 function hash(str: string): number {
   let i = str.length;
   let hash1 = 5381;
@@ -312,14 +296,3 @@ function makeWorkletName(
 
   return { workletName, reactName };
 }
-
-const extraPlugins = [
-  require.resolve('@babel/plugin-transform-shorthand-properties'),
-  require.resolve('@babel/plugin-transform-arrow-functions'),
-  require.resolve('@babel/plugin-transform-optional-chaining'),
-  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
-  [
-    require.resolve('@babel/plugin-transform-template-literals'),
-    { loose: true },
-  ],
-];
