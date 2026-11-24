@@ -129,6 +129,13 @@ function formatSummary(results: ResultFile[], runUrl: string): string {
     (version) => version !== MAIN
   );
 
+  if (mainEntries && others.length === 0) {
+    return (
+      '*Nightly bundle cost*\nNo released Reanimated works with Worklets 1.x yet, so there is nothing to compare main with.\n' +
+      `<${runUrl}|bundle cost workflow run>`
+    );
+  }
+
   if (!mainEntries || others.length === 0) {
     return (
       '*Nightly bundle cost*\nNothing to compare, check the CI logs.\n' +
