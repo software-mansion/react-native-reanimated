@@ -3,7 +3,6 @@ import { transformSync } from '@babel/core';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
-import { join } from 'path';
 
 type CapturedFile = { path: string; content: string };
 
