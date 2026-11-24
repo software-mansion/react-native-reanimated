@@ -28,6 +28,8 @@ export interface TransformResult {
   changed: boolean;
 }
 
+export function isRelease(envName?: string | null): boolean;
+
 export function transform(
   sourceText: string,
   filename: string,

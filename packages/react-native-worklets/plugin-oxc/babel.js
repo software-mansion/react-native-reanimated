@@ -18,6 +18,7 @@ const {
 const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
 const SOURCE_MAP_COMMENT_PREFIX = '# workletSourceMap=';
 const ORIGIN_COMMENT_PREFIX = ' __workletOrigin:';
+const restoredFiles = new WeakSet();
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
@@ -36,7 +37,10 @@ function workletsPluginOxcBabelShim(babelApi) {
     name: 'worklets-oxc-plugin',
     pre(file) {
       const filename = file.opts.filename?.replace(/\\/g, '/');
-      if (filename?.includes(GENERATED_WORKLETS_DIR)) {
+      if (
+        filename?.includes(GENERATED_WORKLETS_DIR) &&
+        !oxc.isRelease(file.opts.envName)
+      ) {
         restoreWorkletFileLocations(file);
       }
     },
@@ -73,10 +77,10 @@ function workletsPluginOxcBabelShim(babelApi) {
 
 /** @param {import('@babel/core').BabelFile} file */
 function restoreWorkletFileLocations(file) {
-  if (file.__workletsLocationsRestored) {
+  if (restoredFiles.has(file)) {
     return;
   }
-  file.__workletsLocationsRestored = true;
+  restoredFiles.add(file);
 
   const comments = file.ast.comments ?? [];
   const sourceMapComment = comments.find((comment) =>
@@ -99,7 +103,10 @@ function restoreWorkletFileLocations(file) {
       : 0;
 
   const toOriginal = (position) => {
-    const needle = { line: position.line - lineOffset, column: position.column };
+    const needle = {
+      line: position.line - lineOffset,
+      column: position.column,
+    };
     const lower = originalPositionFor(map, {
       ...needle,
       bias: GREATEST_LOWER_BOUND,

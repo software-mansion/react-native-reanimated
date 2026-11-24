@@ -2,6 +2,8 @@ import '../src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
+import type { EncodedSourceMap } from '@jridgewell/trace-mapping';
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 import * as fs from 'fs';
@@ -83,6 +85,49 @@ function runPlugin(
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
   return { code: transformed.code ?? '', files: emittedFiles() };
+}
+
+function transformWorkletFile(
+  file: CapturedFile,
+  transformOpts: TransformOptions = {},
+  copies = 1
+) {
+  const transformed = transformSync(file.content, {
+    filename: file.path,
+    babelrc: false,
+    configFile: false,
+    sourceMaps: true,
+    ...transformOpts,
+    plugins: Array.from({ length: copies }, (_, index) => [
+      plugin,
+      { bundleMode: true },
+      `copy-${index}`,
+    ]),
+  });
+  assert(transformed?.code && transformed.map);
+  return { code: transformed.code, map: transformed.map };
+}
+
+function positionIn(code: string, needle: string) {
+  const lines = code.split('\n');
+  const line = lines.findIndex((text) => text.includes(needle));
+  return { line: line + 1, column: lines[line].indexOf(needle) };
+}
+
+function originalPositionOf(
+  output: ReturnType<typeof transformWorkletFile>,
+  needle: string
+) {
+  const { line, column } = positionIn(output.code, needle);
+  const original = originalPositionFor(
+    new TraceMap(output.map as EncodedSourceMap),
+    { line, column }
+  );
+  return {
+    source: original.source,
+    line: original.line,
+    column: original.column,
+  };
 }
 
 describe('babel plugin in bundleMode', () => {
@@ -415,20 +460,63 @@ describe('babel plugin in bundleMode', () => {
 
       const { files } = runPlugin(input, {}, { disableSourceMaps: false });
       expect(files).toHaveLength(1);
-      const transformWorkletFile = (copies: number) =>
-        transformSync(files[0].content, {
-          filename: files[0].path,
-          babelrc: false,
-          configFile: false,
-          sourceMaps: true,
-          plugins: Array.from({ length: copies }, (_, index) => [
-            plugin,
-            { bundleMode: true },
-            `copy-${index}`,
-          ]),
-        })?.map;
 
-      expect(transformWorkletFile(2)).toEqual(transformWorkletFile(1));
+      expect(transformWorkletFile(files[0], {}, 2).map).toEqual(
+        transformWorkletFile(files[0]).map
+      );
+    });
+
+    test.each([false, true])(
+      'maps worklet file statements to their original lines (origin comment: %s)',
+      (withOrigin) => {
+        const input = html`<script>
+          function foo(width) {
+            'worklet';
+            const doubled = width * 2;
+            throw new Error(doubled);
+          }
+        </script>`;
+
+        const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+        expect(files).toHaveLength(1);
+        const content = withOrigin
+          ? `// __workletOrigin: ${MOCK_LOCATION}\n${files[0].content}`
+          : files[0].content;
+
+        for (const statement of ['const doubled', 'throw new Error']) {
+          expect(
+            originalPositionOf(
+              transformWorkletFile({ ...files[0], content }),
+              statement
+            )
+          ).toEqual({
+            source: expect.stringContaining(MOCK_LOCATION),
+            ...positionIn(input, statement),
+          });
+        }
+      }
+    );
+
+    test('keeps the generated locations of worklet files in release builds', () => {
+      const input = html`<script>
+        function foo(width) {
+          'worklet';
+          throw new Error(width);
+        }
+      </script>`;
+
+      const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+      expect(files).toHaveLength(1);
+
+      expect(
+        originalPositionOf(
+          transformWorkletFile(files[0], { envName: 'production' }),
+          'throw new Error'
+        )
+      ).toEqual({
+        source: expect.stringContaining(path.basename(files[0].path)),
+        ...positionIn(files[0].content, 'throw new Error'),
+      });
     });
 
     test('does not emit init data', () => {

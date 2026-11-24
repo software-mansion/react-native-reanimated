@@ -22,6 +22,7 @@ import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
 import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
+import { isRelease } from './utils';
 import { substituteWebCallExpression } from './webOptimization';
 import { restoreWorkletFileLocations } from './workletFileSourceMap';
 import { processIfWithWorkletDirective } from './workletSubstitution';
@@ -47,7 +48,7 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(this, () => {
         initializeState(this);
-        if (this.skipFile) {
+        if (this.skipFile && !isRelease(this)) {
           restoreWorkletFileLocations(this.file);
         }
         /**

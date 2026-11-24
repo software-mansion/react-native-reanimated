@@ -100,4 +100,17 @@ describe('wrapWithReanimatedMetroConfig', () => {
       'windows'
     );
   });
+
+  test('keeps the fields returned by the wrapped customizeFrame', async () => {
+    const customizations = { collapse: false, file: '/app/src/App.tsx' };
+    const config = wrapWithReanimatedMetroConfig({
+      symbolicator: { customizeFrame: () => customizations },
+    });
+
+    await expect(
+      config.symbolicator.customizeFrame({
+        file: '/app/node_modules/react-native-worklets/.worklets/1.js',
+      })
+    ).resolves.toEqual(customizations);
+  });
 });
