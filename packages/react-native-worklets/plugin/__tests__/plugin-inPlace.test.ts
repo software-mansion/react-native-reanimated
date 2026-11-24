@@ -167,32 +167,42 @@ describe('babel plugin without a Metro caller', () => {
       return hashes[0];
     }
 
-    test('gives identical worklets at different positions different hashes', () => {
+    test('gives identical worklets in one file the same hash', () => {
       const hashes = workletHashes(
         "function foo() {\n  'worklet';\n  return 1;\n}\nfunction bar() {\n  'worklet';\n  return 1;\n}\n"
       );
       expect(hashes).toHaveLength(2);
-      expect(hashes[0]).not.toBe(hashes[1]);
+      expect(hashes[0]).toBe(hashes[1]);
     });
 
-    test('keeps the hash when the worklet body changes in place', () => {
+    test('changes the hash when the worklet body changes', () => {
       const before = workletHash(
         "function foo() {\n  'worklet';\n  return 1;\n}\n"
       );
       const after = workletHash(
-        "function foo() {\n  'worklet';\n  return 2 + 2;\n}\n"
-      );
-      expect(after).toBe(before);
-    });
-
-    test('changes the hash when the worklet moves in the file', () => {
-      const before = workletHash(
-        "function foo() {\n  'worklet';\n  return 1;\n}\n"
-      );
-      const after = workletHash(
-        "\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
+        "function foo() {\n  'worklet';\n  return 2;\n}\n"
       );
       expect(after).not.toBe(before);
+    });
+
+    test('changes the hash when a parameter changes', () => {
+      const before = workletHash(
+        "function foo(x) {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "function foo(y) {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).not.toBe(before);
+    });
+
+    test('keeps the hash when the worklet moves in the file', () => {
+      const before = workletHash(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "\n\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).toBe(before);
     });
 
     test('changes the hash for the same code in another file', () => {
@@ -218,24 +228,24 @@ describe('babel plugin without a Metro caller', () => {
       expect(hashes[0][0]).not.toBe(hashes[1][0]);
     });
 
-    test('uses the source position of autoworkletized concise arrows', () => {
+    test('hashes the source text of autoworkletized concise arrows', () => {
       expect(
         workletHash(
           "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
         )
-      ).toBe(14413415183409);
+      ).toBe(6220683572890);
       expect(
         workletHash(
           "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
         )
-      ).toBe(7465442322492);
+      ).toBe(17481696413721);
     });
 
-    test('derives the hash from the relative path and the UTF-16 position', () => {
+    test('derives the hash from the relative path and the raw function text', () => {
       const value = workletHash(
         "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
       );
-      expect(value).toBe(4006526329237);
+      expect(value).toBe(2387330695542);
     });
   });
 });
