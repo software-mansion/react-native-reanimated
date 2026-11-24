@@ -93,6 +93,7 @@
     "react/jsx-fragments": ["error", "syntax"],
     "no-new-wrappers": "error",
     "reanimated/animated-style-non-animated-component": "error",
+    "reanimated/no-shared-value-in-inline-style": "error",
     "prefer-regex-literals": "error",
     "no-bitwise": "error",
     "no-useless-constructor": "error",

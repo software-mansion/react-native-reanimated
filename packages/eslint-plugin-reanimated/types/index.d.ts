@@ -36,4 +36,10 @@ export declare const rules: {
     unknown,
     TSESLint.RuleListener
   >;
+  'no-shared-value-in-inline-style': TSESLint.RuleModule<
+    'sharedValueInInlineStyle',
+    [],
+    unknown,
+    TSESLint.RuleListener
+  >;
 };
