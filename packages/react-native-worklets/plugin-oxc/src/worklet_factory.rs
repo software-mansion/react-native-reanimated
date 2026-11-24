@@ -3,21 +3,18 @@ use oxc_ast::AstBuilder;
 use oxc_ast::NONE;
 use oxc_ast::ast::{Argument, Expression, FormalParameters, FunctionBody};
 use oxc_semantic::Scoping;
-use oxc_span::SPAN;
+use oxc_span::{SPAN, Span};
 use oxc_syntax::node::NodeId;
 use oxc_syntax::reference::{Reference, ReferenceFlags, ReferenceId};
 use oxc_syntax::scope::ScopeId;
 
 use crate::closure::get_closure;
-use crate::factory_expression::{
-    body_references_name, build_closure_array, build_factory_expression,
-};
+use crate::factory_expression::{build_closure_array, build_factory_expression};
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
-use crate::naming::worklet_hash;
+use crate::naming::{worklet_hash, worklet_hash_key};
 use crate::types::State;
 use crate::worklet_file::{generate_worklet_file, write_worklet_file};
-use crate::worklet_string_code::build_worklet_string;
 
 pub struct WorkletInput<'a, 'b> {
     pub params: &'b FormalParameters<'a>,
@@ -81,14 +78,6 @@ pub fn make_worklet_factory<'a>(
         }
     }
 
-    let recursive_name = input.recursion_name().and_then(|name| {
-        if body_references_name(input.body, name, scoping, input.function_scope_id) {
-            Some(names.react_name.as_str())
-        } else {
-            None
-        }
-    });
-
     if state.error.is_none() && closure.closure_variables.contains(&names.react_name) {
         state.error = Some(format!(
             "the `{}` worklet shadows a captured binding of the same name",
@@ -96,16 +85,11 @@ pub fn make_worklet_factory<'a>(
         ));
     }
 
-    let body_string = build_worklet_string(
-        &names.worklet_name,
-        &input,
-        &closure.closure_variables,
-        recursive_name,
-        allocator,
-        &state.source_text,
-    );
-
-    let hash = worklet_hash(&body_string);
+    let hash = worklet_hash(&worklet_hash_key(
+        filename,
+        state.opts.hash_root.as_deref(),
+        &raw_function_text(&input, &closure.closure_variables, &state.source_text),
+    ));
 
     let mut factory_expr = build_factory_expression(
         builder,
@@ -220,4 +204,33 @@ fn make_worklet_factory_call<'a>(
         closure.iter().map(|(name, id)| (name.as_str(), *id)),
     )));
     builder.expression_call(SPAN, dot_default, NONE, args, false)
+}
+
+fn raw_function_text(
+    input: &WorkletInput<'_, '_>,
+    closure_variables: &[String],
+    source_text: &str,
+) -> String {
+    let slice = |span: Span| {
+        source_text
+            .get(span.start as usize..span.end as usize)
+            .unwrap_or_default()
+    };
+    let mut params: Vec<&str> = input
+        .params
+        .items
+        .iter()
+        .map(|param| slice(param.span))
+        .collect();
+    if let Some(rest) = &input.params.rest {
+        params.push(slice(rest.span));
+    }
+    format!(
+        "[{}]{}{}({}){}",
+        closure_variables.join(","),
+        if input.is_async { "async " } else { "" },
+        if input.is_generator { "*" } else { "" },
+        params.join(","),
+        slice(input.body.span)
+    )
 }

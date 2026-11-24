@@ -21,7 +21,6 @@ mod version;
 mod worklet_factory;
 mod worklet_file;
 mod worklet_pass;
-mod worklet_string_code;
 
 pub use options::PluginOptions;
 use program::run;

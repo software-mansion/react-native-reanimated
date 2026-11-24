@@ -57,7 +57,12 @@ var require_directives = __commonJS({
     }
     function replaceImplicitReturnWithBlock(path) {
       if (!(0, types_12.isBlockStatement)(path.body)) {
-        path.body = (0, types_12.blockStatement)([(0, types_12.returnStatement)(path.body)]);
+        const expression = path.body;
+        const block = (0, types_12.blockStatement)([(0, types_12.returnStatement)(expression)]);
+        block.start = expression.start;
+        block.end = expression.end;
+        block.loc = expression.loc;
+        path.body = block;
       }
     }
   }
@@ -1932,7 +1937,7 @@ var require_workletFactory = __commonJS({
       }
       let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, transformed.map);
       (0, assert_1.strict)(funString, "`funString` is undefined.");
-      const workletHash = hash(funString);
+      const workletHash = hash(makeWorkletHashKey(fun, state, closureVariables.map((variable) => variable.name)));
       let lineOffset = 1;
       if (closureVariables.length > 0) {
         lineOffset -= closureVariables.length + 2;
@@ -2051,6 +2056,31 @@ var require_workletFactory = __commonJS({
     }
     function shouldMockVersion() {
       return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
+    }
+    function makeWorkletHashKey(fun, state, closureNames) {
+      var _a, _b;
+      const filename = state.file.opts.filename;
+      const root = (_b = (_a = resolveWorkletsPackageDir()) !== null && _a !== void 0 ? _a : state.file.opts.cwd) !== null && _b !== void 0 ? _b : process.cwd();
+      const source = filename ? (0, path_1.relative)(root, filename).split(path_1.sep).join("/") : "unknownFile";
+      const code = state.file.code;
+      const parts = [...fun.node.params, fun.node.body].map((node) => node.start === null || node.start === void 0 || node.end === null || node.end === void 0 ? null : code.slice(node.start, node.end));
+      if (parts.some((part) => part === null)) {
+        return `${source}#${state.workletNumber}`;
+      }
+      const body = parts.pop();
+      const prefix = `${fun.node.async ? "async " : ""}${fun.node.generator ? "*" : ""}`;
+      return `${source}:[${closureNames.join(",")}]${prefix}(${parts.join(",")})${body}`;
+    }
+    var cachedWorkletsPackageDir;
+    function resolveWorkletsPackageDir() {
+      if (cachedWorkletsPackageDir === void 0) {
+        try {
+          cachedWorkletsPackageDir = (0, path_1.dirname)(require.resolve("react-native-worklets/package.json"));
+        } catch (_a) {
+          cachedWorkletsPackageDir = null;
+        }
+      }
+      return cachedWorkletsPackageDir;
     }
     function hash(str) {
       let i = str.length;
