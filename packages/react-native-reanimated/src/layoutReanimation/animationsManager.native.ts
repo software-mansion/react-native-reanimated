@@ -54,8 +54,9 @@ function measureBlockedTime(start: LayoutAnimationStart) {
 // The start can run in a mount that blocks the main thread for longer than
 // the animation. That time does not count, except for one frame. A retarget
 // keeps the time shift of the animation it continues, because it keeps that
-// animation's start times.
-function shiftFrames(
+// animation's start times. The shifted start reaches only this animation, not
+// the animations that its interrupted animation's callback starts.
+function shiftTimestamps(
   animation: StyleLayoutAnimation,
   start: LayoutAnimationStart,
   startTimestamp: Timestamp,
@@ -63,17 +64,26 @@ function shiftFrames(
   timelines: WeakMap<object, LayoutAnimationTimeline>
 ) {
   'worklet';
-  const onFrame = animation.onFrame;
+  const { onStart, onFrame } = animation;
   const timeline = { startTimestamp, timeShift: previousTimeShift };
   timelines.set(animation, timeline);
+  let isStarting = true;
   let timeShift: number | undefined;
+  animation.onStart = (self, value, _timestamp, previousAnimation) =>
+    onStart(self, value, startTimestamp, previousAnimation);
   animation.onFrame = (self, timestamp) => {
+    if (isStarting) {
+      return onFrame(self, startTimestamp);
+    }
     if (timeShift === undefined) {
       start.blockedTime ??= measureBlockedTime(start);
       timeShift = previousTimeShift + start.blockedTime;
       timeline.timeShift = timeShift;
     }
     return onFrame(self, Math.max(startTimestamp, timestamp - timeShift));
+  };
+  return () => {
+    isStarting = false;
   };
 }
 
@@ -270,19 +280,20 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
                 start.timestamp - previousTimeShift
               )
             : start.timestamp;
-        global.__frameTimestamp = startTimestamp;
-        try {
-          value.value = animation;
-        } finally {
-          global.__frameTimestamp = previousFrameTimestamp;
-        }
-        shiftFrames(
+        global.__frameTimestamp = start.timestamp;
+        const onStarted = shiftTimestamps(
           animation,
           start,
           startTimestamp,
           previousTimeShift,
           timelines
         );
+        try {
+          value.value = animation;
+        } finally {
+          onStarted();
+          global.__frameTimestamp = previousFrameTimestamp;
+        }
       } catch (error) {
         try {
           stop(tag);

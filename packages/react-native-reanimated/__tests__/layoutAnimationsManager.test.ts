@@ -363,6 +363,35 @@ describe('LayoutAnimationsManager', () => {
       manager.stop(28);
     });
 
+    test('keeps the shifted start of a retarget out of the callbacks it triggers', () => {
+      const callbackTimestamps: Array<number | undefined> = [];
+      now.mockReturnValue(100);
+      getAnimationTimestamp.mockReturnValue(100);
+      manager.start(29, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { opacity: 0 },
+        animations: { opacity: linear(1) },
+        callback: () => callbackTimestamps.push(globalThis.__frameTimestamp),
+      }));
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      now.mockReturnValue(700);
+      getAnimationTimestamp.mockReturnValue(700);
+      frames.splice(0).forEach((frame) => frame(100));
+      frames.splice(0).forEach((frame) => frame(750));
+      now.mockReturnValue(760);
+      getAnimationTimestamp.mockReturnValue(760);
+      manager.start(29, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { width: 0 },
+        animations: { width: linear(50) },
+      }));
+
+      expect(callbackTimestamps).toEqual([760]);
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(29, {
+        opacity: expect.closeTo((760 - blockedTime - 100) / 1000),
+        width: 0,
+      });
+      manager.stop(29);
+    });
+
     test('measures the block at the first frame when a retarget comes in the same batch', () => {
       now.mockReturnValue(100);
       getAnimationTimestamp.mockReturnValue(100);
