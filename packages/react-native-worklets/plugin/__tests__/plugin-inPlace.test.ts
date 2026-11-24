@@ -201,6 +201,19 @@ describe('babel plugin without a Metro caller', () => {
       expect(second).not.toBe(first);
     });
 
+    test('uses the source position of autoworkletized concise arrows', () => {
+      expect(
+        workletHash(
+          "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
+        )
+      ).toBe(16268140503517);
+      expect(
+        workletHash(
+          "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
+        )
+      ).toBe(1228006275120);
+    });
+
     test('derives the hash from the relative path and the UTF-16 position', () => {
       const value = workletHash(
         "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
