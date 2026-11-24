@@ -215,17 +215,25 @@ describe('babel plugin without a Metro caller', () => {
       expect(hashes[0][0]).not.toBe(hashes[1][0]);
     });
 
+    test('separates an expression body from a block body with the same text', () => {
+      const hashes = workletHashes(
+        "import { useDerivedValue } from 'react-native-reanimated';\nconst a = useDerivedValue(() => ({ value: 1 }));\nconst b = useDerivedValue(() => { value: 1 });\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
     test('hashes the source text of autoworkletized concise arrows', () => {
       expect(
         workletHash(
           "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
         )
-      ).toBe(15219685961276);
+      ).toBe(7304007199455);
       expect(
         workletHash(
           "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
         )
-      ).toBe(6698349743551);
+      ).toBe(16245832944540);
     });
 
     test('derives the hash from the relative path and the raw function text', () => {
