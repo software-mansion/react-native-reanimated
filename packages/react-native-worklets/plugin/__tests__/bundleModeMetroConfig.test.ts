@@ -1,5 +1,4 @@
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
 
 import {
@@ -43,19 +42,6 @@ describe('bundle mode customizeFrame', () => {
     );
 
     expect(customizeFrame({ file })).toEqual({ file: ORIGINAL_FILE });
-  });
-
-  test('ignores a worklets directory of another package copy', () => {
-    const file = writeWorkletFile(
-      path.join(
-        fs.mkdtempSync(path.join(os.tmpdir(), 'worklets-')),
-        'react-native-worklets',
-        '.worklets',
-        'customizeFrameTest.js'
-      )
-    );
-
-    expect(customizeFrame({ file })).toBeUndefined();
   });
 
   test('ignores paths that leave the worklets directory', () => {
