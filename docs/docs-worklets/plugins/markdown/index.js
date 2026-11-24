@@ -138,17 +138,6 @@ async function createConverter() {
           ];
         }
         if (node.name === 'CallTable') {
-          const calls = attribute(node, 'calls');
-          if (calls) {
-            return [
-              table([
-                ['RN Runtime', 'UI Runtime', 'Worker Runtime'],
-                ['rnRuntime', 'uiRuntime', 'workerRuntime'].map((key) =>
-                  supported(calls[key])
-                ),
-              ]),
-            ];
-          }
           return [
             table([
               ['Mode', 'RN Runtime', 'UI Runtime', 'Worker Runtime'],
@@ -221,7 +210,7 @@ function literal(expression) {
   if (expression?.type === 'ObjectExpression') {
     return Object.fromEntries(
       expression.properties.map((property) => [
-        property.key.name ?? property.key.value,
+        property.key.name,
         literal(property.value),
       ])
     );
@@ -344,4 +333,3 @@ async function markdownPlugin(context) {
 module.exports = markdownPlugin;
 module.exports.createConverter = createConverter;
 module.exports.markdownPaths = markdownPaths;
-module.exports.literal = literal;

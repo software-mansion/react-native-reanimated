@@ -2,16 +2,15 @@ import Link from '@docusaurus/Link';
 
 import styles from './styles.module.css';
 
-interface CallTableData {
+interface CallTableRow {
   rnRuntime: boolean;
   uiRuntime: boolean;
   workerRuntime: boolean;
 }
 
 interface CallTableProps {
-  calls?: CallTableData;
-  bundleMode?: CallTableData;
-  noBundleMode?: CallTableData;
+  bundleMode: CallTableRow;
+  noBundleMode: CallTableRow;
 }
 
 function renderCellValue(value: boolean) {
@@ -25,43 +24,7 @@ function renderCellValue(value: boolean) {
   );
 }
 
-function renderHint() {
-  return (
-    <p className={styles.hint}>
-      <Link to="/docs/guides/call-tables">What does it mean?</Link>
-    </p>
-  );
-}
-
-export function CallTable({ calls, bundleMode, noBundleMode }: CallTableProps) {
-  if (calls) {
-    return (
-      <div className={styles.container}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th scope="col">RN Runtime</th>
-              <th scope="col">UI Runtime</th>
-              <th scope="col">Worker Runtime</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>{renderCellValue(calls.rnRuntime)}</td>
-              <td>{renderCellValue(calls.uiRuntime)}</td>
-              <td>{renderCellValue(calls.workerRuntime)}</td>
-            </tr>
-          </tbody>
-        </table>
-        {renderHint()}
-      </div>
-    );
-  }
-
-  if (!bundleMode || !noBundleMode) {
-    return null;
-  }
-
+export function CallTable({ bundleMode, noBundleMode }: CallTableProps) {
   const rows = [
     {
       label: 'Bundle Mode',
@@ -77,7 +40,7 @@ export function CallTable({ calls, bundleMode, noBundleMode }: CallTableProps) {
 
   return (
     <div className={styles.container}>
-      <table className={`${styles.table} ${styles.modeTable}`}>
+      <table className={styles.table}>
         <thead>
           <tr>
             <th scope="col">Mode</th>
@@ -99,7 +62,9 @@ export function CallTable({ calls, bundleMode, noBundleMode }: CallTableProps) {
           ))}
         </tbody>
       </table>
-      {renderHint()}
+      <p className={styles.hint}>
+        <Link to="/docs/guides/call-tables">What does it mean?</Link>
+      </p>
     </div>
   );
 }

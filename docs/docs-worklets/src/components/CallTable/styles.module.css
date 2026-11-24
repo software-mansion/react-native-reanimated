@@ -29,8 +29,8 @@
   text-align: center;
 }
 
-.modeTable td:first-child,
-.modeTable th:first-child {
+.table td:first-child,
+.table th:first-child {
   text-align: left;
   font-weight: 600;
 }
