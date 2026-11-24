@@ -15,28 +15,12 @@ pub fn const_decl<'a>(
     Statement::VariableDeclaration(const_declaration(builder, pattern, init))
 }
 
-pub fn let_decl<'a>(
-    builder: AstBuilder<'a>,
-    pattern: oxc_ast::ast::BindingPattern<'a>,
-    init: Expression<'a>,
-) -> Statement<'a> {
-    Statement::VariableDeclaration(let_declaration(builder, pattern, init))
-}
-
 pub fn const_declaration<'a>(
     builder: AstBuilder<'a>,
     pattern: oxc_ast::ast::BindingPattern<'a>,
     init: Expression<'a>,
 ) -> oxc_allocator::Box<'a, oxc_ast::ast::VariableDeclaration<'a>> {
     variable_declaration(builder, VariableDeclarationKind::Const, pattern, init)
-}
-
-pub fn let_declaration<'a>(
-    builder: AstBuilder<'a>,
-    pattern: oxc_ast::ast::BindingPattern<'a>,
-    init: Expression<'a>,
-) -> oxc_allocator::Box<'a, oxc_ast::ast::VariableDeclaration<'a>> {
-    variable_declaration(builder, VariableDeclarationKind::Let, pattern, init)
 }
 
 fn variable_declaration<'a>(
