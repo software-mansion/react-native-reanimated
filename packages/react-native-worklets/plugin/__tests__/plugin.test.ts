@@ -233,8 +233,9 @@ describe('babel plugin', () => {
         };
       </script>`;
 
-      // TODO: this is an edge case that wasn't ever handled.
-      expect(() => runPlugin(input)).toThrow();
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatchSnapshot();
     });
 
     test('appends file name to function name', () => {
@@ -1274,14 +1275,10 @@ describe('babel plugin', () => {
 
     test('throws a tagged exception when worklet processing fails', () => {
       const input = html`<script>
-        const foo = useAnimatedStyle(() => {
-          return <Image />;
-        });
+        const handler = useAnimatedScrollHandler({ ...handlers });
       </script>`;
 
-      expect(() =>
-        runPlugin(input, { plugins: ['@babel/plugin-syntax-jsx'] })
-      ).toThrow('[Worklets]');
+      expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
 

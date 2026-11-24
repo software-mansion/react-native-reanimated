@@ -19,4 +19,6 @@ pub struct PluginOptions {
     pub worklets_package_dir: Option<String>,
 
     pub in_place: Option<bool>,
+
+    pub cwd: Option<String>,
 }
