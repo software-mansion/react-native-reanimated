@@ -30,6 +30,11 @@ type LayoutAnimationStart = {
   blockedTime?: number;
 };
 
+type LayoutAnimationTimeline = {
+  startTimestamp: Timestamp;
+  timeShift: number;
+};
+
 // The first frame after a start can carry a timestamp from before the block,
 // so the block is measured on the clock. Real time caps it because the clock
 // can be scaled (slow animations) or frozen (tests).
@@ -53,19 +58,20 @@ function measureBlockedTime(start: LayoutAnimationStart) {
 function shiftFrames(
   animation: StyleLayoutAnimation,
   start: LayoutAnimationStart,
+  startTimestamp: Timestamp,
   previousTimeShift: number,
-  timeShifts: WeakMap<object, number>
+  timelines: WeakMap<object, LayoutAnimationTimeline>
 ) {
   'worklet';
   const onFrame = animation.onFrame;
-  const startTimestamp = start.timestamp - previousTimeShift;
-  timeShifts.set(animation, previousTimeShift);
+  const timeline = { startTimestamp, timeShift: previousTimeShift };
+  timelines.set(animation, timeline);
   let timeShift: number | undefined;
   animation.onFrame = (self, timestamp) => {
     if (timeShift === undefined) {
       start.blockedTime ??= measureBlockedTime(start);
       timeShift = previousTimeShift + start.blockedTime;
-      timeShifts.set(animation, timeShift);
+      timeline.timeShift = timeShift;
     }
     return onFrame(self, Math.max(startTimestamp, timestamp - timeShift));
   };
@@ -127,7 +133,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
-  const timeShifts = new WeakMap<object, number>();
+  const timelines = new WeakMap<object, LayoutAnimationTimeline>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -253,15 +259,30 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
                 realTime: 0,
                 blockedTime: 0,
               };
-        const previousTimeShift =
-          (value._animation && timeShifts.get(value._animation)) ?? 0;
-        global.__frameTimestamp = start.timestamp - previousTimeShift;
+        const previous = value._animation && timelines.get(value._animation);
+        const previousTimeShift = previous ? previous.timeShift : 0;
+        // A retarget in a frame with a stale timestamp must not start before
+        // the animation it continues.
+        const startTimestamp =
+          previous && previousTimeShift > 0
+            ? Math.max(
+                previous.startTimestamp,
+                start.timestamp - previousTimeShift
+              )
+            : start.timestamp;
+        global.__frameTimestamp = startTimestamp;
         try {
           value.value = animation;
         } finally {
           global.__frameTimestamp = previousFrameTimestamp;
         }
-        shiftFrames(animation, start, previousTimeShift, timeShifts);
+        shiftFrames(
+          animation,
+          start,
+          startTimestamp,
+          previousTimeShift,
+          timelines
+        );
       } catch (error) {
         try {
           stop(tag);

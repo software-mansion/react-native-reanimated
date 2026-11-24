@@ -343,6 +343,26 @@ describe('LayoutAnimationsManager', () => {
       manager.stop(23);
     });
 
+    test('keeps the time shift when a retarget starts in a stale frame', () => {
+      startBlocked(28);
+      frames.splice(0).forEach((frame) => frame(100));
+      globalThis.__frameTimestamp = 100;
+      manager.start(28, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { width: 0 },
+        animations: { width: linear(50) },
+      }));
+      globalThis.__frameTimestamp = undefined;
+      now.mockReturnValue(750);
+      getAnimationTimestamp.mockReturnValue(750);
+      frames.splice(0).forEach((frame) => frame(750));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(28, {
+        opacity: expect.closeTo((750 - blockedTime - 100) / 1000),
+        width: expect.closeTo(((750 - blockedTime - 100) / 1000) * 50),
+      });
+      manager.stop(28);
+    });
+
     test('measures the block at the first frame when a retarget comes in the same batch', () => {
       now.mockReturnValue(100);
       getAnimationTimestamp.mockReturnValue(100);
