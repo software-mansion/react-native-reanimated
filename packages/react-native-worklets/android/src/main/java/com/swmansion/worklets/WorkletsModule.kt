@@ -41,7 +41,7 @@ class WorkletsModule(
 
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
-    private val mWorkerAnimationFrameQueue =
+    private val mVSyncFrameQueue =
         AnimationFrameQueue(reactContext, DedicatedThreadFrameSource())
     private val mNetworking = Networking()
     private var mSlowAnimationsEnabled = false
@@ -101,8 +101,8 @@ class WorkletsModule(
     }
 
     @DoNotStrip
-    fun requestWorkerAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
-        mWorkerAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
+    fun requestVSync(animationFrameCallback: AnimationFrameCallback) {
+        mVSyncFrameQueue.requestAnimationFrame(animationFrameCallback)
     }
 
     /** @noinspection unused */
@@ -118,7 +118,7 @@ class WorkletsModule(
         mSlowAnimationsEnabled = !mSlowAnimationsEnabled
         val firstUptime = SystemClock.uptimeMillis()
         mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
-        mWorkerAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
+        mVSyncFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
     }
 
     @OptIn(FrameworkAPI::class)
@@ -147,7 +147,7 @@ class WorkletsModule(
                 .removeTaskEventListener(this)
         }
         mAnimationFrameQueue.invalidate()
-        mWorkerAnimationFrameQueue.invalidate()
+        mVSyncFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
             invalidateCpp()
         }
@@ -187,10 +187,10 @@ class WorkletsModule(
                 HeadlessJsTaskContext.getInstance(reactApplicationContext).hasActiveTasks()
             if (mHostResumed || hasActiveHeadlessTasks) {
                 mAnimationFrameQueue.resume()
-                mWorkerAnimationFrameQueue.resume()
+                mVSyncFrameQueue.resume()
             } else {
                 mAnimationFrameQueue.pause()
-                mWorkerAnimationFrameQueue.pause()
+                mVSyncFrameQueue.pause()
             }
         }
     }

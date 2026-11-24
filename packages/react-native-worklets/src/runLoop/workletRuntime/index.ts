@@ -14,7 +14,7 @@ export function setupRunLoop(
   'worklet';
   setupTaskQueue();
   setupQueueMicrotask();
-  setupSetTimeout(enableVSync);
+  setupSetTimeout();
   setupRequestAnimationFrame(animationQueuePollingRate, enableVSync);
   setupSetImmediate();
   setupSetInterval();

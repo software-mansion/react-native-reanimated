@@ -6,6 +6,18 @@ export function setupRequestAnimationFrame(
 ) {
   'worklet';
   const timeoutInterval = animationQueuePollingRate;
+  const scheduleVSyncCallback = globalThis.__scheduleVSyncCallback;
+  if (enableVSync && !scheduleVSyncCallback) {
+    throw new Error(
+      '[Worklets] The v-sync frame source is not available on this Worklet Runtime.'
+    );
+  }
+  const requestFlush =
+    enableVSync && scheduleVSyncCallback
+      ? scheduleVSyncCallback
+      : () => {
+          setTimeout(flushAnimationFrameOnTimeout, timeoutInterval);
+        };
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -52,11 +64,7 @@ export function setupRequestAnimationFrame(
     if (!flushRequested) {
       flushRequested = true;
 
-      if (enableVSync) {
-        globalThis._scheduleVSyncCallback?.();
-      } else {
-        setTimeout(flushAnimationFrameOnTimeout, timeoutInterval);
-      }
+      requestFlush();
     }
     return handle;
   };

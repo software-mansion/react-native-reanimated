@@ -2,17 +2,16 @@
 
 import { pushTask } from './taskQueue';
 
-export function setupSetTimeout(enableVSync: boolean) {
+export function setupSetTimeout() {
   'worklet';
 
   const pendingHandlers: Set<number> = new Set();
   let ID = 0;
 
-  const schedule = (
+  const setTimeoutPolyfill = (
     callback: (...args: unknown[]) => void,
-    delay: number,
-    args: unknown[],
-    frameAligned: boolean
+    delay: number = 0,
+    ...args: unknown[]
   ) => {
     const handlerId = ID++;
 
@@ -25,15 +24,9 @@ export function setupSetTimeout(enableVSync: boolean) {
     };
 
     pendingHandlers.add(handlerId);
-    pushTask(timeoutCallback, handlerId, delay, frameAligned);
+    pushTask(timeoutCallback, handlerId, delay);
     return handlerId;
   };
-
-  const setTimeoutPolyfill = (
-    callback: (...args: unknown[]) => void,
-    delay: number = 0,
-    ...args: unknown[]
-  ) => schedule(callback, delay, args, enableVSync);
 
   const clearTimeoutPolyfill = (timeoutHandle: number) => {
     pendingHandlers.delete(timeoutHandle);

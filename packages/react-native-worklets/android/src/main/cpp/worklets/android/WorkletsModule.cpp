@@ -64,9 +64,9 @@ std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
     jni::global_ref<JNetworking::javaobject> networking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
       .requestAnimationFrame = getRequestAnimationFrame(javaPart, "requestAnimationFrame"),
-      .createWorkerAnimationFrameSource =
-          [requestWorkerAnimationFrame = getRequestAnimationFrame(javaPart, "requestWorkerAnimationFrame")] {
-            return requestWorkerAnimationFrame;
+      .createVSyncSource =
+          [requestVSync = getRequestAnimationFrame(javaPart, "requestVSync")] {
+            return requestVSync;
           },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AndroidNetworkingBackend>(std::move(networking))});

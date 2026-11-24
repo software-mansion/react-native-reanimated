@@ -56,15 +56,14 @@ void EventLoop::run() {
 
       const auto currentTime = getCurrentTimeInMs();
       std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
-      std::vector<std::function<void(jsi::Runtime & rt)>> frameAlignedJobs;
       auto &timeouts = state->queue;
       timeouts.erase(
           std::remove_if(
               timeouts.begin(),
               timeouts.end(),
-              [currentTime, &jobs, &frameAlignedJobs](const Timeout &timeout) {
+              [currentTime, &jobs](const Timeout &timeout) {
                 if (currentTime >= timeout.targetTime) {
-                  (timeout.frameAligned ? frameAlignedJobs : jobs).emplace_back(timeout.callback);
+                  jobs.emplace_back(timeout.callback);
                   return true;
                 }
                 return false;
@@ -72,13 +71,8 @@ void EventLoop::run() {
           timeouts.end());
       lock.unlock();
 
-      if (auto strongThis = weakThis.lock()) {
-        for (auto &job : jobs) {
-          strongThis->pushTask(std::move(job));
-        }
-        if (!frameAlignedJobs.empty()) {
-          strongThis->deferToNextFrame(std::move(frameAlignedJobs));
-        }
+      if (auto strongThis = weakThis.lock(); strongThis && !jobs.empty()) {
+        strongThis->deferToNextFrame(std::move(jobs));
       }
     }
   });
@@ -196,14 +190,14 @@ void EventLoop::runFrameTimeouts() {
   }
 }
 
-void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay, bool frameAligned) {
+void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay) {
   {
     std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
     if (!timeoutsQueueState_->running) {
       return;
     }
     const auto targetTime = getCurrentTimeInMs() + delay;
-    const auto timeout = Timeout{std::move(job), targetTime, frameAligned};
+    const auto timeout = Timeout{std::move(job), targetTime};
     auto &queue = timeoutsQueueState_->queue;
     auto it = std::upper_bound(queue.begin(), queue.end(), timeout);
     queue.insert(it, timeout);

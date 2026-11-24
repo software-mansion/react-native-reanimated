@@ -26,7 +26,7 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<AsyncQueue> &queue,
       const bool enableVSync,
       const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
-      const RuntimeBindings::CreateWorkerAnimationFrameSource &createWorkerAnimationFrameSource);
+      const RuntimeBindings::CreateVSyncSource &createVSyncSource);
 };
 
 } // namespace worklets

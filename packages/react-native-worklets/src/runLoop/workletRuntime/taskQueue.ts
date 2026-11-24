@@ -20,14 +20,9 @@ export function setupTaskQueue() {
   };
 }
 
-export function pushTask(
-  callback: Callback,
-  handlerId: number,
-  delay: number,
-  frameAligned: boolean
-) {
+export function pushTask(callback: Callback, handlerId: number, delay: number) {
   'worklet';
   const queue = globalThis._taskQueue;
   queue.timeoutCallbacks.set(handlerId, callback);
-  globalThis._scheduleTimeoutCallback(delay, handlerId, frameAligned);
+  globalThis._scheduleTimeoutCallback(delay, handlerId);
 }
