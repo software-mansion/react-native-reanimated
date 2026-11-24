@@ -32,8 +32,6 @@ jest.mock('fs', () => {
 });
 
 // eslint-disable-next-line import/first
-import { version as packageVersion } from '../../package.json';
-// eslint-disable-next-line import/first
 import type { PluginOptions } from '../index';
 // eslint-disable-next-line import/first
 import plugin from '../index';
@@ -1584,7 +1582,7 @@ describe('babel plugin', () => {
 });
 
 describe('babel plugin core', () => {
-  function runPlugin(
+  function runCorePlugin(
     input: string,
     pluginOpts: PluginOptions = {},
     transformOpts: TransformOptions = {}
@@ -1653,7 +1651,7 @@ describe('babel plugin core', () => {
     ];
 
     test.each(cases)('workletizes $name', ({ input }) => {
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(result.files).toHaveLength(1);
       expect(result.code).toMatchSnapshot();
       expect(result.files[0].content).toMatchSnapshot();
@@ -1670,7 +1668,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(workletText(result)).toMatchSnapshot();
     });
 
@@ -1682,7 +1680,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(workletText(result)).toMatchSnapshot();
     });
 
@@ -1698,7 +1696,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(workletText(result)).toMatchSnapshot();
     });
 
@@ -1712,7 +1710,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(workletText(result)).toMatchSnapshot();
     });
 
@@ -1727,7 +1725,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(workletText(result)).toMatchSnapshot();
     });
   });
@@ -1741,7 +1739,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(result.code).toMatchSnapshot();
       expect(result.files[0].content).toMatchSnapshot();
     });
@@ -1749,7 +1747,7 @@ describe('babel plugin core', () => {
 
   describe('autoworkletization of runtime APIs', () => {
     function factoryCount(input: string): number {
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       return result.files.length;
     }
 
@@ -1933,7 +1931,7 @@ describe('babel plugin core', () => {
         </script>`,
       },
     ])('workletizes only the $name in the config', ({ input }) => {
-      const output = workletText(runPlugin(input));
+      const output = workletText(runCorePlugin(input));
       expect(output).toContain('return 2');
       expect(output).not.toContain('return 1');
     });
@@ -1950,7 +1948,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(result.files).toHaveLength(1);
       expect(result.code).toContain('notify =');
       expect(workletText(result)).toContain('return name');
@@ -1966,7 +1964,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(result.files).toHaveLength(1);
       expect(result.code).toContain('static notify =');
     });
@@ -1980,7 +1978,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      expect(runPlugin(input).files).toHaveLength(0);
+      expect(runCorePlugin(input).files).toHaveLength(0);
     });
 
     test('does not workletize accessors and constructors', () => {
@@ -1999,13 +1997,13 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      expect(runPlugin(input).files).toHaveLength(0);
+      expect(runCorePlugin(input).files).toHaveLength(0);
     });
   });
 
   describe('autoworkletization of shared transition callbacks', () => {
     function factoryCount(input: string): number {
-      return runPlugin(input).files.length;
+      return runCorePlugin(input).files.length;
     }
 
     test.each([
@@ -2125,7 +2123,7 @@ describe('babel plugin core', () => {
 
   describe('worklet hash', () => {
     function workletHashes(input: string, filename = TEST_LOCATION) {
-      const { files } = runPlugin(
+      const { files } = runCorePlugin(
         input,
         {},
         { filename: path.join(__dirname, filename) }
@@ -2198,7 +2196,7 @@ describe('babel plugin core', () => {
     test('gives the same file in two Metro projects different hashes', () => {
       const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
       const hashes = ['first-app', 'second-app'].map((app) => {
-        const { files } = runPlugin(
+        const { files } = runCorePlugin(
           input,
           {},
           {
@@ -2253,7 +2251,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      const result = runPlugin(input);
+      const result = runCorePlugin(input);
       expect(result.files).toHaveLength(0);
       expect(result.code).toMatchSnapshot();
     });
@@ -2268,7 +2266,7 @@ describe('babel plugin core', () => {
     </script>`;
 
     function transformWithEnvName(envName: string): string {
-      const result = runPlugin(sampleInput, {}, { envName });
+      const result = runCorePlugin(sampleInput, {}, { envName });
       return workletText(result);
     }
 
@@ -2293,7 +2291,7 @@ describe('babel plugin core', () => {
         };
       </script>`;
 
-      const result = runPlugin(
+      const result = runCorePlugin(
         input,
         {},
         { envName: 'development', plugins: ['babel-plugin-react-compiler'] }
@@ -2309,7 +2307,7 @@ describe('babel plugin core', () => {
 });
 
 describe('babel plugin in bundleMode', () => {
-  function runPlugin(
+  function runBundleModePlugin(
     input: string,
     transformOpts: TransformOptions = {},
     pluginOpts: PluginOptions = {},
@@ -2333,7 +2331,7 @@ describe('babel plugin in bundleMode', () => {
         const body = `{ 'worklet'; return [${name}(), _${name}()]; }`;
         const expression =
           kind === 'arrow' ? `() => ${body}` : `{ read() ${body} }.read`;
-        const { files } = runPlugin(
+        const { files } = runBundleModePlugin(
           `
           import { first as ${name}, second as _${name} } from 'some-library';
           const f = ${expression};
@@ -2347,7 +2345,7 @@ describe('babel plugin in bundleMode', () => {
     );
 
     test('packs captures in the same order at the call site and in the factory', () => {
-      const { code, files } = runPlugin(`
+      const { code, files } = runBundleModePlugin(`
         function make(z, missing, a) {
           return (suffix) => {
             'worklet';
@@ -2361,7 +2359,7 @@ describe('babel plugin in bundleMode', () => {
     });
 
     test('exports closure-free worklets without a factory call', () => {
-      const { code, files } = runPlugin(`
+      const { code, files } = runBundleModePlugin(`
         function factorial(n) {
           'worklet';
           return n <= 1 ? 1 : n * factorial(n - 1);
@@ -2381,7 +2379,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input);
+      const { code, files } = runBundleModePlugin(input);
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
     });
@@ -2398,7 +2396,7 @@ describe('babel plugin in bundleMode', () => {
         false,
       ],
     ])('%s', (_label, source, forwarded) => {
-      const { files } = runPlugin(
+      const { files } = runBundleModePlugin(
         `
         import { value } from '${source}';
         function foo() {
@@ -2414,7 +2412,7 @@ describe('babel plugin in bundleMode', () => {
     });
 
     test('does not forward a namespace import of a listed module', () => {
-      const { files } = runPlugin(
+      const { files } = runBundleModePlugin(
         `
         import * as value from 'some-library';
         function foo() {
@@ -2464,7 +2462,7 @@ describe('babel plugin in bundleMode', () => {
         false,
       ],
     ])('%s', (_label, filename, relativePaths, forwarded) => {
-      const { files } = runPlugin(
+      const { files } = runBundleModePlugin(
         `
         import { helperValue } from './helperModule';
         function foo() {
@@ -2495,7 +2493,7 @@ describe('babel plugin in bundleMode', () => {
     function warningsFor(pluginOpts: PluginOptions) {
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
       try {
-        runPlugin(input, {}, pluginOpts);
+        runBundleModePlugin(input, {}, pluginOpts);
         return warn.mock.calls
           .map(([message]) => String(message))
           .filter((message) => message.includes('importForwarding.relativePaths'));
@@ -2558,7 +2556,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files } = runPlugin(input);
+      const { files } = runBundleModePlugin(input);
       expect(files).toHaveLength(2);
     });
 
@@ -2570,7 +2568,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input);
+      const { code, files } = runBundleModePlugin(input);
       expect(files).toHaveLength(1);
       const fileBasename = path.basename(files[0].path);
       expect(code).toContain(`${REQUIRE_PREFIX}${fileBasename}"`);
@@ -2586,7 +2584,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files } = runPlugin(input);
+      const { files } = runBundleModePlugin(input);
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatchSnapshot();
     });
@@ -2599,7 +2597,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input);
+      const { code, files } = runBundleModePlugin(input);
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
     });
@@ -2612,7 +2610,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files } = runPlugin(input);
+      const { files } = runBundleModePlugin(input);
       expect(files).toHaveLength(1);
       expect(files[0].content).not.toContain('__stackDetails');
       expect(files[0].content).toMatchSnapshot();
@@ -2642,7 +2640,7 @@ describe('babel plugin in bundleMode', () => {
 
       try {
         process.chdir(isolatedDir);
-        const { files } = runPlugin(input);
+        const { files } = runBundleModePlugin(input);
         expect(files).toHaveLength(1);
       } finally {
         process.chdir(previousCwd);
@@ -2660,7 +2658,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input);
+      const { code, files } = runBundleModePlugin(input);
       expect(code).toMatchSnapshot();
       expect(files[0].content).toMatchSnapshot();
     });
@@ -2674,7 +2672,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(
+      const { code, files } = runBundleModePlugin(
         input,
         {},
         { importForwarding: { moduleNames: ['some-library'] } }
@@ -2707,7 +2705,7 @@ describe('babel plugin in bundleMode', () => {
       expect(control).toContain('__self');
       expect(control).toContain('__source');
 
-      const { files } = runPlugin(
+      const { files } = runBundleModePlugin(
         input,
         {
           presets: [
@@ -2736,7 +2734,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code } = runPlugin(
+      const { code } = runBundleModePlugin(
         input,
         { presets: [['@babel/preset-react', { runtime: 'classic' }]] },
         {},
@@ -2756,7 +2754,7 @@ describe('babel plugin in bundleMode', () => {
       </script>`;
 
       const fakeFilename = '/some-library/src/file.ts';
-      const { files } = runPlugin(
+      const { files } = runBundleModePlugin(
         input,
         {},
         { importForwarding: { relativePaths: ['some-library'] } },
@@ -2787,7 +2785,7 @@ describe('babel plugin in bundleMode', () => {
         __dirname,
         '../../../some-library/file.js'
       );
-      const { files } = runPlugin(
+      const { files } = runBundleModePlugin(
         input,
         {},
         { importForwarding: { relativePaths: ['some-library'] } },
@@ -2812,7 +2810,7 @@ describe('babel plugin in bundleMode', () => {
         __dirname,
         '../../../some-library/file.js'
       );
-      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      const { files } = runBundleModePlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
       expect(files[0].content).toContain(`import("../../some-library/helper")`);
       expect(files[0].content).toMatchSnapshot();
@@ -2831,7 +2829,7 @@ describe('babel plugin in bundleMode', () => {
         __dirname,
         '../../../not-a-workletizable-package/src/file.ts'
       );
-      const { files } = runPlugin(input, {}, {}, fakeFilename);
+      const { files } = runBundleModePlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
       expect(files[0].content).toContain(
         `require("../../not-a-workletizable-package/src/helper")`
@@ -2853,7 +2851,7 @@ describe('babel plugin in bundleMode', () => {
         };
       </script>`;
 
-      const { code, files } = runPlugin(input);
+      const { code, files } = runBundleModePlugin(input);
       expect(files).toHaveLength(2);
       const sourceRequires = countOccurrences(code, REQUIRE_PREFIX);
       expect(sourceRequires).toBe(1);
@@ -2876,7 +2874,7 @@ describe('babel plugin in bundleMode', () => {
         };
       </script>`;
 
-      const { code, files } = runPlugin(input);
+      const { code, files } = runBundleModePlugin(input);
       assert(files.length === 2);
       const outerFile = files.find((f) => code.includes(path.basename(f.path)));
       assert(outerFile);
@@ -2898,7 +2896,7 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, generatedFilename);
+      const { code, files } = runBundleModePlugin(input, {}, {}, generatedFilename);
       expect(files).toHaveLength(0);
       expect(code).not.toContain(REQUIRE_PREFIX);
     });
@@ -2913,11 +2911,11 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files: firstPass } = runPlugin(input);
+      const { files: firstPass } = runBundleModePlugin(input);
       assert(firstPass.length >= 1);
       const outerFile = firstPass[firstPass.length - 1];
 
-      const { code: rePassedCode } = runPlugin(
+      const { code: rePassedCode } = runBundleModePlugin(
         outerFile.content,
         {},
         {},
