@@ -1,23 +1,5 @@
 export interface PluginOptions {
   /**
-   * This is a list of Babel plugins that will be used when transforming
-   * worklets' code with Worklets Babel Plugin.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#extraplugins}
-   *
-   * - Defaults to an empty array `[]`.
-   */
-  extraPlugins?: string[];
-  /**
-   * This is a list of Babel presets that will be used when transforming
-   * worklets' code with Worklets Babel Plugin.
-   *
-   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#extrapresets}
-   *
-   * - Defaults to an empty array `[]`.
-   */
-  extraPresets?: string[];
-  /**
    * Configures [import
    * forwarding](https://docs.swmansion.com/react-native-worklets/docs/bundleMode/importForwarding/)
    * for the Bundle Mode.

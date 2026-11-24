@@ -3,6 +3,7 @@ import { transformSync } from '@babel/core';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import { join } from 'path';
 
 type CapturedFile = { path: string; content: string };
 
@@ -154,7 +155,7 @@ describe('babel plugin without a Metro caller', () => {
 
   describe('worklet hash', () => {
     function workletHashes(input: string, filename = MOCK_LOCATION) {
-      const { code } = runPlugin(input, { filename });
+      const { code } = runPlugin(input, { filename: join(__dirname, filename) });
       return [...code.matchAll(/__workletHash = (0x[\da-f]+|\d+)/gi)].map(
         (match) => Number(match[1])
       );
@@ -201,24 +202,40 @@ describe('babel plugin without a Metro caller', () => {
       expect(second).not.toBe(first);
     });
 
+    test('gives the same file in two Metro projects different hashes', () => {
+      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+      const hashes = ['first-app', 'second-app'].map((app) => {
+        const { code } = runPlugin(input, {
+          cwd: join(__dirname, app),
+          filename: join(__dirname, app, 'src', 'App.js'),
+        });
+        return [...code.matchAll(/__workletHash = (0x[\da-f]+|\d+)/gi)].map(
+          (match) => Number(match[1])
+        );
+      });
+      expect(hashes[0]).toHaveLength(1);
+      expect(hashes[1]).toHaveLength(1);
+      expect(hashes[0][0]).not.toBe(hashes[1][0]);
+    });
+
     test('uses the source position of autoworkletized concise arrows', () => {
       expect(
         workletHash(
           "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
         )
-      ).toBe(16268140503517);
+      ).toBe(14413415183409);
       expect(
         workletHash(
           "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
         )
-      ).toBe(1228006275120);
+      ).toBe(7465442322492);
     });
 
     test('derives the hash from the relative path and the UTF-16 position', () => {
       const value = workletHash(
         "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
       );
-      expect(value).toBe(13998117260665);
+      expect(value).toBe(4006526329237);
     });
   });
 });
