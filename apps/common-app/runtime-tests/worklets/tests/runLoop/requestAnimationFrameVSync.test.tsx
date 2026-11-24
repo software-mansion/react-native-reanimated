@@ -1,6 +1,7 @@
 import {
   abortWorkletRuntime,
   createWorkletRuntime,
+  isBundleModeEnabled,
   scheduleOnRN,
   scheduleOnRuntime,
   scheduleOnUI,
@@ -24,6 +25,8 @@ const ABORT_SETTLE_MS = 500;
 const MAX_FRAMES_IN_FLIGHT = 2;
 const CHAIN_LENGTH = 10;
 const FRAME_TOLERANCE = 2;
+
+const bundleModeTest = isBundleModeEnabled() ? test : test.skip;
 const MIN_FRAMES_DURING_UI_BLOCK = 5;
 
 type WorkletRuntimeConfig = Parameters<typeof createWorkletRuntime>[0];
@@ -428,4 +431,53 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     // Assert
     expect(framesDuringChain < CHAIN_LENGTH - FRAME_TOLERANCE).toBe(true);
   });
+
+  bundleModeTest(
+    'delivers FileReader results without waiting for a frame',
+    async () => {
+      // Arrange
+      const notification = 'vsyncFileReaderChain';
+      const runtime = createWorkletRuntime({
+        name: 'vsync',
+        enableVSync: true,
+      });
+      let framesDuringChain = Infinity;
+      const onDone = (frames: number) => {
+        framesDuringChain = frames;
+        notify(notification);
+      };
+
+      // Act
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        let frames = 0;
+        let counting = true;
+        const countFrames = () => {
+          frames++;
+          if (counting) {
+            requestAnimationFrame(countFrames);
+          }
+        };
+        requestAnimationFrame(countFrames);
+        const startFrame = frames;
+        let remaining = CHAIN_LENGTH;
+        const next = () => {
+          remaining--;
+          if (remaining === 0) {
+            counting = false;
+            scheduleOnRN(onDone, frames - startFrame);
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = next;
+          reader.readAsText(new Blob(['content']) as unknown as Blob);
+        };
+        next();
+      });
+      await waitForNotification(notification);
+
+      // Assert
+      expect(framesDuringChain < CHAIN_LENGTH - FRAME_TOLERANCE).toBe(true);
+    }
+  );
 });
