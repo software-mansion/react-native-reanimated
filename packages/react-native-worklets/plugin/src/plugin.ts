@@ -1,7 +1,6 @@
 import type { NodePath, PluginItem, Visitor } from '@babel/core';
 import type {
   CallExpression,
-  ClassDeclaration,
   ClassMethod,
   Directive,
   ExpressionStatement,
@@ -14,7 +13,6 @@ import {
   handleWorkletizableCallback,
 } from './autoworkletization';
 import { toggleBundleMode } from './bundleMode';
-import { processIfWorkletClass } from './class';
 import { processIfWorkletMethod } from './classMethod';
 import { handleWorkletDirective } from './directives';
 import { processIfWorkletFile } from './file';
@@ -72,16 +70,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
         ) {
           runWithTaggedExceptions(state, () => {
             processIfWithWorkletDirective(path, state);
-          });
-        },
-      },
-      ClassDeclaration: {
-        enter(path: NodePath<ClassDeclaration>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            if (state.opts.disableWorkletClasses) {
-              return;
-            }
-            processIfWorkletClass(path, state);
           });
         },
       },

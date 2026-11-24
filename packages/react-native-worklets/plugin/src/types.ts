@@ -76,8 +76,6 @@ export function isWorkletizableObjectNode(
   return isObjectExpression(node);
 }
 
-export const workletClassFactorySuffix = '__classFactory';
-
 export const generatedWorkletsDir = '.worklets';
 
 type InitializedImportForwarding = Required<
