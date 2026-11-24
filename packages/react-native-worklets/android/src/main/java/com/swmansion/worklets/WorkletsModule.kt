@@ -1,6 +1,5 @@
 package com.swmansion.worklets
 
-import android.os.SystemClock
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.bridge.LifecycleEventListener
@@ -15,7 +14,6 @@ import com.facebook.soloader.SoLoader
 import com.swmansion.worklets.networking.Networking
 import com.swmansion.worklets.runloop.AnimationFrameCallback
 import com.swmansion.worklets.runloop.AnimationFrameQueue
-import com.swmansion.worklets.runloop.DedicatedThreadFrameSource
 
 @Suppress("KotlinJniMissingFunction")
 @ReactModule(name = WorkletsModule.NAME, needsEagerInit = true)
@@ -41,8 +39,6 @@ class WorkletsModule(
 
     private val mAndroidUIScheduler = AndroidUIScheduler(reactContext)
     private val mAnimationFrameQueue = AnimationFrameQueue(reactContext)
-    private val mVSyncFrameQueue =
-        AnimationFrameQueue(reactContext, DedicatedThreadFrameSource())
     private val mNetworking = Networking()
     private var mSlowAnimationsEnabled = false
     private var mHostResumed = false
@@ -100,11 +96,6 @@ class WorkletsModule(
         mAnimationFrameQueue.requestAnimationFrame(animationFrameCallback)
     }
 
-    @DoNotStrip
-    fun requestVSync(animationFrameCallback: AnimationFrameCallback) {
-        mVSyncFrameQueue.requestAnimationFrame(animationFrameCallback)
-    }
-
     /** @noinspection unused */
     @DoNotStrip
     fun isOnJSQueueThread(): Boolean = reactApplicationContext.isOnJSQueueThread
@@ -116,9 +107,7 @@ class WorkletsModule(
     fun toggleSlowAnimations() {
         val animationsDragFactor = 10
         mSlowAnimationsEnabled = !mSlowAnimationsEnabled
-        val firstUptime = SystemClock.uptimeMillis()
-        mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
-        mVSyncFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor, firstUptime)
+        mAnimationFrameQueue.enableSlowAnimations(mSlowAnimationsEnabled, animationsDragFactor)
     }
 
     @OptIn(FrameworkAPI::class)
@@ -147,7 +136,6 @@ class WorkletsModule(
                 .removeTaskEventListener(this)
         }
         mAnimationFrameQueue.invalidate()
-        mVSyncFrameQueue.invalidate()
         if (mHybridData != null && mHybridData!!.isValid) {
             invalidateCpp()
         }
@@ -187,10 +175,8 @@ class WorkletsModule(
                 HeadlessJsTaskContext.getInstance(reactApplicationContext).hasActiveTasks()
             if (mHostResumed || hasActiveHeadlessTasks) {
                 mAnimationFrameQueue.resume()
-                mVSyncFrameQueue.resume()
             } else {
                 mAnimationFrameQueue.pause()
-                mVSyncFrameQueue.pause()
             }
         }
     }

@@ -4,7 +4,6 @@
 
 #if TARGET_IPHONE_SIMULATOR
 #import <dlfcn.h>
-#import <mutex>
 #endif
 
 namespace worklets {
@@ -25,8 +24,6 @@ CFTimeInterval calculateTimestampWithSlowAnimations(CFTimeInterval currentTimest
 {
   static const auto MILLISECONDS_IN_SECOND = 1000;
 #if TARGET_IPHONE_SIMULATOR
-  static std::mutex mutex;
-  std::lock_guard<std::mutex> lock(mutex);
   static CFTimeInterval dragCoefChangedTimestamp = CACurrentMediaTime();
   static CGFloat previousDragCoef = getUIAnimationDragCoefficient();
 

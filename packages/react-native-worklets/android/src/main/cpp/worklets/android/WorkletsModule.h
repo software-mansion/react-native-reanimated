@@ -70,8 +70,7 @@ class WorkletsModule : public jni::HybridClass<WorkletsModule> {
   BundleModeConfig loadBundleModeConfig();
 
   static RuntimeBindings::RequestAnimationFrame getRequestAnimationFrame(
-      const jni::global_ref<jhybridobject> &javaPart,
-      const char *methodName);
+      const jni::global_ref<jhybridobject> &javaPart);
 
   std::function<bool()> getIsOnJSQueueThread();
 
