@@ -235,6 +235,42 @@ exports[`babel plugin for DirectiveLiterals doesn't transform functions without 
 }"
 `;
 
+exports[`babel plugin for DirectiveLiterals removes "worklet"; directive from worklets 1`] = `
+"const foo = require("inline-module-1").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (x) {
+  "use no memo";
+
+  return x + 2;
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for DirectiveLiterals removes 'worklet'; directive from worklets 1`] = `
+"const foo = require("inline-module-1").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (x) {
+  "use no memo";
+
+  return x + 2;
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
 exports[`babel plugin for Layout Animations doesn't workletize callback functions on unknown chained methods before 1`] = `
 "FadeIn.AmogusIn().withCallback(() => {
   console.log('FadeIn with AmogusIn before');
@@ -295,6 +331,275 @@ exports[`babel plugin for Layout Animations doesn't workletize callback function
 });"
 `;
 
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after 1`] = `
+"FadeIn.withCallback(require("inline-module-1").default).build();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with build after");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods after with new keyword 1`] = `
+"new FadeIn().withCallback(require("inline-module-1").default).build();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with build after");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before 1`] = `
+"FadeIn.build().withCallback(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with build before");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on known chained methods before with new keyword 1`] = `
+"new FadeIn().build().withCallback(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with build before");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects 1`] = `
+"FadeIn.build().duration().withCallback(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with build");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on longer chains of known objects with new keyword 1`] = `
+"new FadeIn().build().duration().withCallback(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with build");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after 1`] = `
+"FadeIn.withCallback(require("inline-module-1").default).AmogusIn();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with AmogusIn after");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes callback functions on unknown objects chained after with new keyword 1`] = `
+"new FadeIn().withCallback(require("inline-module-1").default).AmogusIn();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn with AmogusIn after");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically 1`] = `
+"FadeIn.withCallback(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for Layout Animations workletizes unchained callback functions automatically with new keyword 1`] = `
+"new FadeIn().withCallback(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("FadeIn");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 1`] = `
+"const x = 5;
+const objX = {
+  x
+};
+const f = require("inline-module-1").default([x, objX]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function f_null1Factory([x, objX]) {
+  const f = function () {
+    "use no memo";
+
+    return {
+      res: x + objX.x
+    };
+  };
+  f.__closure = [x, objX];
+  f.__workletHash = 1;
+  f.__pluginVersion = "x.y.z";
+  f.__moduleId = __workletModuleId;
+  return f;
+});"
+`;
+
+exports[`babel plugin for closure capturing captures worklets environment 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function f_null1Factory([x, objX]) {
+  const f = function () {
+    "use no memo";
+
+    return {
+      res: x + objX.x
+    };
+  };
+  f.__closure = [x, objX];
+  f.__workletHash = 1;
+  f.__pluginVersion = "x.y.z";
+  f.__moduleId = __workletModuleId;
+  return f;
+});"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture arguments 1`] = `
+"const f = require("inline-module-1").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const f = function (a, b, c) {
+  "use no memo";
+
+  console.log(arguments);
+};
+f.__workletHash = 1;
+f.__pluginVersion = "x.y.z";
+f.__moduleId = __workletModuleId;
+export default f;"
+`;
+
+exports[`babel plugin for closure capturing doesn't capture objects' properties 1`] = `
+"const foo = {
+  bar: 42
+};
+const f = require("inline-module-1").default([foo]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function f_null1Factory([foo]) {
+  const f = function () {
+    "use no memo";
+
+    console.log(foo.bar);
+  };
+  f.__closure = [foo];
+  f.__workletHash = 1;
+  f.__pluginVersion = "x.y.z";
+  f.__moduleId = __workletModuleId;
+  return f;
+});"
+`;
+
 exports[`babel plugin for debugging doesn't inject version for worklets in production builds 1`] = `
 ""worklet-module";
 
@@ -309,7 +614,325 @@ null1.__moduleId = __workletModuleId;
 export default null1;"
 `;
 
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 1`] = `
+"const animatedStyle = useAnimatedStyle(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped named FunctionExpression automatically 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 1`] = `
+"const animatedStyle = useAnimatedStyle(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped unnamed FunctionExpression automatically 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {
+    width: 50
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 1`] = `
+"const style = require("inline-module-1").default;
+const animatedStyle = useAnimatedStyle(style);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {
+    color: "red",
+    backgroundColor: "blue"
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for function hooks workletizes hook wrapped worklet reference automatically 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {
+    color: "red",
+    backgroundColor: "blue"
+  };
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
 exports[`babel plugin for object hooks supports empty object in useAnimatedScrollHandler 1`] = `"useAnimatedScrollHandler({});"`;
+
+exports[`babel plugin for object hooks transforms ArrowFunctionExpression as argument of useAnimatedScrollHandler 1`] = `
+"useAnimatedScrollHandler(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for object hooks transforms each object property in useAnimatedScrollHandler 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("inline-module-1").default,
+  onBeginDrag: require("inline-module-2").default,
+  onEndDrag: require("inline-module-3").default,
+  onMomentumBegin: require("inline-module-4").default,
+  onMomentumEnd: require("inline-module-5").default
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function () {
+  "use no memo";
+};
+null2.__workletHash = 1;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;
+
+/* inline module 3 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null3 = function () {
+  "use no memo";
+};
+null3.__workletHash = 1;
+null3.__pluginVersion = "x.y.z";
+null3.__moduleId = __workletModuleId;
+export default null3;
+
+/* inline module 4 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null4 = function () {
+  "use no memo";
+};
+null4.__workletHash = 1;
+null4.__pluginVersion = "x.y.z";
+null4.__moduleId = __workletModuleId;
+export default null4;
+
+/* inline module 5 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null5 = function () {
+  "use no memo";
+};
+null5.__workletHash = 1;
+null5.__pluginVersion = "x.y.z";
+null5.__moduleId = __workletModuleId;
+export default null5;"
+`;
+
+exports[`babel plugin for object hooks transforms named FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
+"useAnimatedScrollHandler(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for object hooks transforms unnamed FunctionExpression as argument of useAnimatedScrollHandler 1`] = `
+"useAnimatedScrollHandler(require("inline-module-1").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ArrowFunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("inline-module-1").default
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped ObjectMethod automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("inline-module-1").default
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const onScroll = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+onScroll.__workletHash = 1;
+onScroll.__pluginVersion = "x.y.z";
+onScroll.__moduleId = __workletModuleId;
+export default onScroll;"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped named FunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("inline-module-1").default
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const onScroll = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+onScroll.__workletHash = 1;
+onScroll.__pluginVersion = "x.y.z";
+onScroll.__moduleId = __workletModuleId;
+export default onScroll;"
+`;
+
+exports[`babel plugin for object hooks workletizes useAnimatedScrollHandler wrapped unnamed FunctionExpression automatically 1`] = `
+"useAnimatedScrollHandler({
+  onScroll: require("inline-module-1").default
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function (event) {
+  "use no memo";
+
+  console.log(event);
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
 
 exports[`babel plugin for react-native-gesture-handler doesn't transform chained methods of objects containing Gesture property 1`] = `
 "const foo = Something.Gesture.Tap().onEnd(() => {
@@ -406,12 +1029,1027 @@ foo.__moduleId = __workletModuleId;
 export default foo;"
 `;
 
+exports[`babel plugin for react-native-gesture-handler workletizes gesture callbacks using the hooks api 1`] = `
+"const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin: require("inline-module-1").default,
+  onStart: require("inline-module-2").default,
+  onEnd: require("inline-module-3").default
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("onBegin");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function (_event) {
+  "use no memo";
+
+  console.log("onStart");
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;
+
+/* inline module 3 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null3 = function (_event, _success) {
+  "use no memo";
+
+  console.log("onEnd");
+};
+null3.__workletHash = 3;
+null3.__pluginVersion = "x.y.z";
+null3.__moduleId = __workletModuleId;
+export default null3;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes possibly chained gesture object callback functions automatically 1`] = `
+"const foo = Gesture.Tap().numberOfTaps(2).onBegin(require("inline-module-1").default).onStart(require("inline-module-2").default).onEnd(require("inline-module-3").default);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("onBegin");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function (_event) {
+  "use no memo";
+
+  console.log("onStart");
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;
+
+/* inline module 3 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null3 = function (_event, _success) {
+  "use no memo";
+
+  console.log("onEnd");
+};
+null3.__workletHash = 3;
+null3.__pluginVersion = "x.y.z";
+null3.__moduleId = __workletModuleId;
+export default null3;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced callbacks 1`] = `
+"const onStart = require("inline-module-1").default;
+const foo = Gesture.Tap().onStart(onStart);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for react-native-gesture-handler workletizes referenced gesture callbacks using the hooks api and shorthand syntax 1`] = `
+"const onBegin = require("inline-module-1").default;
+const foo = useTapGesture({
+  numberOfTaps: 2,
+  onBegin
+});
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("onBegin");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets prefers AssignmentExpression over VariableDeclarator 1`] = `
+"let styleFactory = () => 1;
+styleFactory = require("inline-module-1").default;
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return "AssignmentExpression";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets prefers FunctionDeclaration over AssignmentExpression 1`] = `
+"const styleFactory = require("inline-module-1").default;
+styleFactory = () => "AssignmentExpression";
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const styleFactory = function () {
+  "use no memo";
+
+  return "FunctionDeclaration";
+};
+styleFactory.__workletHash = 1;
+styleFactory.__pluginVersion = "x.y.z";
+styleFactory.__moduleId = __workletModuleId;
+export default styleFactory;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = require("inline-module-1").default;
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression on its VariableDeclarator 1`] = `
+"let styleFactory = require("inline-module-1").default;
+const animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ArrowFunctionExpression only on last AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = () => 1;
+styleFactory = require("inline-module-1").default;
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return "AssignmentExpression";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionDeclaration 1`] = `
+"const styleFactory = require("inline-module-1").default;
+const animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const styleFactory = function () {
+  "use no memo";
+
+  return {};
+};
+styleFactory.__workletHash = 1;
+styleFactory.__pluginVersion = "x.y.z";
+styleFactory.__moduleId = __workletModuleId;
+export default styleFactory;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = require("inline-module-1").default;
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression on its VariableDeclarator 1`] = `
+"let styleFactory = require("inline-module-1").default;
+const animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes FunctionExpression only on last AssignmentExpression 1`] = `
+"let styleFactory;
+styleFactory = function () {
+  return 1;
+};
+styleFactory = require("inline-module-1").default;
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return "AssignmentExpression";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its AssignmentExpression 1`] = `
+"let handler;
+handler = {
+  onScroll: require("inline-module-1").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression on its VariableDeclarator 1`] = `
+"let handler = {
+  onScroll: require("inline-module-1").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes ObjectExpression only on last AssignmentExpression 1`] = `
+"let handler;
+handler = {
+  onScroll: () => 1
+};
+handler = {
+  onScroll: require("inline-module-1").default
+};
+const scrollHandler = useAnimatedScrollHandler(handler);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return "AssignmentExpression";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes assignments that appear after the worklet is used 1`] = `
+"let styleFactory = () => ({});
+animatedStyle = useAnimatedStyle(styleFactory);
+styleFactory = require("inline-module-1").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return "AssignmentAfterUse";
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in immediate scope 1`] = `
+"let styleFactory = require("inline-module-1").default;
+animatedStyle = useAnimatedStyle(styleFactory);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes in nested scope 1`] = `
+"function outerScope() {
+  let styleFactory = require("inline-module-1").default;
+  function innerScope() {
+    animatedStyle = useAnimatedStyle(styleFactory);
+  }
+}
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes multiple referencing 1`] = `
+"const secondReference = require("inline-module-1").default;
+const firstReference = secondReference;
+const animatedStyle = useAnimatedStyle(firstReference);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  return {};
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;"
+`;
+
+exports[`babel plugin for referenced worklets workletizes recursion 1`] = `
+"const recursiveWorklet = require("inline-module-1").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const recursiveWorklet = function () {
+  "use no memo";
+
+  if (!globalThis._WORKLET) {
+    runOnUI(recursiveWorklet)();
+  }
+};
+recursiveWorklet.__workletHash = 1;
+recursiveWorklet.__pluginVersion = "x.y.z";
+recursiveWorklet.__moduleId = __workletModuleId;
+export default recursiveWorklet;"
+`;
+
 exports[`babel plugin for sequence expressions supports SequenceExpression 1`] = `
 "function App() {
   (0, fun)({
     onStart() {}
   }, []);
 }"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, many arguments 1`] = `
+"function App() {
+  (0, 3, fun)({
+    onStart: require("inline-module-1").default
+  }, []);
+}
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const onStart = function () {
+  "use no memo";
+};
+onStart.__workletHash = 1;
+onStart.__pluginVersion = "x.y.z";
+onStart.__moduleId = __workletModuleId;
+export default onStart;"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with objectHook 1`] = `
+"function App() {
+  (0, useAnimatedScrollHandler)({
+    onScroll: require("inline-module-1").default
+  }, []);
+}
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const onScroll = function () {
+  "use no memo";
+};
+onScroll.__workletHash = 1;
+onScroll.__pluginVersion = "x.y.z";
+onScroll.__moduleId = __workletModuleId;
+export default onScroll;"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet 1`] = `
+"function App() {
+  (0, fun)({
+    onStart: require("inline-module-1").default
+  }, []);
+}
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const onStart = function () {
+  "use no memo";
+};
+onStart.__workletHash = 1;
+onStart.__pluginVersion = "x.y.z";
+onStart.__moduleId = __workletModuleId;
+export default onStart;"
+`;
+
+exports[`babel plugin for sequence expressions supports SequenceExpression, with worklet closure 1`] = `
+"function App() {
+  const obj = {
+    a: 1,
+    b: 2
+  };
+  (0, fun)({
+    onStart: require("inline-module-1").default([obj])
+  }, []);
+}
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function onStart_null1Factory([obj]) {
+  const onStart = function () {
+    "use no memo";
+
+    const a = obj.a;
+  };
+  onStart.__closure = [obj];
+  onStart.__workletHash = 1;
+  onStart.__pluginVersion = "x.y.z";
+  onStart.__moduleId = __workletModuleId;
+  return onStart;
+});"
+`;
+
+exports[`babel plugin for worklet names appends file name to function name 1`] = `
+"const x = 1;
+const foo = require("inline-module-1").default([x]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names appends file name to function name 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 1`] = `
+"const x = 1;
+const foo = require("inline-module-1").default([x]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_library_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names appends library name to function name 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_library_sourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 1`] = `
+"const x = 1;
+const foo = require("inline-module-1").default([x]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_SourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names handles names with illegal characters 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_SourceJs1Factory([x]) {
+  const foo = function () {
+    "use no memo";
+
+    return x;
+  };
+  foo.__closure = [x];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin for worklet names preserves recursion 1`] = `
+"const foo = require("inline-module-1").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
+  "use no memo";
+
+  foo(1);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for worklet names preserves recursion 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+const foo = function () {
+  "use no memo";
+
+  foo(1);
+};
+foo.__workletHash = 1;
+foo.__pluginVersion = "x.y.z";
+foo.__moduleId = __workletModuleId;
+export default foo;"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 1`] = `
+"const x = 1;
+require("inline-module-1").default([x]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet names unnamed ArrowFunctionExpression 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 1`] = `
+"const x = 1;
+[require("inline-module-1").default([x])]();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet names unnamed FunctionExpression 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([x]) {
+  const null1 = function () {
+    "use no memo";
+
+    return x;
+  };
+  null1.__closure = [x];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets 1`] = `
+"const foo = require("inline-module-2").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("bar");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function () {
+  "use no memo";
+
+  const bar = require("inline-module-1").default;
+  bar();
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnJS in runOnUI 1`] = `
+"runOnUI(require("inline-module-2").default)();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("Hello from JS thread");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function () {
+  "use no memo";
+
+  console.log("Hello from UI thread");
+  runOnJS(require("inline-module-1").default)();
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets embedded in runOnUI in runOnJS in runOnUI 1`] = `
+"runOnUI(require("inline-module-3").default)();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("Hello from UI thread again");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function () {
+  "use no memo";
+
+  console.log("Hello from JS thread");
+  runOnUI(require("inline-module-1").default)();
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;
+
+/* inline module 3 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null3 = function () {
+  "use no memo";
+
+  console.log("Hello from UI thread");
+  runOnJS(require("inline-module-2").default)();
+};
+null3.__workletHash = 3;
+null3.__pluginVersion = "x.y.z";
+null3.__moduleId = __workletModuleId;
+export default null3;"
+`;
+
+exports[`babel plugin for worklet nesting transpiles nested worklets with depth 3 1`] = `
+"const foo = require("inline-module-3").default;
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("foobar");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function () {
+  "use no memo";
+
+  const foobar = require("inline-module-1").default;
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;
+
+/* inline module 3 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null3 = function () {
+  "use no memo";
+
+  const bar = require("inline-module-2").default;
+  bar();
+};
+null3.__workletHash = 3;
+null3.__pluginVersion = "x.y.z";
+null3.__moduleId = __workletModuleId;
+export default null3;"
+`;
+
+exports[`babel plugin for worklet nesting transpiles worklets with functions defined on UI thread to run them on JS 1`] = `
+"runOnUI(require("inline-module-3").default)();
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null1 = function () {
+  "use no memo";
+
+  console.log("Good morning from JS thread!");
+};
+null1.__workletHash = 1;
+null1.__pluginVersion = "x.y.z";
+null1.__moduleId = __workletModuleId;
+export default null1;
+
+/* inline module 2 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null2 = function () {
+  "use no memo";
+
+  console.log("Good afternoon from JS thread");
+};
+null2.__workletHash = 2;
+null2.__pluginVersion = "x.y.z";
+null2.__moduleId = __workletModuleId;
+export default null2;
+
+/* inline module 3 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+const null3 = function () {
+  "use no memo";
+
+  const a = require("inline-module-1").default;
+  const b = require("inline-module-2").default;
+  const func = Math.random() < 0.5 ? a : b;
+  runOnJS(func)();
+};
+null3.__workletHash = 3;
+null3.__pluginVersion = "x.y.z";
+null3.__moduleId = __workletModuleId;
+export default null3;"
 `;
 
 exports[`babel plugin generally removes comments from worklets 1`] = `
@@ -427,6 +2065,105 @@ null1.__workletHash = 1;
 null1.__pluginVersion = "x.y.z";
 null1.__moduleId = __workletModuleId;
 export default null1;"
+`;
+
+exports[`babel plugin generally supports recursive calls 1`] = `
+"const a = 1;
+const foo = require("inline-module-1").default([a]);
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_null1Factory([a]) {
+  const foo = function (t) {
+    "use no memo";
+
+    if (t > 0) {
+      return a + foo(t - 1);
+    }
+  };
+  foo.__closure = [a];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin generally supports recursive calls 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function foo_null1Factory([a]) {
+  const foo = function (t) {
+    "use no memo";
+
+    if (t > 0) {
+      return a + foo(t - 1);
+    }
+  };
+  foo.__closure = [a];
+  foo.__workletHash = 1;
+  foo.__pluginVersion = "x.y.z";
+  foo.__moduleId = __workletModuleId;
+  return foo;
+});"
+`;
+
+exports[`babel plugin generally transforms 1`] = `
+"import Animated, { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
+function Box() {
+  const offset = useSharedValue(0);
+  const animatedStyles = useAnimatedStyle(require("inline-module-1").default([offset]));
+  return <>
+              <Animated.View style={[styles.box, animatedStyles]} />
+              <Button onPress={() => offset.value = Math.random()} title="Move" />
+            </>;
+}
+
+/* inline module 1 */
+"worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([offset]) {
+  const null1 = function () {
+    "use no memo";
+
+    return {
+      transform: [{
+        translateX: offset.value * 255
+      }]
+    };
+  };
+  null1.__closure = [offset];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
+`;
+
+exports[`babel plugin generally transforms 2`] = `
+""worklet-module";
+
+const __workletModuleId = module.id;
+export default (function null1Factory([offset]) {
+  const null1 = function () {
+    "use no memo";
+
+    return {
+      transform: [{
+        translateX: offset.value * 255
+      }]
+    };
+  };
+  null1.__closure = [offset];
+  null1.__workletHash = 1;
+  null1.__pluginVersion = "x.y.z";
+  null1.__moduleId = __workletModuleId;
+  return null1;
+});"
 `;
 
 exports[`babel plugin in bundleMode nested worklets extracts each nested worklet into its own module 1`] = `"const foo = require("metro:inline;base64,<module 1>").default;"`;

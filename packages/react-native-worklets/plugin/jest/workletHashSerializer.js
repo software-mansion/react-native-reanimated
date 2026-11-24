@@ -31,8 +31,32 @@ const workletHashSerializer = {
   },
 };
 
+const INLINE_MODULE = /(["'])metro:inline;base64,([A-Za-z0-9+/=]+)\1/g;
+
 function normalizeSnapshot(code) {
-  return reprint(renumber(code));
+  const modules = [];
+  const normalized = normalizeWithInlineModules(code, modules);
+  return modules.reduce(
+    (output, module, index) =>
+      `${output}\n\n/* inline module ${index + 1} */\n${module}`,
+    normalized
+  );
+}
+
+function normalizeWithInlineModules(code, modules) {
+  const outer = code.replace(INLINE_MODULE, (match, quote, base64) => {
+    const content = normalizeWithInlineModules(
+      Buffer.from(base64, 'base64').toString('utf8'),
+      modules
+    );
+    let index = modules.indexOf(content);
+    if (index === -1) {
+      modules.push(content);
+      index = modules.length - 1;
+    }
+    return `"inline-module-${index + 1}"`;
+  });
+  return reprint(renumber(outer));
 }
 
 function renumber(code) {
