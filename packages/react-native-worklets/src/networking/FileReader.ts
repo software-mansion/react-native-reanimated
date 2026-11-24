@@ -54,8 +54,9 @@ export class FileReader {
     this.readyState = LOADING;
     /**
      * The File API fires read events from a task, not from a microtask, so
-     * `setImmediate` is used here rather than `queueMicrotask`. Reads are started
-     * from Promise continuations, which makes the distinction observable.
+     * `setImmediate` is used here rather than `queueMicrotask`. Reads are
+     * started from Promise continuations, which makes the distinction
+     * observable.
      */
     setImmediate(() => {
       let failed = false;
