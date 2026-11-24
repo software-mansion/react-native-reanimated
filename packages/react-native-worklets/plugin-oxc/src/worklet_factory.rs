@@ -14,7 +14,7 @@ use crate::factory_expression::{
 };
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
-use crate::naming::worklet_hash;
+use crate::naming::{worklet_hash, worklet_hash_key};
 use crate::types::State;
 use crate::worklet_file::{generate_worklet_file, write_worklet_file};
 use crate::worklet_string_code::build_worklet_string;
@@ -105,7 +105,12 @@ pub fn make_worklet_factory<'a>(
         &state.source_text,
     );
 
-    let hash = worklet_hash(&body_string);
+    let hash = worklet_hash(&worklet_hash_key(
+        filename,
+        state.opts.cwd.as_deref(),
+        &state.source_text,
+        input.body.span.start,
+    ));
 
     let mut factory_expr = build_factory_expression(
         builder,

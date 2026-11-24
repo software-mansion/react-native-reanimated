@@ -69,6 +69,7 @@ function transform(sourceText, filename, state) {
       ...state.opts,
       envName: state.file.opts.envName,
       workletsPackageDir: resolveWorkletsPkgDir(),
+      cwd: state.file.opts.cwd ?? process.cwd(),
     });
   } catch (error) {
     const message = (error && error.message) || '';
