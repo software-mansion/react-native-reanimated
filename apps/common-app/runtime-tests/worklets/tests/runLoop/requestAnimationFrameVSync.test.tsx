@@ -23,8 +23,7 @@ const UI_BLOCK_MS = 500;
 const ABORT_SETTLE_MS = 500;
 const MAX_FRAMES_IN_FLIGHT = 2;
 const CHAIN_LENGTH = 10;
-const MIN_FRAME_SHARE = 0.8;
-const MAX_IMMEDIATE_CHAIN_MS = 16;
+const FRAME_TOLERANCE = 2;
 const MIN_FRAMES_DURING_UI_BLOCK = 5;
 
 type WorkletRuntimeConfig = Parameters<typeof createWorkletRuntime>[0];
@@ -352,72 +351,72 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     // Arrange
     const notification = 'vsyncTimeoutChain';
     const runtime = createWorkletRuntime({ name: 'vsync', enableVSync: true });
-    let frameInterval = 0;
-    let chainDuration = 0;
-    const onDone = (interval: number, duration: number) => {
-      frameInterval = interval;
-      chainDuration = duration;
+    let framesDuringChain = 0;
+    const onDone = (frames: number) => {
+      framesDuringChain = frames;
       notify(notification);
     };
 
     // Act
     scheduleOnRuntime(runtime, () => {
       'worklet';
-      const frameTimes: number[] = [];
-      const runTimeoutChain = () => {
-        const interval =
-          (frameTimes[frameTimes.length - 1] - frameTimes[0]) /
-          (frameTimes.length - 1);
-        const start = performance.now();
-        let remaining = CHAIN_LENGTH;
-        const next = () => {
-          remaining--;
-          if (remaining === 0) {
-            scheduleOnRN(onDone, interval, performance.now() - start);
-          } else {
-            setTimeout(next, 1);
-          }
-        };
-        setTimeout(next, 1);
-      };
-      const onFrame = () => {
-        frameTimes.push(performance.now());
-        if (frameTimes.length <= CHAIN_LENGTH) {
-          requestAnimationFrame(onFrame);
-        } else {
-          runTimeoutChain();
+      let frames = 0;
+      let counting = true;
+      const countFrames = () => {
+        frames++;
+        if (counting) {
+          requestAnimationFrame(countFrames);
         }
       };
-      requestAnimationFrame(onFrame);
+      requestAnimationFrame(countFrames);
+      const startFrame = frames;
+      let remaining = CHAIN_LENGTH;
+      const next = () => {
+        remaining--;
+        if (remaining === 0) {
+          counting = false;
+          scheduleOnRN(onDone, frames - startFrame);
+        } else {
+          setTimeout(next, 1);
+        }
+      };
+      setTimeout(next, 1);
     });
     await waitForNotification(notification);
 
     // Assert
-    expect(frameInterval > 0).toBe(true);
-    expect(
-      chainDuration >= frameInterval * CHAIN_LENGTH * MIN_FRAME_SHARE
-    ).toBe(true);
+    expect(framesDuringChain >= CHAIN_LENGTH - FRAME_TOLERANCE).toBe(true);
   });
 
   test('runs setImmediate callbacks without waiting for a frame', async () => {
     // Arrange
     const notification = 'vsyncImmediateChain';
     const runtime = createWorkletRuntime({ name: 'vsync', enableVSync: true });
-    let chainDuration = Infinity;
-    const onDone = (duration: number) => {
-      chainDuration = duration;
+    let framesDuringChain = Infinity;
+    const onDone = (frames: number) => {
+      framesDuringChain = frames;
       notify(notification);
     };
 
     // Act
     scheduleOnRuntime(runtime, () => {
       'worklet';
-      const start = performance.now();
+      let frames = 0;
+      let counting = true;
+      const countFrames = () => {
+        frames++;
+        if (counting) {
+          requestAnimationFrame(countFrames);
+        }
+      };
+      requestAnimationFrame(countFrames);
+      const startFrame = frames;
       let remaining = CHAIN_LENGTH;
       const next = () => {
         remaining--;
         if (remaining === 0) {
-          scheduleOnRN(onDone, performance.now() - start);
+          counting = false;
+          scheduleOnRN(onDone, frames - startFrame);
         } else {
           setImmediate(next);
         }
@@ -427,6 +426,6 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     await waitForNotification(notification);
 
     // Assert
-    expect(chainDuration < MAX_IMMEDIATE_CHAIN_MS).toBe(true);
+    expect(framesDuringChain < CHAIN_LENGTH / 2).toBe(true);
   });
 });

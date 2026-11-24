@@ -117,10 +117,9 @@ declare global {
    */
   var _scheduleVSyncCallback: (() => void) | undefined;
   /**
-   * Called by native code on the next display v-sync, with the frame
-   * timestamp, after `_scheduleVSyncCallback`. Set by the
-   * `requestAnimationFrame` polyfill only on runtimes created with
-   * `enableVSync`.
+   * Called by native code on the next display v-sync, with the frame timestamp,
+   * after `_scheduleVSyncCallback`. Set by the `requestAnimationFrame` polyfill
+   * only on runtimes created with `enableVSync`.
    */
   var __runVSyncCallback: ((timestamp: number) => void) | undefined;
   var _taskQueue: Queue;
