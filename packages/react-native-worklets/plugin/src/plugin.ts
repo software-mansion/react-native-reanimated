@@ -1,24 +1,15 @@
 import type { NodePath, PluginItem, Visitor } from '@babel/core';
-import type {
-  CallExpression,
-  ClassMethod,
-  Directive,
-  ExpressionStatement,
-  JSXAttribute,
-} from '@babel/types';
+import type { CallExpression, ClassMethod, Directive } from '@babel/types';
 
 import {
   addDirectivesToKnownCallback,
   handleWorkletizableCallback,
 } from './autoworkletization';
-import { toggleBundleMode } from './bundleMode';
 import { processIfWorkletMethod } from './classMethod';
 import { handleWorkletDirective } from './directives';
 import { initializeState } from './globals';
-import { processInlineStylesWarning } from './inlineStylesWarning';
 import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
-import { substituteWebCallExpression } from './webOptimization';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
 module.exports = function WorkletsBabelPlugin(): PluginItem {
@@ -52,15 +43,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
       });
     },
     visitor: {
-      CallExpression: {
-        enter(path: NodePath<CallExpression>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            if (state.opts.substituteWebPlatformChecks) {
-              substituteWebCallExpression(path);
-            }
-          });
-        },
-      },
       [WorkletizableFunction]: {
         enter(
           path: NodePath<WorkletizableFunction>,
@@ -76,20 +58,6 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
           runWithTaggedExceptions(state, () => {
             processIfWorkletMethod(path);
           });
-        },
-      },
-      ExpressionStatement: {
-        enter(path: NodePath<ExpressionStatement>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () => {
-            toggleBundleMode(path, state);
-          });
-        },
-      },
-      JSXAttribute: {
-        enter(path: NodePath<JSXAttribute>, state: WorkletsPluginPass) {
-          runWithTaggedExceptions(state, () =>
-            processInlineStylesWarning(path, state)
-          );
         },
       },
     },

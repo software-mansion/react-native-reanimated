@@ -1,6 +1,6 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import test from 'node:test';
 const require_ = createRequire(import.meta.url);
 
 let babelCore!: typeof import('@babel/core');
@@ -28,7 +28,7 @@ test(
           filename: 'test.js',
           babelrc: false,
           configFile: false,
-          plugins: [[shim, { bundleMode: true }]],
+          plugins: [shim],
         }
       );
       assert.ok(result && result.code);

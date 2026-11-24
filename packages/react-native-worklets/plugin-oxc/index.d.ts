@@ -1,6 +1,4 @@
 export interface PluginOptions {
-  extraPlugins?: string[];
-  extraPresets?: string[];
   importForwarding?: {
     moduleNames?: string[];
     relativePaths?: string[];

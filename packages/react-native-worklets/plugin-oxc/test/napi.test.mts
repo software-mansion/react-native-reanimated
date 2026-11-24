@@ -1,6 +1,7 @@
-import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
+import test from 'node:test';
+
 import plugin from '../index.js';
 
 const { transform } = plugin;
@@ -91,20 +92,20 @@ test('accepts undefined options', () => {
 });
 
 test('windows-style paths are normalised before use', () => {
-  const input = 'globalThis._WORKLETS_BUNDLE_MODE_ENABLED = false;';
-  const { code } = transform(
+  const input = `const x = 1; function foo() { 'worklet'; return x; }`;
+  const { files } = transform(
     input,
     'C:\\proj\\node_modules\\react-native-worklets\\src\\index.ts',
     {}
   );
-  assert.match(code, /_WORKLETS_BUNDLE_MODE_ENABLED = true/);
+  assert.match(joinedFiles(files), /function foo_reactNativeWorklets_indexTs1Factory\(/);
 });
 
 function joinedFiles(files: { path: string; content: string }[]) {
   return files.map((file) => file.content).join('\n');
 }
 
-test('extraPlugins is accepted and ignored by the transform', () => {
+test('extraPlugins has no effect on the transform', () => {
   const input = `function foo() { 'worklet'; return 1; }`;
   const { files } = transform(input, 'test.js', {
     extraPlugins: ['babel-plugin-foo'],

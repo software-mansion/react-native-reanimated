@@ -2,7 +2,6 @@ use napi_derive::napi;
 
 mod ast;
 mod autoworkletization;
-mod bundle_mode;
 mod class_method;
 mod closure;
 mod directives;
@@ -20,7 +19,6 @@ mod version;
 mod worklet_factory;
 mod worklet_file;
 mod worklet_pass;
-mod worklet_string_code;
 
 pub use options::PluginOptions;
 use program::run;

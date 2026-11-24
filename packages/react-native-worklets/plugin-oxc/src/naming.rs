@@ -72,8 +72,8 @@ fn normalized_segments(path: &str) -> Vec<&str> {
 }
 
 pub struct WorkletNames {
-    pub worklet_name: String,
     pub react_name: String,
+    pub factory_name: String,
 }
 
 pub fn make_worklet_name(
@@ -95,9 +95,10 @@ pub fn make_worklet_name(
         )
     };
 
+    let factory_name = format!("{worklet_name}Factory");
     WorkletNames {
-        worklet_name,
         react_name,
+        factory_name,
     }
 }
 

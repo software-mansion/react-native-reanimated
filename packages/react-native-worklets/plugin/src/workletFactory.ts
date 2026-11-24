@@ -1,9 +1,6 @@
 import type { NodePath } from '@babel/core';
-import generate from '@babel/generator';
-import type { Binding } from '@babel/traverse';
 import type {
   ArrayExpression,
-  BlockStatement,
   ExpressionStatement,
   FunctionExpression,
   ReturnStatement,
@@ -24,10 +21,7 @@ import {
   isIdentifier,
   isObjectMethod,
   memberExpression,
-  newExpression,
   numericLiteral,
-  objectExpression,
-  objectProperty,
   returnStatement,
   stringLiteral,
   toIdentifier,
@@ -39,12 +33,9 @@ import { basename, dirname, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
-import { compileWorkletToHbc } from './hermesBytecode';
 import { updateRelativeRequires } from './imports';
-import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { isRelease } from './utils';
-import { buildWorkletString } from './workletStringCode';
 
 const REAL_VERSION = require('../../package.json').version;
 
@@ -61,48 +52,14 @@ export function makeWorkletFactory(
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
 
-  const includeClosure =
-    state.opts.bundleMode || !hasDirective(fun, 'no-worklet-closure');
-  const limitInitDataHoisting = hasDirective(fun, 'limit-init-data-hoisting');
   stripWorkletDirectives(fun);
 
   // We use copy because some of the plugins don't update bindings and
   // some even break them
   assert(state.file.opts.filename, '`state.file.opts.filename` is undefined.');
 
-  const codeObject = generate(fun.node, {
-    sourceMaps: true,
-    sourceFileName: state.file.opts.filename,
-  });
-
-  // We need to add a newline at the end, because there could potentially be a
-  // comment after the function that gets included here, and then the closing
-  // bracket would become part of the comment thus resulting in an error, since
-  // there is a missing closing bracket.
-  codeObject.code =
-    '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
-
-  const transformed = workletTransformSync(codeObject.code, {
-    extraPlugins: [...extraPlugins, ...(state.opts.extraPlugins ?? [])],
-    extraPresets: state.opts.extraPresets,
-    filename: state.file.opts.filename,
-    ast: true,
-    babelrc: false,
-    configFile: false,
-    inputSourceMap: codeObject.map,
-  });
-
-  assert(transformed, '`transformed` is undefined.');
-  assert(transformed.ast, '`transformed.ast` is undefined.');
-
   const { closureVariables, moduleBindingsToImport, relativeBindingsToImport } =
-    includeClosure
-      ? getClosure(fun, state)
-      : {
-          closureVariables: [],
-          moduleBindingsToImport: new Set<Binding>(),
-          relativeBindingsToImport: new Set<Binding>(),
-        };
+    getClosure(fun, state);
 
   const clone = cloneNode(fun.node);
   const funExpression = isBlockStatement(clone.body)
@@ -120,36 +77,22 @@ export function makeWorkletFactory(
     state
   );
   let reactName = initialReactName;
-  if (state.opts.bundleMode && closureVariables.length === 0) {
+  const importedNames = new Set(
+    [...moduleBindingsToImport, ...relativeBindingsToImport].map(
+      (binding) => binding.identifier.name
+    )
+  );
+  let factoryName = `${workletName}Factory`;
+  while (importedNames.has(factoryName)) {
+    factoryName = `_${factoryName}`;
+  }
+  if (closureVariables.length === 0) {
     // The worklet binding will share module scope with forwarded imports.
-    const importedNames = new Set(
-      [...moduleBindingsToImport, ...relativeBindingsToImport].map(
-        (binding) => binding.identifier.name
-      )
-    );
     while (importedNames.has(reactName)) {
       reactName = `_${reactName}`;
     }
   }
 
-  let mutatedClosureVariables;
-  if (state.opts.bundleMode) {
-    mutatedClosureVariables = closureVariables.map((variable) =>
-      cloneNode(variable, true)
-    );
-  } else {
-    mutatedClosureVariables = closureVariables;
-  }
-
-  // eslint-disable-next-line prefer-const
-  let [funString, sourceMapString] = buildWorkletString(
-    transformed.ast,
-    state,
-    mutatedClosureVariables,
-    workletName,
-    transformed.map
-  );
-  assert(funString, '`funString` is undefined.');
   const workletHash = hash(
     makeWorkletHashKey(
       fun,
@@ -157,95 +100,6 @@ export function makeWorkletFactory(
       closureVariables.map((variable) => variable.name)
     )
   );
-
-  let lineOffset = 1;
-  if (closureVariables.length > 0) {
-    // When worklet captures some variables, we append closure destructing at
-    // the beginning of the function body. This effectively results in line
-    // numbers shifting by the number of captured variables (size of the
-    // closure) + 2 (for the opening and closing brackets of the destruct
-    // statement)
-    lineOffset -= closureVariables.length + 2;
-  }
-
-  const pathForStringDefinitions = fun.parentPath.isProgram()
-    ? fun
-    : fun.findParent((path) => path.parentPath?.isProgram() ?? false);
-  assert(pathForStringDefinitions, '`pathForStringDefinitions` is null.');
-  assert(
-    pathForStringDefinitions.parentPath,
-    '`pathForStringDefinitions.parentPath` is null.'
-  );
-
-  const initDataId =
-    pathForStringDefinitions.parentPath.scope.generateUidIdentifier(
-      `worklet_${workletHash}_init_data`
-    );
-
-  const shouldIncludeInitData =
-    !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
-
-  const shouldEmitBytecode =
-    !!state.opts.hermesBytecode && isRelease(state) && shouldIncludeInitData;
-
-  const bytecode = shouldEmitBytecode
-    ? compileWorkletToHbc(funString, workletHash, state)
-    : null;
-
-  const initDataObjectExpression = objectExpression(
-    bytecode
-      ? [
-          objectProperty(
-            identifier('bytecode'),
-            memberExpression(
-              newExpression(identifier('Uint8Array'), [
-                arrayExpression(
-                  Array.from(bytecode, (byte) => numericLiteral(byte))
-                ),
-              ]),
-              identifier('buffer')
-            )
-          ),
-        ]
-      : [objectProperty(identifier('code'), stringLiteral(funString))]
-  );
-
-  const shouldInjectLocation = !isRelease(state);
-  if (shouldInjectLocation) {
-    let location = state.file.opts.filename;
-    if (state.opts.relativeSourceLocation) {
-      location = relative(state.cwd, location);
-      // It seems there is no designated option to use relative paths in generated sourceMap
-      sourceMapString = sourceMapString?.replace(
-        toPosix(state.file.opts.filename),
-        toPosix(location)
-      );
-    }
-    location = toPosix(location);
-
-    initDataObjectExpression.properties.push(
-      objectProperty(identifier('location'), stringLiteral(location))
-    );
-  }
-
-  if (!bytecode && sourceMapString) {
-    initDataObjectExpression.properties.push(
-      objectProperty(identifier('sourceMap'), stringLiteral(sourceMapString))
-    );
-  }
-
-  if (shouldIncludeInitData) {
-    const initDataDeclaration = variableDeclaration('const', [
-      variableDeclarator(initDataId, initDataObjectExpression),
-    ]);
-    if (limitInitDataHoisting) {
-      (fun.getFunctionParent()!.node.body as BlockStatement).body.unshift(
-        initDataDeclaration
-      );
-    } else {
-      pathForStringDefinitions.insertBefore(initDataDeclaration);
-    }
-  }
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -308,65 +162,14 @@ export function makeWorkletFactory(
     );
   }
 
-  if (shouldIncludeInitData) {
-    statements.push(
-      expressionStatement(
-        assignmentExpression(
-          '=',
-          memberExpression(
-            identifier(reactName),
-            identifier('__initData'),
-            false
-          ),
-          cloneNode(initDataId, true)
-        )
-      )
-    );
-  }
-
-  if (!isRelease(state) && !state.opts.bundleMode) {
-    statements.unshift(
-      variableDeclaration('const', [
-        variableDeclarator(
-          identifier('_e'),
-          arrayExpression([
-            newExpression(
-              memberExpression(identifier('global'), identifier('Error')),
-              []
-            ),
-            numericLiteral(lineOffset),
-            numericLiteral(-27), // the placement of opening bracket after Exception in line that defined '_e' variable
-          ])
-        ),
-      ])
-    );
-    statements.push(
-      expressionStatement(
-        assignmentExpression(
-          '=',
-          memberExpression(
-            identifier(reactName),
-            identifier('__stackDetails'),
-            false
-          ),
-          identifier('_e')
-        )
-      )
-    );
-  }
-
   statements.push(returnStatement(identifier(reactName)));
 
   const factoryParams = closureVariables.map((variableId) =>
     cloneNode(variableId, true)
   );
 
-  if (shouldIncludeInitData) {
-    factoryParams.unshift(cloneNode(initDataId, true));
-  }
-
   const factory = functionExpression(
-    identifier(workletName + 'Factory'),
+    identifier(factoryName),
     factoryParams.length > 0
       ? [arrayPattern(factoryParams.map((param) => cloneNode(param, true)))]
       : [],
@@ -377,55 +180,22 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  if (state.opts.bundleMode) {
-    updateRelativeRequires(factory, state);
-
-    generateWorkletFile(
-      moduleBindingsToImport,
-      relativeBindingsToImport,
-      factory,
-      workletHash,
-      state
-    );
-  }
-
-  // @ts-expect-error We must mark the factory as workletized
-  // to avoid further workletization inside the factory.
-  factory.workletized = true;
-
+  updateRelativeRequires(factory, state);
+  generateWorkletFile(
+    moduleBindingsToImport,
+    relativeBindingsToImport,
+    factory,
+    workletHash,
+    state
+  );
   return { factory, factoryCallParamPack, workletHash };
-}
-
-function hasDirective(
-  path: NodePath<WorkletizableFunction>,
-  directiveText: string
-): boolean {
-  if (!path.node.body) {
-    return false;
-  }
-
-  const bodyPath = path.get('body');
-  let has = false;
-  if (bodyPath.isBlockStatement()) {
-    has = bodyPath.get('directives').some((directivePath) => {
-      if (
-        directivePath.isDirective() &&
-        directivePath.node.value.value === directiveText
-      ) {
-        return true;
-      }
-    });
-  }
-  return has;
 }
 
 function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(nodePath) {
       if (
-        (nodePath.node.value === 'worklet' ||
-          nodePath.node.value === 'no-worklet-closure' ||
-          nodePath.node.value === 'limit-init-data-hoisting') &&
+        nodePath.node.value === 'worklet' &&
         nodePath.getFunctionParent() === fun
       ) {
         nodePath.parentPath.remove();
@@ -557,18 +327,3 @@ function makeWorkletName(
 
   return { workletName, reactName };
 }
-
-function toPosix(p: string): string {
-  return sep === '/' ? p : p.split(sep).join('/');
-}
-
-const extraPlugins = [
-  require.resolve('@babel/plugin-transform-shorthand-properties'),
-  require.resolve('@babel/plugin-transform-arrow-functions'),
-  require.resolve('@babel/plugin-transform-optional-chaining'),
-  require.resolve('@babel/plugin-transform-nullish-coalescing-operator'),
-  [
-    require.resolve('@babel/plugin-transform-template-literals'),
-    { loose: true },
-  ],
-];

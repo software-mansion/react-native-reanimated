@@ -12,7 +12,6 @@ const remapping = require('@jridgewell/remapping');
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
 
-let warnedAboutIgnoredOptions = false;
 let cachedWorkletsPkgDir;
 let cachedSyntaxJsx;
 let cachedSyntaxTypescript;
@@ -62,7 +61,6 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @returns {import('./index').TransformResult}
  */
 function transform(sourceText, filename, state) {
-  warnAboutIgnoredOptions(state.opts);
   warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
@@ -84,29 +82,6 @@ function transform(sourceText, filename, state) {
     }
     throw error;
   }
-}
-
-/**
- * @param {import('./index').PluginOptions} options
- * @returns {void}
- */
-function warnAboutIgnoredOptions(options) {
-  if (warnedAboutIgnoredOptions) {
-    return;
-  }
-  const hasExtras =
-    (options?.extraPlugins?.length ?? 0) > 0 ||
-    (options?.extraPresets?.length ?? 0) > 0;
-  if (!hasExtras) {
-    return;
-  }
-  warnedAboutIgnoredOptions = true;
-  console.warn(
-    '[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface ' +
-      'compatibility with `react-native-worklets/plugin` but ignored — the Oxc transform ' +
-      'cannot dispatch arbitrary Babel plugins. Compose them around this plugin in ' +
-      'babel.config.js instead.'
-  );
 }
 
 const COMMON_FOLDER_NAMES = new Set([
