@@ -45,7 +45,7 @@ import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
 import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
-import { buildWorkletString } from './workletStringCode';
+import { buildWorkletString, shiftFirstLine } from './workletStringCode';
 
 const REAL_VERSION = require('../../package.json').version;
 
@@ -80,8 +80,11 @@ export function makeWorkletFactory(
   // comment after the function that gets included here, and then the closing
   // bracket would become part of the comment thus resulting in an error, since
   // there is a missing closing bracket.
-  codeObject.code =
-    '(' + (fun.isObjectMethod() ? 'function ' : '') + codeObject.code + '\n)';
+  const prefix = '(' + (fun.isObjectMethod() ? 'function ' : '');
+  codeObject.code = prefix + codeObject.code + '\n)';
+  if (codeObject.map) {
+    codeObject.map = shiftFirstLine(codeObject.map, prefix.length);
+  }
 
   const transformed = workletTransformSync(codeObject.code, {
     extraPlugins: [...extraPlugins, ...(state.opts.extraPlugins ?? [])],

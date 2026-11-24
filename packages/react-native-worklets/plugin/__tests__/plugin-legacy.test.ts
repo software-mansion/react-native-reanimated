@@ -3,6 +3,7 @@ import '../src/jestMatchers';
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
 import traverse from '@babel/traverse';
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 import type { PluginOptions } from 'react-native-worklets/plugin';
@@ -46,6 +47,23 @@ function runPlugin(
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
   return transformed;
+}
+
+function workletPositionOf(code: string, needle: string) {
+  const workletCode = code.match(/code: ("(?:[^"\\]|\\.)*")/)?.[1];
+  const sourceMap = code.match(/sourceMap: ("(?:[^"\\]|\\.)*")/)?.[1];
+  assert(workletCode && sourceMap);
+  const { line, column } = originalPositionFor(
+    new TraceMap(JSON.parse(JSON.parse(sourceMap))),
+    { line: 1, column: JSON.parse(workletCode).indexOf(needle) }
+  );
+  return { line, column };
+}
+
+function inputPositionOf(input: string, needle: string) {
+  const lines = input.split('\n');
+  const line = lines.findIndex((text) => text.includes(needle));
+  return { line: line + 1, column: lines[line].indexOf(needle) };
 }
 
 describe('babel plugin', () => {
@@ -116,7 +134,7 @@ describe('babel plugin', () => {
       // Expect a string that contains (including the backslash): sourceMap: \"{
       expect(code).toMatch(/sourceMap: /gm);
       // this non-mocked source map is hard-coded, feel free to update it accordingly
-      expect(code).toContain('oBACuB,CAEb,GAAI,CAAAA,SAAG,CAAG,KAAK,CACjB');
+      expect(code).toContain('qBACuB,CAEb,GAAI,CAAAA,SAAG,CAAG,KAAK,CACjB');
     });
 
     test('maps worklet statements to their original lines', () => {
@@ -130,8 +148,42 @@ describe('babel plugin', () => {
       </script>`;
 
       const { code } = runPlugin(input);
-      expect(code).toContain(
-        'mBACqBA,KAAK,CAAE,CAElB,KAAM,CAAAC,OAAO,CAAGD,KAAK,CAAG,CAAC,CACzB,KAAM,IAAI,CAAAE,KAAK,CAACD,OAAO,CAAC,CAC1B'
+      for (const statement of ['const doubled', 'throw new Error']) {
+        expect(workletPositionOf(code, statement)).toEqual(
+          inputPositionOf(input, statement)
+        );
+      }
+    });
+
+    test('maps the header of an object method worklet to its original columns', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
+      const input = html`<script>
+        const o = {
+          foo(width) {
+            'worklet';
+            throw new Error(width);
+          },
+        };
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(workletPositionOf(code, 'width')).toEqual(
+        inputPositionOf(input, 'width')
+      );
+    });
+
+    test('maps single-character identifiers to their own column', () => {
+      process.env.WORKLETS_JEST_SHOULD_MOCK_SOURCE_MAP = '0';
+      const input = html`<script>
+        function foo(x) {
+          'worklet';
+          return x.y;
+        }
+      </script>`;
+
+      const { code } = runPlugin(input);
+      expect(workletPositionOf(code, 'x.y')).toEqual(
+        inputPositionOf(input, 'x.y')
       );
     });
 

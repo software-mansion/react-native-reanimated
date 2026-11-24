@@ -26,6 +26,7 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
+import { decode, encode } from '@jridgewell/sourcemap-codec';
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 
@@ -155,12 +156,24 @@ export function buildWorkletString(
       // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
       // in files that contain multiple worklets. Along with sourcesContent.
       delete sourceMap.sourcesContent;
+      sourceMap = shiftFirstLine(sourceMap, 1);
     }
   }
 
   const wrappedCode = `(${transformed.code})`;
 
   return [wrappedCode, JSON.stringify(sourceMap)];
+}
+
+export function shiftFirstLine<T extends { mappings: string }>(
+  map: T,
+  columns: number
+): T {
+  const lines = decode(map.mappings);
+  for (const segment of lines[0] ?? []) {
+    segment[0] += columns;
+  }
+  return { ...map, mappings: encode(lines) };
 }
 
 /**

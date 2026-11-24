@@ -4267,7 +4267,7 @@ exports[`babel plugin generally strips queries from filename when injecting sour
 "const _worklet_1_init_data = {
   code: "(function foo_nullQuery1(){var foo_nullQuery1='bar';})",
   location: "/dev/null?query",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQuery1\\"],\\"sources\\":[\\"/dev/null?query\\"],\\"mappings\\":\\"yBACuB,CAEb,GAAI,CAAAA,cAAG,CAAG,KAAK,CACjB\\",\\"ignoreList\\":[]}"
+  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQuery1\\"],\\"sources\\":[\\"/dev/null?query\\"],\\"mappings\\":\\"0BACuB,CAEb,GAAI,CAAAA,cAAG,CAAG,KAAK,CACjB\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullQuery1Factory([_worklet_1_init_data]) {
   const _e = [new global.Error(), 1, -27];
@@ -4288,7 +4288,7 @@ exports[`babel plugin generally strips queries from filename when injecting sour
 "const _worklet_2_init_data = {
   code: "(function foo_nullHash1(){var foo_nullHash1='bar';})",
   location: "/dev/null#hash",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullHash1\\"],\\"sources\\":[\\"/dev/null#hash\\"],\\"mappings\\":\\"wBACuB,CAEb,GAAI,CAAAA,aAAG,CAAG,KAAK,CACjB\\",\\"ignoreList\\":[]}"
+  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullHash1\\"],\\"sources\\":[\\"/dev/null#hash\\"],\\"mappings\\":\\"yBACuB,CAEb,GAAI,CAAAA,aAAG,CAAG,KAAK,CACjB\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullHash1Factory([_worklet_2_init_data]) {
   const _e = [new global.Error(), 1, -27];
@@ -4309,7 +4309,7 @@ exports[`babel plugin generally strips queries from filename when injecting sour
 "const _worklet_3_init_data = {
   code: "(function foo_nullQueryHash1(){var foo_nullQueryHash1='bar';})",
   location: "/dev/null?query#hash",
-  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQueryHash1\\"],\\"sources\\":[\\"/dev/null?query#hash\\"],\\"mappings\\":\\"6BACuB,CAEb,GAAI,CAAAA,kBAAG,CAAG,KAAK,CACjB\\",\\"ignoreList\\":[]}"
+  sourceMap: "{\\"version\\":3,\\"names\\":[\\"foo_nullQueryHash1\\"],\\"sources\\":[\\"/dev/null?query#hash\\"],\\"mappings\\":\\"8BACuB,CAEb,GAAI,CAAAA,kBAAG,CAAG,KAAK,CACjB\\",\\"ignoreList\\":[]}"
 };
 const foo = function foo_nullQueryHash1Factory([_worklet_3_init_data]) {
   const _e = [new global.Error(), 1, -27];
