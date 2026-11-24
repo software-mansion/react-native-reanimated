@@ -7,9 +7,9 @@ use oxc_ast::ast::{Expression, Statement};
 use oxc_span::SPAN;
 
 use crate::imports::create_import_path;
-use crate::worklet_source_map::SOURCE_MAP_COMMENT_PREFIX;
 
 const GENERATED_WORKLETS_DIR: &str = ".worklets";
+const SOURCE_MAP_COMMENT_PREFIX: &str = "//# workletSourceMap=";
 
 pub fn generate_worklet_file<'a>(
     builder: AstBuilder<'a>,

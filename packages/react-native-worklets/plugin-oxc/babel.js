@@ -8,8 +8,16 @@ const oxc = require('./index.js');
 // it needs to be merged with this plugin's one
 // to preserve correct mappings
 const remapping = require('@jridgewell/remapping');
+const {
+  GREATEST_LOWER_BOUND,
+  LEAST_UPPER_BOUND,
+  originalPositionFor,
+  TraceMap,
+} = require('@jridgewell/trace-mapping');
 
 const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
+const SOURCE_MAP_COMMENT_PREFIX = '# workletSourceMap=';
+const ORIGIN_COMMENT_PREFIX = ' __workletOrigin:';
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
@@ -70,49 +78,64 @@ function restoreWorkletFileLocations(file) {
   }
   file.__workletsLocationsRestored = true;
 
-  /** @type {import('@babel/core').NodePath[]} */
-  const paths = [];
-  /** @type {number[]} */
-  const positions = [];
-  file.path.traverse({
-    enter(path) {
-      const { loc } = path.node;
-      if (loc) {
-        paths.push(path);
-        positions.push(
-          loc.start.line,
-          loc.start.column,
-          loc.end.line,
-          loc.end.column
-        );
-      }
-    },
-  });
-
-  const restored = oxc.restoreWorkletPositions(file.code, positions);
-  if (!restored) {
+  const comments = file.ast.comments ?? [];
+  const sourceMapComment = comments.find((comment) =>
+    comment.value.startsWith(SOURCE_MAP_COMMENT_PREFIX)
+  );
+  if (!sourceMapComment) {
     return;
   }
 
-  let lastStart = null;
-  paths.forEach((path, index) => {
-    const [startLine, startColumn, endLine, endColumn] =
-      restored.positions.slice(index * 4, index * 4 + 4);
-    const start =
-      startLine >= 0
-        ? { line: startLine, column: startColumn, index: 0 }
-        : lastStart;
-    if (!start) {
-      return;
+  const map = new TraceMap(
+    Buffer.from(
+      sourceMapComment.value.slice(SOURCE_MAP_COMMENT_PREFIX.length),
+      'base64'
+    ).toString('utf8')
+  );
+  const lineOffset =
+    comments[0]?.value.startsWith(ORIGIN_COMMENT_PREFIX) &&
+    comments[0].loc?.start.line === 1
+      ? 1
+      : 0;
+
+  const toOriginal = (position) => {
+    const needle = { line: position.line - lineOffset, column: position.column };
+    const lower = originalPositionFor(map, {
+      ...needle,
+      bias: GREATEST_LOWER_BOUND,
+    });
+    const original =
+      lower.line !== null
+        ? lower
+        : originalPositionFor(map, { ...needle, bias: LEAST_UPPER_BOUND });
+    if (original.line === null) {
+      return null;
     }
-    lastStart = start;
-    path.node.loc = {
-      ...path.node.loc,
-      filename: restored.source ?? path.node.loc.filename,
-      start,
-      end:
-        endLine >= 0 ? { line: endLine, column: endColumn, index: 0 } : start,
+    return {
+      position: { line: original.line, column: original.column, index: 0 },
+      source: original.source,
     };
+  };
+
+  let lastStart = null;
+  file.path.traverse({
+    enter(path) {
+      const { loc } = path.node;
+      if (!loc) {
+        return;
+      }
+      const start = toOriginal(loc.start) ?? lastStart;
+      if (!start) {
+        return;
+      }
+      lastStart = start;
+      path.node.loc = {
+        ...loc,
+        filename: start.source ?? loc.filename,
+        start: start.position,
+        end: toOriginal(loc.end)?.position ?? start.position,
+      };
+    },
   });
 }
 

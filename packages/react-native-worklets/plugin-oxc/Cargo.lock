@@ -1151,7 +1151,6 @@ checksum = "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5"
 name = "worklets-oxc-plugin"
 version = "0.0.0"
 dependencies = [
- "base64-simd",
  "napi",
  "napi-build",
  "napi-derive",
@@ -1161,7 +1160,6 @@ dependencies = [
  "oxc_codegen",
  "oxc_parser",
  "oxc_semantic",
- "oxc_sourcemap",
  "oxc_span",
  "oxc_syntax",
  "oxc_transformer",

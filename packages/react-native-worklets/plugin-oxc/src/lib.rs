@@ -21,17 +21,10 @@ mod version;
 mod worklet_factory;
 mod worklet_file;
 mod worklet_pass;
-mod worklet_source_map;
 mod worklet_string_code;
 
 pub use options::PluginOptions;
 use program::run;
-pub use worklet_source_map::RestoredPositions;
-
-#[napi]
-pub fn restore_worklet_positions(code: String, positions: Vec<u32>) -> Option<RestoredPositions> {
-    worklet_source_map::restore_positions(&code, &positions)
-}
 
 #[napi(object)]
 pub struct EmittedFile {
