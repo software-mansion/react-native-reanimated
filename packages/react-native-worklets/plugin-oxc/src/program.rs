@@ -10,7 +10,7 @@ use oxc_syntax::symbol::SymbolId;
 
 use crate::types::{ImportInfo, ImportShape, State};
 use crate::{EmittedFile, PluginOptions, TransformResult};
-use crate::{bundle_mode, file_directive, plugin};
+use crate::{bundle_mode, plugin};
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
 const FLOW_ERROR_CODE: &str = "WORKLETS_ERR_FLOW";
@@ -34,8 +34,6 @@ pub fn run(
     let source_type = source_type_of(filename);
     let mut program = parse_program(&allocator, source_text, filename, source_type)?;
     let builder = oxc_ast::AstBuilder::new(&allocator);
-
-    let is_worklet_file = file_directive::process_file_directive(&mut program, builder);
 
     if source_type.is_typescript() {
         strip_typescript(&mut program, &allocator, filename)?;
@@ -80,7 +78,7 @@ pub fn run(
     Ok(TransformResult {
         code: printed.code,
         map: printed.map.map(|map| map.to_json_string()),
-        changed: flag_enabled || is_worklet_file || !files.is_empty(),
+        changed: flag_enabled || !files.is_empty(),
         files,
     })
 }
