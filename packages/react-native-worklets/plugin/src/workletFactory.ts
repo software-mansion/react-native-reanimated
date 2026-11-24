@@ -124,7 +124,7 @@ export function makeWorkletFactory(
     workletName
   );
   assert(funString, '`funString` is undefined.');
-  const workletHash = hash(funString);
+  const workletHash = hash(makeWorkletHashKey(fun, state));
 
   assert(
     !isFunctionDeclaration(funExpression),
@@ -237,6 +237,21 @@ function shouldMockVersion(): boolean {
   // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
   return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1';
+}
+
+function makeWorkletHashKey(
+  fun: NodePath<WorkletizableFunction>,
+  state: WorkletsPluginPass
+): string {
+  const filename = state.file.opts.filename;
+  const cwd = state.file.opts.cwd ?? process.cwd();
+  const source = filename
+    ? relative(cwd, filename).split(sep).join('/')
+    : 'unknownFile';
+  const position = fun.node.body.start;
+  return position === null || position === undefined
+    ? `${source}#${state.workletNumber}`
+    : `${source}:${position}`;
 }
 
 function hash(str: string): number {
