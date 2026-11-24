@@ -1,0 +1,1 @@
+Remove the Babel plugin options that only shaped Legacy Eval output: `bundleMode`, `disableInlineStylesWarning`, `disableSourceMaps`, `disableWorkletClasses`, `globals`, `hermesBytecode`, `getHBCBinary`, `omitNativeOnlyData`, `relativeSourceLocation`, `strictGlobal` and `substituteWebPlatformChecks`.
