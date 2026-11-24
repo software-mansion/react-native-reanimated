@@ -740,6 +740,14 @@ var require_globals = __commonJS({
     var path_1 = __importDefault(require("path"));
     var imports_1 = require_imports();
     var types_12 = require_types();
+    var warnedAboutRemovedOptions = false;
+    function warnAboutRemovedOptions(options) {
+      if (warnedAboutRemovedOptions || !("extraPlugins" in options || "extraPresets" in options)) {
+        return;
+      }
+      warnedAboutRemovedOptions = true;
+      console.warn("[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 and have no effect. Remove them from your Babel config.");
+    }
     function initializeState(state, workletModules) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
@@ -749,6 +757,7 @@ var require_globals = __commonJS({
       state.workletModules = workletModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
+      warnAboutRemovedOptions(state.opts);
       (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
       state.importForwarding = {
