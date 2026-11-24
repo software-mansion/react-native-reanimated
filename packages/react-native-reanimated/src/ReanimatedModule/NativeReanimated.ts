@@ -184,8 +184,8 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     this.#reanimatedModuleProxy.setCSSEventHandler(handler);
   }
 
-  createUIShadowNodeWrapper(shadowNodeWrapper: ShadowNodeWrapper) {
-    return this.#reanimatedModuleProxy.createUIShadowNodeWrapper(
+  createDetachedShadowNodeWrapper(shadowNodeWrapper: ShadowNodeWrapper) {
+    return this.#reanimatedModuleProxy.createDetachedShadowNodeWrapper(
       shadowNodeWrapper
     );
   }

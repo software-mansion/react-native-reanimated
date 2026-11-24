@@ -1677,7 +1677,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       });
 
   addMethod<1>(
-      rt, obj, "createUIShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+      rt, obj, "createDetachedShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
         return Bridging<std::shared_ptr<const ShadowNode>>::toJs(rt, shadowNodeFromValue(rt, at<0>(args)));
       });
 

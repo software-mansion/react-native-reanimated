@@ -68,7 +68,7 @@ export interface ReanimatedModuleProxy {
   /** Registers the single handler receiving every CSS event batch. */
   setCSSEventHandler(handler: CSSEventHandler): void;
 
-  createUIShadowNodeWrapper(
+  createDetachedShadowNodeWrapper(
     shadowNodeWrapper: ShadowNodeWrapper
   ): ShadowNodeWrapper;
 

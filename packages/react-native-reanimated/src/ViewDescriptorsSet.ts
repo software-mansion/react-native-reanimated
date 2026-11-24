@@ -22,7 +22,7 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
       const item: Descriptor = input.shadowNodeWrapper
         ? {
             ...input,
-            shadowNodeWrapper: ReanimatedModule.createUIShadowNodeWrapper(
+            shadowNodeWrapper: ReanimatedModule.createDetachedShadowNodeWrapper(
               input.shadowNodeWrapper
             ),
           }
