@@ -62,6 +62,7 @@ var require_directives = __commonJS({
         block.start = expression.start;
         block.end = expression.end;
         block.loc = expression.loc;
+        block.extra = Object.assign(Object.assign({}, block.extra), { workletsExpressionBody: true });
         path.body = block;
       }
     }
@@ -1042,7 +1043,7 @@ var require_workletFactory = __commonJS({
       return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function makeWorkletHashKey(fun, state, closureNames) {
-      var _a, _b;
+      var _a, _b, _c;
       const filename = state.file.opts.filename;
       const root = (_b = (_a = resolveWorkletsPackageDir()) !== null && _a !== void 0 ? _a : state.file.opts.cwd) !== null && _b !== void 0 ? _b : process.cwd();
       const source = filename ? (0, path_1.relative)(root, filename).split(path_1.sep).join("/") : "unknownFile";
@@ -1053,7 +1054,9 @@ var require_workletFactory = __commonJS({
       }
       const body = parts.pop();
       const prefix = `${fun.node.async ? "async " : ""}${fun.node.generator ? "*" : ""}`;
-      return `${source}:[${closureNames.join(",")}]${prefix}(${parts.join(",")})${body}`;
+      const isExpressionBody = !(0, types_12.isBlockStatement)(fun.node.body) || ((_c = fun.node.body.extra) === null || _c === void 0 ? void 0 : _c.workletsExpressionBody) === true;
+      const arrow = isExpressionBody ? "=>" : "";
+      return `${source}:[${closureNames.join(",")}]${prefix}(${parts.join(",")})${arrow}${body}`;
     }
     var cachedWorkletsPackageDir;
     function resolveWorkletsPackageDir() {
