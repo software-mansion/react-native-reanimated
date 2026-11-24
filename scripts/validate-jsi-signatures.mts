@@ -40,8 +40,7 @@ const JSI_OBJECTS: JsiObject[] = [
 ];
 
 const SCRIPT = path.relative(REPOSITORY_ROOT, import.meta.filename);
-const REGISTRATION =
-  /addMethod\s*(?:<[^<>]*>)?\s*\(\s*[^,()]+,\s*[^,()]+,\s*"/y;
+const REGISTRATION = /addMethod\s*\(\s*[^,()]+,\s*[^,()]+,\s*"/y;
 
 type Registration = { length: number };
 
@@ -146,17 +145,15 @@ function readRegisteredMethods(
   };
   const registrations = new Map<string, Registration[]>();
   for (const index of findCalls(source, 'addMethod')) {
-    const call = /^\s*(?:<\s*(\d+)\s*>\s*)?([(;])/.exec(
-      source.slice(index + 'addMethod'.length)
-    );
-    if (call?.[2] === ';') {
+    const call = /^\s*([(;])/.exec(source.slice(index + 'addMethod'.length));
+    if (call?.[1] === ';') {
       continue;
     }
     const args = call
       ? splitTopLevel(source, index + 'addMethod'.length + call[0].length - 1)
       : [];
     const name = /^"(\w+)"$/.exec(args[2] ?? '')?.[1];
-    const length = call ? readLength(args, call[1]) : undefined;
+    const length = readLength(args);
     if (!name || length === undefined) {
       fail(
         index,
@@ -171,13 +168,7 @@ function readRegisteredMethods(
   return registrations;
 }
 
-function readLength(
-  args: string[],
-  declared: string | undefined
-): number | undefined {
-  if (declared !== undefined) {
-    return args.length === 4 ? Number(declared) : undefined;
-  }
+function readLength(args: string[]): number | undefined {
   if (args.length !== 4 && args.length !== 5) {
     return undefined;
   }

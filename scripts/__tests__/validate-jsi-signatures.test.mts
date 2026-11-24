@@ -60,14 +60,13 @@ describe('validate-jsi-signatures', () => {
 
   it('reports a file that registers methods but is not listed', () => {
     const sources: Record<string, string> = {
-      'listed.cpp':
-        'addMethod<0>(rt, obj, "listed", [](jsi::Runtime &, const jsi::Value &) {});',
+      'listed.cpp': 'addMethod(rt, obj, "listed", [](jsi::Runtime &) {});',
       'unlisted.cpp':
-        'jsi_utils::addMethod<0>(\n    rt, obj, "unlisted", [](jsi::Runtime &, const jsi::Value &) {});',
+        'jsi_utils::addMethod(\n    rt, obj, "unlisted", [](jsi::Runtime &) {});',
       'header.h':
         'void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func);',
       'comment.cpp':
-        '// addMethod<0>(rt, obj, "commented", [](jsi::Runtime &, const jsi::Value &) {});',
+        '// addMethod(rt, obj, "commented", [](jsi::Runtime &) {});',
     };
     assert.deepEqual(
       reportFilesMissingFromJsiObjects(

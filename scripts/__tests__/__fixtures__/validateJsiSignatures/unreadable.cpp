@@ -7,7 +7,7 @@ using namespace facebook;
 jsi::Object makeProxy(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
   const char *name = "noArguments";
-  jsi_utils::addMethod<0>(rt, obj, name, [](jsi::Runtime &, const jsi::Value &) {});
+  jsi_utils::addMethod(rt, obj, name, [](jsi::Runtime &) {});
   return obj;
 }
 

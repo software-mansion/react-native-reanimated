@@ -186,59 +186,6 @@ jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, cons
 
 jsi::Object optimizedFromHostObject(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> &&hostObject);
 
-template <size_t TIndex, size_t TLength>
-  requires(TIndex < TLength)
-constexpr const jsi::Value &at(const jsi::Value (&args)[TLength]) noexcept {
-  return args[TIndex];
-}
-
-template <size_t TLength, typename TFun>
-  requires(TLength > 0) &&
-    std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &, const jsi::Value (&)[TLength]>
-void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
-  obj.setProperty(
-      rt,
-      name,
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, name),
-          TLength,
-          [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
-            using TReturn =
-                std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
-            auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
-            if constexpr (std::is_void_v<TReturn>) {
-              func(rt, thisVal, typed);
-              return jsi::Value::undefined();
-            } else {
-              return func(rt, thisVal, typed);
-            }
-          }));
-}
-
-template <size_t TLength, typename TFun>
-  requires(TLength == 0) && std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &>
-void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
-  obj.setProperty(
-      rt,
-      name,
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, name),
-          0,
-          [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *, size_t) mutable -> jsi::Value {
-            using TReturn = std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &>;
-            if constexpr (std::is_void_v<TReturn>) {
-              func(rt, thisVal);
-              return jsi::Value::undefined();
-            } else {
-              return func(rt, thisVal);
-            }
-          }));
-}
-
 template <typename T>
 using StoredParameter = std::conditional_t<std::is_same_v<T, const jsi::Value &>, T, std::remove_cvref_t<T>>;
 

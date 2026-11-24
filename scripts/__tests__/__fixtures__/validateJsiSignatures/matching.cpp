@@ -6,13 +6,13 @@ using namespace facebook;
 
 jsi::Object makeProxy(jsi::Runtime &rt) {
   auto obj = jsi::Object(rt);
-  // jsi_utils::addMethod<0>(rt, obj, "commentedOut", [](jsi::Runtime &, const jsi::Value &) {});
-  jsi_utils::addMethod<0>(rt, obj, "noArguments", [](jsi::Runtime &, const jsi::Value &) {});
-  jsi_utils::addMethod<2>(
+  // jsi_utils::addMethod(rt, obj, "commentedOut", [](jsi::Runtime &) {});
+  jsi_utils::addMethod(rt, obj, "noArguments", [](jsi::Runtime &) {});
+  jsi_utils::addMethod(
       rt,
       obj,
       /* name */ "twoArguments",
-      [prefix = std::string("(, ")](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&)[2]) {
+      [prefix = std::string("(, ")](jsi::Runtime &rt, double, const std::optional<std::string> &) {
         return jsi::String::createFromUtf8(rt, prefix + ")");
       });
   jsi_utils::addMethod(
