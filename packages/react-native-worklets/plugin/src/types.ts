@@ -24,7 +24,6 @@ export interface WorkletsPluginPass {
   cwd: string;
   filename: string | undefined;
   workletNumber: number;
-  classesToWorkletize: { node: BabelNode; name: string }[];
   skipFile: boolean;
   importForwarding: InitializedImportForwarding;
 }

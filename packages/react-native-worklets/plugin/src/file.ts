@@ -1,6 +1,5 @@
 import type { NodePath } from '@babel/core';
 import type {
-  ClassBody,
   MemberExpression,
   ObjectExpression,
   Program,
@@ -8,9 +7,6 @@ import type {
   VariableDeclaration,
 } from '@babel/types';
 import {
-  booleanLiteral,
-  classProperty,
-  identifier,
   isAssignmentExpression,
   isExpressionStatement,
   isIdentifier,
@@ -80,15 +76,6 @@ function processWorkletizableEntity(
     processWorkletAggregator(nodePath, state);
   } else if (nodePath.isVariableDeclaration()) {
     processVariableDeclaration(nodePath, state);
-  } else if (nodePath.isClassDeclaration()) {
-    appendWorkletClassMarker(nodePath.node.body);
-    if (nodePath.node.id?.name) {
-      // We don't support unnamed classes yet.
-      state.classesToWorkletize.push({
-        node: nodePath.node,
-        name: nodePath.node.id.name,
-      });
-    }
   }
 }
 
@@ -118,12 +105,6 @@ function processWorkletAggregator(
       processWorkletizableEntity(valuePath, state);
     }
   });
-}
-
-function appendWorkletClassMarker(classBody: ClassBody) {
-  classBody.body.push(
-    classProperty(identifier('__workletClass'), booleanLiteral(true))
-  );
 }
 
 function dehoistCommonJSExports(program: Program) {
