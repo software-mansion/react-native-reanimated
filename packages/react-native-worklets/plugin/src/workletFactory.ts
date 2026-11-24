@@ -29,7 +29,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative, sep } from 'path';
+import { basename, dirname, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import {
@@ -229,14 +229,30 @@ function makeWorkletHashKey(
   state: WorkletsPluginPass
 ): string {
   const filename = state.file.opts.filename;
-  const cwd = state.file.opts.cwd ?? process.cwd();
+  const root =
+    resolveWorkletsPackageDir() ?? state.file.opts.cwd ?? process.cwd();
   const source = filename
-    ? relative(cwd, filename).split(sep).join('/')
+    ? relative(root, filename).split(sep).join('/')
     : 'unknownFile';
   const position = fun.node.body.start;
   return position === null || position === undefined
     ? `${source}#${state.workletNumber}`
     : `${source}:${position}`;
+}
+
+let cachedWorkletsPackageDir: string | null | undefined;
+
+function resolveWorkletsPackageDir(): string | null {
+  if (cachedWorkletsPackageDir === undefined) {
+    try {
+      cachedWorkletsPackageDir = dirname(
+        require.resolve('react-native-worklets/package.json')
+      );
+    } catch {
+      cachedWorkletsPackageDir = null;
+    }
+  }
+  return cachedWorkletsPackageDir;
 }
 
 function hash(str: string): number {

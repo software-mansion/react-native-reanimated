@@ -22,5 +22,5 @@ pub struct PluginOptions {
 
     pub in_place: Option<bool>,
 
-    pub cwd: Option<String>,
+    pub hash_root: Option<String>,
 }

@@ -1,6 +1,4 @@
 export interface PluginOptions {
-  extraPlugins?: string[];
-  extraPresets?: string[];
   importForwarding?: {
     moduleNames?: string[];
     relativePaths?: string[];
@@ -14,7 +12,7 @@ export interface TransformOptions extends PluginOptions {
   inlineModules?: boolean;
   workletsPackageDir?: string;
   inPlace?: boolean;
-  cwd?: string;
+  hashRoot?: string;
 }
 
 export interface EmittedFile {

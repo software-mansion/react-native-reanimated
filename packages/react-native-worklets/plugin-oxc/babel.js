@@ -78,7 +78,7 @@ function transform(sourceText, filename, state, workletModules) {
       inPlace: workletModules === 'in-place',
       workletsPackageDir:
         workletModules === 'file' ? resolveWorkletsPkgDir() : undefined,
-      cwd: state.file.opts.cwd ?? process.cwd(),
+      hashRoot: resolveHashRoot(state),
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -117,18 +117,15 @@ function warnAboutIgnoredOptions(options) {
   if (warnedAboutIgnoredOptions) {
     return;
   }
-  const hasExtras =
-    (options?.extraPlugins?.length ?? 0) > 0 ||
-    (options?.extraPresets?.length ?? 0) > 0;
-  if (!hasExtras) {
+  const hasRemovedOptions =
+    options != null && ('extraPlugins' in options || 'extraPresets' in options);
+  if (!hasRemovedOptions) {
     return;
   }
   warnedAboutIgnoredOptions = true;
   console.warn(
-    '[Worklets] `extraPlugins`/`extraPresets` are accepted for option-surface ' +
-      'compatibility with `react-native-worklets/plugin` but ignored — the Oxc transform ' +
-      'cannot dispatch arbitrary Babel plugins. Compose them around this plugin in ' +
-      'babel.config.js instead.'
+    '[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 ' +
+      'and have no effect. Remove them from your Babel config.'
   );
 }
 
@@ -204,6 +201,18 @@ function getDangerousRelativePathWarning(relativePath) {
 }
 
 /** @returns {string} */
+/**
+ * @param {import('@babel/core').PluginPass} state
+ * @returns {string}
+ */
+function resolveHashRoot(state) {
+  try {
+    return resolveWorkletsPkgDir();
+  } catch {
+    return state.file.opts.cwd ?? process.cwd();
+  }
+}
+
 function resolveWorkletsPkgDir() {
   if (cachedWorkletsPkgDir === undefined) {
     try {

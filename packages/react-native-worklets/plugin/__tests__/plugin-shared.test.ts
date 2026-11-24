@@ -571,6 +571,23 @@ describe('babel plugin core', () => {
     });
   });
 
+  describe('removed options', () => {
+    test('warns once that extraPlugins and extraPresets were removed', () => {
+      const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const options = {
+        extraPlugins: ['babel-plugin-foo'],
+        extraPresets: [],
+      } as PluginOptions;
+      runPlugin("function foo() {\n  'worklet';\n}\n", options);
+      runPlugin("function bar() {\n  'worklet';\n}\n", options);
+      const removalWarnings = warn.mock.calls.filter(([message]) =>
+        String(message).includes('were removed in Worklets 1.0')
+      );
+      warn.mockRestore();
+      expect(removalWarnings).toHaveLength(1);
+    });
+  });
+
   describe('without worklets', () => {
     test('leaves code untouched and emits no factory', () => {
       const input = html`<script>
