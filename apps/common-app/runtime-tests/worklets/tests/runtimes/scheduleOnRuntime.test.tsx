@@ -32,7 +32,6 @@ describe('scheduleOnRuntime', () => {
     [workletRuntime1, workletRuntime2].forEach((runtime) => {
       runOnRuntimeSync(runtime, () => {
         'worklet';
-        // TODO: fix worklet re-serialization outside of Bundle Mode
         globalThis.scheduleOnRN = scheduleOnRN;
       });
     });
