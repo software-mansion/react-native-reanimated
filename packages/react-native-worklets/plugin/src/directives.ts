@@ -61,6 +61,7 @@ function replaceImplicitReturnWithBlock(path: ArrowFunctionExpression) {
     block.start = expression.start;
     block.end = expression.end;
     block.loc = expression.loc;
+    block.extra = { ...block.extra, workletsExpressionBody: true };
     path.body = block;
   }
 }
