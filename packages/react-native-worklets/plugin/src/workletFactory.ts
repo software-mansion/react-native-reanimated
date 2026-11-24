@@ -195,8 +195,7 @@ function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {
   fun.traverse({
     DirectiveLiteral(nodePath) {
       if (
-        (nodePath.node.value === 'worklet' ||
-          nodePath.node.value === 'no-worklet-closure') &&
+        nodePath.node.value === 'worklet' &&
         nodePath.getFunctionParent() === fun
       ) {
         nodePath.parentPath.remove();
