@@ -42,11 +42,19 @@ fn relative_path(from: &str, to: &str) -> String {
     let common = from_parts
         .iter()
         .zip(to_parts.iter())
-        .take_while(|(a, b)| a == b)
+        .take_while(|(a, b)| same_segment(a, b))
         .count();
     let mut parts: Vec<&str> = std::iter::repeat_n("..", from_parts.len() - common).collect();
     parts.extend_from_slice(&to_parts[common..]);
     parts.join("/")
+}
+
+fn same_segment(a: &str, b: &str) -> bool {
+    if cfg!(windows) {
+        a.eq_ignore_ascii_case(b)
+    } else {
+        a == b
+    }
 }
 
 fn normalized_segments(path: &str) -> Vec<&str> {
