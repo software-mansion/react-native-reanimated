@@ -10,7 +10,7 @@ class VSyncAsyncQueue : public AsyncQueue {
  public:
   ~VSyncAsyncQueue() override = default;
 
-  virtual void requestAnimationFrame(std::function<void(double)> &&callback) = 0;
+  virtual void requestVSync(std::function<void(double)> &&callback) = 0;
 };
 
 } // namespace worklets

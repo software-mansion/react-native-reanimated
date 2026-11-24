@@ -24,7 +24,7 @@ class AppleVSyncAsyncQueue final : public VSyncAsyncQueue {
 
   void stop(AbortToken abortToken) override;
 
-  void requestAnimationFrame(std::function<void(double)> &&callback) override;
+  void requestVSync(std::function<void(double)> &&callback) override;
 
  private:
   const std::shared_ptr<AppleVSyncAsyncQueueState> state_;

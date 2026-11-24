@@ -273,7 +273,7 @@ void WorkletRuntimeDecorator::decorate(
         [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop),
          weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](jsi::Runtime &) {
           if (const auto strongQueue = weakQueue.lock()) {
-            strongQueue->requestAnimationFrame([weakEventLoop](const double timestampMs) {
+            strongQueue->requestVSync([weakEventLoop](const double timestampMs) {
               if (const auto strongEventLoop = weakEventLoop.lock()) {
                 strongEventLoop->runTask([timestampMs](jsi::Runtime &rt) {
                   rt.global().getPropertyAsFunction(rt, "__runAnimationFrameCallback").call(rt, timestampMs);

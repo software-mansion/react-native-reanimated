@@ -221,7 +221,7 @@ void AppleVSyncAsyncQueue::stop(AbortToken abortToken)
   abortPending(abortToken);
 }
 
-void AppleVSyncAsyncQueue::requestAnimationFrame(std::function<void(double)> &&callback)
+void AppleVSyncAsyncQueue::requestVSync(std::function<void(double)> &&callback)
 {
   std::lock_guard<std::mutex> lock(state_->mutex);
   if (!state_->running) [[unlikely]] {
