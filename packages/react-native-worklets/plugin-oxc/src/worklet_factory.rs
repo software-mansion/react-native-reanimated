@@ -235,7 +235,8 @@ fn raw_function_text(
         params.push(slice(rest.span));
     }
     format!(
-        "[{}]{}{}({}){}{}",
+        "{}[{}]{}{}({}){}{}",
+        input.self_name.unwrap_or_default(),
         closure_variables.join(","),
         if input.is_async { "async " } else { "" },
         if input.is_generator { "*" } else { "" },

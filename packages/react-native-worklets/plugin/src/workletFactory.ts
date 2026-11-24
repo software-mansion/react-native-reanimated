@@ -239,7 +239,20 @@ function makeWorkletHashKey(
     !isBlockStatement(fun.node.body) ||
     fun.node.body.extra?.workletsExpressionBody === true;
   const arrow = isExpressionBody ? '=>' : '';
-  return `${source}:[${closureNames.join(',')}]${prefix}(${parts.join(',')})${arrow}${body}`;
+  return `${source}:${workletSelfName(fun)}[${closureNames.join(',')}]${prefix}(${parts.join(',')})${arrow}${body}`;
+}
+
+function workletSelfName(fun: NodePath<WorkletizableFunction>): string {
+  if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
+    return fun.node.key.name;
+  }
+  if (
+    (isFunctionDeclaration(fun.node) || isFunctionExpression(fun.node)) &&
+    isIdentifier(fun.node.id)
+  ) {
+    return fun.node.id.name;
+  }
+  return '';
 }
 
 let cachedWorkletsPackageDir: string | null | undefined;
