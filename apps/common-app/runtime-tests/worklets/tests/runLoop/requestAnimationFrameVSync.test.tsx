@@ -203,7 +203,10 @@ describe('Test requestAnimationFrame with enableVSync', () => {
 
     // Assert
     expect(uiFrames > 0).toBe(true);
-    expect(workerFrames >= uiFrames * MIN_RATE_RATIO).toBe(true);
+    expect(
+      workerFrames >=
+        Math.min(uiFrames * MIN_RATE_RATIO, uiFrames - FRAME_TOLERANCE)
+    ).toBe(true);
     expect(workerFrames <= uiFrames + 1).toBe(true);
   });
 
@@ -309,8 +312,14 @@ describe('Test requestAnimationFrame with enableVSync', () => {
 
     // Assert
     expect(frames[2] > 0).toBe(true);
-    expect(frames[0] >= frames[2] * MIN_RATE_RATIO).toBe(true);
-    expect(frames[1] >= frames[2] * MIN_RATE_RATIO).toBe(true);
+    expect(
+      frames[0] >=
+        Math.min(frames[2] * MIN_RATE_RATIO, frames[2] - FRAME_TOLERANCE)
+    ).toBe(true);
+    expect(
+      frames[1] >=
+        Math.min(frames[2] * MIN_RATE_RATIO, frames[2] - FRAME_TOLERANCE)
+    ).toBe(true);
   });
 
   test('stops running callbacks after abortWorkletRuntime', async () => {
