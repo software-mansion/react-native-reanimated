@@ -205,6 +205,14 @@ describe('babel plugin without a Metro caller', () => {
       expect(after).toBe(before);
     });
 
+    test('separates identical text that captures different variables', () => {
+      const hashes = workletHashes(
+        "function a(value) {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\nfunction b() {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
     test('changes the hash for the same code in another file', () => {
       const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
       const first = workletHash(input, 'first.js');
@@ -233,19 +241,19 @@ describe('babel plugin without a Metro caller', () => {
         workletHash(
           "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
         )
-      ).toBe(6220683572890);
+      ).toBe(15219685961276);
       expect(
         workletHash(
           "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
         )
-      ).toBe(17481696413721);
+      ).toBe(6698349743551);
     });
 
     test('derives the hash from the relative path and the raw function text', () => {
       const value = workletHash(
         "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
       );
-      expect(value).toBe(2387330695542);
+      expect(value).toBe(6803356437101);
     });
   });
 });
