@@ -31,7 +31,6 @@ namespace {
 BundleModeConfig makeBundleModeConfig(NSURL *bundleURL, NSURL *downloadedBundleFileURL)
 {
   return BundleModeConfig{
-      .enabled = true,
       .script = getScript(bundleURL, downloadedBundleFileURL),
       .sourceURL = bundleURL != nil ? std::string([[bundleURL absoluteString] UTF8String]) : std::string{}};
 }
@@ -92,7 +91,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(prepareBundleMode)
   return @YES;
 }
 
-RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnabled)
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
 {
   react_native_assert(self.bridge != nullptr);
   react_native_assert(self.bridge.runtime != nullptr);
@@ -100,8 +99,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule : (BOOL)bundleModeEnab
   AssertJavaScriptQueue();
 
   jsi::Runtime &rnRuntime = *reinterpret_cast<facebook::jsi::Runtime *>(self.bridge.runtime);
-  workletsModuleProxy_ =
-      initializer_->finalize(rnRuntime, static_cast<bool>(bundleModeEnabled), [self makeBundleModeConfigLoader]);
+  workletsModuleProxy_ = initializer_->finalize(rnRuntime, [self makeBundleModeConfigLoader]);
   return @YES;
 }
 
