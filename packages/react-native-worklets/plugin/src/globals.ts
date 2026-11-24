@@ -152,7 +152,6 @@ export function initializeState(state: WorkletsPluginPass) {
     return;
   }
   state.workletNumber = 1;
-  state.classesToWorkletize = [];
   if (!state.opts.strictGlobal) {
     initializeGlobals();
     addCustomGlobals(state);
