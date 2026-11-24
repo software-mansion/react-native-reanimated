@@ -78,6 +78,18 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   void schedule(std::shared_ptr<SerializableWorklet> worklet, std::shared_ptr<void> dropGuard = nullptr) const;
 
   /**
+   * Schedules a serialized worklet with serialized arguments to run
+   * asynchronously.
+   *
+   * Runs a single microtask checkpoint after deserializing the arguments and
+   * invoking the worklet.
+   */
+  void schedule(
+      std::shared_ptr<SerializableWorklet> worklet,
+      std::shared_ptr<SerializableArray> arguments,
+      std::shared_ptr<void> dropGuard = nullptr) const;
+
+  /**
    * Schedules a batch of serialized worklets to run asynchronously.
    *
    * Runs a single microtask checkpoint on completion of the batch.
@@ -94,6 +106,12 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    */
   void scheduleWithStack(
       std::shared_ptr<SerializableWorklet> worklet,
+      std::optional<std::string> scheduleStack,
+      std::shared_ptr<void> dropGuard = nullptr) const;
+
+  void scheduleWithStack(
+      std::shared_ptr<SerializableWorklet> worklet,
+      std::shared_ptr<SerializableArray> arguments,
       std::optional<std::string> scheduleStack,
       std::shared_ptr<void> dropGuard = nullptr) const;
 
@@ -210,6 +228,17 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return runSyncImpl<MicrotaskCheckpoint::Run, std::shared_ptr<Serializable>>(callable, std::forward<TArgs>(args)...);
   }
 
+  /**
+   * Runs a serialized worklet with serialized arguments synchronously and
+   * returns its serialized result.
+   *
+   * Runs a single microtask checkpoint after deserializing the arguments and
+   * invoking the worklet.
+   */
+  auto runSyncAndDrainMicrotasksSerializedWithArguments(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      const std::shared_ptr<SerializableArray> &arguments) const -> std::shared_ptr<Serializable>;
+
 #ifndef NDEBUG
   /**
    * Synchronously invokes a jsi::Function or SerializableWorklet on the worklet
@@ -244,6 +273,18 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
     return runSyncImpl<MicrotaskCheckpoint::Run, TResult, ScheduleStack::Requested>(
         callable, scheduleStack, std::forward<TArgs>(args)...);
   }
+
+  /**
+   * Runs a serialized worklet with serialized arguments synchronously,
+   * remembers its scheduling call site, and returns its serialized result.
+   *
+   * Runs a single microtask checkpoint after deserializing the arguments and
+   * invoking the worklet.
+   */
+  auto runSyncWithStackAndDrainMicrotasksSerializedWithArguments(
+      const std::shared_ptr<SerializableWorklet> &worklet,
+      const std::shared_ptr<SerializableArray> &arguments,
+      const std::optional<std::string> &scheduleStack) const -> std::shared_ptr<Serializable>;
 #endif // NDEBUG
 
   jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propName) override;
