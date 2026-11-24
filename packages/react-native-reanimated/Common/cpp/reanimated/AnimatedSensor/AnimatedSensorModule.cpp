@@ -11,18 +11,18 @@ AnimatedSensorModule::AnimatedSensorModule(const PlatformDepMethodsHolder &platf
       platformRegisterSensorFunction_(platformDepMethodsHolder.registerSensor),
       platformUnregisterSensorFunction_(platformDepMethodsHolder.unregisterSensor) {}
 
-jsi::Value AnimatedSensorModule::isSensorAvailable(const jsi::Value &sensorType) const {
-  return jsi::Value(platformIsSensorAvailableFunction_(static_cast<int>(sensorType.asNumber())));
+bool AnimatedSensorModule::isSensorAvailable(double sensorType) const {
+  return platformIsSensorAvailableFunction_(static_cast<int>(sensorType));
 }
 
 jsi::Value AnimatedSensorModule::registerSensor(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
-    const jsi::Value &sensorTypeValue,
-    const jsi::Value &interval,
-    const jsi::Value &iosReferenceFrame,
+    double sensorTypeValue,
+    double interval,
+    double iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
-  SensorType sensorType = static_cast<SensorType>(sensorTypeValue.asNumber());
+  SensorType sensorType = static_cast<SensorType>(sensorTypeValue);
 
   auto serializableHandler = extractSerializable(
       rnRuntime,
@@ -32,8 +32,8 @@ jsi::Value AnimatedSensorModule::registerSensor(
 
   int sensorId = platformRegisterSensorFunction_(
       static_cast<int>(sensorType),
-      interval.asNumber(),
-      iosReferenceFrame.asNumber(),
+      interval,
+      iosReferenceFrame,
       [sensorType, serializableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
@@ -69,10 +69,10 @@ jsi::Value AnimatedSensorModule::registerSensor(
   return jsi::Value(sensorId);
 }
 
-void AnimatedSensorModule::unregisterSensor(const jsi::Value &sensorId) {
+void AnimatedSensorModule::unregisterSensor(double sensorId) {
   // It is called during sensor hook unmounting
-  sensorsIds_.erase(sensorId.getNumber());
-  platformUnregisterSensorFunction_(sensorId.asNumber());
+  sensorsIds_.erase(sensorId);
+  platformUnregisterSensorFunction_(sensorId);
 }
 
 void AnimatedSensorModule::unregisterAllSensors() {

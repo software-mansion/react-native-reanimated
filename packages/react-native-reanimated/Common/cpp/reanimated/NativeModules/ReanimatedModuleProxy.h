@@ -81,24 +81,21 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   [[nodiscard]]
   jsi::Object toOptimizedObject(jsi::Runtime &rt);
 
-  jsi::Value registerEventHandler(
-      jsi::Runtime &rt,
-      const jsi::Value &worklet,
-      const jsi::Value &eventName,
-      const jsi::Value &emitterReactTag);
-  void unregisterEventHandler(jsi::Runtime &rt, const jsi::Value &registrationId);
+  jsi::Value
+  registerEventHandler(jsi::Runtime &rt, const jsi::Value &worklet, const std::string &eventName, int emitterReactTag);
+  void unregisterEventHandler(jsi::Runtime &rt, double registrationId);
 
   jsi::Value getViewProp(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &propName,
-      const jsi::Value &callback);
+      const std::string &propName,
+      jsi::Function callback);
 
-  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const jsi::Value &name);
-  jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const jsi::Value &name, const jsi::Value &value);
+  jsi::Value getStaticFeatureFlag(jsi::Runtime &rt, const std::string &name);
+  jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const std::string &name, bool value);
 
-  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Value &layoutAnimationsBatch);
-  void setShouldAnimateExiting(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &shouldAnimate);
+  jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Array &array);
+  void setShouldAnimateExiting(jsi::Runtime &rt, double viewTag, bool shouldAnimate);
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
@@ -123,40 +120,40 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void startBackendIfNeeded();
   void stopBackendIfIdle(bool producedMutations);
 
-  void setViewStyle(jsi::Runtime &rt, const jsi::Value &viewTag, const jsi::Value &viewStyle);
+  void setViewStyle(jsi::Runtime &rt, double viewTag, const jsi::Value &viewStyle);
 
   void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper);
-  void unmarkNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &viewTag);
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, double viewTag);
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,
-      const jsi::Value &animationName,
-      const jsi::Value &compoundComponentName,
+      const std::string &animationName,
+      const std::string &compoundComponentName,
       const jsi::Value &keyframesConfig);
   void
-  unregisterCSSKeyframes(jsi::Runtime &rt, const jsi::Value &animationName, const jsi::Value &compoundComponentName);
+  unregisterCSSKeyframes(jsi::Runtime &rt, const std::string &animationName, const std::string &compoundComponentName);
 
   void applyCSSAnimations(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
-      const jsi::Value &compoundComponentName,
+      const std::string &compoundComponentName,
       const jsi::Value &animationUpdates);
-  void unregisterCSSAnimations(const jsi::Value &viewTag);
+  void unregisterCSSAnimations(double viewTag);
 
-  void setCSSEventHandler(jsi::Runtime &rt, const jsi::Value &handler);
+  void setCSSEventHandler(jsi::Runtime &rt, jsi::Function handler);
 
   void runCSSTransition(
       jsi::Runtime &rt,
       const jsi::Value &shadowNodeWrapper,
       const jsi::Value &transitionConfig,
-      const jsi::Value &eventMask);
-  void unregisterCSSTransition(jsi::Runtime &rt, const jsi::Value &viewTag);
+      double eventMask);
+  void unregisterCSSTransition(jsi::Runtime &rt, double viewTag);
 
-  void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &config);
-  void unregisterPseudoStyles(jsi::Runtime &rt, const jsi::Value &viewTag);
+  void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Object &config);
+  void unregisterPseudoStyles(jsi::Runtime &rt, double viewTag);
 
-  jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered);
-  bool hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered);
+  jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Function &isViewRegistered);
+  bool hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Function &isViewRegistered);
 
   void dispatchCommand(
       jsi::Runtime &rt,
@@ -177,23 +174,23 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const std::string &propName,
       const std::shared_ptr<const ShadowNode> &shadowNode);
 
-  jsi::Value isSensorAvailable(jsi::Runtime &rt, const jsi::Value &sensorType) const;
+  bool isSensorAvailable(jsi::Runtime &rt, double sensorType) const;
   jsi::Value registerSensor(
       jsi::Runtime &rt,
-      const jsi::Value &sensorType,
-      const jsi::Value &interval,
-      const jsi::Value &iosReferenceFrame,
+      double sensorType,
+      double interval,
+      double iosReferenceFrame,
       const jsi::Value &sensorDataContainer);
-  void unregisterSensor(jsi::Runtime &rt, const jsi::Value &sensorId);
+  void unregisterSensor(jsi::Runtime &rt, double sensorId);
 
   void cleanupSensors();
 
   jsi::Value subscribeForKeyboardEvents(
       jsi::Runtime &rt,
       const jsi::Value &keyboardEventContainer,
-      const jsi::Value &isStatusBarTranslucent,
-      const jsi::Value &isNavigationBarTranslucent);
-  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, const jsi::Value &listenerId);
+      bool isStatusBarTranslucent,
+      bool isNavigationBarTranslucent);
+  void unsubscribeFromKeyboardEvents(jsi::Runtime &rt, double listenerId);
 
   void toggleSlowAnimationsOnUIRuntime() const;
 
