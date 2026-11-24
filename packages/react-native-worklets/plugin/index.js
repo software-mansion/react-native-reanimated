@@ -741,14 +741,6 @@ var require_globals = __commonJS({
     var path_1 = __importDefault(require("path"));
     var imports_1 = require_imports();
     var types_12 = require_types();
-    var warnedAboutRemovedOptions = false;
-    function warnAboutRemovedOptions(options) {
-      if (warnedAboutRemovedOptions || !("extraPlugins" in options || "extraPresets" in options)) {
-        return;
-      }
-      warnedAboutRemovedOptions = true;
-      console.warn("[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 and have no effect. Remove them from your Babel config.");
-    }
     function initializeState(state, workletModules) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
@@ -758,7 +750,6 @@ var require_globals = __commonJS({
       state.workletModules = workletModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
-      warnAboutRemovedOptions(state.opts);
       (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
       state.importForwarding = {
@@ -939,9 +930,7 @@ var require_generate = __commonJS({
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
       const output = process.env.WORKLETS_WRITE_ORIGIN ? `// __workletOrigin: ${(_b = state.file.opts.filename) !== null && _b !== void 0 ? _b : "unknown"}
 ${transformedProg}` : transformedProg;
-      const temporaryFilePath = `${dedicatedFilePath}.${process.pid}.tmp`;
-      (0, fs_1.writeFileSync)(temporaryFilePath, output);
-      (0, fs_1.renameSync)(temporaryFilePath, dedicatedFilePath);
+      (0, fs_1.writeFileSync)(dedicatedFilePath, output);
     }
     function resolvePresetTypescript() {
       try {

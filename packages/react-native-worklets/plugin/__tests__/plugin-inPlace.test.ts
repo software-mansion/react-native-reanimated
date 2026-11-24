@@ -21,19 +21,10 @@ function emittedFiles(): CapturedFile[] {
 
 jest.mock('fs', () => {
   const actual: object = jest.requireActual('fs');
-  const stagedFiles = new Map<string, string>();
   return {
     ...actual,
     writeFileSync: (filepath: string, content: string) => {
-      stagedFiles.set(String(filepath), String(content));
-    },
-    renameSync: (from: string, to: string) => {
-      const content = stagedFiles.get(String(from));
-      if (content === undefined) {
-        throw new Error(`renameSync: ${String(from)} was never written`);
-      }
-      capturedFiles.push({ path: String(to), content });
-      stagedFiles.delete(String(from));
+      capturedFiles.push({ path: String(filepath), content: String(content) });
     },
   };
 });
