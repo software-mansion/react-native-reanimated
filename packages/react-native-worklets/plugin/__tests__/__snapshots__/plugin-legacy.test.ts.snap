@@ -821,54 +821,54 @@ const foo = function foo_null1Factory([_worklet_1_init_data]) {
   foo.__stackDetails = _e;
   return foo;
 }([_worklet_1_init_data]);
-const _worklet_1_init_data2 = {
+const _worklet_2_init_data = {
   code: "(function bar_null2(){})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const bar = function bar_null2Factory([_worklet_1_init_data2]) {
+const bar = function bar_null2Factory([_worklet_2_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const bar = function () {
     "use no memo";
   };
-  bar.__workletHash = 1;
+  bar.__workletHash = 2;
   bar.__pluginVersion = "x.y.z";
-  bar.__initData = _worklet_1_init_data2;
+  bar.__initData = _worklet_2_init_data;
   bar.__stackDetails = _e;
   return bar;
-}([_worklet_1_init_data2]);
-const _worklet_1_init_data3 = {
+}([_worklet_2_init_data]);
+const _worklet_3_init_data = {
   code: "(function baz_null3(){})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const baz = function baz_null3Factory([_worklet_1_init_data3]) {
+const baz = function baz_null3Factory([_worklet_3_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const baz = function () {
     "use no memo";
   };
-  baz.__workletHash = 1;
+  baz.__workletHash = 3;
   baz.__pluginVersion = "x.y.z";
-  baz.__initData = _worklet_1_init_data3;
+  baz.__initData = _worklet_3_init_data;
   baz.__stackDetails = _e;
   return baz;
-}([_worklet_1_init_data3]);
-const _worklet_1_init_data4 = {
+}([_worklet_3_init_data]);
+const _worklet_4_init_data = {
   code: "(function foobar_null4(){})",
   location: "/dev/null",
   sourceMap: "\\"mock source map\\""
 };
-const foobar = function foobar_null4Factory([_worklet_1_init_data4]) {
+const foobar = function foobar_null4Factory([_worklet_4_init_data]) {
   const _e = [new global.Error(), 1, -27];
   const foobar = function () {
     "use no memo";
   };
-  foobar.__workletHash = 1;
+  foobar.__workletHash = 4;
   foobar.__pluginVersion = "x.y.z";
-  foobar.__initData = _worklet_1_init_data4;
+  foobar.__initData = _worklet_4_init_data;
   foobar.__stackDetails = _e;
   return foobar;
-}([_worklet_1_init_data4]);
+}([_worklet_4_init_data]);
 exports.foo = foo;
 exports.bar = bar;
 exports.baz = baz;

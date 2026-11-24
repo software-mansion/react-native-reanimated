@@ -2072,7 +2072,16 @@ var require_workletFactory = __commonJS({
       const prefix = `${fun.node.async ? "async " : ""}${fun.node.generator ? "*" : ""}`;
       const isExpressionBody = !(0, types_12.isBlockStatement)(fun.node.body) || ((_c = fun.node.body.extra) === null || _c === void 0 ? void 0 : _c.workletsExpressionBody) === true;
       const arrow = isExpressionBody ? "=>" : "";
-      return `${source}:[${closureNames.join(",")}]${prefix}(${parts.join(",")})${arrow}${body}`;
+      return `${source}:${workletSelfName(fun)}[${closureNames.join(",")}]${prefix}(${parts.join(",")})${arrow}${body}`;
+    }
+    function workletSelfName(fun) {
+      if ((0, types_12.isObjectMethod)(fun.node) && (0, types_12.isIdentifier)(fun.node.key)) {
+        return fun.node.key.name;
+      }
+      if (((0, types_12.isFunctionDeclaration)(fun.node) || (0, types_12.isFunctionExpression)(fun.node)) && (0, types_12.isIdentifier)(fun.node.id)) {
+        return fun.node.id.name;
+      }
+      return "";
     }
     var cachedWorkletsPackageDir;
     function resolveWorkletsPackageDir() {
