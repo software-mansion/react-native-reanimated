@@ -57,7 +57,12 @@ var require_directives = __commonJS({
     }
     function replaceImplicitReturnWithBlock(path) {
       if (!(0, types_12.isBlockStatement)(path.body)) {
-        path.body = (0, types_12.blockStatement)([(0, types_12.returnStatement)(path.body)]);
+        const expression = path.body;
+        const block = (0, types_12.blockStatement)([(0, types_12.returnStatement)(expression)]);
+        block.start = expression.start;
+        block.end = expression.end;
+        block.loc = expression.loc;
+        path.body = block;
       }
     }
   }
