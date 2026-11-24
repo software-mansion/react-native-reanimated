@@ -1,4 +1,5 @@
 import {
+  abortWorkletRuntime,
   createWorkletRuntime,
   scheduleOnRN,
   scheduleOnRuntime,
@@ -10,6 +11,7 @@ import {
   expect,
   notify,
   test,
+  wait,
   waitForNotification,
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
@@ -18,6 +20,8 @@ const FRAMES = 20;
 const RATE_WINDOW_MS = 1000;
 const MIN_RATE_RATIO = 0.9;
 const UI_BLOCK_MS = 500;
+const ABORT_SETTLE_MS = 500;
+const MAX_FRAMES_IN_FLIGHT = 2;
 const MIN_FRAMES_DURING_UI_BLOCK = 5;
 
 type WorkletRuntimeConfig = Parameters<typeof createWorkletRuntime>[0];
@@ -305,5 +309,39 @@ describe('Test requestAnimationFrame with enableVSync', () => {
     expect(frames[2] > 0).toBe(true);
     expect(frames[0] >= frames[2] * MIN_RATE_RATIO).toBe(true);
     expect(frames[1] >= frames[2] * MIN_RATE_RATIO).toBe(true);
+  });
+
+  test('stops running callbacks after abortWorkletRuntime', async () => {
+    // Arrange
+    const notification = 'vsyncAbortFirstFrame';
+    const runtime = createWorkletRuntime({
+      name: 'vsync-abort',
+      enableVSync: true,
+      abortable: true,
+    });
+    let frames = 0;
+    const onFrame = () => {
+      frames++;
+      if (frames === 1) {
+        notify(notification);
+      }
+    };
+    scheduleOnRuntime(runtime, () => {
+      'worklet';
+      const loop = () => {
+        scheduleOnRN(onFrame);
+        requestAnimationFrame(loop);
+      };
+      requestAnimationFrame(loop);
+    });
+    await waitForNotification(notification);
+
+    // Act
+    abortWorkletRuntime(runtime);
+    const framesAtAbort = frames;
+    await wait(ABORT_SETTLE_MS);
+
+    // Assert
+    expect(frames <= framesAtAbort + MAX_FRAMES_IN_FLIGHT).toBe(true);
   });
 });
