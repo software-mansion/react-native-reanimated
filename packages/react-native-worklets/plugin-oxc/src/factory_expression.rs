@@ -5,14 +5,11 @@ use oxc_ast::ast::{
     AssignmentOperator, AssignmentTarget, Expression, FormalParameterKind, FormalParameters,
     FunctionBody, FunctionType, NumberBase, Statement,
 };
-use oxc_semantic::Scoping;
 use oxc_span::SPAN;
 use oxc_syntax::reference::ReferenceId;
-use oxc_syntax::scope::ScopeId;
 
 use crate::ast::replace_implicit_return_with_block;
 use crate::ast::{closure_binding_pattern, const_decl, identifier_binding_pattern};
-use crate::closure::scope_is_inside;
 use crate::directives::strip_worklet_directives;
 use crate::naming::WorkletNames;
 use crate::types::State;
@@ -160,52 +157,4 @@ pub fn build_closure_array<'a, 'n>(
         elements.push(oxc_ast::ast::ArrayExpressionElement::from(value));
     }
     builder.expression_array(SPAN, elements)
-}
-
-// We don't want to pollute tests with current version number so we mock it
-// for all tests (except one)
-pub fn body_references_name(
-    body: &FunctionBody<'_>,
-    name: &str,
-    scoping: &Scoping,
-    function_scope_id: ScopeId,
-) -> bool {
-    use oxc_ast::ast::IdentifierReference;
-    use oxc_ast_visit::Visit;
-    struct Probe<'n, 's> {
-        name: &'n str,
-        scoping: &'s Scoping,
-        function_scope_id: ScopeId,
-        found: bool,
-    }
-    impl<'a, 'n, 's> Visit<'a> for Probe<'n, 's> {
-        fn visit_identifier_reference(&mut self, it: &IdentifierReference<'a>) {
-            if self.found || it.name.as_str() != self.name {
-                return;
-            }
-            let symbol_id = it
-                .reference_id
-                .get()
-                .and_then(|rid| self.scoping.get_reference(rid).symbol_id());
-            match symbol_id {
-                Some(sid) => {
-                    let sym_scope = self.scoping.symbol_scope_id(sid);
-                    if !scope_is_inside(self.scoping, sym_scope, self.function_scope_id) {
-                        self.found = true;
-                    }
-                }
-                None => {
-                    self.found = true;
-                }
-            }
-        }
-    }
-    let mut probe = Probe {
-        name,
-        scoping,
-        function_scope_id,
-        found: false,
-    };
-    probe.visit_function_body(body);
-    probe.found
 }
