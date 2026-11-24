@@ -146,12 +146,28 @@ describe('babel plugin without a Metro caller', () => {
       return hashes[0];
     }
 
-    test('gives identical worklets in one file the same hash', () => {
+    test('gives identical anonymous worklets in one file the same hash', () => {
       const hashes = workletHashes(
-        "function foo() {\n  'worklet';\n  return 1;\n}\nfunction bar() {\n  'worklet';\n  return 1;\n}\n"
+        "const foo = () => {\n  'worklet';\n  return 1;\n};\nconst bar = () => {\n  'worklet';\n  return 1;\n};\n"
       );
       expect(hashes).toHaveLength(2);
       expect(hashes[0]).toBe(hashes[1]);
+    });
+
+    test('separates named functions with the same body', () => {
+      const hashes = workletHashes(
+        "scheduleOnUI(function functionNameA() {\n  'worklet';\n  throw new Error();\n});\nscheduleOnUI(function functionNameB() {\n  'worklet';\n  throw new Error();\n});\nfunction functionNameC() {\n  'worklet';\n  throw new Error();\n}\n"
+      );
+      expect(hashes).toHaveLength(3);
+      expect(new Set(hashes).size).toBe(3);
+    });
+
+    test('separates object methods with the same body', () => {
+      const hashes = workletHashes(
+        "const obj = {\n  foo() {\n    'worklet';\n    return 1;\n  },\n  bar() {\n    'worklet';\n    return 1;\n  },\n};\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
     });
 
     test('changes the hash when the worklet body changes', () => {
