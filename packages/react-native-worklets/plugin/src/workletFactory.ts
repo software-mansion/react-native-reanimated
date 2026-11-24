@@ -43,7 +43,6 @@ import { compileWorkletToHbc } from './hermesBytecode';
 import { updateRelativeRequires } from './imports';
 import { workletTransformSync } from './transform';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
-import { workletClassFactorySuffix } from './types';
 import { isRelease } from './utils';
 import { buildWorkletString } from './workletStringCode';
 
@@ -274,21 +273,7 @@ export function makeWorkletFactory(
                 false
               ),
               arrayExpression(
-                closureVariables.map((variable) =>
-                  !state.opts.bundleMode &&
-                  variable.name.endsWith(workletClassFactorySuffix)
-                    ? memberExpression(
-                        identifier(
-                          variable.name.slice(
-                            0,
-                            variable.name.length -
-                              workletClassFactorySuffix.length
-                          )
-                        ),
-                        identifier(variable.name)
-                      )
-                    : cloneNode(variable, true)
-                )
+                closureVariables.map((variable) => cloneNode(variable, true))
               )
             )
           ),
@@ -372,19 +357,9 @@ export function makeWorkletFactory(
 
   statements.push(returnStatement(identifier(reactName)));
 
-  const factoryParams = closureVariables.map((variableId) => {
-    const clonedId = cloneNode(variableId, true);
-    if (
-      !state.opts.bundleMode &&
-      clonedId.name.endsWith(workletClassFactorySuffix)
-    ) {
-      clonedId.name = clonedId.name.slice(
-        0,
-        clonedId.name.length - workletClassFactorySuffix.length
-      );
-    }
-    return clonedId;
-  });
+  const factoryParams = closureVariables.map((variableId) =>
+    cloneNode(variableId, true)
+  );
 
   if (shouldIncludeInitData) {
     factoryParams.unshift(cloneNode(initDataId, true));
