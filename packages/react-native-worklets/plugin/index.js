@@ -1082,8 +1082,14 @@ var require_workletFactory = __commonJS({
       const filename = state.file.opts.filename;
       const root = (_b = (_a = resolveWorkletsPackageDir()) !== null && _a !== void 0 ? _a : state.file.opts.cwd) !== null && _b !== void 0 ? _b : process.cwd();
       const source = filename ? (0, path_1.relative)(root, filename).split(path_1.sep).join("/") : "unknownFile";
-      const position = fun.node.body.start;
-      return position === null || position === void 0 ? `${source}#${state.workletNumber}` : `${source}:${position}`;
+      const code = state.file.code;
+      const parts = [...fun.node.params, fun.node.body].map((node) => node.start === null || node.start === void 0 || node.end === null || node.end === void 0 ? null : code.slice(node.start, node.end));
+      if (parts.some((part) => part === null)) {
+        return `${source}#${state.workletNumber}`;
+      }
+      const body = parts.pop();
+      const prefix = `${fun.node.async ? "async " : ""}${fun.node.generator ? "*" : ""}`;
+      return `${source}:${prefix}(${parts.join(",")})${body}`;
     }
     var cachedWorkletsPackageDir;
     function resolveWorkletsPackageDir() {

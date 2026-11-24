@@ -11,23 +11,14 @@ pub fn worklet_hash(s: &str) -> u64 {
     (h1 as u32 as u64) * 4096 + (h2 as u32 as u64)
 }
 
-pub fn worklet_hash_key(
-    filename: &str,
-    hash_root: Option<&str>,
-    source_text: &str,
-    body_start: u32,
-) -> String {
+pub fn worklet_hash_key(filename: &str, hash_root: Option<&str>, raw_function: &str) -> String {
     let root = hash_root.map(str::to_owned).unwrap_or_else(|| {
         std::env::current_dir()
             .map(|dir| dir.to_string_lossy().into_owned())
             .unwrap_or_default()
     });
     let source = relative_path(&root.replace('\\', "/"), filename);
-    let byte_offset = (body_start as usize).min(source_text.len());
-    let position = source_text
-        .get(..byte_offset)
-        .map_or(0, |prefix| prefix.encode_utf16().count());
-    format!("{source}:{position}")
+    format!("{source}:{raw_function}")
 }
 
 fn relative_path(from: &str, to: &str) -> String {
@@ -114,32 +105,30 @@ pub fn make_worklet_name(
 #[cfg(test)]
 mod tests {
     #[test]
-    fn worklet_hash_key_uses_relative_path_and_utf16_position() {
-        let source = "const text = 'zażółć';\nconst foo = () => {};\n";
-        let body_start = source.find('{').unwrap() as u32;
+    fn worklet_hash_key_uses_relative_path_and_raw_function_text() {
         assert_eq!(
-            worklet_hash_key("/project/src/test.js", Some("/project"), source, body_start),
-            "src/test.js:41"
+            worklet_hash_key("/project/src/test.js", Some("/project"), "(x){return x;}"),
+            "src/test.js:(x){return x;}"
         );
     }
 
     #[test]
     fn worklet_hash_key_resolves_relative_filenames_and_parent_directories() {
         assert_eq!(
-            worklet_hash_key("test.js", Some("/project"), "", 0),
-            "test.js:0"
+            worklet_hash_key("test.js", Some("/project"), ""),
+            "test.js:"
         );
         assert_eq!(
-            worklet_hash_key("/node_modules/lib/index.js", Some("/project"), "", 0),
-            "../node_modules/lib/index.js:0"
+            worklet_hash_key("/node_modules/lib/index.js", Some("/project"), ""),
+            "../node_modules/lib/index.js:"
         );
         assert_eq!(
-            worklet_hash_key("C:/project/src/a.js", Some("C:\\project"), "", 0),
-            "src/a.js:0"
+            worklet_hash_key("C:/project/src/a.js", Some("C:\\project"), ""),
+            "src/a.js:"
         );
         assert_eq!(
-            worklet_hash_key("D:/lib/a.js", Some("C:/project"), "", 0),
-            "D:/lib/a.js:0"
+            worklet_hash_key("D:/lib/a.js", Some("C:/project"), ""),
+            "D:/lib/a.js:"
         );
     }
 
