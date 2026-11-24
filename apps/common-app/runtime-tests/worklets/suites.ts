@@ -53,6 +53,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/runOnRuntimeAsyncWithId.test');
       require('./tests/runtimes/runOnRuntimeSyncWithId.test');
       require('./tests/runtimes/scheduleOnRuntimeWithId.test');
+      require('./tests/runtimes/runtimeIdValidation.test');
       require('./tests/runtimes/microtaskDrains.test');
       require('./tests/runtimes/reentrantModuleLoad.test');
       require('./tests/runtimes/microtaskErrors.test');

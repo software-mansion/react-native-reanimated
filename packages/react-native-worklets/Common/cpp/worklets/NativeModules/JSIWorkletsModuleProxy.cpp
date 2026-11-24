@@ -320,14 +320,23 @@ std::shared_ptr<void> makePromiseDropGuard(
       extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue));
 }
 
-RuntimeData::RuntimeId runtimeIdFromJS(const jsi::Value &value) {
+RuntimeData::RuntimeId runtimeIdFromJS(jsi::Runtime &rt, const jsi::Value &value) {
+  if (!value.isNumber()) {
+    throw jsi::JSError(rt, "[Worklets] Runtime id must be a number.");
+  }
   const auto runtimeId = value.getNumber();
-  react_native_assert(std::isfinite(runtimeId) && "[Worklets] Runtime id must be a finite number.");
-  react_native_assert(std::trunc(runtimeId) == runtimeId && "[Worklets] Runtime id must be an integer.");
-  react_native_assert(runtimeId >= 0 && "[Worklets] Runtime id must not be negative.");
-  react_native_assert(
-      runtimeId < static_cast<double>(std::numeric_limits<RuntimeData::RuntimeId>::max()) &&
-      "[Worklets] Runtime id must be smaller than 2^64.");
+  if (!std::isfinite(runtimeId)) {
+    throw jsi::JSError(rt, "[Worklets] Runtime id must be a finite number.");
+  }
+  if (std::trunc(runtimeId) != runtimeId) {
+    throw jsi::JSError(rt, "[Worklets] Runtime id must be an integer.");
+  }
+  if (runtimeId < 0) {
+    throw jsi::JSError(rt, "[Worklets] Runtime id must not be negative.");
+  }
+  if (runtimeId >= static_cast<double>(std::numeric_limits<RuntimeData::RuntimeId>::max())) {
+    throw jsi::JSError(rt, "[Worklets] Runtime id must be smaller than 2^64.");
+  }
   return static_cast<RuntimeData::RuntimeId>(runtimeId);
 }
 
@@ -668,7 +677,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "runOnRuntimeSyncWithId",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
-        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+        const auto runtimeId = runtimeIdFromJS(rt, at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -761,7 +770,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "scheduleOnRuntimeWithId",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
-        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+        const auto runtimeId = runtimeIdFromJS(rt, at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -797,7 +806,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       obj,
       "abortWorkletRuntime",
       [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
-        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+        const auto runtimeId = runtimeIdFromJS(rt, at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           return jsi::Value(false);
@@ -856,8 +865,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "isRuntimeAlive",
-      [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
-        const auto runtimeId = runtimeIdFromJS(at<0>(args));
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        const auto runtimeId = runtimeIdFromJS(rt, at<0>(args));
         return jsi::Value(runtimeManager->isRuntimeAlive(runtimeId));
       });
 
@@ -926,7 +935,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "createShareable",
       [runtimeManager = runtimeManager_](
           jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) -> jsi::Value {
-        const auto hostRuntimeId = runtimeIdFromJS(at<0>(args));
+        const auto hostRuntimeId = runtimeIdFromJS(rt, at<0>(args));
         const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
         if (!hostRuntime) {
           throw jsi::JSError(
