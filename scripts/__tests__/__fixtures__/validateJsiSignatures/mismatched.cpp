@@ -11,6 +11,13 @@ jsi::Object makeProxy(jsi::Runtime &rt) {
   jsi_utils::addMethod(rt, obj, "typedArguments", [](jsi::Runtime &, double first) {});
   jsi_utils::addMethod(
       rt, obj, "moduleArguments", weak_from_this(), [](jsi::Runtime &, Module &self, double first, bool second) {});
+  jsi_utils::addMethod(
+      rt, obj, "scalarArguments", [](jsi::Runtime &, bool first, double second, const std::string &third) {});
+  jsi_utils::addMethod(
+      rt,
+      obj,
+      "objectArguments",
+      [](jsi::Runtime &, jsi::Function array, jsi::Array callback, jsi::Object buffer, jsi::ArrayBuffer value, Custom anything) {});
   return obj;
 }
 

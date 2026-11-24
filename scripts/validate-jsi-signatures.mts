@@ -42,10 +42,38 @@ const JSI_OBJECTS: JsiObject[] = [
 const SCRIPT = path.relative(REPOSITORY_ROOT, import.meta.filename);
 const REGISTRATION = /addMethod\s*\(\s*[^,()]+,\s*[^,()]+,\s*"/y;
 
-type Registration = { length: number };
+const OBJECT_KINDS = ['object', 'array', 'function', 'arrayBuffer'] as const;
+
+type Kind =
+  | (typeof OBJECT_KINDS)[number]
+  | 'number'
+  | 'boolean'
+  | 'string'
+  | 'bigint'
+  | 'undefined'
+  | 'null';
+
+const CPP_KINDS: Record<string, readonly Kind[]> = {
+  double: ['number'],
+  int: ['number'],
+  'RuntimeData::RuntimeId': ['number'],
+  bool: ['boolean'],
+  'std::string': ['string'],
+  'jsi::String': ['string'],
+  'std::optional<std::string>': ['string', 'undefined'],
+  'jsi::BigInt': ['bigint'],
+  'jsi::Array': ['array'],
+  'jsi::Function': ['function'],
+  'jsi::ArrayBuffer': ['arrayBuffer'],
+  'jsi::Object': OBJECT_KINDS,
+};
+
+type Registration = { parameters: string[] };
+
+type TsParameter = { name: string; kinds: Kind[] | undefined };
 
 type TsMethod = {
-  parameters: number;
+  parameters: TsParameter[];
   declarationProblem?: string;
 };
 
@@ -153,8 +181,8 @@ function readRegisteredMethods(
       ? splitTopLevel(source, index + 'addMethod'.length + call[0].length - 1)
       : [];
     const name = /^"(\w+)"$/.exec(args[2] ?? '')?.[1];
-    const length = readLength(args);
-    if (!name || length === undefined) {
+    const parameters = readParameters(args);
+    if (!name || !parameters) {
       fail(
         index,
         'addMethod cannot be read. Pass the method name as a string literal and the implementation as a lambda written in the call.'
@@ -162,21 +190,30 @@ function readRegisteredMethods(
     }
     registrations.set(name!, [
       ...(registrations.get(name!) ?? []),
-      { length: length! },
+      { parameters: parameters!.map(cppType) },
     ]);
   }
   return registrations;
 }
 
-function readLength(args: string[]): number | undefined {
+function readParameters(args: string[]): string[] | undefined {
   if (args.length !== 4 && args.length !== 5) {
     return undefined;
   }
   const parameters = lambdaParameters(args.at(-1)!);
   const native = args.length === 5 ? 2 : 1;
   return parameters && parameters.length >= native
-    ? parameters.length - native
+    ? parameters.slice(native)
     : undefined;
+}
+
+function cppType(parameter: string): string {
+  return parameter
+    .replace(/\[\[[^\]]*\]\]/g, ' ')
+    .replace(/\bconst\b|[&*]/g, ' ')
+    .trim()
+    .replace(/\s+[A-Za-z_]\w*$/, '')
+    .replace(/\s+/g, ' ');
 }
 
 function lambdaParameters(lambda: string): string[] | undefined {
@@ -236,7 +273,13 @@ function readTsMethods(
         valueDeclaration.dotDotDotToken
     );
     methods.set(member.name, {
-      parameters: parameters.length,
+      parameters: parameters.map((parameter) => ({
+        name: parameter.name,
+        kinds: tsKinds(
+          checker,
+          checker.getTypeOfSymbolAtLocation(parameter, declaration)
+        ),
+      })),
       declarationProblem:
         signatures.length !== 1
           ? `has ${signatures.length} call signatures. Declare exactly one.`
@@ -246,6 +289,62 @@ function readTsMethods(
     });
   }
   return methods;
+}
+
+function tsKinds(checker: ts.TypeChecker, type: ts.Type): Kind[] | undefined {
+  if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) {
+    return undefined;
+  }
+  if (type.isUnion()) {
+    const kinds = type.types.map((member) => tsKinds(checker, member));
+    return kinds.every(Boolean)
+      ? [...new Set(kinds.flatMap((member) => member!))]
+      : undefined;
+  }
+  if (type.isIntersection()) {
+    const kinds = type.types.flatMap((part) => tsKinds(checker, part) ?? []);
+    const specific = kinds.find((kind) => kind !== 'object');
+    return specific ? [specific] : kinds.length ? ['object'] : undefined;
+  }
+  if (type.flags & ts.TypeFlags.Instantiable) {
+    const constraint = checker.getBaseConstraintOfType(type);
+    return constraint && constraint !== type
+      ? tsKinds(checker, constraint)
+      : undefined;
+  }
+  if (type.flags & (ts.TypeFlags.Undefined | ts.TypeFlags.Void)) {
+    return ['undefined'];
+  }
+  if (type.flags & ts.TypeFlags.Null) {
+    return ['null'];
+  }
+  if (type.flags & ts.TypeFlags.NumberLike) {
+    return ['number'];
+  }
+  if (type.flags & ts.TypeFlags.BooleanLike) {
+    return ['boolean'];
+  }
+  if (type.flags & ts.TypeFlags.StringLike) {
+    return ['string'];
+  }
+  if (type.flags & ts.TypeFlags.BigIntLike) {
+    return ['bigint'];
+  }
+  if (checker.isArrayType(type) || checker.isTupleType(type)) {
+    return ['array'];
+  }
+  if (
+    type.getCallSignatures().length > 0 ||
+    type.getSymbol()?.name === 'RemoteFunction'
+  ) {
+    return ['function'];
+  }
+  if (type.getSymbol()?.name === 'ArrayBuffer') {
+    return ['arrayBuffer'];
+  }
+  return type.flags & (ts.TypeFlags.Object | ts.TypeFlags.NonPrimitive)
+    ? ['object']
+    : undefined;
 }
 
 function findVariable(
@@ -292,15 +391,49 @@ function findProblems(
         `${globals} declares it, but ${cpp} does not register it. Register it in ${cpp} or remove the declaration.`
       );
     } else {
-      const lengths = [...new Set(registered.map(({ length }) => length))];
-      if (lengths.some((length) => length !== tsMethod.parameters)) {
+      const lengths = [
+        ...new Set(registered.map(({ parameters }) => parameters.length)),
+      ];
+      const tsLength = tsMethod.parameters.length;
+      if (lengths.some((length) => length !== tsLength)) {
         report(
-          `takes ${lengths.join(' or ')} ${lengths.at(-1) === 1 ? 'argument' : 'arguments'} in ${cpp} but ${tsMethod.parameters} in ${globals}. Make both take the same arguments.`
+          `takes ${lengths.join(' or ')} ${lengths.at(-1) === 1 ? 'argument' : 'arguments'} in ${cpp} but ${tsLength} in ${globals}. Make both take the same arguments.`
         );
+      } else {
+        for (const { parameters } of registered) {
+          parameters.forEach((type, index) => {
+            const problem = typeProblem(type, tsMethod.parameters[index]);
+            if (problem) {
+              report(`argument ${index + 1} ${problem}`);
+            }
+          });
+        }
       }
     }
   }
   return problems;
+}
+
+function typeProblem(
+  type: string,
+  { name, kinds }: TsParameter
+): string | undefined {
+  if (type === 'jsi::Value') {
+    return undefined;
+  }
+  const accepted = CPP_KINDS[type];
+  if (!accepted) {
+    return `(${name}) has the C++ type \`${type}\`, which the linter does not know. Take a type from CPP_KINDS in ${SCRIPT}, or add it there with the JS kinds that jsi_utils::get accepts for it.`;
+  }
+  const rejected = kinds?.filter((kind) => !accepted.includes(kind)) ?? [];
+  if (rejected.length === 0) {
+    return undefined;
+  }
+  const suggested =
+    Object.keys(CPP_KINDS).find((candidate) =>
+      kinds!.every((kind) => CPP_KINDS[candidate].includes(kind))
+    ) ?? 'jsi::Value';
+  return `(${name}) is \`${type}\` in C++, but TS allows ${rejected.join(' | ')}. Take \`${suggested}\` in C++ or change the TS type.`;
 }
 
 if (import.meta.filename === process.argv[1]) {

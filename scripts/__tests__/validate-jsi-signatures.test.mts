@@ -37,6 +37,13 @@ describe('validate-jsi-signatures', () => {
       [
         '__proxy.moduleArguments: takes 2 arguments in mismatched.cpp but 1 in globals.d.ts. Make both take the same arguments.',
         '__proxy.noArguments: globals.d.ts declares it, but mismatched.cpp does not register it. Register it in mismatched.cpp or remove the declaration.',
+        '__proxy.objectArguments: argument 1 (array) is `jsi::Function` in C++, but TS allows array. Take `jsi::Array` in C++ or change the TS type.',
+        '__proxy.objectArguments: argument 2 (callback) is `jsi::Array` in C++, but TS allows function. Take `jsi::Function` in C++ or change the TS type.',
+        '__proxy.objectArguments: argument 4 (value) is `jsi::ArrayBuffer` in C++, but TS allows object. Take `jsi::Object` in C++ or change the TS type.',
+        '__proxy.objectArguments: argument 5 (anything) has the C++ type `Custom`, which the linter does not know. Take a type from CPP_KINDS in scripts/validate-jsi-signatures.mts, or add it there with the JS kinds that jsi_utils::get accepts for it.',
+        '__proxy.scalarArguments: argument 1 (first) is `bool` in C++, but TS allows number. Take `double` in C++ or change the TS type.',
+        '__proxy.scalarArguments: argument 2 (second) is `double` in C++, but TS allows string. Take `std::string` in C++ or change the TS type.',
+        '__proxy.scalarArguments: argument 3 (third) is `std::string` in C++, but TS allows boolean. Take `bool` in C++ or change the TS type.',
         '__proxy.twoArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
         '__proxy.typedArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
         '__proxy.undeclared: mismatched.cpp registers it, but globals.d.ts does not declare it. Declare it in globals.d.ts or remove the registration.',
