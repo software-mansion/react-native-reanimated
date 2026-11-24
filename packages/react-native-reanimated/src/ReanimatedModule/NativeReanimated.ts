@@ -127,7 +127,7 @@ See https://docs.swmansion.com/react-native-reanimated/docs/guides/troubleshooti
     viewTag: number,
     propName: string,
     component: InternalHostInstance,
-    callback?: (result: T) => void
+    callback: (result: T) => void
   ) {
     const shadowNodeWrapper = getShadowNodeWrapperFromRef(component);
     return this.#reanimatedModuleProxy.getViewProp(
