@@ -160,6 +160,12 @@ describe('babel plugin without a Metro caller', () => {
       );
     }
 
+    function workletHash(input: string, filename = MOCK_LOCATION) {
+      const hashes = workletHashes(input, filename);
+      expect(hashes).toHaveLength(1);
+      return hashes[0];
+    }
+
     test('gives identical worklets at different positions different hashes', () => {
       const hashes = workletHashes(
         "function foo() {\n  'worklet';\n  return 1;\n}\nfunction bar() {\n  'worklet';\n  return 1;\n}\n"
@@ -169,20 +175,20 @@ describe('babel plugin without a Metro caller', () => {
     });
 
     test('keeps the hash when the worklet body changes in place', () => {
-      const [before] = workletHashes(
+      const before = workletHash(
         "function foo() {\n  'worklet';\n  return 1;\n}\n"
       );
-      const [after] = workletHashes(
+      const after = workletHash(
         "function foo() {\n  'worklet';\n  return 2 + 2;\n}\n"
       );
       expect(after).toBe(before);
     });
 
     test('changes the hash when the worklet moves in the file', () => {
-      const [before] = workletHashes(
+      const before = workletHash(
         "function foo() {\n  'worklet';\n  return 1;\n}\n"
       );
-      const [after] = workletHashes(
+      const after = workletHash(
         "\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
       );
       expect(after).not.toBe(before);
@@ -190,13 +196,13 @@ describe('babel plugin without a Metro caller', () => {
 
     test('changes the hash for the same code in another file', () => {
       const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
-      const [first] = workletHashes(input, 'first.js');
-      const [second] = workletHashes(input, 'nested/first.js');
+      const first = workletHash(input, 'first.js');
+      const second = workletHash(input, 'nested/first.js');
       expect(second).not.toBe(first);
     });
 
     test('derives the hash from the relative path and the UTF-16 position', () => {
-      const [value] = workletHashes(
+      const value = workletHash(
         "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
       );
       expect(value).toBe(13998117260665);
