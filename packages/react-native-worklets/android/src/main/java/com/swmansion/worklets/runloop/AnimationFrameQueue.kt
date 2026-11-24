@@ -36,7 +36,7 @@ class AnimationFrameQueue(
     private val mDispatchLock = Any()
 
     fun resume() {
-        if (mPaused.getAndSet(false)) {
+        if (mPaused.getAndSet(false) && hasFrameCallbacks()) {
             scheduleQueueExecution()
         }
     }
@@ -123,6 +123,12 @@ class AnimationFrameQueue(
                 }
                 callback.onAnimationFrame(currentFrameTimeMs)
             }
+        }
+    }
+
+    private fun hasFrameCallbacks(): Boolean {
+        synchronized(mFrameCallbacks) {
+            return mFrameCallbacks.isNotEmpty()
         }
     }
 
