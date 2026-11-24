@@ -58,10 +58,15 @@ Arguments to pass to the function. They must be convertible to a [Serializable](
 ## Call table
 
 <CallTable
-  calls={{
+  bundleMode={{
 rnRuntime: true,
 uiRuntime: true,
 workerRuntime: true,
+}}
+  noBundleMode={{
+rnRuntime: true,
+uiRuntime: false,
+workerRuntime: false,
 }}
 />
 
