@@ -5,9 +5,7 @@
   "devDependencies": {
     "@babel/cli": "7.28.3",
     "@babel/core": "7.29.6",
-    "@babel/plugin-transform-class-properties": "7.27.1",
-    "@babel/plugin-transform-classes": "7.28.4",
-    "@babel/plugin-transform-unicode-regex": "7.27.1",
+    "@babel/generator": "7.29.13",
     "@babel/traverse": "7.29.12",
     "@babel/types": "7.29.11",
     "@types/node": "24.0.14",

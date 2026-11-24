@@ -740,6 +740,14 @@ var require_globals = __commonJS({
     var path_1 = __importDefault(require("path"));
     var imports_1 = require_imports();
     var types_12 = require_types();
+    var warnedAboutRemovedOptions = false;
+    function warnAboutRemovedOptions(options) {
+      if (warnedAboutRemovedOptions || !("extraPlugins" in options || "extraPresets" in options)) {
+        return;
+      }
+      warnedAboutRemovedOptions = true;
+      console.warn("[Worklets] `extraPlugins` and `extraPresets` were removed in Worklets 1.0 and have no effect. Remove them from your Babel config.");
+    }
     function initializeState(state, workletModules) {
       var _a, _b;
       state.skipFile = isGeneratedWorkletFile(state.file.opts.filename);
@@ -749,6 +757,7 @@ var require_globals = __commonJS({
       state.workletModules = workletModules;
       state.workletNumber = 1;
       const userImportForwarding = state.opts.importForwarding;
+      warnAboutRemovedOptions(state.opts);
       (0, imports_1.warnAboutDangerousRelativePaths)(userImportForwarding === null || userImportForwarding === void 0 ? void 0 : userImportForwarding.relativePaths, state.opts.silenceDangerousPathsWarning);
       (0, assert_1.strict)(state.importForwarding === void 0, "state.importForwarding should be undefined at this point");
       state.importForwarding = {
@@ -1033,12 +1042,23 @@ var require_workletFactory = __commonJS({
       return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === "1";
     }
     function makeWorkletHashKey(fun, state) {
-      var _a;
+      var _a, _b;
       const filename = state.file.opts.filename;
-      const cwd = (_a = state.file.opts.cwd) !== null && _a !== void 0 ? _a : process.cwd();
-      const source = filename ? (0, path_1.relative)(cwd, filename).split(path_1.sep).join("/") : "unknownFile";
+      const root = (_b = (_a = resolveWorkletsPackageDir()) !== null && _a !== void 0 ? _a : state.file.opts.cwd) !== null && _b !== void 0 ? _b : process.cwd();
+      const source = filename ? (0, path_1.relative)(root, filename).split(path_1.sep).join("/") : "unknownFile";
       const position = fun.node.body.start;
       return position === null || position === void 0 ? `${source}#${state.workletNumber}` : `${source}:${position}`;
+    }
+    var cachedWorkletsPackageDir;
+    function resolveWorkletsPackageDir() {
+      if (cachedWorkletsPackageDir === void 0) {
+        try {
+          cachedWorkletsPackageDir = (0, path_1.dirname)(require.resolve("react-native-worklets/package.json"));
+        } catch (_a) {
+          cachedWorkletsPackageDir = null;
+        }
+      }
+      return cachedWorkletsPackageDir;
     }
     function hash(str) {
       let i = str.length;
