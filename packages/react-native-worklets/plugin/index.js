@@ -1069,16 +1069,6 @@ var require_workletFactory = __commonJS({
       reactName = reactName || (0, types_12.toIdentifier)(suffix);
       return { workletName, reactName };
     }
-    var extraPlugins = [
-      require.resolve("@babel/plugin-transform-shorthand-properties"),
-      require.resolve("@babel/plugin-transform-arrow-functions"),
-      require.resolve("@babel/plugin-transform-optional-chaining"),
-      require.resolve("@babel/plugin-transform-nullish-coalescing-operator"),
-      [
-        require.resolve("@babel/plugin-transform-template-literals"),
-        { loose: true }
-      ]
-    ];
   }
 });
 

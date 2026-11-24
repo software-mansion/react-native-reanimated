@@ -158,6 +158,3 @@ pub fn build_closure_array<'a, 'n>(
     }
     builder.expression_array(SPAN, elements)
 }
-
-// We don't want to pollute tests with current version number so we mock it
-// for all tests (except one)
