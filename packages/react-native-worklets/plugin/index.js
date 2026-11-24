@@ -1432,6 +1432,7 @@ var require_workletFileSourceMap = __commonJS({
     var trace_mapping_1 = require("@jridgewell/trace-mapping");
     var SOURCE_MAP_COMMENT_PREFIX = "# workletSourceMap=";
     var ORIGIN_COMMENT_PREFIX = " __workletOrigin:";
+    var restoredFiles = /* @__PURE__ */ new WeakSet();
     function appendWorkletSourceMap(code, map) {
       const encoded = Buffer.from(JSON.stringify(map)).toString("base64");
       return `${code}
@@ -1440,6 +1441,10 @@ var require_workletFileSourceMap = __commonJS({
     }
     function restoreWorkletFileLocations(file) {
       var _a, _b, _c;
+      if (restoredFiles.has(file)) {
+        return;
+      }
+      restoredFiles.add(file);
       const comments = (_a = file.ast.comments) !== null && _a !== void 0 ? _a : [];
       const sourceMapComment = comments.find((comment) => comment.value.startsWith(SOURCE_MAP_COMMENT_PREFIX));
       if (!sourceMapComment) {

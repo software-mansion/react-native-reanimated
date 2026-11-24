@@ -404,6 +404,33 @@ describe('babel plugin in bundleMode', () => {
       );
     });
 
+    test('restores worklet file locations once when the plugin runs twice', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+          return x;
+        }
+      </script>`;
+
+      const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+      expect(files).toHaveLength(1);
+      const transformWorkletFile = (copies: number) =>
+        transformSync(files[0].content, {
+          filename: files[0].path,
+          babelrc: false,
+          configFile: false,
+          sourceMaps: true,
+          plugins: Array.from({ length: copies }, (_, index) => [
+            plugin,
+            { bundleMode: true },
+            `copy-${index}`,
+          ]),
+        })?.map;
+
+      expect(transformWorkletFile(2)).toEqual(transformWorkletFile(1));
+    });
+
     test('does not emit init data', () => {
       const input = html`<script>
         function foo() {

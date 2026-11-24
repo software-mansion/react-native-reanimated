@@ -65,6 +65,11 @@ function workletsPluginOxcBabelShim(babelApi) {
 
 /** @param {import('@babel/core').BabelFile} file */
 function restoreWorkletFileLocations(file) {
+  if (file.__workletsLocationsRestored) {
+    return;
+  }
+  file.__workletsLocationsRestored = true;
+
   /** @type {import('@babel/core').NodePath[]} */
   const paths = [];
   /** @type {number[]} */

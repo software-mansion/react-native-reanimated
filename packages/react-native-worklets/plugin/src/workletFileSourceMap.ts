@@ -10,6 +10,7 @@ import {
 
 const SOURCE_MAP_COMMENT_PREFIX = '# workletSourceMap=';
 const ORIGIN_COMMENT_PREFIX = ' __workletOrigin:';
+const restoredFiles = new WeakSet<BabelFile>();
 
 export function appendWorkletSourceMap(code: string, map: object): string {
   const encoded = Buffer.from(JSON.stringify(map)).toString('base64');
@@ -17,6 +18,11 @@ export function appendWorkletSourceMap(code: string, map: object): string {
 }
 
 export function restoreWorkletFileLocations(file: BabelFile) {
+  if (restoredFiles.has(file)) {
+    return;
+  }
+  restoredFiles.add(file);
+
   const comments = file.ast.comments ?? [];
   const sourceMapComment = comments.find((comment) =>
     comment.value.startsWith(SOURCE_MAP_COMMENT_PREFIX)
