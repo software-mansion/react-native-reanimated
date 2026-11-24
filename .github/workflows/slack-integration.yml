@@ -76,16 +76,6 @@ jobs:
             "react-native-reanimated@${{ matrix.reanimatedVersion }}" \
             "react-native-worklets@${{ matrix.workletsVersion }}"
 
-      - name: Make the released Worklets plugin write worklet origins
-        if: matrix.reanimatedRange != 'main'
-        run: node --experimental-strip-types .github/workflows/helper/patch-worklets-attribution.ts
-
-      - name: Enable Bundle Mode in the released Worklets plugin
-        if: matrix.reanimatedRange != 'main'
-        run: |
-          sed -i 's/^const workletsPluginOptions = {$/&\n  bundleMode: true,/' "${APP_DIR}/babel.config.js"
-          grep -q '^  bundleMode: true,$' "${APP_DIR}/babel.config.js"
-
       - name: Report what is actually installed
         id: installed
         run: |
