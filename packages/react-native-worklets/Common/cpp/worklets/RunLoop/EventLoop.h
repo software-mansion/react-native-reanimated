@@ -47,7 +47,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void abortPending();
 
   using FrameRequester = std::function<void(std::function<void(double)> &&onFrame)>;
-  void setFrameSource(FrameRequester &&requestFrame);
+  void setRequestFrame(FrameRequester &&requestFrame);
 
  private:
   const AbortToken abortToken_;

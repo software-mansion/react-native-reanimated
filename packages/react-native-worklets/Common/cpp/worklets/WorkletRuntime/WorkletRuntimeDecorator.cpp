@@ -272,7 +272,7 @@ void WorkletRuntimeDecorator::decorate(
 
 #ifdef __APPLE__
   if (const auto vsyncQueue = std::dynamic_pointer_cast<VSyncAsyncQueue>(queue)) {
-    eventLoop->setFrameSource(
+    eventLoop->setRequestFrame(
         [weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](std::function<void(double)> &&onFrame) {
           if (const auto strongQueue = weakQueue.lock()) {
             strongQueue->requestVSync(std::move(onFrame));

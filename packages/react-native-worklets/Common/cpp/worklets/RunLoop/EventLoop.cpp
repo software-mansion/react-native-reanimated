@@ -128,7 +128,7 @@ void EventLoop::abortPending() {
   timeoutsQueueState_->cv.notify_all();
 }
 
-void EventLoop::setFrameSource(FrameRequester &&requestFrame) {
+void EventLoop::setRequestFrame(FrameRequester &&requestFrame) {
   std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
   requestFrame_ = std::move(requestFrame);
 }
