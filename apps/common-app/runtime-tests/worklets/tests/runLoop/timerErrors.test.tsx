@@ -1,8 +1,4 @@
-import {
-  runOnRuntimeSync,
-  scheduleOnRN,
-  scheduleOnRuntime,
-} from 'react-native-worklets';
+import { scheduleOnRN, scheduleOnRuntime } from 'react-native-worklets';
 
 import {
   describe,
@@ -16,6 +12,8 @@ import {
 const TIMER_ERROR = 'error thrown by a setTimeout callback';
 const TIMER_MICROTASK_ERROR =
   'error thrown by a microtask of a setTimeout callback';
+const INTERVAL_ERROR = 'error thrown by a setInterval callback';
+const FRAME_ERROR = 'error thrown by a requestAnimationFrame callback';
 const ALIVE_NOTIFICATION = 'RUNTIME_ALIVE_AFTER_TIMER_ERROR';
 
 describe('errors thrown by timer callbacks', () => {
@@ -73,35 +71,45 @@ describe('errors thrown by timer callbacks', () => {
   );
 
   debugTest(
-    'runs the microtask checkpoint of a synchronous call after a setTimeout callback throws',
+    'keeps firing a setInterval whose callback throws on a Worker Runtime',
     async () => {
       await expect(() => {
         scheduleOnRuntime(workletRuntime, () => {
           'worklet';
-          setTimeout(() => {
-            throw new Error(TIMER_ERROR);
+          let calls = 0;
+          const intervalId = setInterval(() => {
+            calls++;
+            if (calls === 1) {
+              throw new Error(INTERVAL_ERROR);
+            }
+            if (calls === 3) {
+              clearInterval(intervalId);
+              scheduleOnRN(onAlive);
+            }
+          }, 10);
+        });
+      }).toThrow(INTERVAL_ERROR);
+
+      await waitForNotification(ALIVE_NOTIFICATION);
+    }
+  );
+
+  debugTest(
+    'runs the other requestAnimationFrame callbacks of a frame when one throws on a Worker Runtime',
+    async () => {
+      await expect(() => {
+        scheduleOnRuntime(workletRuntime, () => {
+          'worklet';
+          requestAnimationFrame(() => {
+            throw new Error(FRAME_ERROR);
+          });
+          requestAnimationFrame(() => {
+            scheduleOnRN(onAlive);
           });
         });
-      }).toThrow(TIMER_ERROR);
+      }).toThrow(FRAME_ERROR);
 
-      runOnRuntimeSync(workletRuntime, () => {
-        'worklet';
-        (globalThis as Record<string, unknown>).__timerErrorsMicrotaskRan =
-          false;
-        queueMicrotask(() => {
-          (globalThis as Record<string, unknown>).__timerErrorsMicrotaskRan =
-            true;
-        });
-      });
-      const microtaskRan = runOnRuntimeSync(workletRuntime, () => {
-        'worklet';
-        return (
-          (globalThis as Record<string, unknown>).__timerErrorsMicrotaskRan ===
-          true
-        );
-      });
-
-      expect(microtaskRan).toBe(true);
+      await waitForNotification(ALIVE_NOTIFICATION);
     }
   );
 });

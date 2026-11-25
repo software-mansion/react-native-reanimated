@@ -25,12 +25,23 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
+    const errors: unknown[] = [];
     for (const callback of flushedCallbacks) {
-      callback(timestamp);
-      globalThis.__drainMicrotasks();
+      try {
+        callback(timestamp);
+        globalThis.__drainMicrotasks();
+      } catch (error) {
+        errors.push(error);
+      }
     }
 
     flushedCallbacksBegin = flushedCallbacksEnd;
+
+    for (const error of errors) {
+      setTimeout(() => {
+        throw error;
+      });
+    }
   }
 
   globalThis.requestAnimationFrame = (
