@@ -152,6 +152,7 @@ let package = Package(
                 .headerSearchPath("apple"),
                 .define("REANIMATED_VERSION", to: version),
                 .define("REANIMATED_FEATURE_FLAGS", to: featureFlags),
+                .define("WORKLETS_STABLE_API_TARGET", to: "\"0.14.0\""),
             ],
             cxxSettings: [
                 .define("RN_ALLOW_FRAMEWORKS"),
@@ -161,6 +162,7 @@ let package = Package(
                 .headerSearchPath("apple"),
                 .define("REANIMATED_VERSION", to: version),
                 .define("REANIMATED_FEATURE_FLAGS", to: featureFlags),
+                .define("WORKLETS_STABLE_API_TARGET", to: "\"0.14.0\""),
                 .define("DEBUG", .when(configuration: .debug)),
                 .define("NDEBUG", .when(configuration: .release)),
             ],
