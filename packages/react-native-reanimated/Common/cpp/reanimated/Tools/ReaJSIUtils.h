@@ -30,9 +30,9 @@ inline int get<int>(jsi::Runtime &, const jsi::Value *value) {
 }
 
 template <>
-inline bool get<bool>(jsi::Runtime &, const jsi::Value *value) {
+inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
   if (!value->isBool()) {
-    throw jsi::JSINativeException("[Reanimated] Expected a boolean.");
+    throw jsi::JSError(rt, "[Reanimated] Expected a boolean.");
   }
   return value->getBool();
 }
