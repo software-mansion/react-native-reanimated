@@ -14,6 +14,7 @@
 - [Installation](https://docs.swmansion.com/react-native-worklets/docs/unreleased/getting-started/installation)
 - [Call tables](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/call-tables)
 - [Compatibility table](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/compatibility)
+- [Integrating with Worklets from C++](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/cpp-integration)
 - [Feature flags](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/feature-flags)
 - [Good practices](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/good-practices)
 - [Running worklet functions on the UI runtime](https://docs.swmansion.com/react-native-worklets/docs/unreleased/guides/running-on-the-ui-runtime)
