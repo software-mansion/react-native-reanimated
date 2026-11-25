@@ -217,19 +217,19 @@ inline const jsi::Value &argumentOrUndefined(const jsi::Value *args, size_t coun
   return index < count ? args[index] : undefined;
 }
 
-template <typename... TParameters>
-std::tuple<StoredParameter<TParameters>...> readArguments(jsi::Runtime &rt, const jsi::Value *args, size_t count) {
+template <typename... TArgs>
+std::tuple<StoredParameter<TArgs>...> readArguments(jsi::Runtime &rt, const jsi::Value *args, size_t count) {
   size_t index = 0;
-  return std::tuple<StoredParameter<TParameters>...>{
-      get<StoredParameter<TParameters>>(rt, &argumentOrUndefined(args, count, index++))...};
+  return std::tuple<StoredParameter<TArgs>...>{
+      get<StoredParameter<TArgs>>(rt, &argumentOrUndefined(args, count, index++))...};
 }
 
-template <typename TReturn, typename TFun, typename TArguments>
+template <typename TResult, typename TFun, typename TArguments>
 jsi::Value callWithArguments(jsi::Runtime &rt, const TFun &func, TArguments &&arguments) {
-  const auto call = [&](auto &&...values) -> TReturn {
+  const auto call = [&](auto &&...values) -> TResult {
     return func(rt, std::forward<decltype(values)>(values)...);
   };
-  if constexpr (std::is_void_v<TReturn>) {
+  if constexpr (std::is_void_v<TResult>) {
     std::apply(call, std::forward<TArguments>(arguments));
     return jsi::Value::undefined();
   } else {
@@ -245,21 +245,21 @@ setHostFunction(jsi::Runtime &rt, jsi::Object &obj, const char *name, unsigned i
       jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name), length, std::move(body)));
 }
 
-template <typename TFun, typename TClass, typename TReturn, typename... TParameters>
+template <typename TFun, typename TClass, typename TResult, typename... TArgs>
 void addTypedMethod(
     jsi::Runtime &rt,
     jsi::Object &obj,
     const char *name,
     TFun &&func,
-    TReturn (TClass::*)(jsi::Runtime &, TParameters...) const) {
+    TResult (TClass::*)(jsi::Runtime &, TArgs...) const) {
   setHostFunction(
       rt,
       obj,
       name,
-      sizeof...(TParameters),
+      sizeof...(TArgs),
       [func = std::forward<TFun>(func)](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
-        auto arguments = readArguments<TParameters...>(rt, args, count);
-        return callWithArguments<TReturn>(rt, func, std::move(arguments));
+        auto arguments = readArguments<TArgs...>(rt, args, count);
+        return callWithArguments<TResult>(rt, func, std::move(arguments));
       });
 }
 

@@ -18,12 +18,10 @@ bool AnimatedSensorModule::isSensorAvailable(double sensorType) const {
 jsi::Value AnimatedSensorModule::registerSensor(
     jsi::Runtime &rnRuntime,
     const std::shared_ptr<WorkletRuntime> &uiWorkletRuntime,
-    double sensorTypeValue,
+    double sensorType,
     double interval,
     double iosReferenceFrame,
     const jsi::Value &sensorDataHandler) {
-  SensorType sensorType = static_cast<SensorType>(sensorTypeValue);
-
   auto serializableHandler = extractSerializable(
       rnRuntime,
       sensorDataHandler,
@@ -34,7 +32,9 @@ jsi::Value AnimatedSensorModule::registerSensor(
       static_cast<int>(sensorType),
       interval,
       iosReferenceFrame,
-      [sensorType, serializableHandler, weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
+      [sensorType = static_cast<SensorType>(sensorType),
+       serializableHandler,
+       weakUiWorkletRuntime = std::weak_ptr<WorkletRuntime>(uiWorkletRuntime)](
           double newValues[], int orientationDegrees) {
         auto uiWorkletRuntime = weakUiWorkletRuntime.lock();
         if (uiWorkletRuntime == nullptr) {

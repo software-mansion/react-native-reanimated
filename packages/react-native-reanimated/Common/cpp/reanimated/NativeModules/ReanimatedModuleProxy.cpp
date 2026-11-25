@@ -508,11 +508,13 @@ jsi::Value ReanimatedModuleProxy::setDynamicFeatureFlag(jsi::Runtime &, const st
   return jsi::Value::undefined();
 }
 
-jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Array &array) {
-  size_t length = array.size(rt);
+jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
+    jsi::Runtime &rt,
+    const jsi::Array &layoutAnimationsBatch) {
+  size_t length = layoutAnimationsBatch.size(rt);
   std::vector<LayoutAnimationConfig> batch(length);
   for (int i = 0; i < length; i++) {
-    auto item = array.getValueAtIndex(rt, i).asObject(rt);
+    auto item = layoutAnimationsBatch.getValueAtIndex(rt, i).asObject(rt);
     auto &batchItem = batch[i];
     batchItem.tag = item.getProperty(rt, "viewTag").asNumber();
     batchItem.type = static_cast<LayoutAnimationType>(item.getProperty(rt, "type").asNumber());
