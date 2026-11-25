@@ -19,8 +19,8 @@ export function setupSetTimeout() {
       if (!pendingHandlers.has(handlerId)) {
         return;
       }
-      pendingHandlers.delete(handlerId);
       callback(...args);
+      pendingHandlers.delete(handlerId);
     };
 
     pendingHandlers.add(handlerId);

@@ -15,8 +15,8 @@ export function setupTaskQueue() {
 
   globalThis.__runTimeoutCallback = function (handlerId: number) {
     const task = queue.timeoutCallbacks.get(handlerId);
-    queue.timeoutCallbacks.delete(handlerId);
     task?.();
+    queue.timeoutCallbacks.delete(handlerId);
   };
 }
 
