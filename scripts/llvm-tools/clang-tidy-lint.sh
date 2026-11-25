@@ -179,7 +179,7 @@ else
   header_regex="^.*/$scope/.*\\.h$"
 fi
 
-"$run_clang_tidy" -quiet -p "$db_dir" -clang-tidy-binary "$clang_tidy_binary" \
+"$resolved_runner" -quiet -p "$db_dir" -clang-tidy-binary "$clang_tidy_binary" \
   -extra-arg=-Wno-unused-command-line-argument \
   -header-filter="$header_regex" "$file_regex" 2>&1 \
   | awk -v label="$label" -v verbose="$verbose" '
