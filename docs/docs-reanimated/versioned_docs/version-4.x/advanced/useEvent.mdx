@@ -9,7 +9,7 @@ sidebar_position: 4
 ## Reference
 
 ```js
-import { useEvent } from 'react-native-reanimated';
+import { useEvent, useHandler } from 'react-native-reanimated';
 
 function useAnimatedPagerScrollHandler(handlers, dependencies) {
   const { context, doDependenciesDiffer } = useHandler(handlers, dependencies);
@@ -30,7 +30,18 @@ function useAnimatedPagerScrollHandler(handlers, dependencies) {
 }
 // highlight-end
 
-return <Animated.View onScroll={useAnimatedPagerScrollHandler} />;
+const AnimatedPagerView = Animated.createAnimatedComponent(PagerView);
+
+function Pager() {
+  const pageScrollHandler = useAnimatedPagerScrollHandler({
+    onPageScroll: (event) => {
+      'worklet';
+      console.log(event.offset);
+    },
+  });
+
+  return <AnimatedPagerView onPageScroll={pageScrollHandler} />;
+}
 ```
 
 <details>
