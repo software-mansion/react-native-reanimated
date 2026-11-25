@@ -1,1 +1,1 @@
-Keep running the other `requestAnimationFrame` callbacks of a frame on Worker Runtimes when one of them throws, and stop leaking timer callbacks that throw.
+Keep running the other `requestAnimationFrame` callbacks of a frame and their microtasks when one of them throws, report each error, and stop leaking timer callbacks that throw, on the UI Runtime and on Worker Runtimes.
