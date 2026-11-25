@@ -67,6 +67,7 @@ include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
 target_compile_reactnative_options(reanimated PUBLIC)
 # Acknowledge framework-tier APIs when the app opts into RN_STRICT_API.
 target_compile_definitions(reanimated PRIVATE RN_ALLOW_FRAMEWORKS)
+target_compile_definitions(reanimated PRIVATE "WORKLETS_STABLE_API_TARGET=\"0.14.0\"")
 
 target_include_directories(
   reanimated

@@ -74,7 +74,8 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
     "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
   }
-  s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag}"
+  s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag} " \
+    '-DWORKLETS_STABLE_API_TARGET=\"0.14.0\"'
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',
