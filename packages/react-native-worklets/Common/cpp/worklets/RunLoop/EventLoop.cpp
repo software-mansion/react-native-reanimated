@@ -128,10 +128,9 @@ void EventLoop::abortPending() {
   timeoutsQueueState_->cv.notify_all();
 }
 
-void EventLoop::setFrameSource(FrameRequester &&requestFrame, bool deliversOnRuntimeThread) {
+void EventLoop::setFrameSource(FrameRequester &&requestFrame) {
   std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
   requestFrame_ = std::move(requestFrame);
-  deliversOnRuntimeThread_ = deliversOnRuntimeThread;
 }
 
 void EventLoop::deferToNextFrame(std::vector<std::function<void(jsi::Runtime &rt)>> &&jobs) {
@@ -174,19 +173,13 @@ void EventLoop::requestFrame() {
 
 void EventLoop::runFrameTimeouts() {
   std::vector<std::function<void(jsi::Runtime & rt)>> timeouts;
-  bool deliversOnRuntimeThread;
   {
     std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
     std::swap(timeouts, frameTimeouts_);
     frameRequested_ = false;
-    deliversOnRuntimeThread = deliversOnRuntimeThread_;
   }
-  for (auto &timeout : timeouts) {
-    if (deliversOnRuntimeThread) {
-      runTask(timeout);
-    } else {
-      pushTask(std::move(timeout));
-    }
+  for (const auto &timeout : timeouts) {
+    runTask(timeout);
   }
 }
 

@@ -47,7 +47,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void abortPending();
 
   using FrameRequester = std::function<void(std::function<void(double)> &&onFrame)>;
-  void setFrameSource(FrameRequester &&requestFrame, bool deliversOnRuntimeThread);
+  void setFrameSource(FrameRequester &&requestFrame);
 
  private:
   const AbortToken abortToken_;
@@ -63,7 +63,6 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void runFrameTimeouts();
 
   FrameRequester requestFrame_;
-  bool deliversOnRuntimeThread_ = false;
   std::mutex frameTimeoutsMutex_;
   std::vector<std::function<void(jsi::Runtime &rt)>> frameTimeouts_;
   bool frameRequested_ = false;

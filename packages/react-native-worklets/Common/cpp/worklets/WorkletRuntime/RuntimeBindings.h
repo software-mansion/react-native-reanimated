@@ -24,9 +24,6 @@ namespace worklets {
 
 struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
-#ifdef ANDROID
-  using CreateVSyncSource = std::function<RequestAnimationFrame()>;
-#endif // ANDROID
 #ifdef __APPLE__
   using CreateVSyncQueue = std::function<std::shared_ptr<VSyncAsyncQueue>(const std::string &name)>;
 #endif // __APPLE__
@@ -40,15 +37,6 @@ struct RuntimeBindings {
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
-#ifdef ANDROID
-  /**
-   * Returns the v-sync frame source for Worker Runtimes with `enableVSync`.
-   * The returned function is like `requestAnimationFrame`, but the callback
-   * runs on the frame source's own thread instead of the UI thread. Called
-   * lazily on the first frame request of a runtime.
-   */
-  const CreateVSyncSource createVSyncSource;
-#endif // ANDROID
 #ifdef __APPLE__
   /**
    * Creates the queue of a Worker Runtime with `enableVSync`. The queue's

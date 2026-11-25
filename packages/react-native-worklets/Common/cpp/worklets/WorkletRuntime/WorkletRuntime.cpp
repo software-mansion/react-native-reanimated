@@ -168,9 +168,6 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       eventLoop_,
       queue_,
       enableVSync_,
-#ifdef ANDROID
-      runtimeBindings->createVSyncSource,
-#endif // ANDROID
       nativeLoggingHook);
 
   if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
