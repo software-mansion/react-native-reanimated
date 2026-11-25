@@ -41,10 +41,14 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
 
     flushedCallbacksBegin = flushedCallbacksEnd;
 
-    for (const error of errors) {
-      setTimeout(() => {
-        throw error;
-      });
+    if (errors.length > 0) {
+      for (let i = 1; i < errors.length; i++) {
+        const error = errors[i];
+        setTimeout(() => {
+          throw error;
+        });
+      }
+      throw errors[0];
     }
   }
 
