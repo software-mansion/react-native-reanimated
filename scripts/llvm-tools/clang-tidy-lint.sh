@@ -143,13 +143,7 @@ resolve_binary() {
 }
 
 resolved_tidy="$(resolve_binary clang-tidy "$clang_tidy_binary")"
-resolved_runner="$(resolve_binary run-clang-tidy "$run_clang_tidy")"
 
-if [ -z "$resolved_runner" ]; then
-  echo "error: run-clang-tidy not found on PATH or under ${LLVM_FALLBACKS[*]}" >&2
-  echo "       install LLVM (brew install llvm) or use an NDK that ships clang-tidy" >&2
-  exit 1
-fi
 if [ -z "$resolved_tidy" ]; then
   echo "error: clang-tidy not found on PATH or under ${LLVM_FALLBACKS[*]}" >&2
   exit 1
@@ -158,6 +152,14 @@ fi
 # Prepend the resolved tool's dir so run-clang-tidy's child clang-tidy invocations also see it.
 tidy_dir="$(dirname "$resolved_tidy")"
 export PATH="$tidy_dir:$PATH"
+
+resolved_runner="$(resolve_binary run-clang-tidy "$run_clang_tidy")"
+
+if [ -z "$resolved_runner" ]; then
+  echo "error: run-clang-tidy not found on PATH or under ${LLVM_FALLBACKS[*]}" >&2
+  echo "       install LLVM (brew install llvm) or use an NDK that ships clang-tidy" >&2
+  exit 1
+fi
 
 label="${platform:-all}"
 echo "info: linting $label files with $resolved_tidy" >&2
@@ -179,7 +181,7 @@ else
   header_regex="^.*/$scope/.*\\.h$"
 fi
 
-"$run_clang_tidy" -quiet -p "$db_dir" -clang-tidy-binary "$clang_tidy_binary" \
+"$resolved_runner" -quiet -p "$db_dir" -clang-tidy-binary "$clang_tidy_binary" \
   -extra-arg=-Wno-unused-command-line-argument \
   -header-filter="$header_regex" "$file_regex" 2>&1 \
   | awk -v label="$label" -v verbose="$verbose" '
