@@ -320,6 +320,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
  private:
+  friend class EventLoop;
+
   enum class MicrotaskCheckpoint : std::uint8_t {
     Skip,
     Run,

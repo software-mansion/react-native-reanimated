@@ -1,4 +1,5 @@
 #include <worklets/RunLoop/EventLoop.h>
+#include <worklets/WorkletRuntime/WorkletRuntime.h>
 
 #include <memory>
 #include <string>
@@ -8,10 +9,8 @@
 
 namespace worklets {
 
-EventLoop::EventLoop(const std::string &name, TaskScheduler &&scheduleTask)
-    : scheduleTask_(std::move(scheduleTask)),
-      timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()),
-      name_(name) {}
+EventLoop::EventLoop(const std::string &name, const std::weak_ptr<const WorkletRuntime> &workletRuntime)
+    : workletRuntime_(workletRuntime), timeoutsQueueState_(std::make_shared<TimeoutsQueueState>()), name_(name) {}
 
 EventLoop::~EventLoop() {
   {
@@ -75,7 +74,9 @@ void EventLoop::run() {
 }
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
-  scheduleTask_(std::move(job));
+  if (const auto workletRuntime = workletRuntime_.lock()) {
+    workletRuntime->scheduleEventLoopTask(std::move(job));
+  }
 }
 
 void EventLoop::abortPending() {

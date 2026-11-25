@@ -14,6 +14,8 @@ using namespace facebook;
 
 namespace worklets {
 
+class WorkletRuntime;
+
 struct Timeout {
   std::function<void(jsi::Runtime &rt)> callback;
   int64_t targetTime;
@@ -31,9 +33,7 @@ struct TimeoutsQueueState {
 
 class EventLoop : public std::enable_shared_from_this<EventLoop> {
  public:
-  using TaskScheduler = std::function<void(std::function<void(jsi::Runtime &rt)> &&job)>;
-
-  EventLoop(const std::string &name, TaskScheduler &&scheduleTask);
+  EventLoop(const std::string &name, const std::weak_ptr<const WorkletRuntime> &workletRuntime);
   ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
@@ -41,7 +41,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void abortPending();
 
  private:
-  const TaskScheduler scheduleTask_;
+  const std::weak_ptr<const WorkletRuntime> workletRuntime_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
 

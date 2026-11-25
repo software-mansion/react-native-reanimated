@@ -154,12 +154,7 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       bundleModeEnabled ? runtimeBindings->nativeLoggingHook : RuntimeBindings::NativeLoggingHook{};
 
   if (enableEventLoop_) {
-    eventLoop_ =
-        std::make_shared<EventLoop>(name_, [weakThis = weak_from_this()](std::function<void(jsi::Runtime & rt)> &&job) {
-          if (const auto strongThis = weakThis.lock()) {
-            strongThis->scheduleEventLoopTask(std::move(job));
-          }
-        });
+    eventLoop_ = std::make_shared<EventLoop>(name_, weak_from_this());
     eventLoop_->run();
   }
 
