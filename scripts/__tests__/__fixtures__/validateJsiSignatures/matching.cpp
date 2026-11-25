@@ -15,8 +15,12 @@ jsi::Object makeProxy(jsi::Runtime &rt) {
       [prefix = std::string("(, ")](jsi::Runtime &rt, double, const std::optional<std::string> &) {
         return jsi::String::createFromUtf8(rt, prefix + ")");
       });
+#ifndef NDEBUG
   jsi_utils::addMethod(
       rt, obj, "typedArguments", [](jsi::Runtime &, double, const jsi::Object &second) {});
+#else
+  jsi_utils::addMethod(rt, obj, "typedArguments", [](jsi::Runtime &, double first, jsi::Object second) {});
+#endif
   jsi_utils::addMethod(
       rt, obj, "moduleArguments", weak_from_this(), [](jsi::Runtime &, Module &self, double first) {});
   jsi_utils::addMethod(rt, obj, "scalarArguments", [](jsi::Runtime &, int, const jsi::String &, bool) {});

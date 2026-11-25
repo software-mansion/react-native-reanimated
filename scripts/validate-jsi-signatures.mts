@@ -374,11 +374,23 @@ function findProblems(
   for (const name of [...names].sort()) {
     const report = (message: string) =>
       problems.push(`${global}.${name}: ${message}`);
-    const registered = registrations.get(name) ?? [];
+    // The scanner ignores the preprocessor, so a method registered in both
+    // branches of an `#ifndef NDEBUG` shows up twice. Only registrations that
+    // disagree are a problem.
+    const registered = [
+      ...new Map(
+        (registrations.get(name) ?? []).map((registration) => [
+          registration.parameters.join(', '),
+          registration,
+        ])
+      ).values(),
+    ];
     const tsMethod = tsMethods.get(name);
 
     if (registered.length > 1) {
-      report(`${cpp} registers it more than once. Register it once.`);
+      report(
+        `${cpp} registers it more than once with different arguments. Register it with the same arguments each time.`
+      );
     }
     if (!tsMethod) {
       report(

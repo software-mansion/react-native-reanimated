@@ -44,7 +44,8 @@ describe('validate-jsi-signatures', () => {
         '__proxy.scalarArguments: argument 1 (first) is `bool` in C++, but TS allows number. Take `double` in C++ or change the TS type.',
         '__proxy.scalarArguments: argument 2 (second) is `double` in C++, but TS allows string. Take `std::string` in C++ or change the TS type.',
         '__proxy.scalarArguments: argument 3 (third) is `std::string` in C++, but TS allows boolean. Take `bool` in C++ or change the TS type.',
-        '__proxy.twoArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
+        '__proxy.twoArguments: mismatched.cpp registers it more than once with different arguments. Register it with the same arguments each time.',
+        '__proxy.twoArguments: takes 1 or 2 arguments in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
         '__proxy.typedArguments: takes 1 argument in mismatched.cpp but 2 in globals.d.ts. Make both take the same arguments.',
         '__proxy.undeclared: mismatched.cpp registers it, but globals.d.ts does not declare it. Declare it in globals.d.ts or remove the registration.',
       ]
