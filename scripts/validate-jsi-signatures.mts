@@ -40,7 +40,6 @@ const JSI_OBJECTS: JsiObject[] = [
 ];
 
 const SCRIPT = path.relative(REPOSITORY_ROOT, import.meta.filename);
-const REGISTRATION = /addMethod\s*\(\s*[^,()]+,\s*[^,()]+,\s*"/y;
 
 const OBJECT_KINDS = ['object', 'array', 'function', 'arrayBuffer'] as const;
 
@@ -132,11 +131,9 @@ export function reportFilesMissingFromJsiObjects(
       if (listed.has(file)) {
         return false;
       }
-      const source = read(file);
-      return findCalls(source, 'addMethod').some((index) => {
-        REGISTRATION.lastIndex = index;
-        return REGISTRATION.test(source);
-      });
+      return readAddMethodCalls(read(file)).some(
+        ({ name }) => name !== undefined
+      );
     })
     .map(
       (file) =>
@@ -172,16 +169,7 @@ function readRegisteredMethods(
     );
   };
   const registrations = new Map<string, Registration[]>();
-  for (const index of findCalls(source, 'addMethod')) {
-    const call = /^\s*([(;])/.exec(source.slice(index + 'addMethod'.length));
-    if (call?.[1] === ';') {
-      continue;
-    }
-    const args = call
-      ? splitTopLevel(source, index + 'addMethod'.length + call[0].length - 1)
-      : [];
-    const name = /^"(\w+)"$/.exec(args[2] ?? '')?.[1];
-    const parameters = readParameters(args);
+  for (const { index, name, parameters } of readAddMethodCalls(source)) {
     if (!name || !parameters) {
       fail(
         index,
@@ -194,6 +182,27 @@ function readRegisteredMethods(
     ]);
   }
   return registrations;
+}
+
+function readAddMethodCalls(
+  source: string
+): { index: number; name?: string; parameters?: string[] }[] {
+  return findCalls(source, 'addMethod').flatMap((index) => {
+    const call = /^\s*([(;])/.exec(source.slice(index + 'addMethod'.length));
+    if (call?.[1] === ';') {
+      return [];
+    }
+    const args = call
+      ? splitTopLevel(source, index + 'addMethod'.length + call[0].length - 1)
+      : [];
+    return [
+      {
+        index,
+        name: /^"(\w+)"$/.exec(args[2] ?? '')?.[1],
+        parameters: readParameters(args),
+      },
+    ];
+  });
 }
 
 function readParameters(args: string[]): string[] | undefined {

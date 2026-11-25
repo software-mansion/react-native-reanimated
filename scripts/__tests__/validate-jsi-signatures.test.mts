@@ -71,6 +71,8 @@ describe('validate-jsi-signatures', () => {
       'listed.cpp': 'addMethod(rt, obj, "listed", [](jsi::Runtime &) {});',
       'unlisted.cpp':
         'jsi_utils::addMethod(\n    rt, obj, "unlisted", [](jsi::Runtime &) {});',
+      'pointer.cpp':
+        'addMethod(rt, *holder.get(), /* name */ "pointer", [](jsi::Runtime &) {});',
       'header.h':
         'void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func);',
       'comment.cpp':
@@ -84,6 +86,7 @@ describe('validate-jsi-signatures', () => {
       ),
       [
         'unlisted.cpp: registers methods with addMethod, but JSI_OBJECTS does not list it. Add it to JSI_OBJECTS in scripts/validate-jsi-signatures.mts.',
+        'pointer.cpp: registers methods with addMethod, but JSI_OBJECTS does not list it. Add it to JSI_OBJECTS in scripts/validate-jsi-signatures.mts.',
       ]
     );
   });
