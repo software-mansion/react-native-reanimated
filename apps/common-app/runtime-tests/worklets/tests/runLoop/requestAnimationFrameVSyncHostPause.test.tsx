@@ -37,6 +37,7 @@ describe('Test enableVSync while the host is paused', () => {
         enableVSync: true,
       });
       const watch = watchCallbacks(['requestAnimationFrame', 'setTimeout']);
+      const registration = watchCallbacks(['registered']);
       await pauseHost();
 
       // Act
@@ -46,13 +47,16 @@ describe('Test enableVSync while the host is paused', () => {
           scheduleOnRN(watch.onFired, 'requestAnimationFrame')
         );
         setTimeout(() => scheduleOnRN(watch.onFired, 'setTimeout'), 0);
+        scheduleOnRN(registration.onFired, 'registered');
       });
+      const registered = await registration.waitForAll();
       await RuntimeTestObserver!.delay(PAUSED_OBSERVATION_MS);
       const firedWhilePaused = watch.snapshot();
       await resumeHost();
       const firedAfterResume = await watch.waitForAll();
 
       // Assert
+      expect(registered.registered).toBe(true);
       expect(firedWhilePaused.requestAnimationFrame).toBe(false);
       expect(firedWhilePaused.setTimeout).toBe(false);
       expect(firedAfterResume.requestAnimationFrame).toBe(true);
