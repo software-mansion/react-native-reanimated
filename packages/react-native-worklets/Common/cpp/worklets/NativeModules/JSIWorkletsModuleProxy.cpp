@@ -731,6 +731,23 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
           if (!asyncQueue) {
             asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
           }
+#ifdef ANDROID
+          if (enableVSync) {
+            requestFrame = [createVSyncSource = sourceProxy->getRuntimeBindings()->createVSyncSource,
+                            requestVSync = RuntimeBindings::RequestAnimationFrame{},
+                            weakQueue =
+                                std::weak_ptr<AsyncQueue>(asyncQueue)](std::function<void(double)> &&onFrame) mutable {
+              if (!requestVSync) {
+                requestVSync = createVSyncSource();
+              }
+              requestVSync([weakQueue, onFrame = std::move(onFrame)](const double timestampMs) {
+                if (const auto strongQueue = weakQueue.lock()) {
+                  strongQueue->push([onFrame, timestampMs] { onFrame(timestampMs); });
+                }
+              });
+            };
+          }
+#endif // ANDROID
         } else {
           asyncQueue = extractAsyncQueue(rt, at<3>(args));
         }
