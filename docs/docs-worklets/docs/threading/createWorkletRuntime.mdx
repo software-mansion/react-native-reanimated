@@ -105,7 +105,7 @@ When enabled:
 - Each display frame sends at most one flush to the Runtime, and the callbacks receive the timestamp of that frame, the same one that `requestAnimationFrame` callbacks receive on the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 - The frames come from a dedicated thread, so a blocked UI thread does not delay them. On macOS they come from the main thread.
 - `animationQueuePollingRate` cannot be set. TypeScript rejects the combination and `createWorkletRuntime` throws.
-- Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background.
+- Frame callbacks are not flushed while the platform delivers no frames, for example when the app is in the background. Due `setTimeout` and `setInterval` callbacks wait for the next frame too.
 - `setTimeout` and `setInterval` callbacks run on the first frame after they are due, as on the React Native JavaScript thread. For example, `setTimeout(callback, 4)` runs on the next frame, up to one frame later than 4 ms.
 - `setImmediate` is a timer with no delay, so its callbacks also run on the next frame. Microtasks are not affected.
 - The order of a frame callback relative to a timer scheduled in the same task is not defined, because it depends on when the next frame arrives.
