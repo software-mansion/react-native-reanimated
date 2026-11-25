@@ -108,11 +108,11 @@ function main(): void {
       );
       return;
     }
-    console.log(
+    console.error(
       `JSI methods do not match their TS types (${problems.length}):`
     );
     for (const problem of problems) {
-      console.log(`  - ${problem}`);
+      console.error(`  - ${problem}`);
     }
     process.exitCode = 1;
   } catch (error) {
@@ -239,7 +239,7 @@ function readTsMethods(
   globals: string,
   tsConfig: string
 ): Map<string, TsMethod> {
-  const { options } = ts.getParsedCommandLineOfConfigFile(
+  const parsed = ts.getParsedCommandLineOfConfigFile(
     tsConfig,
     { noEmit: true },
     {
@@ -250,8 +250,20 @@ function readTsMethods(
         );
       },
     }
-  )!;
-  const program = ts.createProgram([globals], options);
+  );
+  if (!parsed) {
+    throw new Error(`Could not parse ${tsConfig}`);
+  }
+  if (parsed.errors.length > 0) {
+    throw new Error(
+      `Errors in ${tsConfig}:\n${ts.formatDiagnostics(parsed.errors, {
+        getCanonicalFileName: (fileName) => fileName,
+        getCurrentDirectory: ts.sys.getCurrentDirectory,
+        getNewLine: () => ts.sys.newLine,
+      })}`
+    );
+  }
+  const program = ts.createProgram([globals], parsed.options);
   const unresolved = program
     .getSemanticDiagnostics()
     .find(({ code }) => code === 2307 || code === 2792);
