@@ -29,6 +29,10 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     for (const callback of flushedCallbacks) {
       try {
         callback(timestamp);
+      } catch (error) {
+        errors.push(error);
+      }
+      try {
         globalThis.__drainMicrotasks();
       } catch (error) {
         errors.push(error);

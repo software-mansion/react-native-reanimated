@@ -14,6 +14,9 @@ const TIMER_MICROTASK_ERROR =
   'error thrown by a microtask of a setTimeout callback';
 const INTERVAL_ERROR = 'error thrown by a setInterval callback';
 const FRAME_ERROR = 'error thrown by a requestAnimationFrame callback';
+const FRAME_CANCEL_ERROR =
+  'error thrown by a requestAnimationFrame callback that cancels another one';
+const CANCELLED_CALLBACK_NOTIFICATION = 'CANCELLED_FRAME_CALLBACK_RESULT';
 const ALIVE_NOTIFICATION = 'RUNTIME_ALIVE_AFTER_TIMER_ERROR';
 
 describe('errors thrown by timer callbacks', () => {
@@ -110,6 +113,39 @@ describe('errors thrown by timer callbacks', () => {
       }).toThrow(FRAME_ERROR);
 
       await waitForNotification(ALIVE_NOTIFICATION);
+    }
+  );
+
+  debugTest(
+    'runs the microtasks of a throwing requestAnimationFrame callback before the next callback of the frame on a Worker Runtime',
+    async () => {
+      let cancelledCallbackRan: boolean | null = null;
+      const onResult = (ran: boolean) => {
+        cancelledCallbackRan = ran;
+        notify(CANCELLED_CALLBACK_NOTIFICATION);
+      };
+
+      await expect(() => {
+        scheduleOnRuntime(workletRuntime, () => {
+          'worklet';
+          let ran = false;
+          requestAnimationFrame(() => {
+            queueMicrotask(() => {
+              cancelAnimationFrame(cancelledHandle);
+            });
+            throw new Error(FRAME_CANCEL_ERROR);
+          });
+          const cancelledHandle = requestAnimationFrame(() => {
+            ran = true;
+          });
+          requestAnimationFrame(() => {
+            scheduleOnRN(onResult, ran);
+          });
+        });
+      }).toThrow(FRAME_CANCEL_ERROR);
+
+      await waitForNotification(CANCELLED_CALLBACK_NOTIFICATION);
+      expect(cancelledCallbackRan).toBe(false);
     }
   );
 });
