@@ -132,11 +132,13 @@ void CSSAnimationsRegistry::handleMount(const SurfaceId surfaceId) {
 void CSSAnimationsRegistry::syncDeferredUpdates() {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   // A commit that shows a hidden view applies the registry, so it must carry the current style.
+  // Reset styles are included, as in the regular flushes, because the reset of an animation that
+  // finished while the view was hidden has not been committed yet.
   const auto tags = std::exchange(deferredTags_, {});
   for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
     if (it != groups_.end()) {
-      setInUpdatesRegistry(it->second.getShadowNodeFamily(), it->second.computeStyle());
+      setInUpdatesRegistry(it->second.getShadowNodeFamily(), it->second.computeStyle(true));
     }
   }
 }

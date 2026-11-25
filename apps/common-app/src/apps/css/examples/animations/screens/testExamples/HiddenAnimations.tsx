@@ -64,18 +64,33 @@ export default function HiddenAnimations() {
   const countLabel = useSharedValue(INITIAL_COUNT_LABEL);
   const viewRef = useRef<AnimatedViewRef>(null);
   const hiddenRef = useRef(hidden);
+  // Readings are compared only within one visibility interval. Each Hide or Show starts a new
+  // interval, so the frames committed before the switch never count as frames while hidden.
+  const intervalRef = useRef(0);
+  const lastValueRef = useRef<string | null>(null);
   const countRef = useRef(0);
-  hiddenRef.current = hidden;
 
   useEffect(() => {
-    let lastValue: string | null = null;
+    hiddenRef.current = hidden;
+    intervalRef.current += 1;
+    lastValueRef.current = null;
+    countRef.current = 0;
+    countLabel.value = INITIAL_COUNT_LABEL;
+  }, [countLabel, hidden]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (!viewRef.current) {
         return;
       }
+      const readInterval = intervalRef.current;
       readOpacity(viewRef.current)
         .then((value) => {
+          if (readInterval !== intervalRef.current) {
+            return;
+          }
           const formatted = Number(value).toFixed(3);
+          const lastValue = lastValueRef.current;
           if (
             hiddenRef.current &&
             lastValue !== null &&
@@ -84,7 +99,7 @@ export default function HiddenAnimations() {
             countRef.current += 1;
             countLabel.value = `Frames committed while hidden: ${countRef.current}`;
           }
-          lastValue = formatted;
+          lastValueRef.current = formatted;
           opacityLabel.value = `Committed opacity: ${formatted}`;
         })
         .catch(() => {
@@ -94,11 +109,7 @@ export default function HiddenAnimations() {
     return () => clearInterval(interval);
   }, [countLabel, opacityLabel]);
 
-  const toggle = () => {
-    countRef.current = 0;
-    countLabel.value = INITIAL_COUNT_LABEL;
-    setHidden((value) => !value);
-  };
+  const toggle = () => setHidden((value) => !value);
 
   return (
     <ScrollScreen contentContainerStyle={styles.container}>
