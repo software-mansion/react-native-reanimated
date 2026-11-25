@@ -667,7 +667,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
-        const auto &scheduleStackValue = at<1>(args).isObject() ? at<2>(args) : at<1>(args);
+        const auto &scheduleStackValue = at<2>(args).isString() ? at<2>(args) : at<1>(args);
         if (scheduleStackValue.isString()) {
           scheduleStack = scheduleStackValue.asString(rt).utf8(rt);
         }
