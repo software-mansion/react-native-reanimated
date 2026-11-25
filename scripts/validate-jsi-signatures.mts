@@ -55,6 +55,7 @@ type Kind =
 const CPP_KINDS: Record<string, readonly Kind[]> = {
   double: ['number'],
   int: ['number'],
+  Tag: ['number'],
   'RuntimeData::RuntimeId': ['number'],
   bool: ['boolean'],
   'std::string': ['string'],

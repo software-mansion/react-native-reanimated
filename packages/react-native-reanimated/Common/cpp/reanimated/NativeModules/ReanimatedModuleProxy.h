@@ -95,7 +95,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   jsi::Value setDynamicFeatureFlag(jsi::Runtime &rt, const std::string &name, bool value);
 
   jsi::Value configureLayoutAnimationBatch(jsi::Runtime &rt, const jsi::Array &array);
-  void setShouldAnimateExiting(jsi::Runtime &rt, double viewTag, bool shouldAnimate);
+  void setShouldAnimateExiting(jsi::Runtime &rt, Tag viewTag, bool shouldAnimate);
 
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
 
@@ -120,10 +120,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void startBackendIfNeeded();
   void stopBackendIfIdle(bool producedMutations);
 
-  void setViewStyle(jsi::Runtime &rt, double viewTag, const jsi::Value &viewStyle);
+  void setViewStyle(jsi::Runtime &rt, Tag viewTag, const jsi::Value &viewStyle);
 
   void markNodeAsRemovable(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper);
-  void unmarkNodeAsRemovable(jsi::Runtime &rt, double viewTag);
+  void unmarkNodeAsRemovable(jsi::Runtime &rt, Tag viewTag);
 
   void registerCSSKeyframes(
       jsi::Runtime &rt,
@@ -138,7 +138,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &shadowNodeWrapper,
       const std::string &compoundComponentName,
       const jsi::Value &animationUpdates);
-  void unregisterCSSAnimations(double viewTag);
+  void unregisterCSSAnimations(Tag viewTag);
 
   void setCSSEventHandler(jsi::Runtime &rt, jsi::Function handler);
 
@@ -147,10 +147,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
       const jsi::Value &shadowNodeWrapper,
       const jsi::Value &transitionConfig,
       double eventMask);
-  void unregisterCSSTransition(jsi::Runtime &rt, double viewTag);
+  void unregisterCSSTransition(jsi::Runtime &rt, Tag viewTag);
 
   void registerPseudoStyles(jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Object &config);
-  void unregisterPseudoStyles(jsi::Runtime &rt, double viewTag);
+  void unregisterPseudoStyles(jsi::Runtime &rt, Tag viewTag);
 
   jsi::Value getSettledUpdates(jsi::Runtime &rt, const jsi::Function &isViewRegistered);
   bool hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Function &isViewRegistered);

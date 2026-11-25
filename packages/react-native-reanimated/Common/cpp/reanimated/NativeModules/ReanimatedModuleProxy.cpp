@@ -567,7 +567,7 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(jsi::Runtime &rt
   return jsi::Value::undefined();
 }
 
-void ReanimatedModuleProxy::setShouldAnimateExiting(jsi::Runtime &, double viewTag, bool shouldAnimate) {
+void ReanimatedModuleProxy::setShouldAnimateExiting(jsi::Runtime &, Tag viewTag, bool shouldAnimate) {
   layoutAnimationsManager_->setShouldAnimateExiting(viewTag, shouldAnimate);
 }
 
@@ -597,7 +597,7 @@ void ReanimatedModuleProxy::cleanupSensors() {
   animatedSensorModule_.unregisterAllSensors();
 }
 
-void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, double viewTag, const jsi::Value &viewStyle) {
+void ReanimatedModuleProxy::setViewStyle(jsi::Runtime &rt, Tag viewTag, const jsi::Value &viewStyle) {
   auto lock = updatesRegistryManager_->lock();
   staticPropsRegistry_->set(rt, viewTag, viewStyle);
 }
@@ -608,7 +608,7 @@ void ReanimatedModuleProxy::markNodeAsRemovable(jsi::Runtime &rt, const jsi::Val
   updatesRegistryManager_->markNodeAsRemovable(shadowNode);
 }
 
-void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &, double viewTag) {
+void ReanimatedModuleProxy::unmarkNodeAsRemovable(jsi::Runtime &, Tag viewTag) {
   auto lock = updatesRegistryManager_->lock();
   updatesRegistryManager_->unmarkNodeAsRemovable(viewTag);
 }
@@ -645,7 +645,7 @@ void ReanimatedModuleProxy::applyCSSAnimations(
   cssAnimationsRegistry_->apply(shadowNode, compoundComponentName, updates);
 }
 
-void ReanimatedModuleProxy::unregisterCSSAnimations(double viewTag) {
+void ReanimatedModuleProxy::unregisterCSSAnimations(Tag viewTag) {
   auto lock = updatesRegistryManager_->lock();
   cssAnimationsRegistry_->remove(viewTag);
 }
@@ -668,7 +668,7 @@ void ReanimatedModuleProxy::runCSSTransition(
   cssTransitionsRegistry_->updateConfigOrRun(rt, shadowNode, std::move(config));
 }
 
-void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &, double viewTag) {
+void ReanimatedModuleProxy::unregisterCSSTransition(jsi::Runtime &, Tag viewTag) {
   auto lock = updatesRegistryManager_->lock();
   cssTransitionsRegistry_->remove(viewTag);
 }
@@ -708,7 +708,7 @@ void ReanimatedModuleProxy::registerPseudoStyles(
   pseudoStylesRegistry_->registerPseudoStyles(tag, shadowNode, defaultStyle, selectors);
 }
 
-void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, double viewTag) {
+void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, Tag viewTag) {
   auto lock = updatesRegistryManager_->lock();
   pseudoStylesRegistry_->remove(viewTag);
 }
@@ -1620,7 +1620,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       rt,
       obj,
       "setShouldAnimateExitingForTag",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, double viewTag, bool shouldAnimate) {
+      [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag, bool shouldAnimate) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -1629,10 +1629,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       });
 
   addMethod(
-      rt,
-      obj,
-      "setViewStyle",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, double viewTag, const jsi::Value &style) {
+      rt, obj, "setViewStyle", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag, const jsi::Value &style) {
         auto strongThis = weakThis.lock();
         if (!strongThis) {
           return;
@@ -1656,7 +1653,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->markNodeAsRemovable(rt, shadowNodeWrapper);
       });
 
-  addMethod(rt, obj, "unmarkNodeAsRemovable", [weakThis = weak_from_this()](jsi::Runtime &rt, double viewTag) {
+  addMethod(rt, obj, "unmarkNodeAsRemovable", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -1717,7 +1714,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
     strongThis->setCSSEventHandler(rt, std::move(handler));
   });
 
-  addMethod(rt, obj, "unregisterCSSAnimations", [weakThis = weak_from_this()](jsi::Runtime &, double viewTag) {
+  addMethod(rt, obj, "unregisterCSSAnimations", [weakThis = weak_from_this()](jsi::Runtime &, Tag viewTag) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -1738,7 +1735,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->runCSSTransition(rt, shadowNodeWrapper, transitionConfig, eventMask);
       });
 
-  addMethod(rt, obj, "unregisterCSSTransition", [weakThis = weak_from_this()](jsi::Runtime &rt, double viewTag) {
+  addMethod(rt, obj, "unregisterCSSTransition", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -1782,7 +1779,7 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
         strongThis->registerPseudoStyles(rt, shadowNodeWrapper, config);
       });
 
-  addMethod(rt, obj, "unregisterPseudoStyles", [weakThis = weak_from_this()](jsi::Runtime &rt, double viewTag) {
+  addMethod(rt, obj, "unregisterPseudoStyles", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag) {
     auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
