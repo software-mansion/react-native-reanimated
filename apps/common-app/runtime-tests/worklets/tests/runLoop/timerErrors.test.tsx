@@ -95,8 +95,10 @@ describe('errors thrown by timer callbacks', () => {
       });
       const microtaskRan = runOnRuntimeSync(workletRuntime, () => {
         'worklet';
-        return (globalThis as Record<string, unknown>)
-          .__timerErrorsMicrotaskRan;
+        return (
+          (globalThis as Record<string, unknown>).__timerErrorsMicrotaskRan ===
+          true
+        );
       });
 
       expect(microtaskRan).toBe(true);
