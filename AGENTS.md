@@ -36,7 +36,7 @@ Committed build artifacts, rebuild them and never hand-edit: `packages/react-nat
 
 - `node_modules/react-native-reanimated` and `node_modules/react-native-worklets` are symlinks to `packages/*`. Reanimated always compiles against in-repo worklets headers.
 - Package entry points: `react-native` and `source` point at `src/index` (apps, Metro, Jest). `main`, `module` and `types` point at `lib/` (npm consumers, `type:check`, madge, tree-shake checks). A stale `lib/` breaks checks but never the app.
-- Reanimated and worklets are pinned three times: exact `peerDependencies` version, `compatibility.json` (checked by `yarn validate-peers` and by Android `preBuild`), and a C++ `static_assert` of `WORKLETS_STABLE_API_VERSION` (`packages/react-native-worklets/Common/cpp/worklets/Compat/StableApi.h`) against `EXPECTED_WORKLETS_STABLE_API_VERSION` (`packages/react-native-reanimated/Common/cpp/reanimated/Compat/WorkletsApi.h`). Change one, change the other.
+- Reanimated's Worklets package compatibility is declared in `peerDependencies` and `compatibility.json` (checked by `yarn validate-peers` and by Android `preBuild`). Private build definitions in `RNReanimated.podspec` and `android/CMakeLists.txt` set `WORKLETS_STABLE_API_TARGET` for per-function C++ checks.
 - Reanimated native code may include exactly one worklets header, `<worklets/Compat/StableApi.h>`. `packages/react-native-reanimated/scripts/validate-worklets-includes.sh` enforces this.
 - React Native 0.89 umbrella headers (`<React/View.h>` and others) need an `#if __has_include` check, because React Native 0.87 and 0.88 do not have them. Include them through `Common/cpp/<pkg>/Compat/ReactNative*.h`, not directly. `scripts/validate-compat-includes.sh` enforces this.
 - `packages/react-native-reanimated/plugin` re-exports `react-native-worklets/plugin`.
@@ -89,7 +89,8 @@ Fast C++ syntax check without a native build. Run from `packages/react-native-wo
 ```sh
 RN=../../node_modules/react-native
 HERMES=../../apps/fabric-example/ios/Pods/hermes-engine/destroot/include
-clang++ -std=c++20 -fsyntax-only -I Common/cpp -I $RN/ReactCommon/jsi -I $RN/ReactCommon \
+clang++ -std=c++20 -fsyntax-only -DWORKLETS_STABLE_API_TARGET='"0.14.0"' \
+  -I Common/cpp -I $RN/ReactCommon/jsi -I $RN/ReactCommon \
   -I $RN/ReactCommon/callinvoker -I $RN/ReactCommon/react/nativemodule/core -I $HERMES <file.cpp>
 ```
 
@@ -132,4 +133,4 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 ## Release facts
 
 - The release procedure lives in `packages/react-native-reanimated/RELEASE.md`. Agent skills for releases and cherry-picks live in `.agents/skills/` (`.claude/skills` links to it): `reanimated-release`, `worklets-release`, `reanimated-cherry-pick` and `worklets-cherry-pick`. Worklets follows the same flow from `worklets-<X.Y>-stable` branches, and its version file is `src/debug/jsVersion.ts`.
-- When the worklets stable API changes, bump `WORKLETS_STABLE_API_VERSION` in `StableApi.h` and `EXPECTED_WORKLETS_STABLE_API_VERSION` in `WorkletsApi.h` together, also on backports.
+- Mark each stable Worklets C++ free-function declaration with `WORKLETS_STABLE_API_SINCE("major.minor.patch")` in `StableApi.h`. Use the first release that supports that function's current contract. Update only the affected function's version when it changes incompatibly. Every native target that includes the stable header must set `WORKLETS_STABLE_API_TARGET`. Worklets and Reanimated set it in their podspecs and Android CMake files. Keep shared class definitions independent of that setting so they can be used across translation units.
