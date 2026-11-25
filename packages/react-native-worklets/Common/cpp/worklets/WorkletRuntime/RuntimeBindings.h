@@ -2,7 +2,10 @@
 
 #include <jsi/jsi.h>
 #include <worklets/Networking/NetworkingBackend.h>
+
+#ifdef __APPLE__
 #include <worklets/RunLoop/VSyncAsyncQueue.h>
+#endif // __APPLE__
 
 #include <functional>
 #include <memory>
@@ -21,8 +24,12 @@ namespace worklets {
 
 struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
+#ifdef ANDROID
   using CreateVSyncSource = std::function<RequestAnimationFrame()>;
+#endif // ANDROID
+#ifdef __APPLE__
   using CreateVSyncQueue = std::function<std::shared_ptr<VSyncAsyncQueue>(const std::string &name)>;
+#endif // __APPLE__
   // Host function extracted from RN runtime's `global.nativeLoggingHook`, used
   // to forward logs from Worklet runtimes to the native console in Bundle Mode.
   // Signature:
@@ -33,14 +40,22 @@ struct RuntimeBindings {
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
+#ifdef ANDROID
   /**
-   * Creates a frame source for one Worker Runtime. The returned function is
-   * like `requestAnimationFrame`, but the callback runs on a thread owned by
-   * the platform frame source instead of the UI thread. The frame source is
-   * released together with the returned function.
+   * Returns the v-sync frame source for Worker Runtimes with `enableVSync`.
+   * The returned function is like `requestAnimationFrame`, but the callback
+   * runs on the frame source's own thread instead of the UI thread. Called
+   * lazily on the first frame request of a runtime.
    */
   const CreateVSyncSource createVSyncSource;
+#endif // ANDROID
+#ifdef __APPLE__
+  /**
+   * Creates the queue of a Worker Runtime with `enableVSync`. The queue's
+   * thread both runs the runtime's jobs and receives the v-sync callbacks.
+   */
   const CreateVSyncQueue createVSyncQueue;
+#endif // __APPLE__
   const NativeLoggingHook nativeLoggingHook;
   const std::shared_ptr<NetworkingBackend> networkingBackend;
 };

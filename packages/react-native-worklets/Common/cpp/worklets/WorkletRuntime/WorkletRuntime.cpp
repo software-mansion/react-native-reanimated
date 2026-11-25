@@ -168,8 +168,10 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       eventLoop_,
       queue_,
       enableVSync_,
-      nativeLoggingHook,
-      runtimeBindings->createVSyncSource);
+#ifdef ANDROID
+      runtimeBindings->createVSyncSource,
+#endif // ANDROID
+      nativeLoggingHook);
 
   if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {
     jsi_utils::installJsiFunction(rt, "__getRootTaskId", [taskState = taskState_](jsi::Runtime &) {

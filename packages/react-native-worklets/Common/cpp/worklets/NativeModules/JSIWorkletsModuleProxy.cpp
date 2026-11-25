@@ -703,13 +703,17 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
         const auto useDefaultQueue = at<2>(args).getBool();
         const auto enableVSync = at<8>(args).getBool();
-        const auto createVSyncQueue = sourceProxy->getRuntimeBindings()->createVSyncQueue;
 
         std::shared_ptr<AsyncQueue> asyncQueue;
-        if (useDefaultQueue && enableVSync && createVSyncQueue) {
-          asyncQueue = createVSyncQueue(name + "_queue");
-        } else if (useDefaultQueue) {
-          asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+        if (useDefaultQueue) {
+#ifdef __APPLE__
+          if (enableVSync) {
+            asyncQueue = sourceProxy->getRuntimeBindings()->createVSyncQueue(name + "_queue");
+          }
+#endif // __APPLE__
+          if (!asyncQueue) {
+            asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+          }
         } else {
           asyncQueue = extractAsyncQueue(rt, at<3>(args));
         }

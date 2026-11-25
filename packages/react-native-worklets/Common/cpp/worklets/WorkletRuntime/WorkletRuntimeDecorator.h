@@ -25,8 +25,10 @@ class WorkletRuntimeDecorator {
       const std::shared_ptr<EventLoop> &eventLoop,
       const std::shared_ptr<AsyncQueue> &queue,
       const bool enableVSync,
-      const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
-      const RuntimeBindings::CreateVSyncSource &createVSyncSource);
+#ifdef ANDROID
+      const RuntimeBindings::CreateVSyncSource &createVSyncSource,
+#endif // ANDROID
+      const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);
 };
 
 } // namespace worklets

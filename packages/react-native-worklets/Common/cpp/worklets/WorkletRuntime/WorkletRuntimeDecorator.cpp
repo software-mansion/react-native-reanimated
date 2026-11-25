@@ -87,8 +87,10 @@ void WorkletRuntimeDecorator::decorate(
     const std::shared_ptr<EventLoop> &eventLoop,
     const std::shared_ptr<AsyncQueue> &queue,
     const bool enableVSync,
-    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook,
-    const RuntimeBindings::CreateVSyncSource &createVSyncSource) {
+#ifdef ANDROID
+    const RuntimeBindings::CreateVSyncSource &createVSyncSource,
+#endif // ANDROID
+    const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
 
@@ -271,6 +273,7 @@ void WorkletRuntimeDecorator::decorate(
     return;
   }
 
+#ifdef __APPLE__
   if (const auto vsyncQueue = std::dynamic_pointer_cast<VSyncAsyncQueue>(queue)) {
     eventLoop->setFrameSource(
         [weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](std::function<void(double)> &&onFrame) {
@@ -295,41 +298,38 @@ void WorkletRuntimeDecorator::decorate(
           }
           return jsi::Value::undefined();
         });
-    return;
   }
-
-  if (createVSyncSource) {
-    /**
-     * The frame source is created with the first request, so that only the
-     * runtimes that use it own one. The function is called only from the
-     * runtime it is installed on.
-     */
-    const auto requestVSync = std::make_shared<RuntimeBindings::RequestAnimationFrame>();
-    eventLoop->setFrameSource(
-        [createVSyncSource, requestVSync](std::function<void(double)> &&onFrame) {
-          if (!*requestVSync) {
-            *requestVSync = createVSyncSource();
+#elif defined(ANDROID)
+  /**
+   * The frame source is obtained with the first frame request. The function
+   * is called only from the runtime it is installed on.
+   */
+  const auto requestVSync = std::make_shared<RuntimeBindings::RequestAnimationFrame>();
+  eventLoop->setFrameSource(
+      [createVSyncSource, requestVSync](std::function<void(double)> &&onFrame) {
+        if (!*requestVSync) {
+          *requestVSync = createVSyncSource();
+        }
+        (*requestVSync)(std::move(onFrame));
+      },
+      false);
+  jsi_utils::installJsiFunction(
+      rt,
+      "__scheduleVSyncCallback",
+      [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop), createVSyncSource, requestVSync](jsi::Runtime &) {
+        if (!*requestVSync) {
+          *requestVSync = createVSyncSource();
+        }
+        (*requestVSync)([weakEventLoop](const double timestampMs) {
+          if (auto strongEventLoop = weakEventLoop.lock()) {
+            strongEventLoop->pushTask([timestampMs](jsi::Runtime &rt) {
+              rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
+            });
           }
-          (*requestVSync)(std::move(onFrame));
-        },
-        false);
-    jsi_utils::installJsiFunction(
-        rt,
-        "__scheduleVSyncCallback",
-        [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop), createVSyncSource, requestVSync](jsi::Runtime &) {
-          if (!*requestVSync) {
-            *requestVSync = createVSyncSource();
-          }
-          (*requestVSync)([weakEventLoop](const double timestampMs) {
-            if (auto strongEventLoop = weakEventLoop.lock()) {
-              strongEventLoop->pushTask([timestampMs](jsi::Runtime &rt) {
-                rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
-              });
-            }
-          });
-          return jsi::Value::undefined();
         });
-  }
+        return jsi::Value::undefined();
+      });
+#endif // __APPLE__
 }
 
 } // namespace worklets
