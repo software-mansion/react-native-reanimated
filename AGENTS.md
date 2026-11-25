@@ -89,7 +89,8 @@ Fast C++ syntax check without a native build. Run from `packages/react-native-wo
 ```sh
 RN=../../node_modules/react-native
 HERMES=../../apps/fabric-example/ios/Pods/hermes-engine/destroot/include
-clang++ -std=c++20 -fsyntax-only -I Common/cpp -I $RN/ReactCommon/jsi -I $RN/ReactCommon \
+clang++ -std=c++20 -fsyntax-only -DWORKLETS_STABLE_API_TARGET='"0.14.0"' \
+  -I Common/cpp -I $RN/ReactCommon/jsi -I $RN/ReactCommon \
   -I $RN/ReactCommon/callinvoker -I $RN/ReactCommon/react/nativemodule/core -I $HERMES <file.cpp>
 ```
 
@@ -131,4 +132,4 @@ yarn workspace fabric-example runtime-tests --library worklets --platform ios --
 ## Release facts
 
 - The release procedure lives in `packages/react-native-reanimated/RELEASE.md`. Agent skills for releases and cherry-picks live in `.agents/skills/` (`.claude/skills` links to it): `reanimated-release`, `worklets-release`, `reanimated-cherry-pick` and `worklets-cherry-pick`. Worklets follows the same flow from `worklets-<X.Y>-stable` branches, and its version file is `src/debug/jsVersion.ts`.
-- Mark each stable Worklets C++ free-function declaration with `WORKLETS_STABLE_API_SINCE("major.minor.patch")` in `StableApi.h`. Use the first release that supports that function's current contract. Update only the affected function's version when it changes incompatibly. Consumers opt into checks by setting `WORKLETS_STABLE_API_TARGET`. Keep shared class definitions independent of that setting so they can be used across translation units.
+- Mark each stable Worklets C++ free-function declaration with `WORKLETS_STABLE_API_SINCE("major.minor.patch")` in `StableApi.h`. Use the first release that supports that function's current contract. Update only the affected function's version when it changes incompatibly. Every native target that includes the stable header must set `WORKLETS_STABLE_API_TARGET`. Worklets and Reanimated set it in their podspecs and Android CMake files. Keep shared class definitions independent of that setting so they can be used across translation units.

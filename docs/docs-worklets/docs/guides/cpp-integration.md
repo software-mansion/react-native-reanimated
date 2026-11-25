@@ -14,7 +14,6 @@ Add Worklets as a dependency of your library's pod. For a source-built CocoaPods
 s.dependency 'RNWorklets'
 s.pod_target_xcconfig = {
   'HEADER_SEARCH_PATHS' => '$(inherited) "$(PODS_ROOT)/Headers/Public/RNWorklets"',
-  # Optional. See "Set a C++ target version" below.
   'OTHER_CPLUSPLUSFLAGS' => '$(inherited) -DWORKLETS_STABLE_API_TARGET=\"0.14.0\"'
 }
 ```
@@ -40,7 +39,6 @@ In your library's `CMakeLists.txt`, link the Worklets Prefab target. Replace `my
 ```cmake
 find_package(react-native-worklets REQUIRED CONFIG)
 target_link_libraries(my_library PRIVATE react-native-worklets::worklets)
-# Optional. See "Set a C++ target version" below.
 target_compile_definitions(my_library PRIVATE "WORKLETS_STABLE_API_TARGET=\"0.14.0\"")
 ```
 
@@ -52,6 +50,6 @@ Include the stable Worklets header in your native source.
 #include <worklets/Compat/StableApi.h>
 ```
 
-If you want Clang to check your calls against a specific C++ version, set `WORKLETS_STABLE_API_TARGET` in your native target's build settings as shown above. Use a SemVer string in `major.minor.patch` form, such as `"0.14.0"`. Build settings also pass the target to CocoaPods builds that compile the header as a Clang module.
+Set `WORKLETS_STABLE_API_TARGET` in the build settings of every native target that includes this header. Use a SemVer string in `major.minor.patch` form, such as `"0.14.0"`. Build settings also pass the target to CocoaPods builds that compile the header as a Clang module.
 
 You can still include the header and use functions whose versions are at or below your target.

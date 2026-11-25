@@ -1,13 +1,19 @@
 #pragma once
 
-#define WORKLETS_STABLE_API_VERSION "Deprecated. Use WORKLETS_STABLE_API_TARGET to opt into per-function version checks"
+#define WORKLETS_STABLE_API_VERSION \
+  ([] { \
+    static_assert(false, "WORKLETS_STABLE_API_VERSION is deprecated. Define WORKLETS_STABLE_API_TARGET instead."); \
+  }())
 
 #include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
 
-#ifdef WORKLETS_STABLE_API_TARGET
+#ifndef WORKLETS_STABLE_API_TARGET
+#error "Define WORKLETS_STABLE_API_TARGET as a SemVer string in your native build settings to use the Worklets C++ API."
+#define WORKLETS_STABLE_API_SINCE(version)
+#else
 #include <array>
 #include <cstddef>
 #include <string_view>
@@ -66,8 +72,6 @@ static_assert(
     "The Worklets C++ target must be a SemVer string in major.minor.patch form.");
 
 } // namespace worklets::detail
-#else
-#define WORKLETS_STABLE_API_SINCE(version)
 #endif
 
 namespace facebook::jsi {
