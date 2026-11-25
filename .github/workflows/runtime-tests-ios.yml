@@ -53,7 +53,7 @@ jobs:
   runtime-tests-ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: ${{ inputs.sanitizer && 240 || 90 }}
     strategy:
       fail-fast: false

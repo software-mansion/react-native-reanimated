@@ -1,0 +1,58 @@
+name: Namespace iOS all (test)
+on:
+  push:
+    branches: [namespace-ios-all]
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  example-ios-build-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+    uses: ./.github/workflows/example-ios-build-check.yml
+    with:
+      configuration: ${{ matrix.configuration }}
+
+  runtime-tests-ios-argent:
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, ReleaseRuntimeTests]
+        bundleMode: [false, true]
+    uses: ./.github/workflows/runtime-tests-ios-argent.yml
+    with:
+      configuration: ${{ matrix.configuration }}
+      bundleMode: ${{ matrix.bundleMode }}
+    secrets:
+      SIM_ROUTER_USERNAME: ${{ secrets.SIM_ROUTER_USERNAME }}
+      SIM_ROUTER_API_KEY: ${{ secrets.SIM_ROUTER_API_KEY }}
+
+  runtime-tests-ios-sanitizers:
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizer: [thread, address]
+    uses: ./.github/workflows/runtime-tests-ios.yml
+    with:
+      configuration: ReleaseRuntimeTests
+      bundleMode: true
+      sanitizer: ${{ matrix.sanitizer }}
+
+  use-frameworks:
+    uses: ./.github/workflows/use-frameworks-reanimated-build-check-nightly.yml
+
+  expo-devclient:
+    uses: ./.github/workflows/expo-devclient-build-check-nightly.yml
+
+  react-native-nightly:
+    uses: ./.github/workflows/react-native-nightly-reanimated-build-check-nightly.yml
+
+  reanimated-compatibility:
+    uses: ./.github/workflows/reanimated-compatibility-check-nightly.yml
+
+  reanimated-worklets-compatibility:
+    uses: ./.github/workflows/reanimated-worklets-compatibility-check.yml
