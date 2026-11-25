@@ -1,11 +1,10 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <worklets/RunLoop/AsyncQueue.h>
-#include <worklets/RunLoop/RuntimeTaskState.h>
 
 #include <atomic>
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -32,13 +31,9 @@ struct TimeoutsQueueState {
 
 class EventLoop : public std::enable_shared_from_this<EventLoop> {
  public:
-  EventLoop(
-      const std::string &name,
-      AbortToken abortToken,
-      const std::shared_ptr<jsi::Runtime> &runtime,
-      const std::shared_ptr<AsyncQueue> &queue,
-      const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
-      const std::shared_ptr<RuntimeTaskState> &taskState);
+  using TaskScheduler = std::function<void(std::function<void(jsi::Runtime &rt)> &&job)>;
+
+  EventLoop(const std::string &name, TaskScheduler &&scheduleTask);
   ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
@@ -46,11 +41,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void abortPending();
 
  private:
-  const AbortToken abortToken_;
-  const std::shared_ptr<jsi::Runtime> runtime_;
-  const std::shared_ptr<AsyncQueue> queue_;
-  const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
-  const std::shared_ptr<RuntimeTaskState> taskState_;
+  const TaskScheduler scheduleTask_;
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
 

@@ -90,6 +90,7 @@ WorkletRuntime::WorkletRuntime(
       enableLocking_(enableLocking),
       enableNetworking_(enableNetworking),
       abortable_(abortable),
+      enableEventLoop_(enableEventLoop),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
       runtime_(makeRuntime(
@@ -104,10 +105,6 @@ WorkletRuntime::WorkletRuntime(
       (enableLocking || !enableEventLoop) &&
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
-  if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
-    eventLoop_->run();
-  }
 }
 
 WorkletRuntime::~WorkletRuntime() {
@@ -155,6 +152,16 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
   const auto unpackerLoader = jsiWorkletsModuleProxy->getUnpackerLoader();
   const auto nativeLoggingHook =
       bundleModeEnabled ? runtimeBindings->nativeLoggingHook : RuntimeBindings::NativeLoggingHook{};
+
+  if (enableEventLoop_) {
+    eventLoop_ =
+        std::make_shared<EventLoop>(name_, [weakThis = weak_from_this()](std::function<void(jsi::Runtime & rt)> &&job) {
+          if (const auto strongThis = weakThis.lock()) {
+            strongThis->scheduleEventLoopTask(std::move(job));
+          }
+        });
+    eventLoop_->run();
+  }
 
   WorkletRuntimeDecorator::decorate(
       rt,
@@ -289,6 +296,22 @@ void WorkletRuntime::scheduleWithStack(
 void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
   scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(job);
+  });
+}
+
+void WorkletRuntime::scheduleEventLoopTask(std::function<void(jsi::Runtime &)> &&job) const {
+  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+#ifndef NDEBUG
+      try {
+        job(rt);
+      } catch (jsi::JSError &e) {
+        JSLogger::handleJSError(workletRuntime.jsScheduler_, rt, workletRuntime.name_, e, std::nullopt);
+      }
+#else
+      job(rt);
+#endif // NDEBUG
+    });
   });
 }
 

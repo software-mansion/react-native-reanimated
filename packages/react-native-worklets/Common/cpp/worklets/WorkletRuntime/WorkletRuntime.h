@@ -349,6 +349,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    */
   void scheduleImpl(ScheduledJob job) const;
 
+  void scheduleEventLoopTask(std::function<void(jsi::Runtime &)> &&job) const;
+
   /**
    * Assumes the caller acquired the runtime lock.
    */
@@ -523,6 +525,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const bool enableLocking_;
   const bool enableNetworking_;
   const bool abortable_;
+  const bool enableEventLoop_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;
