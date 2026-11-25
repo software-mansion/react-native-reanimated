@@ -1,0 +1,150 @@
+name: Namespace iOS build check (test)
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  push:
+    branches: [namespace-test]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  namespace-ios-build-check:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: namespace-profile-ios
+    env:
+      WORKING_DIRECTORY: apps/fabric-example
+      REANIMATED_DIR: packages/react-native-reanimated
+      CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
+      BUILD_MARKER_DIR: .build-markers
+      USE_CCACHE_LAUNCHER: 1
+      CACHE_KEY: ios-${{ github.sha }}-${{ inputs.configuration || 'Debug' }}-${{ inputs.bundleMode || false }}
+    concurrency:
+      group: ios-${{ github.workflow }}-${{ github.ref }}-${{ inputs.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Restore result cache
+        id: result-cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
+          key: example-ios-build-${{ env.CACHE_KEY }}
+
+      - name: Skip already validated build
+        if: steps.result-cache.outputs.cache-hit == 'true'
+        run: echo "This commit already built successfully on iOS $CONFIGURATION."
+
+      - uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        with:
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+
+      - name: Install LLVM tools (xcode-build-server + llvm clang-tidy)
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: brew install xcode-build-server llvm@22
+
+      - name: Use Node.js
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install monorepo node dependencies
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: yarn install --immutable
+      - name: Save Yarn cache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
+      - name: Toggle Bundle Mode
+        if: steps.result-cache.outputs.cache-hit != 'true' && inputs.bundleMode
+        run: yarn toggle-bundle-mode
+      - name: Build Reanimated package
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.REANIMATED_DIR }}
+        run: yarn build
+
+      - name: Setup ccache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/setup-ccache
+        with:
+          key-prefix: ios-${{ env.CONFIGURATION }}
+
+      - name: Install Pods (with caching)
+        id: install-pods
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/install-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+
+      # The ccache launcher prefixes every compile command, which
+      # xcode-build-server does not recognise as a compiler, so the sed keeps
+      # the parsed compile database from coming out empty and leaving
+      # clang-tidy with nothing to lint.
+      - name: Build app (piped through xcode-build-server)
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        shell: bash -eo pipefail {0}
+        run: xcodebuild -workspace FabricExample.xcworkspace -configuration "$CONFIGURATION" -scheme "$CONFIGURATION FabricExample" -destination "generic/platform=iOS Simulator" 2>&1 | sed -E 's|^([[:space:]]*)[^[:space:]]*/ccache |\1|' | xcode-build-server parse -o compile_commands.json
+
+      - name: Save ccache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: $/.github/actions/save-ccache
+        with:
+          key-prefix: ios-${{ env.CONFIGURATION }}
+
+      - name: Generate per-package compile_commands.json
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ env.WORKING_DIRECTORY }}/ios
+        run: |
+          ios_db="$(pwd)/compile_commands.json"
+          for cpp_dir in ${{ github.workspace }}/packages/*/Common/cpp; do
+            [ -d "$cpp_dir" ] || continue
+            pkg_dir="${cpp_dir%/Common/cpp}"
+            node ${{ github.workspace }}/scripts/llvm-tools/emit.js \
+              "$pkg_dir/compile_commands.json" \
+              "$ios_db" \
+              "$pkg_dir/android/.cxx"
+          done
+
+      - name: Clang-tidy lint Worklets
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: yarn workspace react-native-worklets lint:clang-tidy:ios --strict
+
+      - name: Clang-tidy lint Reanimated
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: yarn workspace react-native-reanimated lint:clang-tidy:ios --strict
+
+      - name: Mark build successful
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p "${BUILD_MARKER_DIR}"
+          echo "ok" > "${BUILD_MARKER_DIR}/${CACHE_KEY}.success"
+
+      # Pods do not depend on the configuration; one leg saves so the nightly
+      # fan-out does not race for the key.
+      - name: Save Pods cache
+        if: steps.result-cache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
+        uses: $/.github/actions/save-pods
+        with:
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          pod-directory: ios
+          cache-hit: ${{ steps.install-pods.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
+
+      - name: Save result cache
+        if: steps.result-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ env.BUILD_MARKER_DIR }}/${{ env.CACHE_KEY }}.success
+          key: example-ios-build-${{ env.CACHE_KEY }}
