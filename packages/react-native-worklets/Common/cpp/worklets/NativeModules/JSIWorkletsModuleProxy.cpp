@@ -3,6 +3,7 @@
 #include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/RunLoop/VSyncEventLoop.h>
 #include <worklets/SharedItems/Serializable/CustomSerializable.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
@@ -235,9 +236,17 @@ inline jsi::Value createWorkletRuntime(
     bool enableLocking,
     bool enableNetworking,
     bool abortable,
-    bool enableVSync) {
+    VSyncEventLoop::FrameRequester &&requestFrame) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking, abortable, enableVSync);
+      sourceProxy,
+      name,
+      initializer,
+      queue,
+      enableEventLoop,
+      enableLocking,
+      enableNetworking,
+      abortable,
+      std::move(requestFrame));
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -705,10 +714,18 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         const auto enableVSync = at<8>(args).getBool();
 
         std::shared_ptr<AsyncQueue> asyncQueue;
+        VSyncEventLoop::FrameRequester requestFrame;
         if (useDefaultQueue) {
 #ifdef __APPLE__
           if (enableVSync) {
-            asyncQueue = sourceProxy->getRuntimeBindings()->createVSyncQueue(name + "_queue");
+            const auto vsyncQueue = sourceProxy->getRuntimeBindings()->createVSyncQueue(name + "_queue");
+            requestFrame = [weakQueue =
+                                std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](std::function<void(double)> &&onFrame) {
+              if (const auto strongQueue = weakQueue.lock()) {
+                strongQueue->requestVSync(std::move(onFrame));
+              }
+            };
+            asyncQueue = vsyncQueue;
           }
 #endif // __APPLE__
           if (!asyncQueue) {
@@ -735,7 +752,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             enableLocking,
             enableNetworking,
             abortable,
-            enableVSync);
+            std::move(requestFrame));
       });
 
   jsi_utils::addMethod<5>(

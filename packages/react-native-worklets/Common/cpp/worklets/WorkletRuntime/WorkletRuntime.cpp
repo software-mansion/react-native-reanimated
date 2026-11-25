@@ -86,12 +86,11 @@ WorkletRuntime::WorkletRuntime(
     bool enableLocking,
     bool enableNetworking,
     bool abortable,
-    bool enableVSync)
+    VSyncEventLoop::FrameRequester &&requestFrame)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       enableNetworking_(enableNetworking),
       abortable_(abortable),
-      enableVSync_(enableVSync),
       runtimeMutex_(std::make_shared<std::recursive_mutex>()),
       microtaskQueueEnabled_(enableEventLoop || runtimeKind == RuntimeData::RuntimeKind::UI),
       runtime_(makeRuntime(
@@ -107,7 +106,12 @@ WorkletRuntime::WorkletRuntime(
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
+    if (requestFrame) {
+      eventLoop_ = std::make_shared<VSyncEventLoop>(
+          name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_, std::move(requestFrame));
+    } else {
+      eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
+    }
     eventLoop_->run();
   }
 }
@@ -166,8 +170,6 @@ void WorkletRuntime::init(const std::shared_ptr<JSIWorkletsModuleProxy> &jsiWork
       microtaskQueueEnabled_,
       jsiWorkletsModuleProxy->toOptimizedObject(rt),
       eventLoop_,
-      queue_,
-      enableVSync_,
       nativeLoggingHook);
 
   if constexpr (StaticFeatureFlags::getFlag("RUNTIME_TEST_FLAG")) {

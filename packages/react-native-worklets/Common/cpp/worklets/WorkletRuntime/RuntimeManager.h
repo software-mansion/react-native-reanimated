@@ -1,6 +1,7 @@
 #pragma once
 
 #include <jsi/jsi.h>
+#include <worklets/RunLoop/VSyncEventLoop.h>
 #include <worklets/Tools/UIScheduler.h>
 #include <worklets/WorkletRuntime/RuntimeData.h>
 
@@ -47,7 +48,7 @@ class RuntimeManager : public std::enable_shared_from_this<RuntimeManager> {
       bool enableLocking = true,
       bool enableNetworking = true,
       bool abortable = false,
-      bool enableVSync = false);
+      VSyncEventLoop::FrameRequester &&requestFrame = {});
 
   std::shared_ptr<WorkletRuntime> createUninitializedUIRuntime(const std::shared_ptr<AsyncQueue> &uiAsyncQueue);
 

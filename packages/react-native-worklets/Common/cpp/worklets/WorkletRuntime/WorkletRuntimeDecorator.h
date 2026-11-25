@@ -23,8 +23,6 @@ class WorkletRuntimeDecorator {
       const bool enableMicrotaskQueue,
       jsi::Object &&jsiWorkletsModuleProxy,
       const std::shared_ptr<EventLoop> &eventLoop,
-      const std::shared_ptr<AsyncQueue> &queue,
-      const bool enableVSync,
       const RuntimeBindings::NativeLoggingHook &nativeLoggingHook);
 };
 

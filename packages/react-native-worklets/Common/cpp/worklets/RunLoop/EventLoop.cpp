@@ -55,15 +55,15 @@ void EventLoop::run() {
       }
 
       const auto currentTime = getCurrentTimeInMs();
-      std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
+      std::vector<Timeout> dueTimeouts;
       auto &timeouts = state->queue;
       timeouts.erase(
           std::remove_if(
               timeouts.begin(),
               timeouts.end(),
-              [currentTime, &jobs](const Timeout &timeout) {
+              [currentTime, &dueTimeouts](const Timeout &timeout) {
                 if (currentTime >= timeout.targetTime) {
-                  jobs.emplace_back(timeout.callback);
+                  dueTimeouts.push_back(timeout);
                   return true;
                 }
                 return false;
@@ -71,8 +71,8 @@ void EventLoop::run() {
           timeouts.end());
       lock.unlock();
 
-      if (auto strongThis = weakThis.lock(); strongThis && !jobs.empty()) {
-        strongThis->deferToNextFrame(std::move(jobs));
+      if (auto strongThis = weakThis.lock(); strongThis && !dueTimeouts.empty()) {
+        strongThis->releaseDueTimeouts(std::move(dueTimeouts));
       }
     }
   });
@@ -90,32 +90,38 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
        state = timeoutsQueueState_,
        job = std::move(job)] {
         if (auto runtime = weakRuntime.lock()) {
-          std::unique_lock lock(*runtimeMutex);
-          if (!state->running) [[unlikely]] {
-            return;
-          }
-          taskState->rootTaskRunning = true;
-          taskState->rootTaskId++;
-          job(*runtime);
-          runtime->drainMicrotasks();
-          taskState->microtaskCheckpointRequested = false;
-          taskState->rootTaskRunning = false;
+          runRootTask(*runtime, *runtimeMutex, *taskState, *state, job);
         }
       },
       abortToken_);
 }
 
 void EventLoop::runTask(const std::function<void(jsi::Runtime &rt)> &job) {
-  std::unique_lock lock(*runtimeMutex_);
-  if (!timeoutsQueueState_->running) [[unlikely]] {
+  runRootTask(*runtime_, *runtimeMutex_, *taskState_, *timeoutsQueueState_, job);
+}
+
+void EventLoop::releaseDueTimeouts(std::vector<Timeout> &&dueTimeouts) {
+  for (auto &timeout : dueTimeouts) {
+    pushTask(std::move(timeout.callback));
+  }
+}
+
+void EventLoop::runRootTask(
+    jsi::Runtime &runtime,
+    std::recursive_mutex &runtimeMutex,
+    RuntimeTaskState &taskState,
+    const TimeoutsQueueState &state,
+    const std::function<void(jsi::Runtime &rt)> &job) {
+  std::unique_lock lock(runtimeMutex);
+  if (!state.running) [[unlikely]] {
     return;
   }
-  taskState_->rootTaskRunning = true;
-  taskState_->rootTaskId++;
-  job(*runtime_);
-  runtime_->drainMicrotasks();
-  taskState_->microtaskCheckpointRequested = false;
-  taskState_->rootTaskRunning = false;
+  taskState.rootTaskRunning = true;
+  taskState.rootTaskId++;
+  job(runtime);
+  runtime.drainMicrotasks();
+  taskState.microtaskCheckpointRequested = false;
+  taskState.rootTaskRunning = false;
 }
 
 void EventLoop::abortPending() {
@@ -126,61 +132,6 @@ void EventLoop::abortPending() {
     std::swap(pendingTimeouts, timeoutsQueueState_->queue);
   }
   timeoutsQueueState_->cv.notify_all();
-}
-
-void EventLoop::setRequestFrame(FrameRequester &&requestFrame) {
-  std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
-  requestFrame_ = std::move(requestFrame);
-}
-
-void EventLoop::deferToNextFrame(std::vector<std::function<void(jsi::Runtime &rt)>> &&jobs) {
-  bool shouldRequestFrame = false;
-  {
-    std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
-    if (!requestFrame_) {
-      for (auto &job : jobs) {
-        pushTask(std::move(job));
-      }
-      return;
-    }
-    for (auto &job : jobs) {
-      frameTimeouts_.push_back(std::move(job));
-    }
-    shouldRequestFrame = !frameRequested_;
-    frameRequested_ = true;
-  }
-  if (shouldRequestFrame) {
-    pushTask([weakThis = weak_from_this()](jsi::Runtime &) {
-      if (const auto strongThis = weakThis.lock()) {
-        strongThis->requestFrame();
-      }
-    });
-  }
-}
-
-void EventLoop::requestFrame() {
-  FrameRequester requestFrame;
-  {
-    std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
-    requestFrame = requestFrame_;
-  }
-  requestFrame([weakThis = weak_from_this()](double) {
-    if (const auto strongThis = weakThis.lock()) {
-      strongThis->runFrameTimeouts();
-    }
-  });
-}
-
-void EventLoop::runFrameTimeouts() {
-  std::vector<std::function<void(jsi::Runtime & rt)>> timeouts;
-  {
-    std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
-    std::swap(timeouts, frameTimeouts_);
-    frameRequested_ = false;
-  }
-  for (const auto &timeout : timeouts) {
-    runTask(timeout);
-  }
 }
 
 void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay) {

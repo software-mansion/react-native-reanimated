@@ -39,15 +39,15 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
       const std::shared_ptr<AsyncQueue> &queue,
       const std::shared_ptr<std::recursive_mutex> &runtimeMutex,
       const std::shared_ptr<RuntimeTaskState> &taskState);
-  ~EventLoop();
+  virtual ~EventLoop();
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
-  void runTask(const std::function<void(jsi::Runtime &rt)> &job);
   void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
   void abortPending();
 
-  using FrameRequester = std::function<void(std::function<void(double)> &&onFrame)>;
-  void setRequestFrame(FrameRequester &&requestFrame);
+ protected:
+  virtual void releaseDueTimeouts(std::vector<Timeout> &&dueTimeouts);
+  void runTask(const std::function<void(jsi::Runtime &rt)> &job);
 
  private:
   const AbortToken abortToken_;
@@ -58,15 +58,12 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   const std::shared_ptr<TimeoutsQueueState> timeoutsQueueState_;
   const std::string name_;
 
-  void deferToNextFrame(std::vector<std::function<void(jsi::Runtime &rt)>> &&jobs);
-  void requestFrame();
-  void runFrameTimeouts();
-
-  FrameRequester requestFrame_;
-  std::mutex frameTimeoutsMutex_;
-  std::vector<std::function<void(jsi::Runtime &rt)>> frameTimeouts_;
-  bool frameRequested_ = false;
-
+  static void runRootTask(
+      jsi::Runtime &runtime,
+      std::recursive_mutex &runtimeMutex,
+      RuntimeTaskState &taskState,
+      const TimeoutsQueueState &state,
+      const std::function<void(jsi::Runtime &rt)> &job);
   static int64_t getCurrentTimeInMs();
 };
 

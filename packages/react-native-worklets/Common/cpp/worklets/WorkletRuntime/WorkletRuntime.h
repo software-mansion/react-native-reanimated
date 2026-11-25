@@ -6,6 +6,7 @@
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
 #include <worklets/RunLoop/RuntimeTaskState.h>
+#include <worklets/RunLoop/VSyncEventLoop.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableWorklet.h>
@@ -294,7 +295,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       bool enableLocking = true,
       bool enableNetworking = true,
       bool abortable = false,
-      bool enableVSync = false);
+      VSyncEventLoop::FrameRequester &&requestFrame = {});
 
   ~WorkletRuntime() override;
 
@@ -524,7 +525,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   const bool enableLocking_;
   const bool enableNetworking_;
   const bool abortable_;
-  const bool enableVSync_;
   const std::shared_ptr<std::recursive_mutex> runtimeMutex_;
   const bool microtaskQueueEnabled_;
   const std::shared_ptr<jsi::Runtime> runtime_;

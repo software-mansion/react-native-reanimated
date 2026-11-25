@@ -70,7 +70,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
     bool enableLocking,
     bool enableNetworking,
     bool abortable,
-    bool enableVSync) {
+    VSyncEventLoop::FrameRequester &&requestFrame) {
   const auto runtimeId = getNextRuntimeId();
 
   const auto workletRuntime = std::make_shared<WorkletRuntime>(
@@ -83,7 +83,7 @@ std::shared_ptr<WorkletRuntime> RuntimeManager::createWorkletRuntime(
       enableLocking,
       enableNetworking,
       abortable,
-      enableVSync);
+      std::move(requestFrame));
   const auto targetProxy = JSIWorkletsModuleProxy::createForNewRuntime(sourceProxy, runtimeId);
 
   workletRuntime->init(targetProxy);

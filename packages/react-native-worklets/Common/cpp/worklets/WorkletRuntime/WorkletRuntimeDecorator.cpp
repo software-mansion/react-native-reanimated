@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <worklets/RunLoop/VSyncEventLoop.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
@@ -85,8 +86,6 @@ void WorkletRuntimeDecorator::decorate(
     const bool enableMicrotaskQueue,
     jsi::Object &&jsiWorkletsModuleProxy,
     const std::shared_ptr<EventLoop> &eventLoop,
-    const std::shared_ptr<AsyncQueue> &queue,
-    const bool enableVSync,
     const RuntimeBindings::NativeLoggingHook &nativeLoggingHook) {
   // resolves "ReferenceError: Property 'global' doesn't exist at ..."
   rt.global().setProperty(rt, "global", rt.global());
@@ -266,36 +265,17 @@ void WorkletRuntimeDecorator::decorate(
         return jsi::Value::undefined();
       });
 
-  if (!enableVSync || !eventLoop) {
-    return;
-  }
-
-#ifdef __APPLE__
-  if (const auto vsyncQueue = std::dynamic_pointer_cast<VSyncAsyncQueue>(queue)) {
-    eventLoop->setRequestFrame(
-        [weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](std::function<void(double)> &&onFrame) {
-          if (const auto strongQueue = weakQueue.lock()) {
-            strongQueue->requestVSync(std::move(onFrame));
-          }
-        });
+  if (const auto vsyncEventLoop = std::dynamic_pointer_cast<VSyncEventLoop>(eventLoop)) {
     jsi_utils::installJsiFunction(
-        rt,
-        "__scheduleVSyncCallback",
-        [weakEventLoop = std::weak_ptr<EventLoop>(eventLoop),
-         weakQueue = std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](jsi::Runtime &) {
-          if (const auto strongQueue = weakQueue.lock()) {
-            strongQueue->requestVSync([weakEventLoop](const double timestampMs) {
-              if (const auto strongEventLoop = weakEventLoop.lock()) {
-                strongEventLoop->runTask([timestampMs](jsi::Runtime &rt) {
-                  rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
-                });
-              }
+        rt, "__scheduleVSyncCallback", [weakEventLoop = std::weak_ptr<VSyncEventLoop>(vsyncEventLoop)](jsi::Runtime &) {
+          if (const auto strongEventLoop = weakEventLoop.lock()) {
+            strongEventLoop->runOnNextFrame([](jsi::Runtime &rt, const double timestampMs) {
+              rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
             });
           }
           return jsi::Value::undefined();
         });
   }
-#endif // __APPLE__
 }
 
 } // namespace worklets
