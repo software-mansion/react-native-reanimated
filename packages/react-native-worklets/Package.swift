@@ -1,5 +1,8 @@
 // swift-tools-version: 6.0
 
+#if canImport(CoreFoundation)
+import CoreFoundation
+#endif
 import Foundation
 import PackageDescription
 
