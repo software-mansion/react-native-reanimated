@@ -32,24 +32,37 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
       } catch (error) {
         errors.push(error);
       }
+      drainMicrotasks(errors);
+    }
+
+    flushedCallbacksBegin = flushedCallbacksEnd;
+    flushedCallbacks = [];
+
+    throwErrors(errors);
+  }
+
+  function drainMicrotasks(errors: unknown[]) {
+    for (;;) {
       try {
         globalThis.__drainMicrotasks();
+        return;
       } catch (error) {
         errors.push(error);
       }
     }
+  }
 
-    flushedCallbacksBegin = flushedCallbacksEnd;
-
-    if (errors.length > 0) {
-      for (let i = 1; i < errors.length; i++) {
-        const error = errors[i];
-        setTimeout(() => {
-          throw error;
-        });
-      }
-      throw errors[0];
+  function throwErrors(errors: unknown[]) {
+    if (errors.length === 0) {
+      return;
     }
+    for (let i = 1; i < errors.length; i++) {
+      const error = errors[i];
+      setTimeout(() => {
+        throw error;
+      });
+    }
+    throw errors[0];
   }
 
   globalThis.requestAnimationFrame = (

@@ -24,19 +24,21 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
-    try {
-      if (flushedCallbacks.length > 0) {
-        for (const callback of flushedCallbacks) {
+    const errors: unknown[] = [];
+    if (flushedCallbacks.length > 0) {
+      for (const callback of flushedCallbacks) {
+        try {
           callback(timestamp);
-          globalThis.__drainMicrotasks();
+        } catch (error) {
+          errors.push(error);
         }
-      } else {
-        globalThis.__drainMicrotasks();
+        drainMicrotasks(errors);
       }
-    } finally {
-      flushedCallbacksBegin = flushedCallbacksEnd;
-      flushedCallbacks = [];
+    } else {
+      drainMicrotasks(errors);
     }
+    flushedCallbacksBegin = flushedCallbacksEnd;
+    flushedCallbacks = [];
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
@@ -45,6 +47,8 @@ export function setupRequestAnimationFrame() {
       for (; finalizerIndex < finalizers.length; finalizerIndex++) {
         finalizers[finalizerIndex]();
       }
+    } catch (error) {
+      errors.push(error);
     } finally {
       if (finalizerIndex < finalizers.length) {
         queuedFinalizers = finalizers
@@ -52,7 +56,33 @@ export function setupRequestAnimationFrame() {
           .concat(queuedFinalizers);
       }
     }
-    globalThis.__drainMicrotasks();
+    drainMicrotasks(errors);
+
+    throwErrors(errors);
+  }
+
+  function drainMicrotasks(errors: unknown[]) {
+    for (;;) {
+      try {
+        globalThis.__drainMicrotasks();
+        return;
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+  }
+
+  function throwErrors(errors: unknown[]) {
+    if (errors.length === 0) {
+      return;
+    }
+    for (let i = 1; i < errors.length; i++) {
+      const error = errors[i];
+      setTimeout(() => {
+        throw error;
+      });
+    }
+    throw errors[0];
   }
 
   function requestAnimationFrame(
