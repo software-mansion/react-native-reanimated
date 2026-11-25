@@ -16,8 +16,8 @@ export function setupSetTimeout() {
     const rafCallback = () => {
       const now = globalThis._getTimerTimestamp();
       if (now - start >= delay) {
-        callback(...args);
         timeoutHandleToRafHandle.delete(timeoutHandle);
+        callback(...args);
       } else {
         const rafHandle = requestAnimationFrame(rafCallback);
         timeoutHandleToRafHandle.set(timeoutHandle, rafHandle);
