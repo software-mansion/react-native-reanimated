@@ -17,6 +17,8 @@ class UIScheduler {
 
  protected:
   virtual bool queryIsOnUIThread() const = 0;
+  // Must be called on the UI thread. Returns false if the job still has to be queued with a trigger.
+  bool scheduleOnUIFromUIThread(std::function<void()> &job);
 
   bool drainingUI_{false};
   std::atomic<bool> scheduledOnUI_{false};

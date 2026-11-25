@@ -25,11 +25,10 @@ class UISchedulerWrapper : public UIScheduler {
   }
 
   void scheduleOnUI(std::function<void()> job) override {
-    UIScheduler::scheduleOnUI(std::move(job));
-    if (isOnUIThread()) {
-      triggerUI();
+    if (isOnUIThread() && scheduleOnUIFromUIThread(job)) {
       return;
     }
+    UIScheduler::scheduleOnUI(std::move(job));
     if (!scheduledOnUI_) {
       scheduledOnUI_ = true;
       static const auto method = androidUiScheduler_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
