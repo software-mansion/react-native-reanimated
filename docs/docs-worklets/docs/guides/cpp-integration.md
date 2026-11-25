@@ -2,6 +2,8 @@
 title: Integrating with Worklets from C++
 ---
 
+# Integrating with Worklets from C++
+
 Use the Worklets stable C++ interface when your React Native library needs to call Worklets from native code. Declare `react-native-worklets` as a peer dependency with a package range you have tested. The app installs Worklets and React Native autolinks it.
 
 ## iOS
