@@ -290,12 +290,6 @@ void WorkletRuntime::scheduleWithStack(
 
 void WorkletRuntime::schedule(std::function<void(jsi::Runtime &)> job) const {
   scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
-    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>(job);
-  });
-}
-
-void WorkletRuntime::scheduleEventLoopTask(std::function<void(jsi::Runtime &)> &&job) const {
-  scheduleImpl([job = std::move(job)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
 #ifndef NDEBUG
       try {

@@ -320,8 +320,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
  private:
-  friend class EventLoop;
-
   enum class MicrotaskCheckpoint : std::uint8_t {
     Skip,
     Run,
@@ -350,8 +348,6 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * Scheduled jobs must use the unlocked implementation methods.
    */
   void scheduleImpl(ScheduledJob job) const;
-
-  void scheduleEventLoopTask(std::function<void(jsi::Runtime &)> &&job) const;
 
   /**
    * Assumes the caller acquired the runtime lock.

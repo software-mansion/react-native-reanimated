@@ -75,7 +75,7 @@ void EventLoop::run() {
 
 void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
   if (const auto workletRuntime = workletRuntime_.lock()) {
-    workletRuntime->scheduleEventLoopTask(std::move(job));
+    workletRuntime->schedule(std::move(job));
   }
 }
 
