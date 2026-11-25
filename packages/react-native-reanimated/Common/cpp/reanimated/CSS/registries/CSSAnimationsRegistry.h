@@ -8,6 +8,7 @@
 #include <reanimated/CSS/events/CSSEventsEmitter.h>
 #include <reanimated/CSS/registries/CSSKeyframesRegistry.h>
 #include <reanimated/CSS/utils/props.h>
+#include <reanimated/Fabric/MountedRootsRegistry.h>
 #include <reanimated/Fabric/updates/OperationsLoop.h>
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
@@ -28,7 +29,8 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
       const std::shared_ptr<OperationsLoop> &loop,
       const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
       const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
-      const std::shared_ptr<CSSEventsEmitter> &eventsEmitter);
+      const std::shared_ptr<CSSEventsEmitter> &eventsEmitter,
+      const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry);
 
   bool needsFlush() const;
 
@@ -39,6 +41,9 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
 
   void flushUpdates(UpdatesBatch &updatesBatch);
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
+
+  void handleMount(SurfaceId surfaceId) override;
+  void syncDeferredUpdates() override;
 
  private:
   class AnimationObserver : public CSSAnimationObserver {
@@ -57,6 +62,7 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   const std::shared_ptr<CSSKeyframesRegistry> keyframesRegistry_;
   const std::shared_ptr<CSSPlatformAnimationFactory> platformAnimationFactory_;
   const std::shared_ptr<CSSEventsEmitter> eventsEmitter_;
+  const std::shared_ptr<MountedRootsRegistry> mountedRootsRegistry_;
 
   AnimationObserver animationObserver_{*this};
 
@@ -64,8 +70,15 @@ class CSSAnimationsRegistry : public UpdatesRegistry {
   // Tags reported by owned animations between flushes.
   std::unordered_set<Tag> updatedTags_;
   std::unordered_set<Tag> pendingRevertTags_;
+  // Views inside a `display: none` subtree. Their running animations keep their timeline,
+  // but their style is not computed or committed until they are shown again.
+  std::unordered_set<Tag> hiddenTags_;
+  // Hidden views whose style in the updates registry lags behind their animations.
+  std::unordered_set<Tag> deferredTags_;
 
   void removeTag(Tag viewTag) override;
+  void updateVisibility(Tag viewTag, const CSSAnimationsGroup &group);
+  bool shouldDeferUpdates(Tag viewTag, const CSSAnimationsGroup &group);
   std::optional<CSSAnimationsGroup> maybeBuildNewGroup(
       const std::shared_ptr<const ShadowNode> &shadowNode,
       const std::string &compoundComponentName,

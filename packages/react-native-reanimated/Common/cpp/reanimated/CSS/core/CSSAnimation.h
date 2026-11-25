@@ -36,6 +36,8 @@ class CSSAnimation {
 
   AnimationProgressState getState() const;
 
+  bool animatesProperty(const std::string &propName) const;
+
   bool hasForwardsFillMode() const {
     return settings_->hasForwardsFillMode();
   }

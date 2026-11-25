@@ -58,6 +58,10 @@ class UpdatesRegistry {
   void remove(Tag tag);
   virtual void removeUnmounted(const ShadowNodeFamily::Shared &shadowNodeFamily);
   virtual void handleRemount(Tag /*tag*/) {}
+  // Called after a root of the surface was mounted.
+  virtual void handleMount(SurfaceId /*surfaceId*/) {}
+  // Called before the props of the registry are collected for a commit.
+  virtual void syncDeferredUpdates() {}
 
 #ifdef ANDROID
   bool hasPropsToRevert() const;

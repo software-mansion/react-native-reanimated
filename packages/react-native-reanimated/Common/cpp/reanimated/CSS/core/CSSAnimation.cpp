@@ -42,6 +42,10 @@ AnimationProgressState CSSAnimation::getState() const {
   return loopAnimation_->getState();
 }
 
+bool CSSAnimation::animatesProperty(const std::string &propName) const {
+  return keyframesConfig_.styleInterpolatorFactory->getAllPropertyNames().contains(propName);
+}
+
 void CSSAnimation::setEventMask(const CSSEventMask eventMask) {
   if (eventMask == eventMask_) {
     return;

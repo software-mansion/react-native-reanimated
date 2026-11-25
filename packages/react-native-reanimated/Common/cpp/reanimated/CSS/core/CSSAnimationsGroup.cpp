@@ -1,5 +1,7 @@
 #include <reanimated/CSS/core/CSSAnimationsGroup.h>
 
+#include <algorithm>
+#include <string>
 #include <utility>
 
 namespace reanimated::css {
@@ -13,6 +15,16 @@ const CSSAnimationsVector &CSSAnimationsGroup::getAnimations() const {
 
 ShadowNodeFamily::Shared CSSAnimationsGroup::getShadowNodeFamily() const {
   return shadowNode_->getFamilyShared();
+}
+
+bool CSSAnimationsGroup::hasRunningAnimation() const {
+  return std::ranges::any_of(
+      animations_, [](const auto &animation) { return animation->getState() == AnimationProgressState::Running; });
+}
+
+bool CSSAnimationsGroup::animatesProperty(const std::string &propName) const {
+  return std::ranges::any_of(
+      animations_, [&propName](const auto &animation) { return animation->animatesProperty(propName); });
 }
 
 void CSSAnimationsGroup::updateSettings(const CSSAnimationSettingsUpdatesMap &settingsUpdates, const double timestamp) {

@@ -127,6 +127,10 @@ const routes = {
         labelTypes: ['needsFix'],
         name: 'Relative Margins',
       },
+      HiddenAnimations: {
+        Component: testExamples.HiddenAnimations,
+        name: 'Animations in Hidden Views',
+      },
     },
     /* eslint-enable perfectionist/sort-objects */
   },

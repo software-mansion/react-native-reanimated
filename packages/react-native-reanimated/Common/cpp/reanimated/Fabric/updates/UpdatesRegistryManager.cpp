@@ -105,10 +105,18 @@ std::vector<Tag> UpdatesRegistryManager::handleNodeRemovals(const SurfaceId surf
   return removedTags;
 }
 
+void UpdatesRegistryManager::handleMount(const SurfaceId surfaceId) {
+  react_native_assert(isLockedByCurrentThread());
+  for (auto &registry : registries_) {
+    registry->handleMount(surfaceId);
+  }
+}
+
 PropsMap UpdatesRegistryManager::collectProps() {
   react_native_assert(isLockedByCurrentThread());
   PropsMap propsMap;
   for (auto &registry : registries_) {
+    registry->syncDeferredUpdates();
     registry->collectProps(propsMap);
   }
   return propsMap;
