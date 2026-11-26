@@ -21,8 +21,9 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 
 static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value);
 
-// Same result as `jsi::dynamicFromValue` without a key filter.
-static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &object, const bool functionAsNull) {
+// Same result as `jsi::dynamicFromValue` without a key filter, except that
+// every function becomes null, not only functions in object properties.
+static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &object) {
   if (object.isArray(rt)) {
     const auto array = object.getArray(rt);
     const size_t size = array.size(rt);
@@ -34,11 +35,7 @@ static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &objec
     return result;
   }
   if (object.isFunction(rt)) {
-    // Like JSON.stringify, functions in object properties become null.
-    if (functionAsNull) {
-      return nullptr;
-    }
-    throw jsi::JSError(rt, "JS Functions are not convertible to dynamic");
+    return nullptr;
   }
   const auto names = object.getPropertyNames(rt);
   const size_t size = names.size(rt);
@@ -49,9 +46,7 @@ static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &objec
     if (property.isUndefined()) {
       continue;
     }
-    result.insert(
-        name.utf8(rt),
-        property.isObject() ? propsFromObject(rt, property.getObject(rt), true) : propsFromValue(rt, property));
+    result.insert(name.utf8(rt), propsFromValue(rt, property));
   }
   return result;
 }
@@ -64,7 +59,7 @@ static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value) 
     return value.getString(rt).utf8(rt);
   }
   if (value.isObject()) {
-    return propsFromObject(rt, value.getObject(rt), false);
+    return propsFromObject(rt, value.getObject(rt));
   }
   if (value.isUndefined() || value.isNull()) {
     return nullptr;
