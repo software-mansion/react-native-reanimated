@@ -32,20 +32,11 @@ All paths need `react-native-worklets` in the app, and a shared value needs `rea
 
 Add two methods to your C++ TurboModule: `addWorkletListener` and `removeWorkletListener`. JavaScript gives a worklet function to `addWorkletListener`. Your C++ code keeps it and runs it on the UI Runtime with each new value.
 
-The C++ code uses `<worklets/Compat/StableApi.h>`. This header is the stable API of Worklets. Do not include other Worklets headers, because they can change in any release. The header also defines `WORKLETS_STABLE_API_VERSION`, so that your library can check that it builds with a compatible version. For a complete package, see [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule).
+The C++ code uses `<worklets/Compat/StableApi.h>`. This header is the stable API of Worklets. Do not include other Worklets headers, because they can change in any release. For a complete package, see [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule).
 
 #### Step 1: Link Worklets
 
-Your C++ code includes a Worklets header, so your native build must depend on Worklets. On iOS, add `RNWorklets` to the dependencies of your podspec. On Android, link the `worklets` library in your `CMakeLists.txt`.
-
-```ruby title="Reading.podspec"
-s.dependency 'RNWorklets'
-```
-
-```cmake title="android/CMakeLists.txt"
-find_package(react-native-worklets REQUIRED CONFIG)
-target_link_libraries(reading react-native-worklets::worklets)
-```
+Your C++ code includes a Worklets header, so your native build must depend on Worklets and set `WORKLETS_STABLE_API_TARGET`. Follow [Integrating with Worklets from C++](./cpp-integration.md).
 
 #### Step 2: Add the listener methods to your TurboModule spec
 
@@ -450,17 +441,6 @@ export function useReadingSharedValue(): SharedValue<number | null> {
       } // namespace facebook::react
       ```
     </TabItem>
-
-    <TabItem value="build" label="Build">
-      ```ruby title="Reading.podspec"
-      s.dependency 'RNWorklets'
-      ```
-
-      ```cmake title="android/CMakeLists.txt"
-      find_package(react-native-worklets REQUIRED CONFIG)
-      target_link_libraries(reading react-native-worklets::worklets)
-      ```
-    </TabItem>
   </Tabs>
 
   To register the TurboModule, follow [Cross-Platform Native Modules (C++)](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules), or see the [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule) package.
@@ -819,28 +799,7 @@ A Nitro Module can use the same pattern as the C++ path, with a serialized workl
 
 #### Step 1: Link Worklets
 
-Your C++ code includes a Worklets header, so your native build must depend on Worklets. On iOS, add `RNWorklets` to the dependencies of your podspec. On Android, add the Gradle dependency, turn on prefab, and link the `worklets` library in your `CMakeLists.txt`.
-
-```ruby title="Reading.podspec"
-s.dependency 'RNWorklets'
-```
-
-```groovy title="android/build.gradle"
-android {
-  buildFeatures {
-    prefab true
-  }
-}
-
-dependencies {
-  implementation project(':react-native-worklets')
-}
-```
-
-```cmake title="android/CMakeLists.txt"
-find_package(react-native-worklets REQUIRED CONFIG)
-target_link_libraries(Reading react-native-worklets::worklets)
-```
+Your C++ code includes a Worklets header, so your native build must depend on Worklets and set `WORKLETS_STABLE_API_TARGET`. Follow [Integrating with Worklets from C++](./cpp-integration.md).
 
 #### Step 2: Write the spec and run Nitrogen
 
@@ -1234,29 +1193,6 @@ function remove() {
       };
 
       } // namespace margelo::nitro::reading
-      ```
-    </TabItem>
-
-    <TabItem value="build" label="Build">
-      ```ruby title="Reading.podspec"
-      s.dependency 'RNWorklets'
-      ```
-
-      ```groovy title="android/build.gradle"
-      android {
-        buildFeatures {
-          prefab true
-        }
-      }
-
-      dependencies {
-        implementation project(':react-native-worklets')
-      }
-      ```
-
-      ```cmake title="android/CMakeLists.txt"
-      find_package(react-native-worklets REQUIRED CONFIG)
-      target_link_libraries(Reading react-native-worklets::worklets)
       ```
     </TabItem>
   </Tabs>
