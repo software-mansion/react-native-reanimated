@@ -1,9 +1,11 @@
+#include <react/renderer/components/text/ParagraphShadowNode.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
 #include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 
 namespace reanimated {
 
@@ -41,6 +43,57 @@ SharedTransitionGeometry interpolateSharedTransitionGeometry(
     props["opacity"] = std::clamp(interpolate(startOpacity, targetOpacity, progress), 0.0, 1.0);
   }
   return {.frame = interpolateFrame(start, target, progress), .props = std::move(props)};
+}
+
+State::Shared textStateAt(const ShadowView &start, const ShadowView &target, const double progress) {
+  if (target.componentHandle != ParagraphShadowNode::Handle() || !target.state) {
+    return nullptr;
+  }
+  const auto defaultFontSize = TextAttributes::defaultTextAttributes().fontSize;
+  const auto drawnFontSize = [defaultFontSize](const State::Shared &state) {
+    const auto &fragments =
+        static_cast<const ParagraphShadowNode::ConcreteState &>(*state).getData().attributedString.getFragments();
+    return fragments.empty() || std::isnan(fragments.front().textAttributes.fontSize)
+        ? defaultFontSize
+        : fragments.front().textAttributes.fontSize;
+  };
+  const auto ownFontSize = drawnFontSize(target.state);
+  const auto startFontSize = start.state ? drawnFontSize(start.state) : ownFontSize;
+  const auto targetPropsFontSize =
+      std::static_pointer_cast<const ParagraphProps>(target.props)->textAttributes.fontSize;
+  const auto targetFontSize = std::isnan(targetPropsFontSize) ? defaultFontSize : targetPropsFontSize;
+  if (startFontSize == ownFontSize && targetFontSize == ownFontSize) {
+    return nullptr;
+  }
+  const auto scale = interpolate(startFontSize, targetFontSize, progress) / ownFontSize;
+  const auto &state = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
+  auto data = state.getData();
+  for (auto &fragment : data.attributedString.getFragments()) {
+    auto &attributes = fragment.textAttributes;
+    attributes.fontSize *= scale;
+    attributes.lineHeight *= scale;
+    attributes.letterSpacing *= scale;
+  }
+#ifdef ANDROID
+  // With prepared text layouts, Android draws the prepared layout of the state, not its attributed string.
+  if (const auto textLayoutManager = data.layoutManager.lock();
+      textLayoutManager && data.measuredLayout.preparedTextLayout) {
+    auto constraints = data.measuredLayout.layoutConstraints;
+    constraints.minimumSize.width *= scale;
+    constraints.maximumSize.width *= scale;
+    const TextLayoutContext context{
+        .pointScaleFactor = data.measuredLayout.pointScaleFactor, .surfaceId = target.surfaceId};
+    data.measuredLayout.preparedTextLayout =
+        TextLayoutManagerExtended(*textLayoutManager)
+            .prepareLayout(data.attributedString, data.paragraphAttributes, context, constraints);
+  }
+#else
+  // iOS lays the text out in this size, so it keeps its line breaks.
+  data.layoutSize.width *= scale;
+  data.layoutSize.height *= scale;
+#endif
+  return std::make_shared<const ParagraphShadowNode::ConcreteState>(
+      std::make_shared<const ParagraphState>(std::move(data)), state);
 }
 
 namespace {

@@ -19,4 +19,9 @@ SharedTransitionGeometry interpolateSharedTransitionGeometry(
     double progress,
     Float baseOpacity);
 
+// A Text draws the attributed string of its state, not its props. At this progress, the state of a Text carrier draws a
+// font size between the one drawn at the start and the one in the props of the target. It is null for other views and
+// for equal font sizes.
+State::Shared textStateAt(const ShadowView &start, const ShadowView &target, double progress);
+
 } // namespace reanimated

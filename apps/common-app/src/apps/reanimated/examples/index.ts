@@ -317,6 +317,10 @@ const TabNavigatorExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/TabNavigatorExample').default
   );
+const TextSizeExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/TextSize').default as React.FC
+  );
 const ThirdPartyComponentsExample: React.FC = () =>
   React.createElement(
     require('./ThirdPartyComponentsExample').default as React.FC
@@ -973,6 +977,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FadeContentExample: {
     title: '[SET] Fade content',
     screen: FadeContentExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  TextSizeExample: {
+    title: '[SET] Text size',
+    screen: TextSizeExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,
