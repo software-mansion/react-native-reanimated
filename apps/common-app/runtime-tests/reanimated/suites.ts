@@ -91,6 +91,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
       require('./tests/events/hostReplacement.test');
       require('./tests/events/eventLayoutProps.test');
+      require('./tests/events/eventDuringScreenAttach.test');
       require('./tests/events/microtasksInEventHandler.test');
       require('./tests/events/scrollDrivenStyle.test');
     },

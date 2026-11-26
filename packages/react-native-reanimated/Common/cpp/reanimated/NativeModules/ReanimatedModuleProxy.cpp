@@ -957,6 +957,11 @@ void ReanimatedModuleProxy::performOperations() {
 bool ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    auto lock = updatesRegistryManager_->lock();
+    return animatedPropsRegistry_->hasPendingAnimatedPropsUpdates();
+  }
+
   UpdatesBatch updatesBatch;
   {
     auto lock = updatesRegistryManager_->lock();
@@ -965,6 +970,17 @@ bool ReanimatedModuleProxy::performNonLayoutOperations() {
   auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(std::move(updatesBatch), true);
   applySynchronousUpdates(std::move(synchronousUpdatesBatch));
   return !shadowTreeUpdatesBatch.empty();
+}
+
+void ReanimatedModuleProxy::flushDeferredEventUpdates() {
+  {
+    auto lock = updatesRegistryManager_->lock();
+    if (!animatedPropsRegistry_->hasPendingAnimatedPropsUpdates()) {
+      return;
+    }
+  }
+  getAnimationBackend()->pushAnimationMutations(
+      [this](AnimationTimestamp timestamp) { return runGrandCallback(timestamp, GrandCallbackSource::Event); });
 }
 
 bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {

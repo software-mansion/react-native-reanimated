@@ -109,6 +109,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   void performOperations();
   bool performNonLayoutOperations();
+  void flushDeferredEventUpdates();
   bool hasSynchronousWritesTracker() const;
   void rewriteSynchronousProps();
   void flushLayoutAnimationOperations();
