@@ -74,6 +74,7 @@ Array of event names that will be handled by the handler.
 #### `rebuild` <Optional/>
 
 Value indicating whether the handler should be rebuilt.
+When it is `true` in a render that React commits, the hook returns a new handler. Pass this new handler to each component that must use the new worklet.
 
 ### Returns
 

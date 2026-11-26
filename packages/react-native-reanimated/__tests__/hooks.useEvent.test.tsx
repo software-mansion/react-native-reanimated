@@ -125,15 +125,18 @@ describe('useEvent', () => {
   });
 
   test('does not change the registration in a render that React discards', async () => {
-    const { rerender } = render(<DiscardableEventView label="first" />);
+    const { rerender } = render(
+      <DiscardableEventView label="first" rebuild={false} />
+    );
     registerMock.mockClear();
 
     await act(() => {
       startTransition(() => {
-        rerender(<DiscardableEventView label="second" />);
+        rerender(<DiscardableEventView label="second" rebuild />);
       });
       return Promise.resolve();
     });
+    rerender(<DiscardableEventView label="first" rebuild={false} />);
 
     expect(registerMock).not.toHaveBeenCalled();
     expect(unregisterMock).not.toHaveBeenCalled();
@@ -161,10 +164,16 @@ describe('useEvent', () => {
     return <Animated.ScrollView onScroll={handler} />;
   }
 
-  function DiscardableEventView({ label }: { label: string }) {
+  function DiscardableEventView({
+    label,
+    rebuild,
+  }: {
+    label: string;
+    rebuild: boolean;
+  }) {
     return (
       <Suspense fallback={null}>
-        <EventView label={label} rebuild />
+        <EventView label={label} rebuild={rebuild} />
         <SuspendOnSecond label={label} />
       </Suspense>
     );

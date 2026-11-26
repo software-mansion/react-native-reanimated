@@ -25,10 +25,7 @@ export class WorkletEventHandler<
   Event extends object,
 > implements IWorkletEventHandler<Event> {
   readonly eventNames: string[];
-  listeners:
-    | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
-    | Record<string, (event: JSEvent<Event>) => void>;
-
+  readonly listeners: Record<string, (event: JSEvent<Event>) => void>;
   readonly worklet: (event: ReanimatedEvent<Event>) => void;
 
   constructor(
@@ -37,15 +34,9 @@ export class WorkletEventHandler<
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
-    this.listeners = {};
-    this.setupWebListeners();
-  }
-
-  setupWebListeners() {
-    this.listeners = {};
-    this.eventNames.forEach((eventName) => {
-      this.listeners[eventName] = jsListener(eventName, this.worklet);
-    });
+    this.listeners = Object.fromEntries(
+      eventNames.map((eventName) => [eventName, jsListener(eventName, worklet)])
+    );
   }
 
   registerForEvents(_viewTag: number, _fallbackEventName?: string): void {

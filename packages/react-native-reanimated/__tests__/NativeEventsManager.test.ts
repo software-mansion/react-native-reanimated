@@ -123,6 +123,22 @@ describe('NativeEventsManager', () => {
     }
   );
 
+  test('registers a handler added after mount for its prop event', () => {
+    const { component, manager } = setup();
+    const addedHandler = makeHandler();
+
+    component.props = {
+      ...component.props,
+      onMomentumScrollEnd: { workletEventHandler: addedHandler },
+    };
+    manager.updateEvents();
+
+    expect(addedHandler.registerForEvents).toHaveBeenCalledWith(
+      1,
+      'onMomentumScrollEnd'
+    );
+  });
+
   test('detaches registered handlers if props change before unmount', () => {
     const { component, handler, manager } = setup();
 
