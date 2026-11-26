@@ -1,20 +1,28 @@
-import { renderHook } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 
 import type { SharedValue } from '../src';
-import { makeMutable, useScrollOffset } from '../src';
+import Animated, { makeMutable, useAnimatedRef, useScrollOffset } from '../src';
 
 describe('useScrollOffset', () => {
-  test('returns a provided shared value swapped after mount', () => {
+  function ScrollOffsetView({ offset }: { offset: SharedValue<number> }) {
+    const animatedRef = useAnimatedRef<Animated.ScrollView>();
+    useScrollOffset(animatedRef, offset);
+    return <Animated.ScrollView ref={animatedRef} testID="scroll" />;
+  }
+
+  test('writes to a provided shared value swapped after mount', () => {
     const first = makeMutable(0);
     const second = makeMutable(0);
-    const { result, rerender } = renderHook(
-      ({ offset }: { offset: SharedValue<number> }) =>
-        useScrollOffset(null, offset),
-      { initialProps: { offset: first } }
+    const { getByTestId, rerender } = render(
+      <ScrollOffsetView offset={first} />
     );
 
-    rerender({ offset: second });
+    rerender(<ScrollOffsetView offset={second} />);
+    const scrollable = getByTestId('scroll');
+    scrollable.scrollTop = 42;
+    fireEvent.scroll(scrollable);
 
-    expect(result.current).toBe(second);
+    expect(first.value).toBe(0);
+    expect(second.value).toBe(42);
   });
 });
