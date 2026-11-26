@@ -16,7 +16,7 @@ The examples use a sample library named `Reading`. It gets a number from a nativ
 
 ## Pick a path
 
-For a working example package for each path, see the [worklets-integration-examples](https://github.com/pawicao/worklets-integration-examples) repository.
+For a working example package for each path, see the [integration examples](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples) in the Reanimated repository.
 
 | Your data comes from                          | Use                                                       | Example                                                                                                 |
 | --------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
@@ -32,7 +32,7 @@ All paths need `react-native-worklets` in the app, and a shared value needs `rea
 
 Add two methods to your C++ TurboModule: `addWorkletListener` and `removeWorkletListener`. JavaScript gives a worklet function to `addWorkletListener`. Your C++ code keeps it and runs it on the UI Runtime with each new value.
 
-The C++ code uses `<worklets/Compat/StableApi.h>`. This header is the stable API of Worklets. Do not include other Worklets headers, because they can change in any release. For a complete package, see [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule).
+The C++ code uses `<worklets/Compat/StableApi.h>`. This header is the stable API of Worklets. Do not include other Worklets headers, because they can change in any release. For a complete package, see [`with-cpp-turbomodule`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-cpp-turbomodule).
 
 #### Step 1: Link Worklets
 
@@ -221,7 +221,7 @@ export function useReadingSharedValue(): SharedValue<number | null> {
 }
 ```
 
-**Start with a real value.** If your module always has a value, add a synchronous getter to the spec, for example `getReading(): number`, and give it to the hook: `useSharedValue(NativeReading.getReading)`. The JS thread calls the getter while your source thread writes the value, so keep the value in a `std::atomic`, for example `std::atomic<double>`, or read it with the lock. A source that has no value before its first sample must keep `null`. The [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule) package shows a getter.
+**Start with a real value.** If your module always has a value, add a synchronous getter to the spec, for example `getReading(): number`, and give it to the hook: `useSharedValue(NativeReading.getReading)`. The JS thread calls the getter while your source thread writes the value, so keep the value in a `std::atomic`, for example `std::atomic<double>`, or read it with the lock. A source that has no value before its first sample must keep `null`. The [`with-cpp-turbomodule`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-cpp-turbomodule) package shows a getter.
 
 <details>
   <summary>Full code</summary>
@@ -443,12 +443,12 @@ export function useReadingSharedValue(): SharedValue<number | null> {
     </TabItem>
   </Tabs>
 
-  To register the TurboModule, follow [Cross-Platform Native Modules (C++)](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules), or see the [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule) package.
+  To register the TurboModule, follow [Cross-Platform Native Modules (C++)](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules), or see the [`with-cpp-turbomodule`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-cpp-turbomodule) package.
 </details>
 
 ## Expo modules
 
-[Expo Modules API](https://docs.expo.dev/modules/overview/) has a `Worklet` type for function arguments. Native code keeps the worklet and runs it on the UI Runtime. Expo calls `Function` on the JavaScript thread, and the worklets run on the main thread, because the UI Runtime runs there. For a complete package, see [`with-expo-module`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-expo-module).
+[Expo Modules API](https://docs.expo.dev/modules/overview/) has a `Worklet` type for function arguments. Native code keeps the worklet and runs it on the UI Runtime. Expo calls `Function` on the JavaScript thread, and the worklets run on the main thread, because the UI Runtime runs there. For a complete package, see [`with-expo-module`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-expo-module).
 
 :::info
 
@@ -583,7 +583,7 @@ Each new value must reach all worklets on the UI Runtime, and the UI Runtime run
   }
 ```
 
-If your value has no native event, read it on each frame with a `CADisplayLink` while a listener exists. Create and stop the display link on the main thread after each add or remove, and stop it when the module is destroyed. Run the worklets in its callback. `CADisplayLink` keeps a strong reference to its target, so give it a small target object that holds the module weakly. For the tested code, see [`updateDisplayLink` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/ios/CounterModule.swift#L97-L137).
+If your value has no native event, read it on each frame with a `CADisplayLink` while a listener exists. Create and stop the display link on the main thread after each add or remove, and stop it when the module is destroyed. Run the worklets in its callback. `CADisplayLink` keeps a strong reference to its target, so give it a small target object that holds the module weakly. For the tested code, see [`updateDisplayLink` and `runFrameWorklets`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/integration-examples/packages/with-expo-module/ios/CounterModule.swift#L97-L137).
 
 ### Android
 
@@ -642,7 +642,7 @@ Each new value must reach all worklets on the UI Runtime, and the UI Runtime run
   }
 ```
 
-If your value has no native event, for example a playback position, read it on each frame while a listener exists. After each add or remove, post a check to the main thread that starts or stops the `Choreographer` frame callback. The main thread is necessary because `Choreographer.getInstance()` belongs to the thread that calls it. In the callback, run the worklets and post the callback again. Stop when no listener is left. For the tested code, see [`updateFrameCallback` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/android/src/main/java/com/example/withexpomodule/CounterModule.kt#L79-L101).
+If your value has no native event, for example a playback position, read it on each frame while a listener exists. After each add or remove, post a check to the main thread that starts or stops the `Choreographer` frame callback. The main thread is necessary because `Choreographer.getInstance()` belongs to the thread that calls it. In the callback, run the worklets and post the callback again. Stop when no listener is left. For the tested code, see [`updateFrameCallback` and `runFrameWorklets`](https://github.com/software-mansion/react-native-reanimated/blob/main/apps/integration-examples/packages/with-expo-module/android/src/main/java/com/example/withexpomodule/CounterModule.kt#L81-L103).
 
 <details>
   <summary>Full code</summary>
@@ -790,12 +790,12 @@ If your value has no native event, for example a playback position, read it on e
     </TabItem>
   </Tabs>
 
-  For the module registration and the frame listener, see the [`with-expo-module`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-expo-module) package.
+  For the module registration and the frame listener, see the [`with-expo-module`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-expo-module) package.
 </details>
 
 ## Nitro Modules
 
-A Nitro Module can use the same pattern as the C++ path, with a serialized worklet. This section uses an ordinary Nitro callback that you create on the UI Runtime. A Hybrid Object works inside a worklet, because Nitro registers it as a custom serializable. For a complete package, see [`with-nitro`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-nitro).
+A Nitro Module can use the same pattern as the C++ path, with a serialized worklet. This section uses an ordinary Nitro callback that you create on the UI Runtime. A Hybrid Object works inside a worklet, because Nitro registers it as a custom serializable. For a complete package, see [`with-nitro`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-nitro).
 
 #### Step 1: Link Worklets
 
@@ -1197,12 +1197,12 @@ function remove() {
     </TabItem>
   </Tabs>
 
-  For the build files that Nitrogen needs, follow [Nitrogen](https://nitro.margelo.com/docs/concepts/nitrogen), or see the [`with-nitro`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-nitro) package.
+  For the build files that Nitrogen needs, follow [Nitrogen](https://nitro.margelo.com/docs/concepts/nitrogen), or see the [`with-nitro`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-nitro) package.
 </details>
 
 ## View events
 
-When a native view sends the data, send it as an ordinary Fabric component event. Reanimated can run a worklet function for that event on the UI Runtime. For a complete package, see [`with-view-event`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-view-event).
+When a native view sends the data, send it as an ordinary Fabric component event. Reanimated can run a worklet function for that event on the UI Runtime. For a complete package, see [`with-view-event`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-view-event).
 
 #### Step 1: Declare the event in the codegen spec
 
@@ -1511,7 +1511,7 @@ return <AnimatedReadingView onReading={onReading} />;
     </TabItem>
   </Tabs>
 
-  For the view registration, follow [Fabric Native Components](https://reactnative.dev/docs/fabric-native-components-introduction), or see the [`with-view-event`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-view-event) package.
+  For the view registration, follow [Fabric Native Components](https://reactnative.dev/docs/fabric-native-components-introduction), or see the [`with-view-event`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/with-view-event) package.
 </details>
 
 ## The other direction
@@ -1529,7 +1529,7 @@ export function getReadingFromWorklet(): number {
 }
 ```
 
-For a complete package, see [`ui-to-native`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/ui-to-native).
+For a complete package, see [`ui-to-native`](https://github.com/software-mansion/react-native-reanimated/tree/main/apps/integration-examples/packages/ui-to-native).
 
 ## Optional dependencies
 
