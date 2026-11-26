@@ -1,0 +1,49 @@
+---
+sidebar_position: 42 # Use alphabetical order
+---
+
+<Badges version="0.14.0">
+  # setSerializableMapping
+</Badges>
+
+When Worklets [serializes](./serializable.mdx) an object, for example when a [worklet](../tutorials/0-concurrency-model.mdx#worklet-functions) captures it in its closure, it sends a serialized copy of that object to the other Runtime and remembers the mapping from the object to that copy. `setSerializableMapping` lets you set the mapping manually.
+
+## Reference
+
+```typescript
+import { scheduleOnUI, setSerializableMapping } from 'react-native-worklets';
+
+const flag = { current: false };
+setSerializableMapping(flag, { current: true });
+
+scheduleOnUI(() => {
+  console.log(flag.current); // logs `true`
+});
+```
+
+<details>
+  <summary>Type definitions</summary>
+
+  ```typescript
+  function setSerializableMapping(value: object, mapping: unknown): void;
+  ```
+</details>
+
+## Arguments
+
+### value
+
+The object to set the mapping for. It's compared by reference.
+
+### mapping
+
+The value to send in place of `value`. It's serialized once, when `setSerializableMapping` is called. It can also be a [SerializableRef](./isSerializableRef.mdx), which is used as is.
+
+## Remarks
+
+- The new mapping overwrites the existing one for `value`, including one that Worklets created when it serialized `value` earlier.
+- Use [hasSerializableMapping](./hasSerializableMapping.mdx) to check whether `value` already has a mapping.
+- Use [getSerializableMapping](./getSerializableMapping.mdx) to read the mapping.
+- Use [removeSerializableMapping](./removeSerializableMapping.mdx) to remove the mapping.
+- Each Runtime keeps its own mappings, so `setSerializableMapping` affects only the values that the calling Runtime serializes.
+- On the Web `setSerializableMapping` does nothing, because values aren't serialized there.

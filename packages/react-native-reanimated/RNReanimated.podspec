@@ -68,14 +68,14 @@ Pod::Spec.new do |s|
       '"$(PODS_ROOT)/Headers/Private/React-Core"',
       '"$(PODS_ROOT)/Headers/Private/Yoga"',
       '"$(PODS_ROOT)/Headers/Public/RNWorklets"',
-      '"$(PODS_CONFIGURATION_BUILD_DIR)/React-utils/React_utils.framework/Headers/react/utils/platform/ios"',
     ].join(' '),
     "FRAMEWORK_SEARCH_PATHS" => '"${PODS_CONFIGURATION_BUILD_DIR}/React-hermes"',
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited)',
-    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited)',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Debug*]" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
+    "GCC_PREPROCESSOR_DEFINITIONS[config=*Release*]" => '$(inherited) RN_ALLOW_FRAMEWORKS=1',
   }
-  s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag}"
+  s.compiler_flags = "#{boost_compiler_flags} #{deprecation_flag} " \
+    '-DWORKLETS_STABLE_API_TARGET=\"0.14.0\"'
   s.xcconfig = {
     "HEADER_SEARCH_PATHS" => [
       '"$(PODS_ROOT)/boost"',

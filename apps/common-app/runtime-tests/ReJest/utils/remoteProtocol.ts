@@ -3,6 +3,7 @@ export type ConsoleLevel = 'log' | 'info' | 'warn' | 'error';
 export interface DeclaredSuite {
   name: string;
   skipByDefault: boolean;
+  fullRunOnly: boolean;
   disabled: boolean;
 }
 
@@ -66,6 +67,7 @@ export type DeviceMessage =
 export interface StartMessage {
   type: 'start';
   only?: string[];
+  full?: boolean;
 }
 
 export interface ReloadAcceptedMessage {

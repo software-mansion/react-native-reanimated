@@ -53,6 +53,10 @@ const CustomTransitionExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/CustomTransition').default as React.FC
   );
+const ModalHostExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/ModalHost').default as React.FC
+  );
 const ModalPresentationsExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/ModalPresentations').default as React.FC
@@ -161,8 +165,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   React.createElement(
     require('./FlatListWithLayoutAnimationsExample').default as React.FC
   );
-const FrameCallbackExample: React.FC = () =>
-  React.createElement(require('./FrameCallbackExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -513,11 +515,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '📡',
     title: 'useAnimatedSensor',
     screen: AnimatedSensorExample,
-  },
-  FrameCallbackExample: {
-    icon: '🗣',
-    title: 'useFrameCallback',
-    screen: FrameCallbackExample,
   },
   ScrollToExample: {
     icon: '🦘',
@@ -949,6 +946,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   TabNavigatorExample: {
     title: '[SET] Tab Navigator',
     screen: TabNavigatorExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  ModalHostExample: {
+    title: '[SET] Inside a Modal',
+    screen: ModalHostExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

@@ -5,11 +5,16 @@ type SuiteDeclaration = Pick<DeclaredSuite, 'name'> &
 
 export function selectSuites(
   suites: SuiteDeclaration[],
-  only: string[] | null
+  only: string[] | null,
+  full: boolean
 ): string[] {
   return suites
     .filter((suite) =>
-      only ? only.includes(suite.name) : !suite.skipByDefault && !suite.disabled
+      only
+        ? only.includes(suite.name)
+        : !suite.skipByDefault &&
+          !suite.disabled &&
+          (full || !suite.fullRunOnly)
     )
     .map((suite) => suite.name);
 }

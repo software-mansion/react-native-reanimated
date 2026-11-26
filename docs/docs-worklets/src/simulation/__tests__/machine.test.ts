@@ -13,7 +13,9 @@ import {
   scheduleOnRuntime,
   runOnRuntimeSync,
   scheduleOnUI,
+  requestAnimationFrame,
   sendToUIThread,
+  setTimeout,
   updateScreen,
 } from '../worklets';
 import * as syncShareable from '../../../docs/tutorials/_synchronizing-data/syncShareable';
@@ -797,6 +799,53 @@ describe('Machine semantics', () => {
     assert.ok(reads.length > 1);
     assert.ok(reads.every((read) => read.core === 'rn'));
     assert.equal(formatLogs(snapshots)[0], '[rn] 3');
+  });
+
+  it('timeScale divides timer delays but not animation frames', () => {
+    function tickOfLog(
+      call: 'setTimeout' | 'requestAnimationFrame',
+      delay: number,
+      options?: SimulateOptions
+    ): number {
+      function* later() {
+        yield console.log('later');
+      }
+      function* main() {
+        if (call === 'setTimeout') {
+          yield setTimeout(() => later(), delay);
+        } else {
+          yield requestAnimationFrame(() => later());
+        }
+      }
+      const scheduled =
+        call === 'setTimeout'
+          ? `setTimeout(() => later(), ${delay})`
+          : 'requestAnimationFrame(() => later())';
+      const source = `export function* later() {\n  yield console.log('later');\n}\n\nexport default function* main() {\n  yield ${scheduled};\n}\n`;
+      const snapshots = simulate(
+        asModule({ later, default: main }),
+        source,
+        options
+      );
+      return snapshots.findIndex((snapshot) =>
+        snapshot.events.some(
+          (event) => event.type === 'log' && event.text === 'later'
+        )
+      );
+    }
+
+    const written = tickOfLog('setTimeout', 48);
+    const scaled = tickOfLog('setTimeout', 2_400, { timeScale: 50 });
+    const frame = tickOfLog('requestAnimationFrame', 0);
+    const scaledFrame = tickOfLog('requestAnimationFrame', 0, {
+      timeScale: 50,
+    });
+
+    assert.ok(written > 0);
+    assert.equal(scaled, written);
+    assert.ok(frame > 0);
+    assert.equal(scaledFrame, frame);
+    assert.equal(tickOfLog('setTimeout', 48, { timeScale: 0 }), written);
   });
 
   it('tick() is a no-op after the simulation finished', () => {

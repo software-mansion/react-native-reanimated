@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+import { isBundleModeEnabled } from 'react-native-worklets';
+
 import type { RuntimeTestSuite } from '../types';
 
 type Describe = (name: string, buildSuite: () => void) => void;
 
-export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
+const SUITES: RuntimeTestSuite[] = [
   {
     testSuiteName: 'matrixInterpolation',
     importTest: () =>
@@ -50,6 +52,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/core/useAnimatedRef.test');
       require('./tests/core/useAnimatedRefRetention.test');
+      require('./tests/core/useAnimatedRefNewestClone.test');
       require('./tests/core/getAnimatableRef.test');
       // TODO: update expected values
       // require('./tests/core/cancelAnimation.test');
@@ -69,9 +72,18 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/core/useDerivedValue/basic.test');
       require('./tests/core/useDerivedValue/chain.test');
       require('./tests/core/useSharedValue/animationsCompilerApi.test');
+      require('./tests/core/updatesWithoutAnimation.test');
+      require('./tests/core/idleFrames.test');
+      require('./tests/core/mapperErrors.test');
       // TODO: onLayout event isn't working on Android
       // require('./tests/core/onLayout.test');
     },
+  },
+  {
+    testSuiteName: 'shadow node wrapper race',
+    importTest: () => require('./tests/core/shadowNodeWrapperRace.test'),
+    // A stress test for TSan, which runs in the nightly full runs.
+    fullRunOnly: true,
   },
   {
     testSuiteName: 'event handlers',
@@ -79,6 +91,8 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/events/useAnimatedScrollHandlerMemo.test');
       require('./tests/events/hostReplacement.test');
       require('./tests/events/eventLayoutProps.test');
+      require('./tests/events/microtasksInEventHandler.test');
+      require('./tests/events/scrollDrivenStyle.test');
     },
   },
   {
@@ -86,6 +100,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/props/backgroundImage.test');
       require('./tests/props/syncBackToReact.test');
+      require('./tests/props/settledPropsSyncInterval.test');
       require('./tests/props/boxShadow.test');
       require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');
@@ -171,6 +186,7 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'layout animations entering',
     importTest: () => {
       require('./tests/layoutAnimations/entering/movedBeforeFirstPaint.test');
+      require('./tests/layoutAnimations/entering/userNativeID.test');
       require('./tests/layoutAnimations/startError.test');
     },
   },
@@ -199,7 +215,10 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionCarrier.test');
       require('./tests/layoutAnimations/sharedTransitionAnimatedStyle.test');
       require('./tests/layoutAnimations/sharedTransitionCarrierRetarget.test');
+      require('./tests/layoutAnimations/sharedTransitionCarrierReactProps.test');
+      require('./tests/layoutAnimations/sharedTransitionMovingTarget.test');
       require('./tests/layoutAnimations/sharedTransitionGesture.test');
+      require('./tests/layoutAnimations/sharedTransitionWindow.test');
       require('./tests/layoutAnimations/sharedTransitionFadeContent.test');
       require('./tests/layoutAnimations/sharedTransitionFadeProgress.test');
       require('./tests/layoutAnimations/sharedTransitionNested.test');
@@ -208,6 +227,14 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/layoutAnimations/sharedTransitionRemoval.test');
       require('./tests/layoutAnimations/sharedTransitionRemovedTarget.test');
       require('./tests/layoutAnimations/sharedTransitionStart.test');
+      require('./tests/layoutAnimations/sharedTransitionScreenSlide.test');
+      require('./tests/layoutAnimations/sharedTransitionCallback.test');
+    },
+  },
+  {
+    testSuiteName: 'screen transition events',
+    importTest: () => {
+      require('./tests/layoutAnimations/screenTransitionEvents.test');
     },
   },
   {
@@ -275,3 +302,24 @@ export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = [
     },
   },
 ];
+
+// Bundle Mode and Legacy Eval differ only in how worklets are loaded, so a
+// short run checks Legacy Eval in a subset of suites that load worklets in
+// different ways: animations, hooks, event handlers and layout animation
+// builders.
+const LEGACY_EVAL_SHORT_RUN_SUITES = [
+  'animations',
+  'core',
+  'event handlers',
+  'layout animations entering',
+];
+
+export const REANIMATED_TEST_SUITES: RuntimeTestSuite[] = SUITES.map(
+  (suite) => ({
+    ...suite,
+    fullRunOnly:
+      suite.fullRunOnly ||
+      (!isBundleModeEnabled() &&
+        !LEGACY_EVAL_SHORT_RUN_SUITES.includes(suite.testSuiteName)),
+  })
+);

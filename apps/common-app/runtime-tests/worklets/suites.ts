@@ -3,6 +3,16 @@ import { isBundleModeEnabled } from 'react-native-worklets';
 import type { RuntimeTestSuite } from '../types';
 
 export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
+  // First, because a Worker Runtime of the new instance only reaches the id of
+  // an old one by creating every runtime the suites before it created.
+  {
+    testSuiteName: 'reload',
+    importTest: () => {
+      require('./tests/reload/oldInstanceValues.test');
+    },
+    needsRuntimeTestsServer: true,
+    disabled: !__DEV__,
+  },
   {
     testSuiteName: 'memory',
     importTest: () => {
@@ -44,7 +54,10 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runtimes/runOnRuntimeSyncWithId.test');
       require('./tests/runtimes/scheduleOnRuntimeWithId.test');
       require('./tests/runtimes/microtaskDrains.test');
+      require('./tests/runtimes/reentrantModuleLoad.test');
+      require('./tests/runtimes/microtaskErrors.test');
       require('./tests/runtimes/weakRef.test');
+      require('./tests/runtimes/performanceNow.test');
     },
   },
   {
@@ -63,6 +76,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/networking/api.test');
       require('./tests/networking/xhr.test');
       require('./tests/networking/fetch.test');
+      require('./tests/networking/websocket.test');
     },
     disabled: !isBundleModeEnabled(),
   },
@@ -80,6 +94,9 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/queueMicrotask.test');
       require('./tests/runLoop/executionOrder.test');
       require('./tests/runLoop/finalizers.test');
+      require('./tests/runLoop/headlessTask.test');
+      require('./tests/runLoop/idleRuntime.test');
+      require('./tests/runLoop/idleFrames.test');
     },
   },
   {
@@ -93,13 +110,5 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/plugin/versionMismatch.test');
       require('./tests/plugin/workletClasses.test');
     },
-  },
-  {
-    testSuiteName: 'reload',
-    importTest: () => {
-      require('./tests/reload/oldInstanceValues.test');
-    },
-    needsRuntimeTestsServer: true,
-    disabled: !__DEV__,
   },
 ];

@@ -3,7 +3,7 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/TextMetrics.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <algorithm>
 #include <memory>
@@ -19,39 +19,35 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
-static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
-  const auto object = updates.asObject(rt);
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    const auto value = object.getProperty(rt, propName);
-    if (value.isNumber()) {
-      object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
-    }
-  }
-}
-
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
 
+  // Created once per call instead of once per view.
+  const auto shadowNodeWrapperName = jsi::PropNameID::forAscii(rt, "shadowNodeWrapper");
+  const auto updatesName = jsi::PropNameID::forAscii(rt, "updates");
+  [[maybe_unused]] const auto isAnimatedPropsName = jsi::PropNameID::forAscii(rt, "isAnimatedProps");
+
   for (size_t i = 0, length = operationsArray.size(rt); i < length; ++i) {
     auto item = operationsArray.getValueAtIndex(rt, i).asObject(rt);
-    auto shadowNodeWrapper = item.getProperty(rt, "shadowNodeWrapper");
+    auto shadowNodeWrapper = item.getProperty(rt, shadowNodeWrapperName);
     auto shadowNode = shadowNodeFromValue(rt, shadowNodeWrapper);
     if (isUnmounted(shadowNode->getFamily())) {
       continue;
     }
 
-    jsi::Value updates = item.getProperty(rt, "updates");
-    roundTextMetrics(rt, updates);
+    jsi::Value updates = item.getProperty(rt, updatesName);
 
     if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+      roundTextMetrics(rt, updates);
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
       auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
+      roundTextMetrics(dynamicUpdates);
       // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
       // `collectSettledUpdates` never reads `writeHistories_`.
       if constexpr (StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS")) {
-        const bool isAnimatedProps = item.getProperty(rt, "isAnimatedProps").asBool();
+        const bool isAnimatedProps = item.getProperty(rt, isAnimatedPropsName).asBool();
         trackUpdate(shadowNode->getTag(), dynamicUpdates, isAnimatedProps, timestamp);
       }
       addUpdatesToBatch(shadowNode->getFamilyShared(), std::move(dynamicUpdates));
@@ -131,7 +127,7 @@ jsi::Object AnimatedPropsRegistry::createSettledUpdate(
 jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
     jsi::Runtime &rt,
     const double settledTimestamp,
-    const std::unordered_set<Tag> &registeredViewTags) {
+    const std::function<bool(Tag)> &isViewRegistered) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
 
   std::vector<jsi::Object> settledUpdates;
@@ -139,13 +135,20 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
 
   for (auto it = updatesRegistry_.begin(); it != updatesRegistry_.end();) {
     const auto viewTag = it->first;
+    const bool isSynced = syncedTags_.contains(viewTag);
+    const auto writeHistoryIt = writeHistories_.find(viewTag);
+    const bool hasWriteHistory = writeHistoryIt != writeHistories_.end();
+    const bool isSettled = hasWriteHistory && writeHistoryIt->second.lastWriteTimestamp < settledTimestamp;
+    const auto invalidatedIt = invalidatedTags_.find(viewTag);
+    const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
+    const bool hasWork = isSynced || (hasWriteHistory && (isSettled || isInvalidated));
 
-    if (!registeredViewTags.contains(viewTag) || pendingTags.contains(viewTag)) {
+    if (!hasWork || pendingTags.contains(viewTag) || !isViewRegistered(viewTag)) {
       ++it;
       continue;
     }
 
-    if (syncedTags_.contains(viewTag)) {
+    if (isSynced) {
       // React already has the latest value for this tag (synced on a previous
       // call, so the `settledProps` state is committed by now) — the registry
       // entry is redundant. `syncedTags_` is intentionally retained to detect
@@ -155,25 +158,14 @@ jsi::Value AnimatedPropsRegistry::collectSettledUpdates(
       continue;
     }
 
-    const auto writeHistoryIt = writeHistories_.find(viewTag);
-    if (writeHistoryIt == writeHistories_.end()) {
-      ++it;
-      continue;
+    settledUpdates.push_back(createSettledUpdate(rt, viewTag, it->second.second, writeHistoryIt->second));
+    if (isSettled) {
+      // Only settled-path tags are tracked as "synced" so that an ongoing
+      // animation doesn't re-trigger an invalidation/sync on every GC tick.
+      syncedTags_.insert(viewTag);
     }
-    const auto &writeHistory = writeHistoryIt->second;
-    const bool isSettled = writeHistory.lastWriteTimestamp < settledTimestamp;
-    const auto invalidatedIt = invalidatedTags_.find(viewTag);
-    const bool isInvalidated = invalidatedIt != invalidatedTags_.end();
-    if (isSettled || isInvalidated) {
-      settledUpdates.push_back(createSettledUpdate(rt, viewTag, it->second.second, writeHistory));
-      if (isSettled) {
-        // Only settled-path tags are tracked as "synced" so that an ongoing
-        // animation doesn't re-trigger an invalidation/sync on every GC tick.
-        syncedTags_.insert(viewTag);
-      }
-      if (isInvalidated) {
-        invalidatedTags_.erase(invalidatedIt);
-      }
+    if (isInvalidated) {
+      invalidatedTags_.erase(invalidatedIt);
     }
     ++it;
   }
@@ -207,6 +199,19 @@ bool AnimatedPropsRegistry::isUnmounted(const ShadowNodeFamily &shadowNodeFamily
 void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
   std::erase_if(unmountedFamilies_, [](const auto &entry) { return entry.second.expired(); });
   unmountedFamiliesPruneThreshold_ = std::max(MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD, 2 * unmountedFamilies_.size());
+}
+
+bool AnimatedPropsRegistry::hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto pendingTags = getPendingTags();
+  if (std::any_of(pendingTags.begin(), pendingTags.end(), isViewRegistered)) {
+    return true;
+  }
+  return std::any_of(updatesRegistry_.begin(), updatesRegistry_.end(), [&](const auto &entry) {
+    const auto viewTag = entry.first;
+    const bool hasWork = syncedTags_.contains(viewTag) || writeHistories_.contains(viewTag);
+    return hasWork && isViewRegistered(viewTag);
+  });
 }
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {

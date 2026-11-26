@@ -73,6 +73,12 @@ declare global {
   var __serializer: typeof makeShareableCloneOnUIRecursive;
   /** Available on runtimes with the Hermes microtask queue enabled. */
   var __drainMicrotasks: () => void;
+  /**
+   * Returns the number of outermost native calls into this runtime that have
+   * started. Available on Worklet Runtimes only with the `RUNTIME_TEST_FLAG`
+   * static feature flag.
+   */
+  var __getRootTaskId: (() => number) | undefined;
   /** Available only on the UI Runtime */
   var __nativeRequestAnimationFrame: (
     callback: (timestamp: number) => void
@@ -84,12 +90,6 @@ declare global {
   var __customSerializationRegistry: CustomSerializationRegistry;
   var __customSerializableUnpacker: CustomSerializableUnpacker;
   var __remoteFunctionUnpacker: RemoteFunctionUnpacker;
-  /**
-   * @deprecated Kept for backwards compatibility. Remove it after support for
-   *   Reanimated 4.3 is dropped. Reanimated uses it to handle event updates
-   *   synchronously.
-   */
-  var __flushAnimationFrame: (timestamp: number) => void;
   var __frameTimestamp: number | undefined;
   var _log: (value: unknown) => void;
   var _startProfiling: (meanHzFreq?: number) => void;
@@ -97,6 +97,7 @@ declare global {
   var _beginSection: (name: string) => void;
   var _endSection: () => void;
   var _getAnimationTimestamp: () => number;
+  var _getTimerTimestamp: () => number;
   var _scheduleOnRuntime: (
     runtime: WorkletRuntime,
     worklet: SerializableRef<() => void>
@@ -136,6 +137,19 @@ declare global {
         ): number;
         abortRequest(requestId: number): void;
         decodeText(buffer: ArrayBuffer, encoding?: string): string;
+        connectWebSocket(
+          config: {
+            url: string;
+            protocols: string[];
+            headers: Array<[string, string]>;
+          },
+          onEvent: (type: string, payload: unknown) => void
+        ): number;
+        sendWebSocketMessage(
+          socketId: number,
+          message: string | ArrayBuffer
+        ): void;
+        closeWebSocket(socketId: number, code: number, reason: string): void;
       }
     | undefined;
   interface NodeRequire {

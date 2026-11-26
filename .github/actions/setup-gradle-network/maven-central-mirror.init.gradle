@@ -1,0 +1,31 @@
+def mirrorUrl = 'https://maven-central.storage-download.googleapis.com/maven2/'
+
+logger.lifecycle("Maven Central resolves from ${mirrorUrl}")
+
+def useMirror = { RepositoryHandler repositories ->
+  repositories.withType(MavenArtifactRepository).configureEach { repository ->
+    if (repository.url.toString().startsWith('https://repo.maven.apache.org/maven2')) {
+      repository.url = mirrorUrl
+    }
+  }
+}
+
+beforeSettings { settings ->
+  def pluginRepositories = settings.pluginManagement.repositories
+  pluginRepositories.maven { url = mirrorUrl }
+  pluginRepositories.gradlePluginPortal {
+    content {
+      excludeGroupByRegex 'com\\.android(\\..*)?'
+      excludeGroupByRegex 'androidx(\\..*)?'
+      excludeGroupByRegex 'com\\.google\\.(android|gms|firebase|testing)(\\..*)?'
+    }
+  }
+  useMirror(pluginRepositories)
+  useMirror(settings.buildscript.repositories)
+  useMirror(settings.dependencyResolutionManagement.repositories)
+}
+
+allprojects { project ->
+  useMirror(project.buildscript.repositories)
+  useMirror(project.repositories)
+}

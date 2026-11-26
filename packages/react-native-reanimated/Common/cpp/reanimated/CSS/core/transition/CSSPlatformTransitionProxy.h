@@ -8,7 +8,7 @@
 
 #include <folly/dynamic.h>
 #include <jsi/jsi.h>
-#include <react/renderer/core/ReactPrimitives.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <optional>

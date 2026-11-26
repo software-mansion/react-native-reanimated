@@ -85,13 +85,16 @@ export function prepareUIRegistry() {
       if (callbackId === -1) {
         return;
       }
+      const callback = this.frameCallbackRegistry.get(callbackId);
+      if (callback === undefined) {
+        return;
+      }
       if (state) {
         if (!this.activeFrameCallbacks.has(callbackId)) {
           this.activeFrameCallbacks.add(callbackId);
           this.runCallbacks(this.nextCallId);
         }
       } else {
-        const callback = this.frameCallbackRegistry.get(callbackId)!;
         callback.startTime = null;
 
         this.activeFrameCallbacks.delete(callbackId);

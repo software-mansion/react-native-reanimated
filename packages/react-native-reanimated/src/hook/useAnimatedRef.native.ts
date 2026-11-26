@@ -11,6 +11,7 @@ import {
 
 import type { InstanceOrElement, ShadowNodeWrapper } from '../commonTypes';
 import { getShadowNodeWrapperFromRef } from '../fabricUtils';
+import { ReanimatedModule } from '../ReanimatedModule';
 import type { AnimatedRef, AnimatedRefOnUI } from './commonTypes';
 import { useAnimatedRefBase } from './useAnimatedRefCommon';
 
@@ -31,9 +32,11 @@ export function useAnimatedRef<
   const resultRef = useAnimatedRefBase<TRef>(
     (ref) => {
       const currentWrapper = getShadowNodeWrapperFromRef(ref);
+      const uiWrapper =
+        ReanimatedModule.createDetachedShadowNodeWrapper(currentWrapper);
 
       scheduleOnUI(() => {
-        (sharedWrapper as AnimatedRefOnUI).value = currentWrapper;
+        (sharedWrapper as AnimatedRefOnUI).value = uiWrapper;
       });
 
       return currentWrapper;
