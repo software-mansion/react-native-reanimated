@@ -1,13 +1,15 @@
 package com.swmansion.worklets.runloop
 
 import android.os.SystemClock
+import com.facebook.react.bridge.GuardedRunnable
 import com.facebook.react.bridge.ReactApplicationContext
+import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.modules.core.ReactChoreographer
 import com.facebook.react.uimanager.GuardedFrameCallback
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AnimationFrameQueue(
-    reactApplicationContext: ReactApplicationContext,
+    private val reactApplicationContext: ReactApplicationContext,
 ) {
     private var mFirstUptime = SystemClock.uptimeMillis()
     private var mSlowAnimationsEnabled = false
@@ -24,6 +26,7 @@ class AnimationFrameQueue(
             }
         }
     private val mCallbackPosted = AtomicBoolean()
+    private val mScheduleOnUIThreadPosted = AtomicBoolean()
     private val mPaused = AtomicBoolean(true)
     private val mInvalidated = AtomicBoolean()
     private val mFrameCallbacks = mutableListOf<AnimationFrameCallback>()
@@ -78,6 +81,22 @@ class AnimationFrameQueue(
     }
 
     private fun scheduleQueueExecution() {
+        // ReactChoreographer holds the lock of its callback queues while it runs a frame on the UI thread, and the
+        // frame can wait for the UI runtime, for example when a view mounts and sends an event to a worklet handler.
+        // A caller on another thread can hold the UI runtime (runOnUISync), so it must not wait for that lock.
+        if (!UiThreadUtil.isOnUiThread()) {
+            if (!mScheduleOnUIThreadPosted.getAndSet(true)) {
+                UiThreadUtil.runOnUiThread(
+                    object : GuardedRunnable(reactApplicationContext.exceptionHandler) {
+                        override fun runGuarded() {
+                            mScheduleOnUIThreadPosted.set(false)
+                            scheduleQueueExecution()
+                        }
+                    },
+                )
+            }
+            return
+        }
         synchronized(mPaused) {
             if (mInvalidated.get()) {
                 return
