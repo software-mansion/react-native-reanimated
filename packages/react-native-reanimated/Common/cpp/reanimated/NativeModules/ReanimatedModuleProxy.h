@@ -56,9 +56,8 @@ enum class GrandCallbackSource : std::uint8_t {
   // Used when handling an event that can update the layout at once
   Event,
 
-  // Used when handling an event inside an Android UI-thread dispatch. The updates of a view with
-  // a layout update wait for a later flush, because a mount inside the dispatch can break the
-  // view tree walk of the sender
+  // Used when handling an event inside an Android UI-thread dispatch, where a mount can break
+  // the view tree walk of the sender
   EventInAndroidDispatch,
 };
 

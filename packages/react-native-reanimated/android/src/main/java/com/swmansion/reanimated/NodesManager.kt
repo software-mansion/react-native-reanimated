@@ -35,7 +35,8 @@ class NodesManager(
     private var lastFrameTimeMs = 0.0
     private val mFabricUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
     private val mDrawPassObserver: DrawPassObserver
-    private var mHasDeferredEventLayoutOperations = false
+    private var mHasDeferredLayoutOperations = false
+    private var mIsInsideEventDispatch = false
 
     private var mNativeProxy: NativeProxy? = null
 
@@ -44,7 +45,7 @@ class NodesManager(
     init {
         context.assertOnJSQueueThread()
 
-        mDrawPassObserver = DrawPassObserver(context, ::performDeferredEventLayoutOperations)
+        mDrawPassObserver = DrawPassObserver(context, ::performDeferredLayoutOperations)
 
         mReactChoreographer = ReactChoreographer.getInstance()
         mChoreographerCallback =
@@ -104,28 +105,37 @@ class NodesManager(
 
     fun performOperations() {
         UiThreadUtil.assertOnUiThread()
-        mNativeProxy?.performOperations()
-    }
-
-    internal fun performNonLayoutOperations(): Boolean {
-        UiThreadUtil.assertOnUiThread()
-        return mNativeProxy?.performNonLayoutOperations() ?: false
+        val hasDeferredLayoutOperations = mHasDeferredLayoutOperations
+        mHasDeferredLayoutOperations = false
+        mNativeProxy?.performOperations(hasDeferredLayoutOperations)
     }
 
     internal fun performOperationsRespectingDrawPass() {
+        if (mIsInsideEventDispatch) {
+            // onEventDispatch flushes after the handlers.
+            return
+        }
+
         mDrawPassObserver.initialize()
         if (mDrawPassObserver.isInDrawPass()) {
-            performNonLayoutOperations()
-            startUpdatingOnAnimationFrame()
+            performNonLayoutOperationsAndDeferTheRest()
             return
         }
 
         performOperations()
     }
 
-    private fun performDeferredEventLayoutOperations() {
-        if (mHasDeferredEventLayoutOperations) {
-            mHasDeferredEventLayoutOperations = false
+    private fun performNonLayoutOperationsAndDeferTheRest() {
+        UiThreadUtil.assertOnUiThread()
+        if (mNativeProxy?.performNonLayoutOperations() == true) {
+            mHasDeferredLayoutOperations = true
+            mDrawPassObserver.requestDrawPass()
+            startUpdatingOnAnimationFrame()
+        }
+    }
+
+    private fun performDeferredLayoutOperations() {
+        if (mHasDeferredLayoutOperations) {
             performOperations()
         }
     }
@@ -167,12 +177,11 @@ class NodesManager(
                     }
                 }
 
-                mHasDeferredEventLayoutOperations = false
                 performOperations()
             }
 
             mCallbackPosted.set(false)
-            if (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty() || mHasDeferredEventLayoutOperations) {
+            if (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty() || mHasDeferredLayoutOperations) {
                 // enqueue next frame
                 startUpdatingOnAnimationFrame()
             }
@@ -198,14 +207,16 @@ class NodesManager(
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
-                // The sender can still be walking its view tree, so the layout operations wait.
                 mDrawPassObserver.initialize()
-                startUpdatingOnAnimationFrame()
-                handleEvent(event)
-                if (performNonLayoutOperations()) {
-                    mHasDeferredEventLayoutOperations = true
-                    mDrawPassObserver.requestDrawPass()
+                val wasInsideEventDispatch = mIsInsideEventDispatch
+                mIsInsideEventDispatch = true
+                try {
+                    handleEvent(event)
+                } finally {
+                    mIsInsideEventDispatch = wasInsideEventDispatch
                 }
+                // The sender can still be walking its view tree, so the layout operations wait.
+                performNonLayoutOperationsAndDeferTheRest()
             } else {
                 val eventName = resolveCustomEventName(event.eventName)
                 val viewTag = event.viewTag

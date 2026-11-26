@@ -2,6 +2,7 @@ import type { RouteProp } from '@react-navigation/native';
 import {
   createNavigationContainerRef,
   NavigationContainer,
+  NavigationIndependentTree,
 } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -9,13 +10,14 @@ import { useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import Animated, {
   FadeIn,
+  makeMutable,
   useAnimatedStyle,
   useEvent,
-  useSharedValue,
 } from 'react-native-reanimated';
 
 import {
   describe,
+  expectEventually,
   notify,
   render,
   test,
@@ -37,12 +39,12 @@ type StackParamList = { Home: undefined; Images: { push: number } };
 const Stack = createNativeStackNavigator<StackParamList>();
 const navigation = createNavigationContainerRef<StackParamList>();
 const AnimatedImage = Animated.createAnimatedComponent(Image);
+const loadCount = makeMutable(0);
 
 describe('An event that a view sends while its screen attaches', () => {
-  // On Android, an image from the memory cache sends its load events inside the fragment
-  // transaction that attaches its screen. A mount inside such an event removed views of the
-  // tree that Android walked.
+  // A cached image can send its load event while Android attaches the screen.
   test('does not break the attach', async () => {
+    loadCount.value = 0;
     await render(<Screens />);
     await waitForNotification(STACK_READY);
 
@@ -53,6 +55,7 @@ describe('An event that a view sends while its screen attaches', () => {
       await waitForNotification(closed(push));
     }
 
+    await expectEventually(() => loadCount.value > 0).toBe(true);
     await render(null);
   });
 });
@@ -60,16 +63,20 @@ describe('An event that a view sends while its screen attaches', () => {
 function Screens() {
   return (
     <View style={styles.root}>
-      <NavigationContainer ref={navigation} onReady={() => notify(STACK_READY)}>
-        <Stack.Navigator>
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen
-            name="Images"
-            component={Images}
-            listeners={notifyWhenShown}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
+      <NavigationIndependentTree>
+        <NavigationContainer
+          ref={navigation}
+          onReady={() => notify(STACK_READY)}>
+          <Stack.Navigator>
+            <Stack.Screen name="Home" component={Home} />
+            <Stack.Screen
+              name="Images"
+              component={Images}
+              listeners={notifyWhenShown}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </NavigationIndependentTree>
     </View>
   );
 }
@@ -93,7 +100,6 @@ function Home() {
 function Images({ route }: NativeStackScreenProps<StackParamList, 'Images'>) {
   const { push } = route.params;
   const [renderCount, setRenderCount] = useState(0);
-  const loadCount = useSharedValue(0);
   const countLoad = useEvent(() => {
     'worklet';
     loadCount.value += 1;

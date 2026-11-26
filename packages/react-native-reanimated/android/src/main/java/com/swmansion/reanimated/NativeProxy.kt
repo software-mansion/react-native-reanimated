@@ -175,7 +175,7 @@ open class NativeProxy {
         emitterReactTag: Int,
     ): Boolean
 
-    private external fun performOperationsCpp()
+    private external fun performOperationsCpp(hasDeferredLayoutOperations: Boolean)
 
     private external fun performNonLayoutOperationsCpp(): Boolean
 
@@ -215,7 +215,8 @@ open class NativeProxy {
         emitterReactTag: Int,
     ): Boolean = ifNotInvalidated(false) { isAnyHandlerWaitingForEventCpp(eventName, emitterReactTag) }
 
-    fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
+    fun performOperations(hasDeferredLayoutOperations: Boolean) =
+        ifNotInvalidated(Unit) { performOperationsCpp(hasDeferredLayoutOperations) }
 
     fun performNonLayoutOperations(): Boolean = ifNotInvalidated(false) { performNonLayoutOperationsCpp() }
 

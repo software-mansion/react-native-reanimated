@@ -19,7 +19,11 @@ internal class DrawPassObserver(
 
     private val mOnPreDrawListener =
         ViewTreeObserver.OnPreDrawListener {
-            mOnBeforeDrawPass()
+            try {
+                mOnBeforeDrawPass()
+            } catch (exception: RuntimeException) {
+                mContext.handleException(exception)
+            }
             true
         }
 

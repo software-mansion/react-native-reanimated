@@ -52,7 +52,7 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   if (source.rawProps) {
     if (target.rawProps) {
       auto mergedRawProps = target.rawProps->toDynamic();
-      mergedRawProps.merge_patch(source.rawProps->toDynamic());
+      mergedRawProps.update(source.rawProps->toDynamic());
       target.rawProps = std::make_unique<RawProps>(std::move(mergedRawProps));
     } else {
       target.rawProps = std::move(source.rawProps);
@@ -1011,9 +1011,10 @@ AnimationMutations ReanimatedModuleProxy::collectUpdatesWithoutLayout() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::collectUpdatesWithoutLayout");
 
   UpdatesBatchAnimatedProps batch;
-  auto lock = updatesRegistryManager_->lock();
-  animatedPropsRegistry_->flushUpdatesWithoutLayout(batch);
-
+  {
+    auto lock = updatesRegistryManager_->lock();
+    animatedPropsRegistry_->flushUpdatesWithoutLayout(batch);
+  }
   return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
 
