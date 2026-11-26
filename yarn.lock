@@ -18180,6 +18180,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"expo-modules-core@npm:58.1.0":
+  version: 58.1.0
+  resolution: "expo-modules-core@npm:58.1.0"
+  dependencies:
+    expo-modules-jsi: "npm:~58.0.23"
+    expo-modules-macros: "npm:0.33.0"
+    invariant: "npm:^2.2.4"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+    react-native-worklets: ">=0.13.0"
+  peerDependenciesMeta:
+    react-native-worklets:
+      optional: true
+  checksum: 10/6619e72427475a5a284993058cf0fc9b6c8c0c38f727629c4f15b63e587df84cfed12f94760aa0ad57726d4e7060798beededf05c127cfe4a0d4beda335acae5
+  languageName: node
+  linkType: hard
+
 "expo-modules-core@npm:~57.0.8":
   version: 57.0.8
   resolution: "expo-modules-core@npm:57.0.8"
@@ -18198,9 +18216,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"expo-modules-core@npm:~58.1.0":
+"expo-modules-core@patch:expo-modules-core@npm%3A58.1.0#~/.yarn/patches/expo-modules-core-npm-58.1.0-a93dd717b5.patch":
   version: 58.1.0
-  resolution: "expo-modules-core@npm:58.1.0"
+  resolution: "expo-modules-core@patch:expo-modules-core@npm%3A58.1.0#~/.yarn/patches/expo-modules-core-npm-58.1.0-a93dd717b5.patch::version=58.1.0&hash=a8081e"
   dependencies:
     expo-modules-jsi: "npm:~58.0.23"
     expo-modules-macros: "npm:0.33.0"
@@ -18212,7 +18230,7 @@ __metadata:
   peerDependenciesMeta:
     react-native-worklets:
       optional: true
-  checksum: 10/6619e72427475a5a284993058cf0fc9b6c8c0c38f727629c4f15b63e587df84cfed12f94760aa0ad57726d4e7060798beededf05c127cfe4a0d4beda335acae5
+  checksum: 10/e43966e310fc7a056147b13b7c2d59789232ac9c45d3dd76145d1f8e26550d8bb80e08ea2ebb53ddf8e1280a232e50db1c7932670ec678101be4903fd1d4494e
   languageName: node
   linkType: hard
 
