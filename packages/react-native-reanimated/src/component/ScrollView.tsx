@@ -1,6 +1,6 @@
 'use strict';
-import type { ComponentProps, ComponentRef } from 'react';
-import React, { useMemo } from 'react';
+import type { ComponentProps, ComponentRef, RefObject } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../commonTypes';
@@ -8,7 +8,6 @@ import {
   type AnimatedComponentType,
   createAnimatedComponent,
 } from '../createAnimatedComponent';
-import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
 import { mergeRefs } from '../reactUtils';
 
@@ -35,11 +34,7 @@ export function AnimatedScrollView({
   ref,
   ...restProps
 }: AnimatedScrollViewProps) {
-  const offsetRef = useAnimatedRef<ScrollView>();
-  const refWithOffset = useMemo(
-    () => mergeRefs(ref, offsetRef),
-    [ref, offsetRef]
-  );
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   // Set default scrollEventThrottle, because user expects
   // to have continuous scroll events.
@@ -51,21 +46,31 @@ export function AnimatedScrollView({
 
   return (
     <>
-      <AnimatedScrollViewComponent ref={refWithOffset} {...restProps} />
+      <AnimatedScrollViewComponent
+        ref={mergeRefs(ref, scrollViewRef)}
+        {...restProps}
+      />
       {scrollViewOffset ? (
-        <ScrollViewOffset animatedRef={offsetRef} offset={scrollViewOffset} />
+        <ScrollViewOffset
+          scrollViewRef={scrollViewRef}
+          offset={scrollViewOffset}
+        />
       ) : null}
     </>
   );
 }
 
 function ScrollViewOffset({
-  animatedRef,
+  scrollViewRef,
   offset,
 }: {
-  animatedRef: AnimatedRef<ScrollView>;
+  scrollViewRef: RefObject<ComponentRef<typeof ScrollView> | null>;
   offset: SharedValue<number>;
 }) {
+  const animatedRef = useAnimatedRef<ScrollView>();
+  useLayoutEffect(() => {
+    animatedRef(scrollViewRef.current);
+  }, [animatedRef, scrollViewRef]);
   useScrollOffset(animatedRef, offset);
   return null;
 }
