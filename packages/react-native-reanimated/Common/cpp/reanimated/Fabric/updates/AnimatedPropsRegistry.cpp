@@ -19,26 +19,6 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
-// Rounds in place. Used only with USE_ANIMATION_BACKEND, where the props are read from JSI directly.
-[[maybe_unused]] static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
-  const auto object = updates.asObject(rt);
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    const auto value = object.getProperty(rt, propName);
-    if (value.isNumber()) {
-      object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
-    }
-  }
-}
-
-static void roundTextMetrics(folly::dynamic &updates) {
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    auto *value = updates.get_ptr(propName);
-    if (value != nullptr && value->isNumber()) {
-      *value = roundTextMetric(value->asDouble());
-    }
-  }
-}
-
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
