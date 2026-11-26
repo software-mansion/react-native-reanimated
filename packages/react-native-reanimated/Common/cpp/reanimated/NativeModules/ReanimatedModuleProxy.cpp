@@ -1007,16 +1007,14 @@ void ReanimatedModuleProxy::rewriteSynchronousProps() {
   synchronousWritesTracker_->onRewrite();
 }
 
-AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
+AnimationMutations ReanimatedModuleProxy::collectUpdatesWithoutLayout() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectUpdatesWithoutLayout");
 
-  AnimationMutations mutations;
-  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
-  {
-    auto lock = updatesRegistryManager_->lock();
-    animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
-  }
-  return mutations;
+  UpdatesBatchAnimatedProps batch;
+  auto lock = updatesRegistryManager_->lock();
+  animatedPropsRegistry_->flushUpdatesWithoutLayout(batch);
+
+  return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
 
 std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() {
@@ -1115,7 +1113,7 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
     }
 
     case GrandCallbackSource::EventInAndroidDispatch:
-      return collectNonLayoutAnimationUpdates();
+      return collectUpdatesWithoutLayout();
   }
 
   return AnimationMutations{};

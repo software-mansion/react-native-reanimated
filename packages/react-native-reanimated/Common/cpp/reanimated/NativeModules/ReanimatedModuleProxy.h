@@ -56,8 +56,9 @@ enum class GrandCallbackSource : std::uint8_t {
   // Used when handling an event that can update the layout at once
   Event,
 
-  // Used when handling an event inside an Android UI-thread dispatch. Layout updates wait for
-  // a later flush, because a mount inside the dispatch can break the view tree walk of the sender
+  // Used when handling an event inside an Android UI-thread dispatch. The updates of a view with
+  // a layout update wait for a later flush, because a mount inside the dispatch can break the
+  // view tree walk of the sender
   EventInAndroidDispatch,
 };
 
@@ -223,7 +224,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
-  AnimationMutations collectNonLayoutAnimationUpdates();
+  AnimationMutations collectUpdatesWithoutLayout();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
 
   const bool isReducedMotion_;

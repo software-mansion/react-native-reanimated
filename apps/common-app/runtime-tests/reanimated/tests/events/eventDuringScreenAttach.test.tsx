@@ -23,7 +23,7 @@ import {
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
 
-const PUSHES = 3;
+const PUSHES = 5;
 const IMAGE_COUNT = 24;
 const RENDERS_AFTER_PUSH = 40;
 const FOLLOWER_BASE_WIDTH = 16;
@@ -66,7 +66,7 @@ function Screens() {
           <Stack.Screen
             name="Images"
             component={Images}
-            listeners={notifyTransitionEnds}
+            listeners={notifyWhenShown}
           />
         </Stack.Navigator>
       </NavigationContainer>
@@ -110,6 +110,8 @@ function Images({ route }: NativeStackScreenProps<StackParamList, 'Images'>) {
     }
   }, [push, renderCount]);
 
+  useEffect(() => () => notify(closed(push)), [push]);
+
   return (
     <View>
       <Animated.View style={[styles.box, followerStyle]} />
@@ -139,15 +141,16 @@ function Images({ route }: NativeStackScreenProps<StackParamList, 'Images'>) {
   );
 }
 
-function notifyTransitionEnds({
+function notifyWhenShown({
   route,
 }: {
   route: RouteProp<StackParamList, 'Images'>;
 }) {
   return {
     transitionEnd: ({ data }: { data: { closing: boolean } }) => {
-      const { push } = route.params;
-      notify(data.closing ? closed(push) : shown(push));
+      if (!data.closing) {
+        notify(shown(route.params.push));
+      }
     },
   };
 }
