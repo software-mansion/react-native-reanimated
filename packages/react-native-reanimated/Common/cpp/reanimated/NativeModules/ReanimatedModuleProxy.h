@@ -222,6 +222,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
   AnimationMutations collectUpdatesWithoutLayout();
+  bool hasPendingEventUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
 
   const bool isReducedMotion_;
