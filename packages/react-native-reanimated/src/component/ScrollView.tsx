@@ -69,8 +69,10 @@ function ScrollViewOffset({
 }) {
   const animatedRef = useAnimatedRef<ScrollView>();
   useLayoutEffect(() => {
-    animatedRef(scrollViewRef.current);
-  }, [animatedRef, scrollViewRef]);
+    if (animatedRef.current !== scrollViewRef.current) {
+      animatedRef(scrollViewRef.current);
+    }
+  });
   useScrollOffset(animatedRef, offset);
   return null;
 }
