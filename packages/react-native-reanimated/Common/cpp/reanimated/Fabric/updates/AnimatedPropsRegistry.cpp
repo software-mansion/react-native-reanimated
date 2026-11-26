@@ -21,8 +21,6 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
 
 static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value);
 
-// Same result as `jsi::dynamicFromValue` without a key filter, except that
-// every function becomes null, not only functions in object properties.
 static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &object) {
   if (object.isArray(rt)) {
     const auto array = object.getArray(rt);
