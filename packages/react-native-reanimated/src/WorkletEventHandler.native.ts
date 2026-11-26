@@ -7,29 +7,29 @@ export class WorkletEventHandler<
 > implements IWorkletEventHandler<Event> {
   readonly eventNames: string[];
   readonly worklet: (event: ReanimatedEvent<Event>) => void;
-  #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
+  #registrations: Map<ViewTag, Map<EventName, RegistrationId>>;
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
     eventNames: string[]
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
-    this.#registrations = new Map<number, number[]>();
+    this.#registrations = new Map();
   }
 
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
-    const newRegistrations = this.eventNames.map((eventName) =>
-      registerEventHandler(this.worklet, eventName, viewTag)
-    );
-    this.#registrations.set(viewTag, newRegistrations);
+    const registrations =
+      this.#registrations.get(viewTag) ?? new Map<EventName, RegistrationId>();
+    this.#registrations.set(viewTag, registrations);
 
-    if (this.eventNames.length === 0 && fallbackEventName) {
-      const newRegistration = registerEventHandler(
-        this.worklet,
-        fallbackEventName,
-        viewTag
-      );
-      this.#registrations.set(viewTag, [newRegistration]);
+    const eventNames = eventNamesToRegister(this.eventNames, fallbackEventName);
+    for (const eventName of eventNames) {
+      if (!registrations.has(eventName)) {
+        registrations.set(
+          eventName,
+          registerEventHandler(this.worklet, eventName, viewTag)
+        );
+      }
     }
   }
 
@@ -40,3 +40,17 @@ export class WorkletEventHandler<
     this.#registrations.delete(viewTag);
   }
 }
+
+function eventNamesToRegister(
+  eventNames: string[],
+  fallbackEventName?: string
+): string[] {
+  if (eventNames.length > 0) {
+    return eventNames;
+  }
+  return fallbackEventName ? [fallbackEventName] : [];
+}
+
+type ViewTag = number;
+type EventName = string;
+type RegistrationId = number;

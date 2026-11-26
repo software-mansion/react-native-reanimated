@@ -2,7 +2,7 @@ import { act, render } from '@testing-library/react-native';
 import { startTransition, StrictMode, Suspense, use } from 'react';
 import { ScrollView } from 'react-native';
 
-import type { SharedValue } from '../src';
+import type { ReanimatedEvent, SharedValue } from '../src';
 import Animated, {
   makeMutable,
   useAnimatedRef,
@@ -238,7 +238,7 @@ describe('handler with several events', () => {
   });
 
   test('keeps running when one of its two props is removed', () => {
-    const { rerender } = render(
+    const { rerender, unmount } = render(
       <ScrollEventsView props={['onScroll', 'onMomentumScrollEnd']} />
     );
 
@@ -246,6 +246,51 @@ describe('handler with several events', () => {
     dispatch('onScroll');
 
     expect(received).toEqual(['onScroll']);
+
+    unmount();
+
+    expect(registrations.size).toBe(0);
+  });
+
+  test('runs once for each event when it is on two props of one view', () => {
+    render(<ScrollEventsView props={['onScroll', 'onMomentumScrollEnd']} />);
+
+    dispatch('onScroll');
+    dispatch('onMomentumScrollEnd');
+
+    expect(received).toEqual(['onScroll', 'onMomentumScrollEnd']);
+  });
+
+  test('unregisters all events on unmount when it is on two props of one view', () => {
+    const { unmount } = render(
+      <ScrollEventsView props={['onScroll', 'onMomentumScrollEnd']} />
+    );
+
+    unmount();
+
+    expect(registrations.size).toBe(0);
+  });
+
+  test('registers a handler without event names for the event of each prop', () => {
+    const { unmount } = render(<NoEventNamesView />);
+
+    dispatch('onScroll');
+    dispatch('onMomentumScrollEnd');
+    expect(received).toEqual(['onScroll', 'onMomentumScrollEnd']);
+
+    unmount();
+
+    expect(registrations.size).toBe(0);
+  });
+
+  test('moves the prop event of a handler without event names to the handler that replaces it', () => {
+    const { rerender } = render(<NoEventNamesView />);
+
+    rerender(<NoEventNamesView replaceMomentumHandler />);
+    dispatch('onScroll');
+    dispatch('onMomentumScrollEnd');
+
+    expect(received).toEqual(['onScroll', 'other onMomentumScrollEnd']);
   });
 
   function ScrollEventsView({ props }: { props: string[] }) {
@@ -259,6 +304,23 @@ describe('handler with several events', () => {
     });
     const eventProps = Object.fromEntries(props.map((prop) => [prop, handler]));
     return <Animated.ScrollView {...eventProps} />;
+  }
+
+  function NoEventNamesView({ replaceMomentumHandler = false }) {
+    const handler = useEvent((event: ReanimatedEvent<object>) => {
+      'worklet';
+      received.push(event.eventName);
+    });
+    const otherHandler = useEvent((event: ReanimatedEvent<object>) => {
+      'worklet';
+      received.push(`other ${event.eventName}`);
+    });
+    return (
+      <Animated.ScrollView
+        onScroll={handler}
+        onMomentumScrollEnd={replaceMomentumHandler ? otherHandler : handler}
+      />
+    );
   }
 });
 

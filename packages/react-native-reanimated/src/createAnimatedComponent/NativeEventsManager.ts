@@ -60,24 +60,28 @@ export class NativeEventsManager implements INativeEventsManager {
       return;
     }
 
+    const unregisteredHandlers = new Set<
+      WorkletEventHandlerHolder['workletEventHandler']
+    >();
     executeForEachEventHandler(prevProps, (key, prevHandler) => {
       const newProp = this.#managedComponent.props[key];
       if (!newProp) {
         // Prop got deleted
         prevHandler.unregisterFromEvents(this.#eventViewTag);
+        unregisteredHandlers.add(prevHandler);
       } else if (
         isWorkletEventHandler(newProp) &&
         newProp.workletEventHandler !== prevHandler
       ) {
         // Prop got changed
         prevHandler.unregisterFromEvents(this.#eventViewTag);
+        unregisteredHandlers.add(prevHandler);
         newProp.workletEventHandler.registerForEvents(this.#eventViewTag, key);
       }
     });
 
     executeForEachEventHandler(this.#managedComponent.props, (key, handler) => {
-      if (!prevProps[key]) {
-        // Prop got added
+      if (!prevProps[key] || unregisteredHandlers.has(handler)) {
         handler.registerForEvents(this.#eventViewTag, key);
       }
     });
