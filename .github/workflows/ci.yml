@@ -51,6 +51,7 @@ jobs:
       example-ios-build-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-ios-build-check == 'true' }}
       example-next-build-check-and-test: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-next-build-check-and-test == 'true' }}
       example-typescript-check-and-lint: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.example-typescript-check-and-lint == 'true' }}
+      integration-examples-e2e-android: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.integration-examples-e2e-android == 'true' }}
       runtime-tests-android: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.runtime-tests-android == 'true' }}
       runtime-tests-ios-argent: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.runtime-tests-ios-argent == 'true' }}
       worklets-plugin-static-check: ${{ !contains(fromJSON('["pull_request", "push"]'), github.event_name) || steps.filter.outputs.worklets-plugin-static-check == 'true' }}
@@ -190,6 +191,27 @@ jobs:
               # - 'apps/macos-example/**'
               # next-example does not have type:check yet
               # - 'apps/next-example/**'
+            integration-examples-e2e-android:
+              - '.github/workflows/ci.yml'
+              - '.github/workflows/integration-examples-e2e-android.yml'
+              - '.github/actions/install-android-emulator/**'
+              - '.github/actions/install-android-ndk/**'
+              - '.github/actions/setup-gradle-network/**'
+              - '.github/actions/setup-node-yarn/**'
+              - '.github/actions/save-yarn-cache/**'
+              - '.nvmrc'
+              - '.yarn/patches/expo-modules-core-*.patch'
+              - 'scripts/metro.js'
+              - 'apps/integration-examples/**'
+              - 'packages/react-native-reanimated/Common/**'
+              - 'packages/react-native-reanimated/android/**'
+              - 'packages/react-native-reanimated/package.json'
+              - 'packages/react-native-reanimated/src/**'
+              - 'packages/react-native-worklets/Common/**'
+              - 'packages/react-native-worklets/android/**'
+              - 'packages/react-native-worklets/package.json'
+              - 'packages/react-native-worklets/plugin/index.js'
+              - 'packages/react-native-worklets/src/**'
             runtime-tests-android:
               - '.github/workflows/ci.yml'
               - '.github/workflows/runtime-tests-android.yml'
@@ -296,7 +318,7 @@ jobs:
             else
               echo "| Check | Runs |"
               echo "| --- | --- |"
-              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes" and (.key | endswith("_count") | not))) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests")) then "skipped, not run on pushes" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
+              echo "$OUTPUTS" | jq -r --arg event "$EVENT" 'to_entries | map(select(.key != "changes" and (.key | endswith("_count") | not))) | sort_by(.key) | .[] | "| \(.key) | \(if $event == "push" and (.key | startswith("runtime-tests") or startswith("integration-examples-e2e")) then "skipped, not run on pushes" elif .value == "true" then "yes" else "skipped, no matching changes" end) |"'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -350,6 +372,13 @@ jobs:
     needs: changes
     if: ${{ !cancelled() && (needs.changes.result == 'failure' || needs.changes.outputs.example-typescript-check-and-lint == 'true') }}
     uses: $/.github/workflows/example-typescript-check-and-lint.yml
+
+  # Not on pushes to main: the nightly runs it.
+  integration-examples-e2e-android:
+    name: Integration examples e2e Android
+    needs: changes
+    if: ${{ !cancelled() && github.event_name != 'push' && (needs.changes.result == 'failure' || needs.changes.outputs.integration-examples-e2e-android == 'true') }}
+    uses: $/.github/workflows/integration-examples-e2e-android.yml
 
   # Not a matrix: a skipped matrix job shows its `name:` unexpanded.
   # Not on pushes to main: too expensive to rerun after every merge.
@@ -427,6 +456,7 @@ jobs:
       - example-ios-build-check
       - example-next-build-check-and-test
       - example-typescript-check-and-lint
+      - integration-examples-e2e-android
       - runtime-tests-android-legacy-eval
       - runtime-tests-android-bundle-mode
       - runtime-tests-ios-legacy-eval
