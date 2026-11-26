@@ -170,8 +170,9 @@ export default abstract class AnimatedComponentCommon<
   }
 
   _releasePreviousHost(_previousViewInfo: ViewInfo) {
-    // Called after `_detachHostBindings`, before the component is pointed at a
-    // new host. Platforms release what they keep for the previous host.
+    // Called after `_detachHostBindings`. `_componentRef` already points at the
+    // new host, while `_previousViewInfo` still describes the previous one, so
+    // platforms release what they keep for the previous host through it.
   }
 
   _createCSSManager() {
