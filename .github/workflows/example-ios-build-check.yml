@@ -21,7 +21,7 @@ permissions:
 jobs:
   example-ios-build-check:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     env:
       WORKING_DIRECTORY: apps/fabric-example
       REANIMATED_DIR: packages/react-native-reanimated

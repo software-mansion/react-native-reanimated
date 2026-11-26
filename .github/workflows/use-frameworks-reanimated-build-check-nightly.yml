@@ -17,7 +17,7 @@ permissions:
 jobs:
   use-frameworks-reanimated-build-check-nightly:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     concurrency:
       group: use-${{matrix.type}}-frameworks-reanimated-build-check-nightly-${{ github.ref }}
       cancel-in-progress: true

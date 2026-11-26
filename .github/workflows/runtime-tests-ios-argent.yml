@@ -73,7 +73,7 @@ jobs:
   build-app:
     needs: preflight
     name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: 90
     concurrency:
       group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}

@@ -130,7 +130,7 @@ jobs:
 
   reanimated-worklets-compatibility-check-ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     needs: read-compatibility-json
     strategy:
       fail-fast: false
