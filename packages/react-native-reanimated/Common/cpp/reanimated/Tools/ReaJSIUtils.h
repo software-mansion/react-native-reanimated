@@ -222,27 +222,43 @@ setHostFunction(jsi::Runtime &rt, jsi::Object &obj, const char *name, unsigned i
       jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name), length, std::move(body)));
 }
 
-template <typename TFun, typename TClass, typename TResult, typename... TArgs>
-void addTypedMethod(
+template <typename TResult>
+jsi::Value resultForDeadModule() {
+  if constexpr (std::is_void_v<TResult>) {
+    return jsi::Value::undefined();
+  } else {
+    return jsi::Value(TResult{});
+  }
+}
+
+template <typename TModule, typename TFun, typename TClass, typename TResult, typename... TArgs>
+void addTypedModuleMethod(
     jsi::Runtime &rt,
     jsi::Object &obj,
     const char *name,
+    std::weak_ptr<TModule> weakModule,
     TFun &&func,
-    TResult (TClass::*)(jsi::Runtime &, TArgs...) const) {
+    TResult (TClass::*)(jsi::Runtime &, TModule &, TArgs...) const) {
   setHostFunction(
       rt,
       obj,
       name,
       sizeof...(TArgs),
-      [func = std::forward<TFun>(func)](jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
-        auto arguments = readArguments<TArgs...>(rt, args, count);
+      [weakModule = std::move(weakModule), func = std::forward<TFun>(func)](
+          jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+        const auto strongModule = weakModule.lock();
+        if (!strongModule) {
+          return resultForDeadModule<TResult>();
+        }
+        auto arguments = std::tuple_cat(std::tie(*strongModule), readArguments<TArgs...>(rt, args, count));
         return callWithArguments<TResult>(rt, func, std::move(arguments));
       });
 }
 
-template <typename TFun>
-void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
-  addTypedMethod(rt, obj, name, std::forward<TFun>(func), &std::remove_cvref_t<TFun>::operator());
+template <typename TModule, typename TFun>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, std::weak_ptr<TModule> weakModule, TFun &&func) {
+  addTypedModuleMethod(
+      rt, obj, name, std::move(weakModule), std::forward<TFun>(func), &std::remove_cvref_t<TFun>::operator());
 }
 
 } // namespace reanimated::jsi_utils

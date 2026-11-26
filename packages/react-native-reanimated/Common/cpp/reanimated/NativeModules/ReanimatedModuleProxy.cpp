@@ -1505,289 +1505,261 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       rt,
       obj,
       "registerEventHandler",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt, const jsi::Value &worklet, const std::string &eventName, int emitterReactTag) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->registerEventHandler(rt, worklet, eventName, emitterReactTag);
-      });
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const jsi::Value &worklet,
+         const std::string &eventName,
+         int emitterReactTag) { return self.registerEventHandler(rt, worklet, eventName, emitterReactTag); });
 
-  addMethod(rt, obj, "unregisterEventHandler", [weakThis = weak_from_this()](jsi::Runtime &rt, double registrationId) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->unregisterEventHandler(rt, registrationId);
-  });
+  addMethod(
+      rt,
+      obj,
+      "unregisterEventHandler",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, double registrationId) {
+        self.unregisterEventHandler(rt, registrationId);
+      });
 
   addMethod(
       rt,
       obj,
       "getViewProp",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const std::string &propName, jsi::Function callback) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->getViewProp(rt, shadowNodeWrapper, propName, std::move(callback));
-      });
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const jsi::Value &shadowNodeWrapper,
+         const std::string &propName,
+         jsi::Function callback) { return self.getViewProp(rt, shadowNodeWrapper, propName, std::move(callback)); });
 
-  addMethod(rt, obj, "isSensorAvailable", [weakThis = weak_from_this()](jsi::Runtime &rt, double sensorType) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return false;
-    }
-    return strongThis->isSensorAvailable(rt, sensorType);
-  });
+  addMethod(
+      rt,
+      obj,
+      "isSensorAvailable",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, double sensorType) {
+        return self.isSensorAvailable(rt, sensorType);
+      });
 
   addMethod(
       rt,
       obj,
       "registerSensor",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt, double sensorType, double interval, double iosReferenceFrame, const jsi::Value &handler) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->registerSensor(rt, sensorType, interval, iosReferenceFrame, handler);
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         double sensorType,
+         double interval,
+         double iosReferenceFrame,
+         const jsi::Value &handler) {
+        return self.registerSensor(rt, sensorType, interval, iosReferenceFrame, handler);
       });
 
-  addMethod(rt, obj, "unregisterSensor", [weakThis = weak_from_this()](jsi::Runtime &rt, double sensorId) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->unregisterSensor(rt, sensorId);
-  });
+  addMethod(
+      rt,
+      obj,
+      "unregisterSensor",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, double sensorId) { self.unregisterSensor(rt, sensorId); });
 
-  addMethod(rt, obj, "getStaticFeatureFlag", [weakThis = weak_from_this()](jsi::Runtime &rt, const std::string &name) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return jsi::Value::undefined();
-    }
-    return strongThis->getStaticFeatureFlag(rt, name);
-  });
+  addMethod(
+      rt,
+      obj,
+      "getStaticFeatureFlag",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, const std::string &name) {
+        return self.getStaticFeatureFlag(rt, name);
+      });
 
   addMethod(
       rt,
       obj,
       "setDynamicFeatureFlag",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const std::string &name, bool value) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->setDynamicFeatureFlag(rt, name, value);
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, const std::string &name, bool value) {
+        return self.setDynamicFeatureFlag(rt, name, value);
       });
 
   addMethod(
       rt,
       obj,
       "subscribeForKeyboardEvents",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt, const jsi::Value &handler, bool isStatusBarTranslucent, bool isNavigationBarTranslucent) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->subscribeForKeyboardEvents(rt, handler, isStatusBarTranslucent, isNavigationBarTranslucent);
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const jsi::Value &handler,
+         bool isStatusBarTranslucent,
+         bool isNavigationBarTranslucent) {
+        return self.subscribeForKeyboardEvents(rt, handler, isStatusBarTranslucent, isNavigationBarTranslucent);
       });
 
   addMethod(
-      rt, obj, "unsubscribeFromKeyboardEvents", [weakThis = weak_from_this()](jsi::Runtime &rt, double listenerId) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->unsubscribeFromKeyboardEvents(rt, listenerId);
+      rt,
+      obj,
+      "unsubscribeFromKeyboardEvents",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, double listenerId) {
+        self.unsubscribeFromKeyboardEvents(rt, listenerId);
       });
 
   addMethod(
       rt,
       obj,
       "configureLayoutAnimationBatch",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Array &layoutAnimationsBatch) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->configureLayoutAnimationBatch(rt, layoutAnimationsBatch);
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, const jsi::Array &layoutAnimationsBatch) {
+        return self.configureLayoutAnimationBatch(rt, layoutAnimationsBatch);
       });
 
   addMethod(
       rt,
       obj,
       "setShouldAnimateExitingForTag",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag, bool shouldAnimate) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->setShouldAnimateExiting(rt, viewTag, shouldAnimate);
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, Tag viewTag, bool shouldAnimate) {
+        self.setShouldAnimateExiting(rt, viewTag, shouldAnimate);
       });
 
   addMethod(
-      rt, obj, "setViewStyle", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag, const jsi::Value &style) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->setViewStyle(rt, viewTag, style);
+      rt,
+      obj,
+      "setViewStyle",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, Tag viewTag, const jsi::Value &style) {
+        self.setViewStyle(rt, viewTag, style);
       });
 
-  addMethod(rt, obj, "createDetachedShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-    return Bridging<std::shared_ptr<const ShadowNode>>::toJs(rt, shadowNodeFromValue(rt, shadowNodeWrapper));
-  });
+  addMethod(
+      rt,
+      obj,
+      "createDetachedShadowNodeWrapper",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &, const jsi::Value &shadowNodeWrapper) {
+        return Bridging<std::shared_ptr<const ShadowNode>>::toJs(rt, shadowNodeFromValue(rt, shadowNodeWrapper));
+      });
 
   addMethod(
       rt,
       obj,
       "markNodeAsRemovable",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->markNodeAsRemovable(rt, shadowNodeWrapper);
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, const jsi::Value &shadowNodeWrapper) {
+        self.markNodeAsRemovable(rt, shadowNodeWrapper);
       });
 
-  addMethod(rt, obj, "unmarkNodeAsRemovable", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->unmarkNodeAsRemovable(rt, viewTag);
-  });
+  addMethod(
+      rt,
+      obj,
+      "unmarkNodeAsRemovable",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, Tag viewTag) { self.unmarkNodeAsRemovable(rt, viewTag); });
 
   addMethod(
       rt,
       obj,
       "registerCSSKeyframes",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt,
-          const std::string &animationName,
-          const std::string &compoundComponentName,
-          const jsi::Value &keyframesConfig) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->registerCSSKeyframes(rt, animationName, compoundComponentName, keyframesConfig);
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const std::string &animationName,
+         const std::string &compoundComponentName,
+         const jsi::Value &keyframesConfig) {
+        self.registerCSSKeyframes(rt, animationName, compoundComponentName, keyframesConfig);
       });
 
   addMethod(
       rt,
       obj,
       "unregisterCSSKeyframes",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt, const std::string &animationName, const std::string &compoundComponentName) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->unregisterCSSKeyframes(rt, animationName, compoundComponentName);
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const std::string &animationName,
+         const std::string &compoundComponentName) {
+        self.unregisterCSSKeyframes(rt, animationName, compoundComponentName);
       });
 
   addMethod(
       rt,
       obj,
       "applyCSSAnimations",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt,
-          const jsi::Value &shadowNodeWrapper,
-          const std::string &compoundComponentName,
-          const jsi::Value &animationUpdates) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->applyCSSAnimations(rt, shadowNodeWrapper, compoundComponentName, animationUpdates);
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const jsi::Value &shadowNodeWrapper,
+         const std::string &compoundComponentName,
+         const jsi::Value &animationUpdates) {
+        self.applyCSSAnimations(rt, shadowNodeWrapper, compoundComponentName, animationUpdates);
       });
 
-  addMethod(rt, obj, "setCSSEventHandler", [weakThis = weak_from_this()](jsi::Runtime &rt, jsi::Function handler) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->setCSSEventHandler(rt, std::move(handler));
-  });
+  addMethod(
+      rt,
+      obj,
+      "setCSSEventHandler",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, jsi::Function handler) {
+        self.setCSSEventHandler(rt, std::move(handler));
+      });
 
-  addMethod(rt, obj, "unregisterCSSAnimations", [weakThis = weak_from_this()](jsi::Runtime &, Tag viewTag) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->unregisterCSSAnimations(viewTag);
-  });
+  addMethod(
+      rt,
+      obj,
+      "unregisterCSSAnimations",
+      weak_from_this(),
+      [](jsi::Runtime &, ReanimatedModuleProxy &self, Tag viewTag) { self.unregisterCSSAnimations(viewTag); });
 
   addMethod(
       rt,
       obj,
       "runCSSTransition",
-      [weakThis = weak_from_this()](
-          jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Value &transitionConfig, double eventMask) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->runCSSTransition(rt, shadowNodeWrapper, transitionConfig, eventMask);
-      });
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const jsi::Value &shadowNodeWrapper,
+         const jsi::Value &transitionConfig,
+         double eventMask) { self.runCSSTransition(rt, shadowNodeWrapper, transitionConfig, eventMask); });
 
-  addMethod(rt, obj, "unregisterCSSTransition", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->unregisterCSSTransition(rt, viewTag);
-  });
+  addMethod(
+      rt,
+      obj,
+      "unregisterCSSTransition",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, Tag viewTag) { self.unregisterCSSTransition(rt, viewTag); });
 
   addMethod(
       rt,
       obj,
       "getSettledUpdates",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Function &isViewRegistered) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return jsi::Value::undefined();
-        }
-        return strongThis->getSettledUpdates(rt, isViewRegistered);
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, const jsi::Function &isViewRegistered) {
+        return self.getSettledUpdates(rt, isViewRegistered);
       });
 
   addMethod(
       rt,
       obj,
       "hasPendingSettledUpdates",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Function &isViewRegistered) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return false;
-        }
-        return strongThis->hasPendingSettledUpdates(rt, isViewRegistered);
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, const jsi::Function &isViewRegistered) {
+        return self.hasPendingSettledUpdates(rt, isViewRegistered);
       });
 
   addMethod(
       rt,
       obj,
       "registerPseudoStyles",
-      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &shadowNodeWrapper, const jsi::Object &config) {
-        auto strongThis = weakThis.lock();
-        if (!strongThis) {
-          return;
-        }
-        strongThis->registerPseudoStyles(rt, shadowNodeWrapper, config);
-      });
+      weak_from_this(),
+      [](jsi::Runtime &rt,
+         ReanimatedModuleProxy &self,
+         const jsi::Value &shadowNodeWrapper,
+         const jsi::Object &config) { self.registerPseudoStyles(rt, shadowNodeWrapper, config); });
 
-  addMethod(rt, obj, "unregisterPseudoStyles", [weakThis = weak_from_this()](jsi::Runtime &rt, Tag viewTag) {
-    auto strongThis = weakThis.lock();
-    if (!strongThis) {
-      return;
-    }
-    strongThis->unregisterPseudoStyles(rt, viewTag);
-  });
+  addMethod(
+      rt,
+      obj,
+      "unregisterPseudoStyles",
+      weak_from_this(),
+      [](jsi::Runtime &rt, ReanimatedModuleProxy &self, Tag viewTag) { self.unregisterPseudoStyles(rt, viewTag); });
 
   return obj;
 }
