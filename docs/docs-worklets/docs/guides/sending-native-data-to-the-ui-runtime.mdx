@@ -143,7 +143,7 @@ class ReadingListeners {
 
 #### Step 5: Add and remove listeners
 
-`add` takes the runtime, the scheduler and the worklet out of the objects from JavaScript, and keeps them under a new ID. `remove` deletes a listener, so that a component that unmounts stops getting values. Add both methods to the public part of the class.
+`add` takes the runtime, the scheduler and the worklet out of the objects from JavaScript, and keeps them under a new ID. `remove` deletes a listener, so that a component that unmounts stops getting new values. Add both methods to the public part of the class.
 
 ```cpp
  public:
@@ -1580,7 +1580,7 @@ return <AnimatedReadingView onReading={onReading} />;
 
 ## The other direction
 
-A worklet on the UI Runtime can also call your native methods, for example to read the latest value on each frame. A native method is a host function, and a worklet can call a host function on any Runtime (see [Tried to synchronously call a Remote Function](./troubleshooting.mdx#tried-to-synchronously-call-a-remote-function)). The method runs on the UI thread, so it must be safe to call from there.
+A worklet on the UI Runtime can also call a method of your TurboModule, for example to read the latest value on each frame. A TurboModule method is a host function, and a worklet can call a host function on any Runtime (see [Tried to synchronously call a Remote Function](./troubleshooting.mdx#tried-to-synchronously-call-a-remote-function)). The method usually runs on the UI thread, so it must be safe to call from there.
 
 Read the method on the RN Runtime, and capture only the function, as [Transfer granular objects](./good-practices.mdx#transfer-granular-objects) recommends:
 
