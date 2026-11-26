@@ -12,7 +12,6 @@ const WebSocketServer = WebSocket.WebSocketServer || WebSocket.Server;
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
 const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
-const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
 
 const projectRoot = path.resolve(__dirname, '..');
@@ -92,6 +91,12 @@ const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
 const SIMULATOR =
   typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
 const UDID = typeof args.udid === 'string' ? args.udid : null;
+const DEVICE = typeof args.device === 'string' ? args.device : null;
+const TEAM = typeof args.team === 'string' ? args.team : null;
+const BUNDLE_ID =
+  typeof args['bundle-id'] === 'string'
+    ? args['bundle-id']
+    : 'org.reactjs.native.example.FabricExample';
 const SERIAL = typeof args.serial === 'string' ? args.serial : null;
 const AVD = typeof args.avd === 'string' ? args.avd : null;
 const SANITIZER = args.sanitizer ? String(args.sanitizer).toLowerCase() : null;
@@ -107,6 +112,13 @@ if (!BUILD_ONLY && !LIBRARIES.includes(LIBRARY)) {
 if (!PLATFORMS.includes(PLATFORM)) {
   console.error(
     `[runtime-tests] --platform must be one of: ${PLATFORMS.join(', ')} (got: ${PLATFORM})`
+  );
+  process.exit(1);
+}
+
+if (DEVICE !== null && (!DEVICE || PLATFORM !== 'ios' || !TEAM || SANITIZER)) {
+  console.error(
+    '[runtime-tests] --device needs a UDID and --team, and runs on ios with no --sanitizer'
   );
   process.exit(1);
 }
@@ -445,10 +457,14 @@ function clampInteger(raw, fallback, min, max) {
   return Math.min(Math.max(Math.trunc(value), min), max);
 }
 
-const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
+const HOST =
+  typeof args.host === 'string' ? args.host : DEVICE ? '::' : '0.0.0.0';
 
 const httpServer = http.createServer(handleEchoRequest);
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({
+  server: httpServer,
+  ...(DEVICE ? { path: '/' } : {}),
+});
 
 httpServer.on('error', (error) => {
   if (/** @type {{ code?: string }} */ (error).code === 'EADDRINUSE') {
@@ -813,6 +829,12 @@ function dumpCrashDiagnostics() {
 }
 
 async function dumpIOSCrashDiagnostics() {
+  if (DEVICE) {
+    console.error(
+      `[runtime-tests] crash reports stay on the device ${DEVICE} (Settings > Privacy & Security > Analytics & Improvements > Analytics Data)`
+    );
+    return;
+  }
   if (process.platform !== 'darwin') {
     console.error(
       '[runtime-tests] the simulator runs on a remote host — check its ~/Library/Logs/DiagnosticReports for FabricExample crash reports'
@@ -1486,40 +1508,13 @@ async function buildApp() {
   console.log(
     `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
   );
-  await run(
-    'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      'build',
-    ],
-    { cwd: iosDir }
-  );
+  await run('xcodebuild', [...xcodebuildArgs(), 'build'], { cwd: iosDir });
 }
 
 async function appPath() {
   const { stdout } = await run(
     'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      '-showBuildSettings',
-      '-json',
-    ],
+    [...xcodebuildArgs(), '-showBuildSettings', '-json'],
     { cwd: iosDir }
   );
   /** @type {{ buildSettings?: Record<string, string> }[]} */
@@ -1536,6 +1531,28 @@ async function appPath() {
 
   const { TARGET_BUILD_DIR, WRAPPER_NAME } = entry.buildSettings;
   return path.join(TARGET_BUILD_DIR, WRAPPER_NAME);
+}
+
+function xcodebuildArgs() {
+  return [
+    '-workspace',
+    'FabricExample.xcworkspace',
+    '-scheme',
+    'DebugRuntimeTests',
+    '-configuration',
+    CONFIGURATION,
+    '-destination',
+    DEVICE ? `id=${DEVICE}` : 'generic/platform=iOS Simulator',
+    ...(args['bundle-id'] ? [`PRODUCT_BUNDLE_IDENTIFIER=${BUNDLE_ID}`] : []),
+    ...(TEAM
+      ? [
+          `DEVELOPMENT_TEAM=${TEAM}`,
+          'CODE_SIGN_STYLE=Automatic',
+          '-allowProvisioningUpdates',
+        ]
+      : []),
+    ...sanitizerBuildArgs(),
+  ];
 }
 
 /** @param {string} udid */
@@ -1575,6 +1592,92 @@ async function installAndLaunch(udid) {
       ...(SANITIZER ? SANITIZERS[SANITIZER].launchEnv : {}),
     },
   });
+}
+
+/** @param {string} device */
+async function installAndLaunchOnDevice(device) {
+  const app = await appPath();
+  const host = await macAddressOnDeviceTunnel(device);
+  console.log(`[runtime-tests] installing ${app} on ${device}`);
+  await run('xcrun', [
+    'devicectl',
+    'device',
+    'install',
+    'app',
+    '--device',
+    device,
+    app,
+  ]);
+  console.log(
+    `[runtime-tests] launching ${BUNDLE_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY}, Mac at [${host}]`
+  );
+  await run('xcrun', [
+    'devicectl',
+    'device',
+    'process',
+    'launch',
+    '--device',
+    device,
+    '--terminate-existing',
+    '--environment-variables',
+    JSON.stringify({ RUNTIME_TESTS_LIBRARY: LIBRARY }),
+    BUNDLE_ID,
+    '--',
+    '-RCT_jsLocation',
+    `[${host}]:${METRO_PORT}`,
+    '-RUNTIME_TESTS_WS_URL',
+    `ws://[${host}]:${PORT}`,
+  ]);
+}
+
+/**
+ * @param {string} device
+ * @returns {Promise<string>}
+ */
+async function macAddressOnDeviceTunnel(device) {
+  const deviceAddress = await tunnelAddressOf(device);
+  const address = Object.values(os.networkInterfaces())
+    .flat()
+    .find((entry) => {
+      if (entry?.family !== 'IPv6' || entry.cidr === null) {
+        return false;
+      }
+      const subnet = new net.BlockList();
+      subnet.addSubnet(entry.address, Number(entry.cidr.split('/')[1]), 'ipv6');
+      return (
+        entry.address !== deviceAddress && subnet.check(deviceAddress, 'ipv6')
+      );
+    })?.address;
+  if (!address) {
+    throw new Error(`No address of this Mac on the tunnel to ${deviceAddress}`);
+  }
+  return address;
+}
+
+/**
+ * @param {string} device
+ * @returns {Promise<string>}
+ */
+async function tunnelAddressOf(device) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'runtime-tests-'));
+  try {
+    const details = path.join(dir, 'details.json');
+    await run('xcrun', [
+      'devicectl',
+      'device',
+      'info',
+      'details',
+      '--device',
+      device,
+      '--quiet',
+      '--json-output',
+      details,
+    ]);
+    return JSON.parse(fs.readFileSync(details, 'utf8')).result
+      .connectionProperties.tunnelIPAddress;
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 /**
@@ -1769,6 +1872,11 @@ if (SHOULD_LAUNCH) {
         await buildAndroidApp(serial);
       }
       await installAndLaunchAndroid(serial);
+    } else if (DEVICE) {
+      if (!SKIP_BUILD) {
+        await buildApp();
+      }
+      await installAndLaunchOnDevice(DEVICE);
     } else {
       const device = await resolveSimulator();
       await ensureBooted(device);
@@ -1849,6 +1957,11 @@ Target
   --platform <name>         One of: ${PLATFORMS.join(', ')}. Default: ios.
   --simulator <name>        iOS simulator to boot. Default: iPhone 17.
   --udid <udid>             iOS simulator to reuse, instead of --simulator.
+  --device <udid>           Cabled iPhone, instead of a simulator. The app
+                            reaches Metro and this server over the USB tunnel.
+  --team <id>               Signing team for --device (automatic signing).
+  --bundle-id <id>          Bundle identifier of the app. Needed when the team
+                            cannot use the default one.
   --serial <serial>         Android device already running (see \`adb devices\`).
   --avd <name>              Android AVD to boot when no --serial is given.
 

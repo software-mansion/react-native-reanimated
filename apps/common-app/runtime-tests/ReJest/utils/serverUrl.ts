@@ -1,4 +1,4 @@
-import { NativeModules, Platform } from 'react-native';
+import { NativeModules, Platform, Settings } from 'react-native';
 
 const DEFAULT_PORT = 8082;
 
@@ -33,15 +33,22 @@ function deriveServerHostPort(): { host: string; port: number } {
 }
 
 export function deriveWsUrl(): string {
-  // eslint-disable-next-line no-underscore-dangle
-  const override = (globalThis as { __RUNTIME_TESTS_WS_URL__?: string })
-    .__RUNTIME_TESTS_WS_URL__;
+  const override =
+    // eslint-disable-next-line no-underscore-dangle
+    (globalThis as { __RUNTIME_TESTS_WS_URL__?: string })
+      .__RUNTIME_TESTS_WS_URL__ ?? launchArgumentWsUrl();
   if (override) {
     return stripTrailingSlash(override);
   }
 
   const { host, port } = deriveServerHostPort();
   return `ws://${host}:${port}`;
+}
+
+function launchArgumentWsUrl(): string | undefined {
+  return Platform.OS === 'ios'
+    ? (Settings.get('RUNTIME_TESTS_WS_URL') ?? undefined)
+    : undefined;
 }
 
 /**
