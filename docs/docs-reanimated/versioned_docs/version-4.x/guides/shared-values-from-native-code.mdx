@@ -1,0 +1,11 @@
+---
+id: shared-values-from-native-code
+title: Shared values from native code
+sidebar_label: Shared values from native code
+---
+
+# Shared values from native code
+
+If you write a native module, in your app or in a library, you can give its data to JavaScript as a [shared value](../fundamentals/glossary.mdx#shared-value). Your native code runs a worklet on the UI thread with each new value, and the worklet writes the shared value. Animations that read it continue when the JavaScript thread is busy. The guide covers C++ TurboModules, Expo modules, Nitro Modules and native views.
+
+To learn how, read [Sending native data to the UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/sending-native-data-to-the-ui-runtime) in the Worklets documentation.

@@ -8,9 +8,9 @@ import TabItem from '@theme/TabItem';
 
 # Sending native data to the UI Runtime
 
-This guide is for library authors. It shows how a native library can send its data, for example sensor readings or a playback position, directly to the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
+This guide is for authors of native modules and libraries. It shows how native code can send its data, for example sensor readings or a playback position, directly to the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
 
-An ordinary native module sends events to the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime). When the JavaScript thread is busy, the events wait, and animations that use the data stop at the last value. When the library calls a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) on the UI Runtime instead, the worklet function can write a [Reanimated shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value), and animations that read it continue.
+An ordinary native module sends events to the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime). When the JavaScript thread is busy, the events wait, and animations that use the data stop at the last value. When the native code calls a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) on the UI Runtime instead, the worklet function can write a [Reanimated shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value), and animations that read it continue.
 
 The examples use a sample library named `Reading`. It gets a number from a native source, for example a sensor, and its users want the latest number in a shared value.
 
