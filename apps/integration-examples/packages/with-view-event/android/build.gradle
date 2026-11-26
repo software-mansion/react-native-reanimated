@@ -1,0 +1,17 @@
+apply plugin: 'com.android.library'
+if (findProperty('android.builtInKotlin') == 'false') {
+  apply plugin: 'org.jetbrains.kotlin.android'
+}
+apply plugin: 'com.facebook.react'
+
+android {
+  namespace 'com.example.counterview'
+  compileSdk rootProject.ext.compileSdkVersion
+  defaultConfig {
+    minSdk rootProject.ext.minSdkVersion
+  }
+}
+
+dependencies {
+  implementation 'com.facebook.react:react-android'
+}

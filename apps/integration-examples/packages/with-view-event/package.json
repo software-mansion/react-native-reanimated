@@ -1,0 +1,39 @@
+{
+  "name": "with-view-event",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sends native data to the UI Runtime as a Fabric event of a native view.",
+  "license": "MIT",
+  "homepage": "https://docs.swmansion.com/react-native-worklets/",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./reanimated": "./src/reanimated.ts",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-reanimated": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native-reanimated": {
+      "optional": true
+    }
+  },
+  "codegenConfig": {
+    "name": "CounterViewSpec",
+    "type": "components",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.example.counterview"
+    },
+    "ios": {
+      "components": {
+        "CounterView": {
+          "className": "CounterComponentView"
+        }
+      }
+    }
+  }
+}

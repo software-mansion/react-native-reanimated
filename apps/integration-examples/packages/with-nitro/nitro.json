@@ -1,0 +1,20 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": ["withnitro"],
+  "ios": {
+    "iosModuleName": "WithNitro"
+  },
+  "android": {
+    "androidNamespace": ["withnitro"],
+    "androidCxxLibName": "WithNitro"
+  },
+  "autolinking": {
+    "Counter": {
+      "all": {
+        "language": "c++",
+        "implementationClassName": "HybridCounter"
+      }
+    }
+  },
+  "ignorePaths": ["**/node_modules"]
+}

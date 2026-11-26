@@ -13,6 +13,8 @@
       "docs/docs-worklets",
       "apps/common-app",
       "apps/fabric-example",
+      "apps/integration-examples",
+      "apps/integration-examples/packages/*",
       "apps/macos-example",
       "apps/tvos-example",
       "apps/web-example",
@@ -88,6 +90,10 @@
     }
   },
   "resolutions": {
+    "@expo/metro@npm:58.0.0/metro": "0.87.1",
+    "@expo/metro@npm:58.0.0/metro-runtime": "0.87.1",
+    "@react-native/community-cli-plugin@npm:0.88.1/metro": "0.87.1",
+    "react-native@npm:0.88.1/metro-runtime": "0.87.1",
     "metro": "patch:metro@npm%3A0.88.0#~/.yarn/patches/metro-npm-0.88.0-4800af9fce.patch",
     "metro-runtime": "patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch"
   }

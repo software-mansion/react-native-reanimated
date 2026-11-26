@@ -1,0 +1,36 @@
+{
+  "name": "integration-examples",
+  "version": "0.0.1",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "prebuild": "expo prebuild",
+    "format": "yarn run --top-level oxfmt .",
+    "lint": "yarn run --top-level oxlint . --max-warnings 0 && yarn run --top-level oxfmt --check .",
+    "type:check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "58.0.26",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-nitro-modules": "0.37.2",
+    "react-native-reanimated": "workspace:*",
+    "react-native-worklets": "workspace:*",
+    "ui-to-native": "workspace:*",
+    "with-cpp-turbomodule": "workspace:*",
+    "with-expo-module": "workspace:*",
+    "with-nitro": "workspace:*",
+    "with-view-event": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.18",
+    "typescript": "5.9.3"
+  },
+  "installConfig": {
+    "hoistingLimits": "workspaces",
+    "selfReferences": false
+  }
+}

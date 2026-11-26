@@ -1,0 +1,40 @@
+{
+  "name": "with-cpp-turbomodule",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sends native data to the UI Runtime from a C++ TurboModule with the C++ stable API of Worklets.",
+  "license": "MIT",
+  "homepage": "https://docs.swmansion.com/react-native-worklets/",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./reanimated": "./src/reanimated.ts",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-reanimated": "*",
+    "react-native-worklets": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native-reanimated": {
+      "optional": true
+    }
+  },
+  "codegenConfig": {
+    "name": "CppCounterSpec",
+    "type": "modules",
+    "jsSrcsDir": "src",
+    "android": {
+      "javaPackageName": "com.example.cppcounter"
+    },
+    "ios": {
+      "modules": {
+        "CppCounter": {
+          "className": "CppCounterProvider"
+        }
+      }
+    }
+  }
+}
