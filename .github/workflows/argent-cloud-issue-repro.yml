@@ -237,7 +237,7 @@ jobs:
   build:
     needs: plan
     if: needs.plan.outputs.feasible == 'true'
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: 120
     env:
       APP_DIR: ${{ github.workspace }}/argent-cloud-app
