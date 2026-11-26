@@ -112,10 +112,10 @@ run_clang_tidy="${run_clang_tidy:-run-clang-tidy}"
 # them is auto-symlinked into `<prefix>/bin`. Search common install locations
 # explicitly so the script works without the user having to fiddle with their
 # shell rc. The LLVM major pinned in `llvm-version` wins over $PATH and every
-# other install, so the lint matches CI. Other versioned formulae (`llvm@22`,
-# `llvm@21`, ...) live next to the unversioned one under `<prefix>/opt`; they
-# are appended newest major first, after the unversioned `llvm` and within
-# their own Homebrew prefix.
+# other install, so the iOS lint matches the iOS build check in CI. Other
+# versioned formulae (`llvm@22`, `llvm@21`, ...) live next to the unversioned
+# one under `<prefix>/opt`; they are appended newest major first, after the
+# unversioned `llvm` and within their own Homebrew prefix.
 llvm_major="$(cat "$script_dir/llvm-version")"
 LLVM_PINNED=(
   "/opt/homebrew/opt/llvm@${llvm_major}/bin"
