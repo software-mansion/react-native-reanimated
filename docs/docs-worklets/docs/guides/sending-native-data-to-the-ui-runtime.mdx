@@ -173,21 +173,21 @@ class ReadingListeners {
 
 #### Step 6: Send each value to the listeners
 
-`dispatch` gives a new value to all listeners. For each listener, it schedules a job that runs the worklet on the UI thread. Add it to the public methods, and call it from any thread. On Android, attach that thread to the JVM first, for example with `facebook::jni::ThreadScope`. Without it, `scheduleOnUI` throws, and the job waits until other work on the UI thread runs it.
+`dispatch` gives a new value to all listeners. For each listener, it schedules a job that runs the worklet on the UI thread. Add it to the public methods. Call it from one thread at a time, in the order of the values. On Android, attach that thread to the JVM first, for example with `facebook::jni::ThreadScope`. Without it, `scheduleOnUI` throws, and the job waits until other work on the UI thread runs it.
 
 ```cpp
   void dispatch(double value) {
     for (const auto &listener : snapshot()) {
-      worklets::scheduleOnUI(listener.uiScheduler, [listener, value] {
-        if (auto uiRuntime = listener.uiRuntime.lock()) {
-          worklets::runSyncOnRuntime(uiRuntime, listener.worklet, jsi::Value(value));
+      worklets::scheduleOnUI(listener.uiScheduler, [uiRuntime = listener.uiRuntime, worklet = listener.worklet, value] {
+        if (auto runtime = uiRuntime.lock()) {
+          worklets::runSyncOnRuntime(runtime, worklet, jsi::Value(value));
         }
       });
     }
   }
 ```
 
-`runSyncOnRuntime` takes at most two worklet arguments. To send an object, create it in the job on `worklets::getJSIRuntimeFromWorkletRuntime(uiRuntime)`. The UI Runtime takes its lock around each JSI call.
+`runSyncOnRuntime` takes at most two worklet arguments. To send an object, create it in the job on `worklets::getJSIRuntimeFromWorkletRuntime(runtime)`. The UI Runtime takes its lock around each JSI call.
 
 #### Step 7: Connect your TurboModule to the listeners
 
@@ -336,9 +336,9 @@ export function useReadingSharedValue(): SharedValue<number | null> {
 
         void dispatch(double value) {
           for (const auto &listener : snapshot()) {
-            worklets::scheduleOnUI(listener.uiScheduler, [listener, value] {
-              if (auto uiRuntime = listener.uiRuntime.lock()) {
-                worklets::runSyncOnRuntime(uiRuntime, listener.worklet, jsi::Value(value));
+            worklets::scheduleOnUI(listener.uiScheduler, [uiRuntime = listener.uiRuntime, worklet = listener.worklet, value] {
+              if (auto runtime = uiRuntime.lock()) {
+                worklets::runSyncOnRuntime(runtime, worklet, jsi::Value(value));
               }
             });
           }
@@ -483,7 +483,7 @@ export function useReadingSharedValue(): SharedValue<number | null> {
 Your native module must get the worklet function in a form that it can keep and run on the UI Runtime. This function prepares the worklet and the UI Runtime, and gives the worklet to the module.
 
 ```ts title="src/worklets.ts"
-import { installOnUIRuntime, type EventSubscription } from 'expo';
+import { installOnUIRuntime } from 'expo';
 import { useEffect } from 'react';
 import { useSharedValue, type SharedValue } from 'react-native-reanimated';
 import {
@@ -498,7 +498,7 @@ let isInstalledOnUIRuntime = false;
 
 export function addReadingWorkletListener(
   worklet: (reading: number) => void
-): EventSubscription {
+): { remove(): void } {
   if (!isWorkletFunction(worklet)) {
     throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
   }
@@ -662,7 +662,7 @@ Each new value must reach all worklets on the UI Runtime, and the UI Runtime run
   }
 ```
 
-If your value has no native event, for example a playback position, read it on each frame while a listener exists. Post a `Choreographer` frame callback on the main thread after each add or remove, because `Choreographer.getInstance()` belongs to the thread that calls it. In the callback, run the worklets and post the callback again. Stop when no listener is left. For the tested code, see [`updateFrameCallback` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/android/src/main/java/com/example/withexpomodule/CounterModule.kt#L79-L101).
+If your value has no native event, for example a playback position, read it on each frame while a listener exists. After each add or remove, post a check to the main thread that starts or stops the `Choreographer` frame callback. The main thread is necessary because `Choreographer.getInstance()` belongs to the thread that calls it. In the callback, run the worklets and post the callback again. Stop when no listener is left. For the tested code, see [`updateFrameCallback` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/android/src/main/java/com/example/withexpomodule/CounterModule.kt#L79-L101).
 
 <details>
   <summary>Full code</summary>
@@ -670,7 +670,7 @@ If your value has no native event, for example a playback position, read it on e
   <Tabs groupId="native-data-expo">
     <TabItem value="js" label="JavaScript">
       ```ts title="src/worklets.ts"
-      import { installOnUIRuntime, type EventSubscription } from 'expo';
+      import { installOnUIRuntime } from 'expo';
       import { useEffect } from 'react';
       import { useSharedValue, type SharedValue } from 'react-native-reanimated';
       import {
@@ -685,7 +685,7 @@ If your value has no native event, for example a playback position, read it on e
 
       export function addReadingWorkletListener(
         worklet: (reading: number) => void
-      ): EventSubscription {
+      ): { remove(): void } {
         if (!isWorkletFunction(worklet)) {
           throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
         }
@@ -913,11 +913,14 @@ Nitro looks for the `Dispatcher` in a global of the runtime. `install` sets that
     std::weak_ptr<worklets::WorkletRuntime> uiRuntime =
         worklets::getWorkletRuntimeFromHolder(rnRuntime, uiRuntimeHolder.asObject(rnRuntime));
     auto uiScheduler = worklets::getUISchedulerFromHolder(rnRuntime, uiSchedulerHolder.asObject(rnRuntime));
-    worklets::scheduleOnUI(uiScheduler, [uiRuntime, uiScheduler] {
-      if (auto runtime = uiRuntime.lock()) {
+    std::weak_ptr<worklets::UIScheduler> weakUIScheduler = uiScheduler;
+    worklets::scheduleOnUI(uiScheduler, [uiRuntime, weakUIScheduler] {
+      auto runtime = uiRuntime.lock();
+      auto scheduler = weakUIScheduler.lock();
+      if (runtime && scheduler) {
         installRuntimeGlobalDispatcher(
             worklets::getJSIRuntimeFromWorkletRuntime(runtime),
-            std::make_shared<WorkletsUIDispatcher>(uiRuntime, uiScheduler));
+            std::make_shared<WorkletsUIDispatcher>(uiRuntime, scheduler));
       }
     });
   }
@@ -1182,11 +1185,14 @@ function remove() {
           std::weak_ptr<worklets::WorkletRuntime> uiRuntime =
               worklets::getWorkletRuntimeFromHolder(rnRuntime, uiRuntimeHolder.asObject(rnRuntime));
           auto uiScheduler = worklets::getUISchedulerFromHolder(rnRuntime, uiSchedulerHolder.asObject(rnRuntime));
-          worklets::scheduleOnUI(uiScheduler, [uiRuntime, uiScheduler] {
-            if (auto runtime = uiRuntime.lock()) {
+          std::weak_ptr<worklets::UIScheduler> weakUIScheduler = uiScheduler;
+          worklets::scheduleOnUI(uiScheduler, [uiRuntime, weakUIScheduler] {
+            auto runtime = uiRuntime.lock();
+            auto scheduler = weakUIScheduler.lock();
+            if (runtime && scheduler) {
               installRuntimeGlobalDispatcher(
                   worklets::getJSIRuntimeFromWorkletRuntime(runtime),
-                  std::make_shared<WorkletsUIDispatcher>(uiRuntime, uiScheduler));
+                  std::make_shared<WorkletsUIDispatcher>(uiRuntime, scheduler));
             }
           });
         }
@@ -1561,7 +1567,7 @@ return <AnimatedReadingView onReading={onReading} />;
 
 ## The other direction
 
-A worklet on the UI Runtime can also call your native methods, for example to read the latest value on each frame. A native method is a host function, and a worklet can call a host function on any Runtime (see [Tried to synchronously call a Remote Function](./troubleshooting.mdx#tried-to-synchronously-call-a-remote-function)).
+A worklet on the UI Runtime can also call your native methods, for example to read the latest value on each frame. A native method is a host function, and a worklet can call a host function on any Runtime (see [Tried to synchronously call a Remote Function](./troubleshooting.mdx#tried-to-synchronously-call-a-remote-function)). The method runs on the UI thread, so it must be safe to call from there.
 
 Read the method on the RN Runtime, and capture only the function, as [Transfer granular objects](./good-practices.mdx#transfer-granular-objects) recommends:
 
