@@ -49,30 +49,33 @@ State::Shared textStateAt(const ShadowView &start, const ShadowView &target, con
   if (target.componentHandle != ParagraphShadowNode::Handle() || !target.state) {
     return nullptr;
   }
-  const auto defaultFontSize = TextAttributes::defaultTextAttributes().fontSize;
-  const auto drawnFontSize = [defaultFontSize](const State::Shared &state) {
-    const auto &fragments =
-        static_cast<const ParagraphShadowNode::ConcreteState &>(*state).getData().attributedString.getFragments();
-    return fragments.empty() || std::isnan(fragments.front().textAttributes.fontSize)
-        ? defaultFontSize
-        : fragments.front().textAttributes.fontSize;
+  const auto fontSizeOf = [](const TextAttributes &attributes) {
+    return std::isnan(attributes.fontSize) ? TextAttributes::defaultTextAttributes().fontSize : attributes.fontSize;
   };
-  const auto ownFontSize = drawnFontSize(target.state);
-  const auto startFontSize = start.state ? drawnFontSize(start.state) : ownFontSize;
-  const auto targetPropsFontSize =
-      std::static_pointer_cast<const ParagraphProps>(target.props)->textAttributes.fontSize;
-  const auto targetFontSize = std::isnan(targetPropsFontSize) ? defaultFontSize : targetPropsFontSize;
+  const auto baseFontSizeOf = [&fontSizeOf](const State::Shared &state) {
+    return fontSizeOf(static_cast<const ParagraphShadowNode::ConcreteState &>(*state)
+                          .getData()
+                          .attributedString.getBaseTextAttributes());
+  };
+  const auto ownFontSize = baseFontSizeOf(target.state);
+  const auto startFontSize = start.state ? baseFontSizeOf(start.state) : ownFontSize;
+  const auto targetFontSize = fontSizeOf(std::static_pointer_cast<const ParagraphProps>(target.props)->textAttributes);
   if (startFontSize == ownFontSize && targetFontSize == ownFontSize) {
     return nullptr;
   }
   const auto scale = interpolate(startFontSize, targetFontSize, progress) / ownFontSize;
-  const auto &state = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
-  auto data = state.getData();
-  for (auto &fragment : data.attributedString.getFragments()) {
-    auto &attributes = fragment.textAttributes;
+  const auto scaleSizes = [scale](TextAttributes &attributes) {
     attributes.fontSize *= scale;
     attributes.lineHeight *= scale;
     attributes.letterSpacing *= scale;
+  };
+  const auto &state = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
+  auto data = state.getData();
+  auto baseAttributes = data.attributedString.getBaseTextAttributes();
+  scaleSizes(baseAttributes);
+  data.attributedString.setBaseTextAttributes(baseAttributes);
+  for (auto &fragment : data.attributedString.getFragments()) {
+    scaleSizes(fragment.textAttributes);
   }
 #ifdef ANDROID
   // With prepared text layouts, Android draws the prepared layout of the state, not its attributed string.
