@@ -149,6 +149,10 @@ const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
+const LayoutTextSizeExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/TextSize').default as React.FC
+  );
 const FinalFrameAccuracyExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
@@ -825,6 +829,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
   EnteringMovedBeforeFirstPaint: {
     title: '[LA] Entering view moved before first paint',
     screen: EnteringMovedBeforeFirstPaint,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
+  LayoutTextSizeExample: {
+    title: '[LA] Text size',
+    screen: LayoutTextSizeExample,
     disabledPlatforms: [REAPlatform.WEB],
   },
 
