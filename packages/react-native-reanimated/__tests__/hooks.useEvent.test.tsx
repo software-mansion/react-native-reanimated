@@ -59,13 +59,21 @@ beforeEach(() => {
 });
 
 describe('useEvent', () => {
-  function EventView({ label, rebuild }: { label: string; rebuild: boolean }) {
+  function EventView({
+    label,
+    rebuild,
+    eventNames = ['onScroll'],
+  }: {
+    label: string;
+    rebuild: boolean;
+    eventNames?: string[];
+  }) {
     const handler = useEvent(
       () => {
         'worklet';
         received.push(label);
       },
-      ['onScroll'],
+      eventNames,
       rebuild
     );
     return <Animated.ScrollView onScroll={handler} />;
@@ -107,6 +115,18 @@ describe('useEvent', () => {
     rerender(<EventView label="second" rebuild />);
 
     expect(registrations.size).toBe(1);
+    dispatch('onScroll');
+    expect(received).toEqual(['second']);
+  });
+
+  test('registers a rebuilt handler without event names for the prop event', () => {
+    const { rerender } = render(
+      <EventView label="first" rebuild={false} eventNames={[]} />
+    );
+
+    rerender(<EventView label="second" rebuild eventNames={[]} />);
+
+    expect(activeEventNames()).toEqual(['onScroll']);
     dispatch('onScroll');
     expect(received).toEqual(['second']);
   });

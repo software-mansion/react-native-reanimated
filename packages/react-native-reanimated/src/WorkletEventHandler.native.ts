@@ -7,7 +7,6 @@ export class WorkletEventHandler<
 > implements IWorkletEventHandler<Event> {
   readonly eventNames: string[];
   readonly worklet: (event: ReanimatedEvent<Event>) => void;
-  #viewTags: Set<number>;
   #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
@@ -15,13 +14,10 @@ export class WorkletEventHandler<
   ) {
     this.worklet = worklet;
     this.eventNames = eventNames;
-    this.#viewTags = new Set<number>();
     this.#registrations = new Map<number, number[]>();
   }
 
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
-    this.#viewTags.add(viewTag);
-
     const newRegistrations = this.eventNames.map((eventName) =>
       registerEventHandler(this.worklet, eventName, viewTag)
     );
@@ -38,7 +34,6 @@ export class WorkletEventHandler<
   }
 
   unregisterFromEvents(viewTag: number): void {
-    this.#viewTags.delete(viewTag);
     this.#registrations.get(viewTag)?.forEach((id) => {
       unregisterEventHandler(id);
     });
