@@ -603,7 +603,7 @@ Each new value must reach all worklets on the UI Runtime, and the UI Runtime run
   }
 ```
 
-If your value has no native event, read it on each frame with a `CADisplayLink` while a listener exists. Create and stop the display link on the main thread after each add or remove, and run the worklets in its callback. `CADisplayLink` keeps a strong reference to its target, so give it a small target object that holds the module weakly. For the tested code, see [`updateDisplayLink` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/ios/CounterModule.swift#L97-L137).
+If your value has no native event, read it on each frame with a `CADisplayLink` while a listener exists. Create and stop the display link on the main thread after each add or remove, and stop it when the module is destroyed. Run the worklets in its callback. `CADisplayLink` keeps a strong reference to its target, so give it a small target object that holds the module weakly. For the tested code, see [`updateDisplayLink` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/ios/CounterModule.swift#L97-L137).
 
 ### Android
 
@@ -668,6 +668,19 @@ If your value has no native event, for example a playback position, read it on e
   <summary>Full code</summary>
 
   <Tabs groupId="native-data-expo">
+    <TabItem value="binding" label="Binding">
+      ```ts title="src/NativeModule.ts"
+      import { NativeModule, requireNativeModule } from 'expo';
+
+      declare class ReadingModule extends NativeModule {
+        addWorkletListener(worklet: object): number;
+        removeWorkletListener(id: number): void;
+      }
+
+      export default requireNativeModule<ReadingModule>('Reading');
+      ```
+    </TabItem>
+
     <TabItem value="js" label="JavaScript">
       ```ts title="src/worklets.ts"
       import { installOnUIRuntime } from 'expo';
