@@ -3,7 +3,7 @@
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <reanimated/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <jsi/jsi.h>
 #include <memory>

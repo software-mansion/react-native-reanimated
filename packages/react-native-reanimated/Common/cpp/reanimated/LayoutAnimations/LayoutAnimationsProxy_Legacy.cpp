@@ -3,12 +3,12 @@
 #include <worklets/Compat/StableApi.h>
 
 #ifdef ANDROID
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#include <reanimated/Tools/ReactNativeFeatureFlags.h>
 #endif // ANDROID
 
+#include <React/Debug.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <optional>
@@ -140,7 +140,8 @@ void LayoutAnimationsProxy_Legacy::reconcileContradictedRemovals(
 // where cleanup is safe. A dropped surface can also be cleaned up immediately.
 bool LayoutAnimationsProxy_Legacy::shouldFlushDeadNodes([[maybe_unused]] const bool surfaceDropped) const {
 #ifdef ANDROID
-  return surfaceDropped || isMountingCoordinatorPullModelEnabled() || !worklets::isOnUIThread(uiScheduler_);
+  return surfaceDropped || ReactNativeFeatureFlags::enableMountingCoordinatorPullModelAndroid() ||
+      !worklets::isOnUIThread(uiScheduler_);
 #else
   return true;
 #endif
@@ -422,7 +423,7 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 #ifdef ANDROID
   std::optional<std::unique_ptr<int[]>> maybeCorrectedTags;
 
-  if (!isMountingCoordinatorPullModelEnabled()) {
+  if (!ReactNativeFeatureFlags::enableMountingCoordinatorPullModelAndroid()) {
     std::vector<int> tagsToUpdate;
     tagsToUpdate.reserve(updateMap_.size());
 

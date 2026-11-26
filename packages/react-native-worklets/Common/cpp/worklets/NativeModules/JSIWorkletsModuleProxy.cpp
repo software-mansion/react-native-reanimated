@@ -1,6 +1,6 @@
+#include <React/Debug.h>
 #include <jsi/jsi.h>
 #include <worklets/Compat/Holders.h>
-#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
 #include <worklets/SharedItems/Serializable/CustomSerializable.h>

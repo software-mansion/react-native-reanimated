@@ -1,3 +1,5 @@
+#include <React/Debug.h>
+#include <React/RendererCore.h>
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
 #include <react/renderer/scheduler/Scheduler.h>
@@ -5,9 +7,6 @@
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
-#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -21,6 +20,7 @@
 #include <reanimated/RuntimeDecorators/UIRuntimeDecorator.h>
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/ReaJSIUtils.h>
+#include <reanimated/Tools/ReactNativeFeatureFlags.h>
 #include <reanimated/Tools/ReanimatedSystraceSection.h>
 
 #ifdef __ANDROID__

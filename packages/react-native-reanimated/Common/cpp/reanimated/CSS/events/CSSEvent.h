@@ -1,7 +1,7 @@
 #pragma once
 
-#include <reanimated/Compat/ReactNativeDebug.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <React/Debug.h>
+#include <React/RendererCore.h>
 
 #include <cstdint>
 #include <limits>

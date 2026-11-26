@@ -1,7 +1,7 @@
 #pragma once
 
+#include <React/CallInvoker.h>
 #include <jsi/jsi.h>
-#include <worklets/Compat/ReactNativeCallInvoker.h>
 
 #include <memory>
 

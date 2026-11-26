@@ -1,7 +1,7 @@
 #pragma once
 
+#include <React/Debug.h>
 #include <jsi/jsi.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <concepts>
 #include <memory>

@@ -3,8 +3,8 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
+#include <React/RendererCore.h>
 #include <folly/dynamic.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <optional>

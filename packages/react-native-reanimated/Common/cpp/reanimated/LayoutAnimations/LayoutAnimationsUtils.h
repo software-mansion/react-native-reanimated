@@ -1,11 +1,11 @@
 #pragma once
 
+#include <React/Debug.h>
+#include <React/View.h>
 #include <folly/dynamic.h>
 #include <react/renderer/components/rnreanimated/Props.h>
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
-#include <reanimated/Compat/ReactNativeDebug.h>
-#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
 #include <algorithm>

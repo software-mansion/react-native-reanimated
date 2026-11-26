@@ -2,7 +2,7 @@
 
 #include <worklets/Tools/ThreadSafeQueue.h>
 
-#include <worklets/Compat/ReactNativeCallInvoker.h>
+#include <React/CallInvoker.h>
 
 #include <atomic>
 

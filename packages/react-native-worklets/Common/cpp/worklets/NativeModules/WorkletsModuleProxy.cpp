@@ -6,7 +6,7 @@
 #include <worklets/WorkletRuntime/RuntimeData.h>
 #include <worklets/WorkletRuntime/UIRuntimeDecorator.h>
 
-#include <worklets/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <memory>
 #include <stdexcept>

@@ -3,8 +3,8 @@
 #include <reanimated/CSS/configs/CSSAnimationConfig.h>
 #include <reanimated/CSS/core/CSSAnimation.h>
 
+#include <React/RendererCore.h>
 #include <folly/dynamic.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
 #include <vector>

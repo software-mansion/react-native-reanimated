@@ -1,7 +1,7 @@
 #include <reanimated/CSS/registries/StaticPropsRegistry.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <reanimated/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 namespace reanimated::css {
 

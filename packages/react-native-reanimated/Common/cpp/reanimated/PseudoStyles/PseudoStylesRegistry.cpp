@@ -1,6 +1,6 @@
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
 
-#include <reanimated/Compat/ReactNativeDebug.h>
+#include <React/Debug.h>
 
 #include <string>
 #include <utility>

@@ -4,7 +4,7 @@
 #include <reanimated/CSS/configs/CSSKeyframesConfig.h>
 #include <reanimated/CSS/core/CSSPlatformAnimation.h>
 
-#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <React/RendererCore.h>
 
 #include <memory>
 #include <string>

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <reanimated/Compat/ReactNativeGraphics.h>
-#include <reanimated/Compat/ReactNativeRendererCore.h>
-#include <reanimated/Compat/ReactNativeView.h>
+#include <React/Graphics.h>
+#include <React/RendererCore.h>
+#include <React/View.h>
 
 #include <memory>
 #include <string>
