@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/expo-devclient-build-check-nightly.yml
+      - .github/workflows/helper/configureDevClient.ts
   schedule:
     - cron: '0 0 * * *' # after publishing new nightly version on NPM
   workflow_call:
