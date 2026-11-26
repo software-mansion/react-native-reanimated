@@ -1,7 +1,8 @@
 import { render } from '@testing-library/react-native';
 import { ScrollView } from 'react-native';
 
-import { useAnimatedRef, useScrollOffset } from '../src';
+import type { SharedValue } from '../src';
+import { makeMutable, useAnimatedRef, useScrollOffset } from '../src';
 import { WorkletEventHandler } from '../src/WorkletEventHandler';
 
 jest.mock('../src/platformFunctions/findNodeHandle', () => {
@@ -82,5 +83,30 @@ describe('useScrollOffset', () => {
     expect(registerForEvents).toHaveBeenCalledTimes(2);
     expect(secondTag).not.toBe(firstTag);
     expect(unregisterFromEvents.mock.calls).toEqual([[firstTag]]);
+  });
+
+  test('writes to and returns a provided shared value swapped after mount', () => {
+    let returned: SharedValue<number> | undefined;
+    function TrackedScrollView({
+      providedOffset,
+    }: {
+      providedOffset: SharedValue<number>;
+    }) {
+      const animatedRef = useAnimatedRef<ScrollView>();
+      returned = useScrollOffset(animatedRef, providedOffset);
+      return <ScrollView ref={animatedRef} />;
+    }
+    const first = makeMutable(0);
+    const second = makeMutable(0);
+
+    const { rerender } = render(<TrackedScrollView providedOffset={first} />);
+    rerender(<TrackedScrollView providedOffset={second} />);
+    const [handler] = registerForEvents.mock
+      .contexts as WorkletEventHandler<object>[];
+    handler.worklet({ contentOffset: { x: 0, y: 42 } } as never);
+
+    expect(returned).toBe(second);
+    expect(first.value).toBe(0);
+    expect(second.value).toBe(42);
   });
 });

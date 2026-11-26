@@ -1,5 +1,5 @@
 'use strict';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import type { Maybe } from '../common';
 import { logger } from '../common';
@@ -11,6 +11,7 @@ import type {
 } from './commonTypes';
 import type { EventHandlerInternal } from './useEvent';
 import { useEvent } from './useEvent';
+import { useHandler } from './useHandler';
 import { useSharedValue } from './useSharedValue';
 
 const NOT_INITIALIZED_WARNING =
@@ -39,17 +40,20 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
-  const offset = useRef(providedOffset ?? internalOffset).current;
+  const offset = providedOffset ?? internalOffset;
 
+  const scrollHandler = (event: ReanimatedScrollEvent) => {
+    'worklet';
+    offset.value =
+      event.contentOffset.x === 0
+        ? event.contentOffset.y
+        : event.contentOffset.x;
+  };
+  const { doDependenciesDiffer } = useHandler({ scrollHandler });
   const eventHandler = useEvent<RNNativeScrollEvent>(
-    (event: ReanimatedScrollEvent) => {
-      'worklet';
-      offset.value =
-        event.contentOffset.x === 0
-          ? event.contentOffset.y
-          : event.contentOffset.x;
-    },
-    NATIVE_SCROLL_EVENT_NAMES
+    scrollHandler,
+    NATIVE_SCROLL_EVENT_NAMES,
+    doDependenciesDiffer
     // Read https://github.com/software-mansion/react-native-reanimated/pull/5056
     // for more information about this cast.
   ) as unknown as EventHandlerInternal<ReanimatedScrollEvent>;
