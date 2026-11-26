@@ -60,7 +60,7 @@ State::Shared textStateAt(const ShadowView &start, const ShadowView &target, con
   const auto ownFontSize = baseFontSizeOf(target.state);
   const auto startFontSize = start.state ? baseFontSizeOf(start.state) : ownFontSize;
   const auto targetFontSize = fontSizeOf(std::static_pointer_cast<const ParagraphProps>(target.props)->textAttributes);
-  if (startFontSize == ownFontSize && targetFontSize == ownFontSize) {
+  if (ownFontSize <= 0 || (startFontSize == ownFontSize && targetFontSize == ownFontSize)) {
     return nullptr;
   }
   const auto scale = interpolate(startFontSize, targetFontSize, progress) / ownFontSize;
