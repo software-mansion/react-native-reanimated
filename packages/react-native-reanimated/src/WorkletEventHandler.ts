@@ -24,12 +24,12 @@ function jsListener<Event extends object>(
 export class WorkletEventHandler<
   Event extends object,
 > implements IWorkletEventHandler<Event> {
-  eventNames: string[];
+  readonly eventNames: string[];
   listeners:
     | Record<string, (event: ReanimatedEvent<ReanimatedEvent<Event>>) => void>
     | Record<string, (event: JSEvent<Event>) => void>;
 
-  worklet: (event: ReanimatedEvent<Event>) => void;
+  readonly worklet: (event: ReanimatedEvent<Event>) => void;
 
   constructor(
     worklet: (event: ReanimatedEvent<Event>) => void,
@@ -46,16 +46,6 @@ export class WorkletEventHandler<
     this.eventNames.forEach((eventName) => {
       this.listeners[eventName] = jsListener(eventName, this.worklet);
     });
-  }
-
-  updateEventHandler(
-    newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
-  ): void {
-    // Update worklet and event names
-    this.worklet = newWorklet;
-    this.eventNames = newEvents;
-    this.setupWebListeners();
   }
 
   registerForEvents(_viewTag: number, _fallbackEventName?: string): void {

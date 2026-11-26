@@ -1,5 +1,5 @@
 'use strict';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { WorkletEventHandler } from '../WorkletEventHandler';
 import type { IWorkletEventHandler, ReanimatedEvent } from './commonTypes';
@@ -51,18 +51,17 @@ export function useEvent<Event extends object, Context = never>(
   eventNames: string[] = [],
   rebuild = false
 ): EventHandlerInternal<Event> {
-  const initRef = useRef<EventHandlerInternal<Event>>(null!);
-  if (initRef.current === null) {
-    const workletEventHandler = new WorkletEventHandler<Event>(
-      handler,
-      eventNames
-    );
-    initRef.current = { workletEventHandler };
-  } else if (rebuild) {
-    const workletEventHandler = initRef.current.workletEventHandler;
-    workletEventHandler.updateEventHandler(handler, eventNames);
-    initRef.current = { workletEventHandler };
-  }
+  'use no memo';
 
-  return initRef.current;
+  const committedRef = useRef<EventHandlerInternal<Event> | null>(null);
+  const eventHandler =
+    rebuild || committedRef.current === null
+      ? { workletEventHandler: new WorkletEventHandler(handler, eventNames) }
+      : committedRef.current;
+
+  useEffect(() => {
+    committedRef.current = eventHandler;
+  });
+
+  return eventHandler;
 }

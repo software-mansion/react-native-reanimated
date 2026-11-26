@@ -94,10 +94,8 @@ export type RNNativeScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
 export type ReanimatedScrollEvent = ReanimatedEvent<RNNativeScrollEvent>;
 
 export interface IWorkletEventHandler<Event extends object> {
-  updateEventHandler: (
-    newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
-  ) => void;
+  readonly eventNames: string[];
+  readonly worklet: (event: ReanimatedEvent<Event>) => void;
   registerForEvents: (viewTag: number, fallbackEventName?: string) => void;
   unregisterFromEvents: (viewTag: number) => void;
 }

@@ -1,4 +1,5 @@
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
+import { startTransition, StrictMode, Suspense, use } from 'react';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../src';
@@ -25,7 +26,6 @@ jest.mock('../src/core', () => ({
 type Registration = {
   worklet: (event: object) => void;
   eventName: string;
-  tag: number;
 };
 
 const registerMock = registerEventHandler as jest.MockedFunction<
@@ -37,6 +37,7 @@ const unregisterMock = unregisterEventHandler as jest.MockedFunction<
 const registrations = new Map<number, Registration>();
 
 const SCROLL_VIEW_TAG = 1000;
+const NEVER_RESOLVES = new Promise<never>(() => undefined);
 
 beforeEach(() => {
   jest
@@ -44,12 +45,11 @@ beforeEach(() => {
     .mockReturnValue(SCROLL_VIEW_TAG);
   registrations.clear();
   let nextId = 1;
-  registerMock.mockReset().mockImplementation((worklet, eventName, tag) => {
+  registerMock.mockReset().mockImplementation((worklet, eventName) => {
     const id = nextId++;
     registrations.set(id, {
       worklet: worklet as Registration['worklet'],
       eventName,
-      tag,
     });
     return id;
   });
@@ -110,6 +110,52 @@ describe('useEvent', () => {
     dispatch('onScroll');
     expect(received).toEqual(['second']);
   });
+
+  test('registers a rebuilt handler once in StrictMode', () => {
+    const { rerender } = render(<EventView label="first" rebuild={false} />, {
+      wrapper: StrictMode,
+    });
+    registerMock.mockClear();
+
+    rerender(<EventView label="second" rebuild />);
+
+    expect(registerMock).toHaveBeenCalledTimes(1);
+    dispatch('onScroll');
+    expect(received).toEqual(['second']);
+  });
+
+  test('does not change the registration in a render that React discards', async () => {
+    const { rerender } = render(<DiscardableEventView label="first" />);
+    registerMock.mockClear();
+
+    await act(() => {
+      startTransition(() => {
+        rerender(<DiscardableEventView label="second" />);
+      });
+      return Promise.resolve();
+    });
+
+    expect(registerMock).not.toHaveBeenCalled();
+    expect(unregisterMock).not.toHaveBeenCalled();
+    dispatch('onScroll');
+    expect(received).toEqual(['first']);
+  });
+
+  function DiscardableEventView({ label }: { label: string }) {
+    return (
+      <Suspense fallback={null}>
+        <EventView label={label} rebuild />
+        <SuspendOnSecond label={label} />
+      </Suspense>
+    );
+  }
+
+  function SuspendOnSecond({ label }: { label: string }) {
+    if (label === 'second') {
+      use(NEVER_RESOLVES);
+    }
+    return null;
+  }
 });
 
 describe('useAnimatedScrollHandler', () => {

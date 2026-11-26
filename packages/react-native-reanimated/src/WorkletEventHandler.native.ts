@@ -5,8 +5,8 @@ import type { IWorkletEventHandler, ReanimatedEvent } from './hook/commonTypes';
 export class WorkletEventHandler<
   Event extends object,
 > implements IWorkletEventHandler<Event> {
-  eventNames: string[];
-  worklet: (event: ReanimatedEvent<Event>) => void;
+  readonly eventNames: string[];
+  readonly worklet: (event: ReanimatedEvent<Event>) => void;
   #viewTags: Set<number>;
   #registrations: Map<number, number[]>; // keys are viewTags, values are arrays of registration ID's for each viewTag
   constructor(
@@ -17,29 +17,6 @@ export class WorkletEventHandler<
     this.eventNames = eventNames;
     this.#viewTags = new Set<number>();
     this.#registrations = new Map<number, number[]>();
-  }
-
-  updateEventHandler(
-    newWorklet: (event: ReanimatedEvent<Event>) => void,
-    newEvents: string[]
-  ): void {
-    // Update worklet and event names
-    this.worklet = newWorklet;
-    this.eventNames = newEvents;
-
-    // Detach all events
-    this.#registrations.forEach((registrationIDs) => {
-      registrationIDs.forEach((id) => unregisterEventHandler(id));
-      // No need to remove registrationIDs from map, since it gets overwritten when attaching
-    });
-
-    // Attach new events with new worklet
-    Array.from(this.#viewTags).forEach((tag) => {
-      const newRegistrations = this.eventNames.map((eventName) =>
-        registerEventHandler(this.worklet, eventName, tag)
-      );
-      this.#registrations.set(tag, newRegistrations);
-    });
   }
 
   registerForEvents(viewTag: number, fallbackEventName?: string): void {
