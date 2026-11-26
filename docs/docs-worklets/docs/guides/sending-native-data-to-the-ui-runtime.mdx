@@ -588,7 +588,7 @@ JavaScript gives a worklet to `addWorkletListener` and gets an ID. It gives that
 
 #### Step 4: Run the worklets on the main thread
 
-Each new value must reach all worklets on the UI Runtime, and the UI Runtime runs on the main thread. Add `onReading` to the class, and call it with each new value. It can run on any thread, because it goes to the main thread first.
+Each new value must reach all worklets on the UI Runtime, and the UI Runtime runs on the main thread. Add `onReading` to the class, and call it with each new value. Call it from one thread at a time, in the order of the values. That thread can be a background thread, because `onReading` goes to the main thread first.
 
 ```swift title="ios/ReadingModule.swift"
   func onReading(_ reading: Double) {
