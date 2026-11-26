@@ -330,7 +330,10 @@ std::optional<MountingTransaction> LayoutAnimationsProxy::pullTransaction(
     startEnteringAnimation(node, config);
   }
   for (const auto &[node, config, before] : transaction.layout) {
-    startLayoutAnimation(node, config, before);
+    // A later mutation can remove the view after its layout animation was queued.
+    if (isLightNodeMapped(node)) {
+      startLayoutAnimation(node, config, before);
+    }
   }
   for (const auto &[node, config] : transaction.exiting) {
     startExitingAnimation(node, config);

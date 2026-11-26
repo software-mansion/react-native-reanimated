@@ -147,6 +147,10 @@ class RuntimeTestObserverModule(context: ReactApplicationContext) :
     }
   }
 
+  override fun replayLayoutUpdateRemoval(removeParent: Boolean, promise: Promise) {
+    promise.reject("E_PLATFORM", "Layout transaction fixture requires iOS")
+  }
+
   override fun resumeHost(promise: Promise) {
     UiThreadUtil.runOnUiThread {
       val cover = HostPauseActivity.current
