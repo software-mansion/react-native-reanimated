@@ -32,6 +32,7 @@ This repository contains two main packages:
 [![URL validation](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/url-validation-nightly.yml)
 [![Runtime tests nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-nightly.yml)
 [![Runtime tests sanitizers nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-sanitizers-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/runtime-tests-sanitizers-nightly.yml)
+[![Integration examples e2e nightly](https://github.com/software-mansion/react-native-reanimated/actions/workflows/integration-examples-e2e-nightly.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/integration-examples-e2e-nightly.yml)
 
 ## Installation
 

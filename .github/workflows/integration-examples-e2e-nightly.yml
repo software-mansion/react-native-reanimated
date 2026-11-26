@@ -1,0 +1,105 @@
+name: Integration examples e2e nightly
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  schedule:
+    - cron: '23 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    uses: $/.github/workflows/integration-examples-e2e-android.yml
+
+  ios:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: namespace-profile-ios
+    timeout-minutes: 90
+    env:
+      WORKING_DIRECTORY: apps/integration-examples
+      DO_NOT_TRACK: 1
+    concurrency:
+      group: integration-examples-e2e-ios-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
+
+      # A first boot can take minutes. It continues during the build.
+      - name: Boot a simulator
+        run: |
+          udid=$(xcrun simctl list devices available --json | jq -r '[.devices[][] | select(.name | startswith("iPhone"))][0].udid')
+          xcrun simctl boot "$udid"
+          echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          yarn prebuild --platform ios --no-install
+          cd ios
+          pod install
+          xcodebuild build -quiet \
+            -workspace Workletsexamples.xcworkspace \
+            -scheme Workletsexamples \
+            -configuration Release \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath build \
+            ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Install Argent
+        run: npm install --global --omit=optional @swmansion/argent@0.32.0
+
+      - name: Install app on the simulator
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          xcrun simctl bootstatus "$SIMULATOR_UDID"
+          xcrun simctl install "$SIMULATOR_UDID" ios/build/Build/Products/Release-iphonesimulator/Workletsexamples.app
+
+      # `argent e2e run` waits only 15 s for a tool-server that it starts. On macOS runners, the start takes more time.
+      - name: Start the Argent tool-server
+        run: |
+          argent server start --port 0 > "$RUNNER_TEMP/argent-server.log" 2>&1 &
+          for attempt in $(seq 90); do
+            argent server status --json | jq -e .healthy > /dev/null && exit 0
+            sleep 2
+          done
+          cat "$RUNNER_TEMP/argent-server.log"
+          exit 1
+
+      - name: Run e2e tests on the simulator
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: argent e2e run .argent/e2e --platform ios --output "$GITHUB_WORKSPACE/argent-report"
+
+      - name: Upload Argent report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: integration-examples-e2e-ios
+          path: |
+            argent-report
+            ${{ runner.temp }}/argent-server.log
+            ~/.argent/tool-server.log
+          if-no-files-found: ignore
+          retention-days: 14
