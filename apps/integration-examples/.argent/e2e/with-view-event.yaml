@@ -1,0 +1,11 @@
+steps:
+  - echo: Start the app. Expect the list of examples
+  - launch: com.example.workletsintegration
+  - await: { visible: { id: with-view-event } }
+  - await: { idle: true, timeout: 15000 }
+  - echo: Open the view event screen. Expect both counters to count
+  - tap: { id: with-view-event }
+  - await: { visible: { id: shared-value-count } }
+  - await: { text: { in: { id: react-state-count }, matches: '^[1-9]\d*$' } }
+  - echo: Block the JS thread. Expect the shared value to change and the React state to stop
+  - script: { path: ../scripts/expect-js-thread-blocked.mjs }
