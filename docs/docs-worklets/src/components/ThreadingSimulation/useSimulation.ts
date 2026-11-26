@@ -23,6 +23,7 @@ interface SessionOptions {
   bootTicks: number;
   durationTicks: number | undefined;
   skipIdleTicks: boolean;
+  timeScale?: number;
 }
 
 const MAX_SKIPPED_TICKS = 10_000;
@@ -55,6 +56,7 @@ export class Session {
         uiRuntime: this.options.uiRuntime,
         screen: this.options.screen,
         bootTicks: this.options.bootTicks,
+        timeScale: this.options.timeScale,
       });
       machine.skip(this.options.skipTicks);
       this.machine = machine;
@@ -75,6 +77,7 @@ export class Session {
       uiRuntime: this.options.uiRuntime,
       screen: this.options.screen,
       bootTicks: this.options.bootTicks,
+      timeScale: this.options.timeScale,
     });
     probe.skip(this.options.skipTicks);
     let clock = 0;
@@ -220,7 +223,8 @@ export function useSimulation(
   boilerplate: boolean,
   suspended = false,
   autoplay = true,
-  skipIdleTicks = false
+  skipIdleTicks = false,
+  timeScale?: number
 ): SimulationState {
   const display = useMemo(() => {
     try {
@@ -244,6 +248,7 @@ export function useSimulation(
         bootTicks,
         durationTicks,
         skipIdleTicks,
+        timeScale,
       }),
     [
       module,
@@ -255,6 +260,7 @@ export function useSimulation(
       bootTicks,
       durationTicks,
       skipIdleTicks,
+      timeScale,
     ]
   );
 

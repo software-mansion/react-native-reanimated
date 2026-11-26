@@ -3,7 +3,7 @@
 #include <reanimated/Tools/FeatureFlags.h>
 #include <reanimated/Tools/TextMetrics.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <algorithm>
 #include <memory>
@@ -17,26 +17,6 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
     jsi::Runtime &rt,
     const jsi::Value &shadowNodeWrapper) {
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
-}
-
-// Rounds in place. Used only with USE_ANIMATION_BACKEND, where the props are read from JSI directly.
-[[maybe_unused]] static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
-  const auto object = updates.asObject(rt);
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    const auto value = object.getProperty(rt, propName);
-    if (value.isNumber()) {
-      object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
-    }
-  }
-}
-
-static void roundTextMetrics(folly::dynamic &updates) {
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    auto *value = updates.get_ptr(propName);
-    if (value != nullptr && value->isNumber()) {
-      *value = roundTextMetric(value->asDouble());
-    }
-  }
 }
 
 static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value);
@@ -283,6 +263,19 @@ bool AnimatedPropsRegistry::isUnmounted(const ShadowNodeFamily &shadowNodeFamily
 void AnimatedPropsRegistry::pruneExpiredUnmountedFamilies() {
   std::erase_if(unmountedFamilies_, [](const auto &entry) { return entry.second.expired(); });
   unmountedFamiliesPruneThreshold_ = std::max(MIN_UNMOUNTED_FAMILIES_PRUNE_THRESHOLD, 2 * unmountedFamilies_.size());
+}
+
+bool AnimatedPropsRegistry::hasPendingSettledUpdates(const std::function<bool(Tag)> &isViewRegistered) const {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  const auto pendingTags = getPendingTags();
+  if (std::any_of(pendingTags.begin(), pendingTags.end(), isViewRegistered)) {
+    return true;
+  }
+  return std::any_of(updatesRegistry_.begin(), updatesRegistry_.end(), [&](const auto &entry) {
+    const auto viewTag = entry.first;
+    const bool hasWork = syncedTags_.contains(viewTag) || writeHistories_.contains(viewTag);
+    return hasWork && isViewRegistered(viewTag);
+  });
 }
 
 void AnimatedPropsRegistry::removeTag(const Tag tag) {

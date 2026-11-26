@@ -1,6 +1,6 @@
-#include <react/renderer/components/view/ViewProps.h>
-#include <react/renderer/core/graphicsConversions.h>
-#include <react/renderer/graphics/Transform.h>
+#include <reanimated/Compat/ReactNativeGraphics.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/SharedTransitionValuesFactory.h>
 
 #include <algorithm>

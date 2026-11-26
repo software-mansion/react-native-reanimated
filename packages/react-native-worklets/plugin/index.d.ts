@@ -108,6 +108,17 @@ export interface PluginOptions {
    */
   relativeSourceLocation?: boolean;
   /**
+   * Turns off the warning that the plugin prints in Bundle Mode when an
+   * `importForwarding.relativePaths` entry has only common folder names, such
+   * as `'src'` or `'app/src'`. Such a path can also match folders inside
+   * packages in `node_modules`.
+   *
+   * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#silencedangerouspathswarning}
+   *
+   * - Defaults to `false`.
+   */
+  silenceDangerousPathsWarning?: boolean;
+  /**
    * This option makes it so no global identifiers are implicitly captured in
    * worklets' closures between runtimes.
    *
@@ -137,11 +148,15 @@ export interface PluginOptions {
    */
   importForwarding?: {
     /**
-     * List of exact module names whose imports should be forwarded inside
-     * worklets.
+     * Modules in this list are forwarded as imports inside worklets.
      *
-     * The module name has to be an exact match — with `'my-library'` in the
-     * list, an import from `'my-library/some-file'` won't be forwarded.
+     * The module name has to be an exact match. With `'my-library'` in the
+     * list, imports from `'my-library/some-file'` aren't forwarded. Add
+     * `'my-library/some-file'` to the list to forward them too.
+     *
+     * Only named and default imports are forwarded. Namespace imports such
+     * as `import * as lib from 'my-library'` are captured from the closure
+     * instead.
      *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingmodulenames}
      *
@@ -158,6 +173,15 @@ export interface PluginOptions {
      * Use this instead of {@link moduleNames} when you want to forward
      * relative imports (like `'./utils'`) from a specific package, without
      * affecting identically-named relative imports in other packages.
+     *
+     * A path matches a sequence of whole path segments (folder names and
+     * the file name) anywhere in the module's path. For a module in
+     * `node_modules`, only the part after the last `node_modules` is
+     * compared. A common name such as `'src'` therefore also matches
+     * packages with a `src` folder, for example
+     * `react-native-reanimated/src`. Use a sequence of segments that only
+     * your code has, and check that it does not occur in the paths of your
+     * dependencies.
      *
      * {@link https://docs.swmansion.com/react-native-worklets/docs/worklets-plugin/plugin-options/#importforwardingrelativepaths}
      *

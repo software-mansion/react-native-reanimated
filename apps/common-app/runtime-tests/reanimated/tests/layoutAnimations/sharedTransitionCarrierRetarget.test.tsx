@@ -23,6 +23,7 @@ import {
   waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
+import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
 
 const DURATION = 1200;
 
@@ -149,8 +150,64 @@ function OffWindowTargetScreens({
   );
 }
 
+const legTransition = SharedTransition.duration(300).easing(Easing.linear);
+const labelTransition = SharedTransition.duration(1500)
+  .easing(Easing.linear)
+  .withCallback((finished) => {
+    'worklet';
+    if (finished) {
+      notify('label-finished');
+    }
+  });
+
+const LABELED_BOXES = {
+  small: { width: 100, height: 60 },
+  large: { top: 100, width: 200, height: 100, backgroundColor: '#2277dd' },
+  wide: { top: 250, width: 200, height: 60 },
+} as const;
+
+type LabeledScreen = keyof typeof LABELED_BOXES;
+
+function LabeledScreens({ stack }: { stack: LabeledScreen[] }) {
+  return (
+    <View style={styles.container}>
+      {stack.map((screen, position) => (
+        <SharedTransitionBoundary
+          key={screen}
+          isActive={position === stack.length - 1}>
+          <LabeledBox screen={screen} />
+        </SharedTransitionBoundary>
+      ))}
+    </View>
+  );
+}
+
+function LabeledBox({ screen }: { screen: LabeledScreen }) {
+  const ref = useTestRef(screen);
+  return (
+    <Animated.View
+      ref={ref}
+      sharedTransitionTag="labeled"
+      sharedTransitionStyle={legTransition}
+      style={[styles.labeled, LABELED_BOXES[screen]]}>
+      <Animated.Text
+        sharedTransitionTag="label"
+        sharedTransitionStyle={labelTransition}>
+        {screen}
+      </Animated.Text>
+    </Animated.View>
+  );
+}
+
 async function mountedWidth(name: string) {
   return (await getTestComponent(name).getMountedViewProps())?.width;
+}
+
+function carrierProps(tag: number) {
+  return runOnUIBlocking(() => {
+    'worklet';
+    return global._obtainMountedViewProps(tag, false);
+  });
 }
 
 describe('Shared transition carrier changes during a run', () => {
@@ -254,6 +311,34 @@ describe('Shared transition carrier changes during a run', () => {
       }).toBe(true);
     }
   );
+
+  test('keeps the style on screen when a new screen continues a run that waits to land', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    await render(<LabeledScreens stack={['small', 'large']} />);
+    await waitForFrames();
+    const carrierTag = getTestComponent('large').getTag();
+
+    await render(<LabeledScreens stack={['small']} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(400);
+
+    await render(<LabeledScreens stack={['small', 'wide']} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(150);
+    const carrier = await carrierProps(carrierTag);
+    expect(carrier?.width).toBeWithinRange(101, 199);
+    expect(carrier?.backgroundColor).toBe(
+      styles.labeled.backgroundColor,
+      ComparisonMode.COLOR
+    );
+
+    await advanceAnimationTimer(1500);
+    await waitForNotification('label-finished');
+    await expectEventually(
+      async () =>
+        (await getTestComponent('wide').getMountedViewProps())?.opacity
+    ).toBe(1);
+  });
 });
 
 const styles = StyleSheet.create({
@@ -266,6 +351,7 @@ const styles = StyleSheet.create({
     height: 150,
     backgroundColor: '#2277dd',
   },
+  labeled: { position: 'absolute', backgroundColor: '#dd5522' },
   secondTarget: {
     marginTop: 200,
     marginLeft: 40,

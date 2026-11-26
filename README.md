@@ -17,6 +17,8 @@ This repository contains two main packages:
 
 ## Nightly CI state
 
+[![CI sponsored by Namespace](https://img.shields.io/badge/CI%20sponsored%20by-Namespace-1C32FF?logo=data:image/svg%2Bxml;base64,PHN2ZyB3aWR0aD0iMTYwIiBoZWlnaHQ9IjE2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNzkgMTU4QzEyMi42MyAxNTggMTU4IDEyMi42MyAxNTggNzlDMTU4IDM1LjM2OTUgMTIyLjYzIDAgNzkgMEMzNS4zNjk1IDAgMCAzNS4zNjk1IDAgNzlDMCAxMjIuNjMgMzUuMzY5NSAxNTggNzkgMTU4WiIgZmlsbD0iIzFDMzJGRiI+PC9wYXRoPjxwYXRoIGQ9Ik05MC4yNzA4IDEwMi41MzNIODAuNTU5N0w1Mi42NjY5IDYzLjE5M1YxMDIuNTMzSDQwLjgyOTNWNDMuNDg3M0g1Mi4zODM0TDc4LjQzMzIgODAuODA3NlY0My40ODczSDkwLjI3MDhWMTAyLjUzM1oiIGZpbGw9IndoaXRlIj48L3BhdGg+PHBhdGggZD0iTTEyMC4xNDggMTIyLjgwNlYxMTAuOTY5SDgwLjQ4ODRWMTIyLjgwNkgxMjAuMTQ4WiIgZmlsbD0id2hpdGUiPjwvcGF0aD48L3N2Zz4=)](https://namespace.so)
+
 [![Main branch build](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/main-branch-build.yml)
 [![NPM Reanimated publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-reanimated-publish.yml)
 [![NPM Worklets publish \[Nightly\]](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml/badge.svg)](https://github.com/software-mansion/react-native-reanimated/actions/workflows/npm-worklets-publish.yml)

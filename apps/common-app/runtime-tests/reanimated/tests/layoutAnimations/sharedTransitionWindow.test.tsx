@@ -10,6 +10,7 @@ import { Screen, ScreenContainer } from 'react-native-screens';
 import { scheduleOnRN } from 'react-native-worklets';
 
 import RuntimeTestObserver from '../../../ReJest/native/NativeRuntimeTestObserver';
+import type { PresentedFrame } from '../../../ReJest/native/NativeRuntimeTestObserver';
 import {
   advanceAnimationTimer,
   describe,
@@ -17,10 +18,12 @@ import {
   expectEventually,
   getTestComponent,
   mockAnimationTimer,
+  notify,
   render,
   test,
   useTestRef,
   waitForFrames,
+  waitForNotification,
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 import { runOnUIBlocking } from '../../../ReJest/utils/runOnUIBlocking';
@@ -192,23 +195,40 @@ function OffWindowSourceScreens({
   );
 }
 
+const MODAL_SHOWN = 'windowModalShown';
+const INSTANT_MODAL = { transparent: true, animationType: 'none' } as const;
+const PAGE_SHEET_MODAL = {
+  presentationStyle: 'pageSheet',
+  animationType: 'slide',
+} as const;
+
 function InModal({
   open = true,
+  pageSheet = false,
   children,
 }: {
   open?: boolean;
+  pageSheet?: boolean;
   children: ReactNode;
 }) {
   const ref = useTestRef('window-modal-offset');
+  const markerRef = useTestRef('window-closed-marker');
   return (
     <View style={styles.root}>
       <View ref={ref} collapsable={false} style={styles.modalOffset}>
         {open && (
-          <Modal transparent animationType="none">
+          <Modal
+            {...(pageSheet ? PAGE_SHEET_MODAL : INSTANT_MODAL)}
+            onShow={() => notify(MODAL_SHOWN)}>
             {children}
           </Modal>
         )}
       </View>
+      <View
+        ref={markerRef}
+        collapsable={false}
+        style={[styles.marker, { opacity: open ? 0 : 1 }]}
+      />
     </View>
   );
 }
@@ -702,7 +722,121 @@ describe('Shared transitions from a source off the window', () => {
   });
 });
 
+describe('Shared transitions inside an iOS Modal', () => {
+  iosTest('flies back to the source when the run reverses', async () => {
+    const results: boolean[] = [];
+    const transition = recordingTransition(results);
+    await mockAnimationTimer({ autoAdvance: false });
+    await renderInModal(transition, { active: false });
+    const home = await homeOf('window-source');
+    await renderInModal(transition, { active: true });
+    await advanceAnimationTimer(400);
+    await renderInModal(transition, { active: false });
+    const start = await runOnUIBlocking(() => {
+      'worklet';
+      return global._obtainMountedViewProps(home.tag, false);
+    });
+    await advanceAnimationTimer(600);
+    await expectCarrier(
+      home.tag,
+      ((start?.x ?? 0) + SOURCE_IN_MODAL.x) / 2,
+      ((start?.y ?? 0) + SOURCE_IN_MODAL.y) / 2,
+      ((start?.width ?? 0) + 60) / 2
+    );
+    await advanceAnimationTimer(599);
+    await expectCarrier(home.tag, SOURCE_IN_MODAL.x, SOURCE_IN_MODAL.y, 60);
+    await advanceAnimationTimer(400);
+    await expectSettledEndpoint('source', 60, 0.6);
+    await expectEventually(() => results.length).toBe(2);
+    expect(results).toBe([false, true]);
+    await expectLandedAtHome(home);
+  });
+
+  iosTest.each([
+    [true, false],
+    [false, false],
+    [true, true],
+  ] as const)(
+    'ends the run when the Modal closes, with the moving view where it is on screen (source kept: ${0}, page sheet: ${1})',
+    async ([keepSource, pageSheet]) => {
+      const results: boolean[] = [];
+      const transition = recordingTransition(results);
+      await render(modalScreens(transition, { active: false, pageSheet }));
+      await waitForNotification(MODAL_SHOWN);
+      const sourceOnScreen = await RuntimeTestObserver!.observeLocationOnScreen(
+        getTestComponent('window-source').getTag()
+      );
+      expect(sourceOnScreen === null).toBe(false);
+      expect(sourceOnScreen!.y > SOURCE_IN_MODAL.y).toBe(pageSheet);
+      const { sourceTag } = await startFlight((active) =>
+        modalScreens(transition, { active, pageSheet })
+      );
+      await renderInModal(transition, { active: true, keepSource, pageSheet });
+      const targetTag = getTestComponent('window-target').getTag();
+      const markerTag = getTestComponent('window-closed-marker').getTag();
+      expect(results).toBe([]);
+      const frames = await recordPresentedFrames(
+        [sourceTag, targetTag, markerTag],
+        async () => {
+          await render(
+            modalScreens(transition, {
+              active: true,
+              keepSource,
+              open: false,
+              pageSheet,
+            })
+          );
+          await expectEventually(
+            async () => (await mountedWidth(targetTag)) === undefined
+          ).toBe(true);
+        }
+      );
+      expectOnScreenUntilModalLeaves(frames);
+      await expectEventually(() => results.length).toBe(1);
+      expect(results).toBe([false]);
+      await advanceAnimationTimer(1600);
+      expect(results).toBe([false]);
+    }
+  );
+});
+
 const SOURCE_IN_MODAL = { x: 40, y: 120 };
+
+async function recordPresentedFrames(
+  tags: number[],
+  during: () => Promise<void>
+) {
+  await RuntimeTestObserver!.startFrameRecording(tags);
+  let frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>> = [];
+  try {
+    await waitForFrames(2);
+    await during();
+  } finally {
+    frames = (await RuntimeTestObserver!.takeFrameRecording()) ?? [];
+  }
+  return frames;
+}
+
+function expectOnScreenUntilModalLeaves(
+  frames: ReadonlyArray<ReadonlyArray<PresentedFrame | null>>
+) {
+  const before = frames[0]?.[0];
+  expect((before?.opacity ?? 0) > 0).toBe(true);
+  const modalShown = frames.filter(([, target]) => target !== null);
+  for (const [moving, target] of modalShown) {
+    expect(target?.opacity).toBe(0, ComparisonMode.FLOAT_DISTANCE);
+    for (const key of ['x', 'y', 'width', 'height'] as const) {
+      expect(moving?.[key]).toBe(before?.[key], ComparisonMode.PIXEL);
+    }
+    expect(moving?.opacity).toBe(
+      before?.opacity,
+      ComparisonMode.FLOAT_DISTANCE
+    );
+  }
+  expect(
+    modalShown.some(([, , closedMarker]) => closedMarker?.opacity === 1)
+  ).toBe(true);
+}
 
 async function modalHostOf(tag: number) {
   const offsetTag = getTestComponent('window-modal-offset').getTag();
@@ -731,6 +865,7 @@ function modalScreens(
     candidateTransition = transition,
     keepSource = true,
     sourceTransform = false,
+    pageSheet = false,
   }: {
     active: boolean;
     keepTarget?: boolean;
@@ -739,10 +874,11 @@ function modalScreens(
     candidateTransition?: SharedTransition;
     keepSource?: boolean;
     sourceTransform?: boolean;
+    pageSheet?: boolean;
   }
 ) {
   return (
-    <InModal open={open}>
+    <InModal open={open} pageSheet={pageSheet}>
       <RetargetScreens
         active={active}
         candidate={candidate}
@@ -862,6 +998,7 @@ const styles = StyleSheet.create({
   modalOffset: { flex: 1, marginTop: 80, marginLeft: 30 },
   sourceOffset: { marginTop: 120, marginLeft: 40 },
   sourceTransform: { transform: [{ translateX: 20 }] },
+  marker: { width: 10, height: 10, backgroundColor: '#222222' },
   later: {
     width: 120,
     height: 120,

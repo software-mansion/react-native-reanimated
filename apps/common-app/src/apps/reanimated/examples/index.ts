@@ -165,8 +165,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   React.createElement(
     require('./FlatListWithLayoutAnimationsExample').default as React.FC
   );
-const FrameCallbackExample: React.FC = () =>
-  React.createElement(require('./FrameCallbackExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -517,11 +515,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     icon: '📡',
     title: 'useAnimatedSensor',
     screen: AnimatedSensorExample,
-  },
-  FrameCallbackExample: {
-    icon: '🗣',
-    title: 'useFrameCallback',
-    screen: FrameCallbackExample,
   },
   ScrollToExample: {
     icon: '🦘',

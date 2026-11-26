@@ -68,6 +68,10 @@ export interface ReanimatedModuleProxy {
   /** Registers the single handler receiving every CSS event batch. */
   setCSSEventHandler(handler: CSSEventHandler): void;
 
+  createDetachedShadowNodeWrapper(
+    shadowNodeWrapper: ShadowNodeWrapper
+  ): ShadowNodeWrapper;
+
   markNodeAsRemovable(shadowNodeWrapper: ShadowNodeWrapper): void;
   unmarkNodeAsRemovable(viewTag: number): void;
 
@@ -101,6 +105,10 @@ export interface ReanimatedModuleProxy {
   getSettledUpdates(
     isViewRegistered: (viewTag: number) => boolean
   ): SettledUpdate[];
+
+  hasPendingSettledUpdates(
+    isViewRegistered: (viewTag: number) => boolean
+  ): boolean;
 
   registerPseudoStyles(
     shadowNodeWrapper: ShadowNodeWrapper,

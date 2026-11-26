@@ -188,8 +188,6 @@ export function assertRNRuntime(name: string): void {
   dispatch('assertRNRuntime', [name]);
 }
 
-const FRAME_MS = 16;
-
 export function setTimeout(callback: () => unknown, ms = 0): number {
   return dispatch('setTimeout', [callback, ms]) as number;
 }
@@ -197,7 +195,7 @@ export function setTimeout(callback: () => unknown, ms = 0): number {
 export const UIRuntimeId = 1;
 
 export function requestAnimationFrame(callback: () => unknown): number {
-  return dispatch('setTimeout', [callback, FRAME_MS]) as number;
+  return dispatch('requestAnimationFrame', [callback]) as number;
 }
 
 export function setImmediate(callback: () => unknown): number {

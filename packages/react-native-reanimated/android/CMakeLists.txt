@@ -36,7 +36,11 @@ set(ANDROID_CPP_DIR "${CMAKE_SOURCE_DIR}/src/main/cpp")
 set(COMMON_CPP_DIR "${CMAKE_SOURCE_DIR}/../Common/cpp")
 set(NATIVEVIEW_DIR "${CMAKE_SOURCE_DIR}/../Common/NativeView")
 set(PACKAGE_ROOT_DIR "${CMAKE_SOURCE_DIR}/..")
-set(CODEGEN_OUTPUT_DIR "${BUILD_DIR}/generated/source/codegen/jni")
+if(DEFINED REANIMATED_CODEGEN_DIR)
+  set(CODEGEN_OUTPUT_DIR "${REANIMATED_CODEGEN_DIR}")
+else()
+  set(CODEGEN_OUTPUT_DIR "${BUILD_DIR}/generated/source/codegen/jni")
+endif()
 
 file(GLOB_RECURSE REANIMATED_COMMON_CPP_SOURCES CONFIGURE_DEPENDS
      "${COMMON_CPP_DIR}/reanimated/*.cpp")
@@ -65,6 +69,9 @@ target_compile_options(
 
 include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
 target_compile_reactnative_options(reanimated PUBLIC)
+# Acknowledge framework-tier APIs when the app opts into RN_STRICT_API.
+target_compile_definitions(reanimated PRIVATE RN_ALLOW_FRAMEWORKS)
+target_compile_definitions(reanimated PRIVATE "WORKLETS_STABLE_API_TARGET=\"0.14.0\"")
 
 target_include_directories(
   reanimated
@@ -78,7 +85,7 @@ target_include_directories(
           "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
           "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
           "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/cxx"
+          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/android"
 )
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)

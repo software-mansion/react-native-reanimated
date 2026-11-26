@@ -22,6 +22,7 @@
 //   node --experimental-strip-types runtime-tests-remote.mts install --udid <UUID> --app-path <path/to/FabricExample.app>
 //   node --experimental-strip-types runtime-tests-remote.mts run     --udid <UUID> --library <reanimated|worklets|self-tests>
 //                                                                    [--configuration ReleaseRuntimeTests] [--only "<suites>"]
+//                                                                    [--full true]
 //                                                                    [--metro-port <port>]
 //                                                                    [--connect-timeout <secs>] [--idle-timeout <secs>]
 //
@@ -90,6 +91,7 @@ const APP_PATH = args['app-path'] ?? '';
 const LIBRARY = args.library ?? '';
 const CONFIGURATION = args.configuration ?? 'ReleaseRuntimeTests';
 const ONLY = args.only ?? '';
+const FULL = args.full === 'true';
 
 function positiveInt(name: string, value: string | number) {
   const parsed = Number(value);
@@ -308,6 +310,9 @@ async function runLibrary() {
   if (ONLY) {
     serverArgs.push('--only', ONLY);
   }
+  if (FULL) {
+    serverArgs.push('--full');
+  }
 
   const server = spawn('node', serverArgs, {
     cwd: projectRoot,
@@ -330,12 +335,28 @@ async function runLibrary() {
 
   log(`launching ${BUNDLE_ID} (library: ${LIBRARY})`);
   await simRemote(['simctl', 'terminate', UDID, BUNDLE_ID]).catch(() => {});
-  try {
-    await simRemote(['simctl', 'launch', UDID, BUNDLE_ID]);
-  } catch (error) {
+  const launchError = await simRemote([
+    'simctl',
+    'launch',
+    UDID,
+    BUNDLE_ID,
+  ]).then(
+    () => null,
+    (error: unknown) => error
+  );
+  // The shared Debug build starts the tests whenever this is set.
+  await simRemote([
+    'spawn',
+    UDID,
+    '--',
+    'launchctl',
+    'unsetenv',
+    'RUNTIME_TESTS_LIBRARY',
+  ]);
+  if (launchError) {
     // Don't leave the collector hanging for the full connect timeout.
     server.kill();
-    fail(`launch failed: ${errorMessage(error)}`);
+    fail(`launch failed: ${errorMessage(launchError)}`);
   }
 
   const exitCode = await serverExit;

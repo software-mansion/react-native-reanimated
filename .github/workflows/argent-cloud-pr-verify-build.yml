@@ -43,7 +43,7 @@ env:
 jobs:
   build:
     name: build (${{ inputs.variant }})
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: 120
     env:
       APP_DIR: ${{ github.workspace }}/argent-cloud-app
