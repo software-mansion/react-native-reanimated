@@ -954,7 +954,7 @@ void ReanimatedModuleProxy::performOperations() {
   commitUpdates(propsMapBySurface);
 }
 
-void ReanimatedModuleProxy::performNonLayoutOperations() {
+bool ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
 
   UpdatesBatch updatesBatch;
@@ -962,7 +962,9 @@ void ReanimatedModuleProxy::performNonLayoutOperations() {
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
-  applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
+  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(std::move(updatesBatch), true);
+  applySynchronousUpdates(std::move(synchronousUpdatesBatch));
+  return !shadowTreeUpdatesBatch.empty();
 }
 
 bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {

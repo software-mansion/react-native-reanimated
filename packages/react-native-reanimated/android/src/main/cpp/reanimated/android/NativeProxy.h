@@ -64,7 +64,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
   double getAnimationTimestamp();
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
   void performOperations();
-  void performNonLayoutOperations();
+  bool performNonLayoutOperations();
   bool hasSynchronousWritesTracker();
   void rewriteSynchronousProps();
   bool getIsReducedMotion();

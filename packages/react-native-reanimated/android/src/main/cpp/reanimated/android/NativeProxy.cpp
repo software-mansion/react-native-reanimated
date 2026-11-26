@@ -140,8 +140,8 @@ void NativeProxy::performOperations() {
   }
 }
 
-void NativeProxy::performNonLayoutOperations() {
-  reanimatedModuleProxy_->performNonLayoutOperations();
+bool NativeProxy::performNonLayoutOperations() {
+  return reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
 bool NativeProxy::hasSynchronousWritesTracker() {

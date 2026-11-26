@@ -177,7 +177,7 @@ open class NativeProxy {
 
     private external fun performOperationsCpp()
 
-    private external fun performNonLayoutOperationsCpp()
+    private external fun performNonLayoutOperationsCpp(): Boolean
 
     private external fun hasSynchronousWritesTracker(): Boolean
 
@@ -217,7 +217,7 @@ open class NativeProxy {
 
     fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
 
-    fun performNonLayoutOperations() = ifNotInvalidated(Unit) { performNonLayoutOperationsCpp() }
+    fun performNonLayoutOperations(): Boolean = ifNotInvalidated(false) { performNonLayoutOperationsCpp() }
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {

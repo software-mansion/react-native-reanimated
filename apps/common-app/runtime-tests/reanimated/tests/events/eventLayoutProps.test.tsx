@@ -23,9 +23,6 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-// On Android, the layout work that an event causes waits for the next frame callback.
-// This test makes sure that it does not wait longer.
-
 const BOX_REF = 'EVENT_LAYOUT_BOX';
 const OFFSET = 'EVENT_LAYOUT_OFFSET';
 const CALL_COUNT = 'EVENT_LAYOUT_CALL_COUNT';
@@ -38,7 +35,6 @@ const FRAMES_TO_MOUNT = 4;
 const READY_ATTEMPTS = 10;
 const FRAMES_PER_READY_ATTEMPT = 5;
 
-// Written during render, read by the test.
 let scrollViewRef: AnimatedRef<Animated.ScrollView> | null = null;
 
 function Scenario() {
@@ -86,8 +82,8 @@ function sendScroll(offset: number) {
 }
 
 /**
- * A scroll command that arrives before the native scroll view mounts is
- * dropped.
+ * The native scroll view ignores a scroll command that arrives before it
+ * mounts.
  */
 async function waitForScrollHandlerReady() {
   for (let attempt = 1; attempt <= READY_ATTEMPTS; attempt++) {
