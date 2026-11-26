@@ -261,6 +261,25 @@ describe('useScrollOffset', () => {
     expect(provided.value).toBe(42);
   });
 
+  test('writes to and returns a provided shared value swapped after mount', () => {
+    const first = makeMutable(0);
+    const second = makeMutable(0);
+    let returned: SharedValue<number> | undefined;
+    const onOffset = (offset: SharedValue<number>) => {
+      returned = offset;
+    };
+    const { rerender } = render(
+      <ScrollOffsetView providedOffset={first} onOffset={onOffset} />
+    );
+
+    rerender(<ScrollOffsetView providedOffset={second} onOffset={onOffset} />);
+    dispatch('onScroll', { contentOffset: { x: 0, y: 42 } });
+
+    expect(returned).toBe(second);
+    expect(first.value).toBe(0);
+    expect(second.value).toBe(42);
+  });
+
   function ScrollOffsetView({
     providedOffset,
     onOffset,
