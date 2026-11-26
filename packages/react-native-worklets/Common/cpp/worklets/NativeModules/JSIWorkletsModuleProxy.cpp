@@ -320,9 +320,12 @@ std::shared_ptr<void> makePromiseDropGuard(
       extractSerializableOrThrow<SerializableRemoteFunction>(rt, rejectValue));
 }
 
-RuntimeData::RuntimeId runtimeIdFromJS(const jsi::Value &value) {
-  react_native_assert(value.isNumber() && "[Worklets] Runtime id must be a number.");
-  const auto runtimeId = value.getNumber();
+} // namespace
+
+template <>
+inline RuntimeData::RuntimeId jsi_utils::get<RuntimeData::RuntimeId>(jsi::Runtime &, const jsi::Value *value) {
+  react_native_assert(value->isNumber() && "[Worklets] Runtime id must be a number.");
+  const auto runtimeId = value->getNumber();
   react_native_assert(std::isfinite(runtimeId) && "[Worklets] Runtime id must be a finite number.");
   react_native_assert(std::trunc(runtimeId) == runtimeId && "[Worklets] Runtime id must be an integer.");
   react_native_assert(runtimeId >= 0 && "[Worklets] Runtime id must not be negative.");
@@ -331,8 +334,6 @@ RuntimeData::RuntimeId runtimeIdFromJS(const jsi::Value &value) {
       "[Worklets] Runtime id must be smaller than 2^64.");
   return static_cast<RuntimeData::RuntimeId>(runtimeId);
 }
-
-} // namespace
 
 jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   auto obj = jsi::Object(rt);
@@ -720,10 +721,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "runOnRuntimeSyncWithId",
       [runtimeManager = runtimeManager_](
           jsi::Runtime &rt,
-          const jsi::Value &runtimeIdValue,
+          RuntimeData::RuntimeId runtimeId,
           const jsi::Value &worklet,
           [[maybe_unused]] const jsi::Value &scheduleStackValue) {
-        const auto runtimeId = runtimeIdFromJS(runtimeIdValue);
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -827,12 +827,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "scheduleOnRuntimeWithId",
       [runtimeManager = runtimeManager_](
           jsi::Runtime &rt,
-          const jsi::Value &runtimeIdValue,
+          RuntimeData::RuntimeId runtimeId,
           const jsi::Value &workletValue,
           [[maybe_unused]] const jsi::Value &scheduleStackValue,
           const jsi::Value &resolve,
           const jsi::Value &reject) {
-        const auto runtimeId = runtimeIdFromJS(runtimeIdValue);
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           throw jsi::JSError(
@@ -867,8 +866,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       rt,
       obj,
       "abortWorkletRuntime",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &runtimeIdValue) {
-        const auto runtimeId = runtimeIdFromJS(runtimeIdValue);
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, RuntimeData::RuntimeId runtimeId) {
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
           return jsi::Value(false);
@@ -919,8 +917,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
   });
 
   jsi_utils::addMethod(
-      rt, obj, "isRuntimeAlive", [runtimeManager = runtimeManager_](jsi::Runtime &, const jsi::Value &runtimeIdValue) {
-        const auto runtimeId = runtimeIdFromJS(runtimeIdValue);
+      rt, obj, "isRuntimeAlive", [runtimeManager = runtimeManager_](jsi::Runtime &, RuntimeData::RuntimeId runtimeId) {
         return jsi::Value(runtimeManager->isRuntimeAlive(runtimeId));
       });
 
@@ -989,12 +986,11 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
       "createShareable",
       [runtimeManager = runtimeManager_](
           jsi::Runtime &rt,
-          const jsi::Value &hostRuntimeIdValue,
+          RuntimeData::RuntimeId hostRuntimeId,
           const jsi::Value &initialValue,
           bool initSynchronously,
           const jsi::Value &decorateHostValue,
           const jsi::Value &decorateGuestValue) -> jsi::Value {
-        const auto hostRuntimeId = runtimeIdFromJS(hostRuntimeIdValue);
         const auto hostRuntime = runtimeManager->getRuntime(hostRuntimeId);
         if (!hostRuntime) {
           throw jsi::JSError(
