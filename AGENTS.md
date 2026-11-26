@@ -19,6 +19,7 @@ Facts that are true on `main` and that agents otherwise re-discover in every ses
 - `apps/common-app` - all example screens (`src/apps/{reanimated,worklets,css,macos,runtime-tests}`) and the on-device test suites (`runtime-tests/`, a sibling of `src/`). Not runnable on its own.
 - `apps/fabric-example` - primary iOS/Android app and the runtime-tests host. No local `node_modules`, everything hoists to the root.
 - `apps/macos-example`, `apps/tvos-example` - own `node_modules` (`hoistingLimits: workspaces`). macOS cannot run Bundle Mode, so its `build` script runs `toggle-bundle-mode --off`.
+- `apps/integration-examples` - Expo SDK 58 app (React Native 0.88.1, own `node_modules`) with the example packages of the Worklets guide "Sending native data to the UI Runtime" in `packages/`. Scoped root `resolutions` keep Metro 0.87.1 for Expo, and a Yarn patch adds `WORKLETS_STABLE_API_TARGET` to `expo-modules-core`.
 - `apps/web-example` (Expo web, Playwright), `apps/next-example` (Next.js, Cypress).
 - `docs/docs-reanimated`, `docs/docs-worklets` - Docusaurus. Worklets docs are nested into the Reanimated build on publish.
 
