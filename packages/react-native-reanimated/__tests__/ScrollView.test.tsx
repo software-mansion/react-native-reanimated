@@ -8,10 +8,10 @@ import Animated, { makeMutable, useAnimatedRef, useSharedValue } from '../src';
 import type { ReanimatedScrollEvent } from '../src/hook/commonTypes';
 import { WorkletEventHandler } from '../src/WorkletEventHandler';
 
-const SCROLL_VIEW_TAG = 1234;
+const MOCK_SCROLL_VIEW_TAG = 1234;
 
 jest.mock('../src/platformFunctions/findNodeHandle', () => ({
-  findNodeHandle: jest.fn(() => 1234),
+  findNodeHandle: jest.fn(() => MOCK_SCROLL_VIEW_TAG),
 }));
 
 function ScrollViewWithOffset({
@@ -57,7 +57,7 @@ describe('Animated.ScrollView scrollViewOffset', () => {
     render(<Animated.ScrollView scrollViewOffset={offset} />);
 
     expect(registerForEvents).toHaveBeenCalledTimes(1);
-    expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(registerForEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
     const [handler] = registerForEvents.mock
       .instances as WorkletEventHandler<ReanimatedScrollEvent>[];
     handler.worklet({
@@ -78,7 +78,7 @@ describe('Animated.ScrollView scrollViewOffset', () => {
 
     render(<WithAnimatedRef />);
 
-    expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(registerForEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
     expect(attached).toEqual([true]);
   });
 
@@ -87,7 +87,7 @@ describe('Animated.ScrollView scrollViewOffset', () => {
 
     render(<ScrollViewWithOffset scrollViewRef={refObject} />);
 
-    expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(registerForEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
     expect(refObject.current).not.toBeNull();
   });
 
@@ -102,7 +102,7 @@ describe('Animated.ScrollView scrollViewOffset', () => {
       />
     );
 
-    expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(registerForEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
     expect(instances).toHaveLength(1);
     expect(instances[0]).not.toBeNull();
   });
@@ -112,7 +112,7 @@ describe('Animated.ScrollView scrollViewOffset', () => {
 
     rerender(<ScrollViewWithOffset withOffset={false} />);
 
-    expect(unregisterFromEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(unregisterFromEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
   });
 
   test('starts tracking when scrollViewOffset is added after mount', () => {
@@ -120,7 +120,7 @@ describe('Animated.ScrollView scrollViewOffset', () => {
 
     rerender(<ScrollViewWithOffset />);
 
-    expect(registerForEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(registerForEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
     expect(consoleError).not.toHaveBeenCalled();
   });
 
@@ -129,6 +129,6 @@ describe('Animated.ScrollView scrollViewOffset', () => {
 
     unmount();
 
-    expect(unregisterFromEvents).toHaveBeenCalledWith(SCROLL_VIEW_TAG);
+    expect(unregisterFromEvents).toHaveBeenCalledWith(MOCK_SCROLL_VIEW_TAG);
   });
 });
