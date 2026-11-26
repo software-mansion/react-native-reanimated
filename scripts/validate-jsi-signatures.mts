@@ -103,14 +103,8 @@ function main(): void {
       ...compareRegistrationsWithTsTypes(JSI_OBJECTS, REPOSITORY_ROOT),
     ];
     if (problems.length === 0) {
-      console.log(
-        `The methods of ${JSI_OBJECTS.map(({ global }) => global).join(', ')} match their TS types.`
-      );
       return;
     }
-    console.error(
-      `JSI methods do not match their TS types (${problems.length}):`
-    );
     for (const problem of problems) {
       console.error(`  - ${problem}`);
     }
