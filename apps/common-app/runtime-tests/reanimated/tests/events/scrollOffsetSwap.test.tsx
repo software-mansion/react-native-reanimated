@@ -29,6 +29,30 @@ const SCROLL_STEP = 50;
 const READY_ATTEMPTS = 10;
 const FRAMES_PER_READY_ATTEMPT = 5;
 
+describe('useScrollOffset with a swapped providedOffset', () => {
+  test('writes the scroll offset to the shared value from the latest render', async () => {
+    await render(<Scenario useSecond={false} />);
+    await waitForFirstOffsetReady();
+    sendScroll(SCROLL_STEP);
+    await expectEventually(() => getSharedValue<number>(FIRST_OFFSET)).toBe(
+      SCROLL_STEP,
+      ComparisonMode.PIXEL
+    );
+
+    await render(<Scenario useSecond />);
+    sendScroll(SCROLL_STEP * 2);
+
+    await expectEventually(() => getSharedValue<number>(SECOND_OFFSET)).toBe(
+      SCROLL_STEP * 2,
+      ComparisonMode.PIXEL
+    );
+    expect(await getSharedValue<number>(FIRST_OFFSET)).toBe(
+      SCROLL_STEP,
+      ComparisonMode.PIXEL
+    );
+  });
+});
+
 let scrollViewRef: AnimatedRef<Animated.ScrollView> | null = null;
 
 function Scenario({ useSecond }: { useSecond: boolean }) {
@@ -84,30 +108,6 @@ async function waitForFirstOffsetReady() {
   }
   throw new Error('useScrollOffset never received a scroll event');
 }
-
-describe('useScrollOffset with a swapped providedOffset', () => {
-  test('writes the scroll offset to the shared value from the latest render', async () => {
-    await render(<Scenario useSecond={false} />);
-    await waitForFirstOffsetReady();
-    sendScroll(SCROLL_STEP);
-    await expectEventually(() => getSharedValue<number>(FIRST_OFFSET)).toBe(
-      SCROLL_STEP,
-      ComparisonMode.PIXEL
-    );
-
-    await render(<Scenario useSecond />);
-    sendScroll(SCROLL_STEP * 2);
-
-    await expectEventually(() => getSharedValue<number>(SECOND_OFFSET)).toBe(
-      SCROLL_STEP * 2,
-      ComparisonMode.PIXEL
-    );
-    expect(await getSharedValue<number>(FIRST_OFFSET)).toBe(
-      SCROLL_STEP,
-      ComparisonMode.PIXEL
-    );
-  });
-});
 
 const styles = StyleSheet.create({
   container: {
