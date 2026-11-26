@@ -111,9 +111,16 @@ run_clang_tidy="${run_clang_tidy:-run-clang-tidy}"
 # `/usr/local/bin`, and Homebrew's `llvm` formulae are keg-only, so none of
 # them is auto-symlinked into `<prefix>/bin`. Search common install locations
 # explicitly so the script works without the user having to fiddle with their
-# shell rc. Versioned formulae (`llvm@22`, `llvm@21`, ...) live next to the
-# unversioned one under `<prefix>/opt`; they are appended newest major first,
-# after the unversioned `llvm` and within their own Homebrew prefix.
+# shell rc. The LLVM major pinned in `llvm-version` wins over $PATH and every
+# other install, so the lint matches CI. Other versioned formulae (`llvm@22`,
+# `llvm@21`, ...) live next to the unversioned one under `<prefix>/opt`; they
+# are appended newest major first, after the unversioned `llvm` and within
+# their own Homebrew prefix.
+llvm_major="$(cat "$script_dir/llvm-version")"
+LLVM_PINNED=(
+  "/opt/homebrew/opt/llvm@${llvm_major}/bin"
+  "/usr/local/opt/llvm@${llvm_major}/bin"
+)
 LLVM_FALLBACKS=(
   "/opt/homebrew/opt/llvm/bin"
   "/usr/local/opt/llvm/bin"
@@ -134,7 +141,12 @@ LLVM_FALLBACKS+=(
 resolve_binary() {
   local name="$1"
   local first="$2"
-  local found
+  local found dir
+  if [ "${first#/}" = "$first" ]; then
+    for dir in "${LLVM_PINNED[@]}"; do
+      if [ -x "$dir/$name" ]; then printf '%s' "$dir/$name"; return; fi
+    done
+  fi
   found="$(command -v "$first" 2>/dev/null || true)"
   if [ -n "$found" ]; then printf '%s' "$found"; return; fi
   for dir in "${LLVM_FALLBACKS[@]}"; do
@@ -148,6 +160,9 @@ if [ -z "$resolved_tidy" ]; then
   echo "error: clang-tidy not found on PATH or under ${LLVM_FALLBACKS[*]}" >&2
   exit 1
 fi
+if [ "${clang_tidy_binary#/}" = "$clang_tidy_binary" ] && [[ " ${LLVM_PINNED[*]} " != *" $(dirname "$resolved_tidy") "* ]]; then
+  echo "warning: $resolved_tidy is not from llvm@${llvm_major}, results can differ from CI (brew install llvm@${llvm_major})" >&2
+fi
 
 # Prepend the resolved tool's dir so run-clang-tidy's child clang-tidy invocations also see it.
 tidy_dir="$(dirname "$resolved_tidy")"
@@ -157,7 +172,7 @@ resolved_runner="$(resolve_binary run-clang-tidy "$run_clang_tidy")"
 
 if [ -z "$resolved_runner" ]; then
   echo "error: run-clang-tidy not found on PATH or under ${LLVM_FALLBACKS[*]}" >&2
-  echo "       install LLVM (brew install llvm) or use an NDK that ships clang-tidy" >&2
+  echo "       install LLVM (brew install llvm@${llvm_major}) or use an NDK that ships clang-tidy" >&2
   exit 1
 fi
 
