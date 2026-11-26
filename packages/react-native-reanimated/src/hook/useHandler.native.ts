@@ -59,7 +59,7 @@ export function useHandler<Event extends object, Context extends UnknownRecord>(
     state.prevHandlers as Record<string, WorkletFunction>
   );
 
-  // Write after commit to avoid corruption from interrupted renders (in case of concurrent mode).
+  // Write in a passive effect, as `useEvent` does, so that both hooks see the same commits.
   useEffect(() => {
     state.prevHandlers = handlers;
   });
