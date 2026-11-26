@@ -83,7 +83,9 @@ State::Shared textStateAt(const ShadowView &start, const ShadowView &target, con
       textLayoutManager && data.measuredLayout.preparedTextLayout) {
     auto constraints = data.measuredLayout.layoutConstraints;
     constraints.minimumSize.width *= scale;
+    constraints.minimumSize.height *= scale;
     constraints.maximumSize.width *= scale;
+    constraints.maximumSize.height *= scale;
     const TextLayoutContext context{
         .pointScaleFactor = data.measuredLayout.pointScaleFactor, .surfaceId = target.surfaceId};
     data.measuredLayout.preparedTextLayout =
