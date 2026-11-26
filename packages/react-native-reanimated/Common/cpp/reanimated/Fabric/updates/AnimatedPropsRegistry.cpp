@@ -19,6 +19,61 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
+static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value);
+
+static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &object) {
+  if (object.isArray(rt)) {
+    const auto array = object.getArray(rt);
+    const size_t size = array.size(rt);
+    folly::dynamic result = folly::dynamic::array();
+    result.reserve(size);
+    for (size_t i = 0; i < size; ++i) {
+      result.push_back(propsFromValue(rt, array.getValueAtIndex(rt, i)));
+    }
+    return result;
+  }
+  if (object.isFunction(rt)) {
+    return nullptr;
+  }
+  const auto names = object.getPropertyNames(rt);
+  const size_t size = names.size(rt);
+  folly::dynamic result = folly::dynamic::object();
+  for (size_t i = 0; i < size; ++i) {
+    const auto name = names.getValueAtIndex(rt, i).getString(rt);
+    const auto property = object.getProperty(rt, name);
+    if (property.isUndefined()) {
+      continue;
+    }
+    result.insert(name.utf8(rt), propsFromValue(rt, property));
+  }
+  return result;
+}
+
+static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value) {
+  if (value.isNumber()) {
+    return value.getNumber();
+  }
+  if (value.isString()) {
+    return value.getString(rt).utf8(rt);
+  }
+  if (value.isObject()) {
+    return propsFromObject(rt, value.getObject(rt));
+  }
+  if (value.isUndefined() || value.isNull()) {
+    return nullptr;
+  }
+  if (value.isBool()) {
+    return value.getBool();
+  }
+  if (value.isBigInt()) {
+    throw jsi::JSError(rt, "JS BigInts are not convertible to dynamic");
+  }
+  if (value.isSymbol()) {
+    throw jsi::JSError(rt, "JS Symbols are not convertible to dynamic");
+  }
+  throw jsi::JSError(rt, "Value is not convertible to dynamic");
+}
+
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   auto operationsArray = operations.asObject(rt).asArray(rt);
@@ -42,7 +97,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       roundTextMetrics(rt, updates);
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
-      auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
+      auto dynamicUpdates = propsFromValue(rt, updates);
       roundTextMetrics(dynamicUpdates);
       // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
       // `collectSettledUpdates` never reads `writeHistories_`.
