@@ -32,4 +32,15 @@ std::optional<double> sizeProgress(const ShadowView &start, const ShadowView &ta
 // the own state of the Text. Null for other views and for their own font size.
 State::Shared textStateWithFontSize(const ShadowView &text, Float fontSize);
 
+// Whether two Texts have the same strings in the same runs.
+bool haveSameRuns(const ShadowView &start, const ShadowView &target);
+
+// How far a font size is from the one that the start draws to the one that the target draws. Null when they are the
+// same.
+std::optional<double> fontSizeProgress(const ShadowView &start, const ShadowView &target, Float fontSize);
+
+// The state of a Text whose runs draw sizes between their sizes in the start and in the target, which have the same
+// runs. Null when the sizes are the same.
+State::Shared textStateBetween(const ShadowView &start, const ShadowView &target, double progress);
+
 } // namespace reanimated

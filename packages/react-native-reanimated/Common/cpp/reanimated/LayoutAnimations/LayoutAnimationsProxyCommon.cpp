@@ -83,18 +83,28 @@ bool isCarrierKey(const std::string &name) {
 }
 
 // A Text draws the font size that the animation sets. Without one, the font size follows the progress of a built-in
-// shared transition, or the change of the size of a layout transition.
+// shared transition, or the change of the size of a layout transition. When a layout transition keeps the runs of a
+// Text, each run moves between its own sizes.
 State::Shared textStateOf(const LayoutAnimation &animation, const Frame &frame) {
+  const auto &start = animation.startView;
+  const auto &target = animation.finalView;
+  if (animation.type == LayoutAnimationType::LAYOUT && haveSameRuns(start, target)) {
+    const auto progress =
+        animation.fontSize ? fontSizeProgress(start, target, *animation.fontSize) : sizeProgress(start, target, frame);
+    if (progress) {
+      return textStateBetween(start, target, *progress);
+    }
+  }
   auto fontSize = animation.fontSize;
   if (!fontSize) {
     const auto progress = animation.geometryProgress    ? animation.geometryProgress
-        : animation.type == LayoutAnimationType::LAYOUT ? sizeProgress(animation.startView, animation.finalView, frame)
+        : animation.type == LayoutAnimationType::LAYOUT ? sizeProgress(start, target, frame)
                                                         : std::nullopt;
     if (progress) {
-      fontSize = textFontSizeAt(animation.startView, animation.finalView, *progress);
+      fontSize = textFontSizeAt(start, target, *progress);
     }
   }
-  return fontSize ? textStateWithFontSize(animation.finalView, *fontSize) : nullptr;
+  return fontSize ? textStateWithFontSize(target, *fontSize) : nullptr;
 }
 
 SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation) {

@@ -46,6 +46,12 @@ export default function TextSizeExample() {
         style={[styles.text, { fontSize }]}>
         Morning tide
       </Animated.Text>
+      <Text style={styles.label}>Nested Text with its own size</Text>
+      <Animated.Text
+        layout={LinearTransition.duration(DURATION)}
+        style={[styles.text, { fontSize }]}>
+        Quiet orchard <Text style={styles.nested}>(7 km)</Text>
+      </Animated.Text>
       <Text style={styles.label}>Custom animation of fontSize</Text>
       <Animated.Text
         layout={big ? grow : shrink}
@@ -65,4 +71,5 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, gap: 12 },
   label: { fontSize: 13, color: '#57606a', marginTop: 12 },
   text: { alignSelf: 'flex-start', backgroundColor: '#dbe8fb' },
+  nested: { fontSize: 14, color: '#57606a' },
 });
