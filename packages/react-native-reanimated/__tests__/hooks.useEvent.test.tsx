@@ -220,6 +220,48 @@ describe('useAnimatedScrollHandler', () => {
   }
 });
 
+describe('handler with several events', () => {
+  const received: string[] = [];
+
+  beforeEach(() => {
+    received.length = 0;
+  });
+
+  test('registers each event once and unregisters them on unmount', () => {
+    const { unmount } = render(<ScrollEventsView props={['onScroll']} />);
+
+    expect(activeEventNames()).toEqual(['onScroll', 'onMomentumScrollEnd']);
+
+    unmount();
+
+    expect(registrations.size).toBe(0);
+  });
+
+  test('keeps running when one of its two props is removed', () => {
+    const { rerender } = render(
+      <ScrollEventsView props={['onScroll', 'onMomentumScrollEnd']} />
+    );
+
+    rerender(<ScrollEventsView props={['onScroll']} />);
+    dispatch('onScroll');
+
+    expect(received).toEqual(['onScroll']);
+  });
+
+  function ScrollEventsView({ props }: { props: string[] }) {
+    const handler = useAnimatedScrollHandler({
+      onScroll: () => {
+        received.push('onScroll');
+      },
+      onMomentumEnd: () => {
+        received.push('onMomentumScrollEnd');
+      },
+    });
+    const eventProps = Object.fromEntries(props.map((prop) => [prop, handler]));
+    return <Animated.ScrollView {...eventProps} />;
+  }
+});
+
 describe('useComposedEventHandler', () => {
   test('registers a composed handler that calls the rebuilt handler', () => {
     const first = makeMutable(0);
