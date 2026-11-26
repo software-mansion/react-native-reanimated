@@ -49,6 +49,7 @@ import {
   mockAnimationTimer,
   mockWindowDimensions,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   unmockAnimationTimer,
@@ -150,6 +151,7 @@ async function getSnapshotUpdates(
   await render(<ExitingComponent exiting={componentExiting} />);
 
   await waitForAnimationUpdates(snapshot.length);
+  await stopRecordingAnimationUpdates();
   const updates = await updatesContainer.getUpdates();
 
   await unmockAnimationTimer();

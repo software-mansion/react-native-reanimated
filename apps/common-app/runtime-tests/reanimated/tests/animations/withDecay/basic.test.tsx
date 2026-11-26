@@ -8,6 +8,7 @@ import {
   expect,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   unmockAnimationTimer,
@@ -40,6 +41,7 @@ describe('withDecay animation, test various config', () => {
 
     await waitForAnimationUpdates(Snapshots[snapshotName].length);
 
+    await stopRecordingAnimationUpdates();
     const updates = await updatesContainer.getUpdates();
     const nativeUpdates = await updatesContainer.getNativeSnapshots();
     await unmockAnimationTimer();

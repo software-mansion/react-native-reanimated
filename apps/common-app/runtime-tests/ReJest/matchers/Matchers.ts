@@ -92,14 +92,16 @@ export class Matchers {
 
   public toMatchNativeSnapshots(
     expectedSnapshots: SingleViewSnapshot,
-    expectNegativeValueMismatch = false
+    expectNegativeValueMismatch = false,
+    offset: 0 | 1 = 1
   ) {
     const capturedSnapshots = this._currentValue as SingleViewSnapshot;
     const mismatchError = compareSnapshots(
       expectedSnapshots,
       capturedSnapshots,
       true,
-      expectNegativeValueMismatch
+      expectNegativeValueMismatch,
+      offset
     );
     if (mismatchError) {
       this._testCase.errors.push(mismatchError);
