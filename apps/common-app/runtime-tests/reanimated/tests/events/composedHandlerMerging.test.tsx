@@ -33,10 +33,12 @@ import {
 } from '../../../ReJest/RuntimeTestsApi';
 import { ComparisonMode } from '../../../ReJest/types';
 
-// A component composes its own scroll handler with one passed by its parent,
-// and each handler must run once per scroll event. The internal handler drives
-// the list's backgroundColor, read from the shadow tree. User drag and fling,
-// and events other than onScroll, stay manual.
+// A component composes its own scroll handler with one passed by its parent.
+// Each handler must run once per scroll event, counted against the same list
+// with its own handler uncomposed. A new passed handler must replace the old
+// one, and Reanimated must log nothing. The internal handler drives the list's
+// backgroundColor, read from the shadow tree. User drag, fling, momentum and
+// begin/end-drag events are not covered.
 
 const LIST_REF = 'COMPOSED_MERGING_LIST';
 const OFFSET_A = 'COMPOSED_MERGING_OFFSET_A';
@@ -61,8 +63,11 @@ const COLOR_TO = 'purple';
 /** Readiness nudges scroll by 1 px per attempt, far below FIRST_OFFSET. */
 const READY_ATTEMPTS = 10;
 const FRAMES_PER_READY_ATTEMPT = 5;
-/** Frames without a new call before a call count counts as final. */
-const STABLE_CALL_FRAMES = 10;
+/**
+ * Reads, 16 ms apart, without a new call before a call count is final. The two
+ * iOS events of one scrollTo arrive within a few ms of each other.
+ */
+const STABLE_CALL_READS = 10;
 const NO_OFFSET = -1;
 
 /** Written during render, read by the test. Reset in beforeEach. */
@@ -115,7 +120,6 @@ function ColorChangingList({
     <Animated.ScrollView
       ref={setRef}
       onScroll={additionalHandler ? composedHandler : internalHandler}
-      scrollEventThrottle={16}
       style={[styles.list, animatedStyle]}>
       {[...Array(ITEM_COUNT).keys()].map((i) => (
         <View key={i} style={styles.item} />
@@ -124,7 +128,7 @@ function ColorChangingList({
   );
 }
 
-function Scenario({ passed }: { passed: 'A' | 'B' | null }) {
+function Scenario({ passed }: { passed?: 'A' | 'B' }) {
   const offsetA = useSharedValue(NO_OFFSET);
   const offsetB = useSharedValue(NO_OFFSET);
   const callsA = useSharedValue(0);
@@ -147,9 +151,12 @@ function Scenario({ passed }: { passed: 'A' | 'B' | null }) {
     },
   });
 
-  const passedHandler = { A: handlerA, B: handlerB, none: null }[
-    passed ?? 'none'
-  ];
+  let passedHandler: ScrollHandlerProcessed | null = null;
+  if (passed === 'A') {
+    passedHandler = handlerA;
+  } else if (passed === 'B') {
+    passedHandler = handlerB;
+  }
 
   return (
     <View style={styles.container}>
@@ -179,7 +186,7 @@ async function waitForScrollHandlerReady() {
     await waitForFrames(FRAMES_PER_READY_ATTEMPT);
     if ((await readInternalOffset()) > 0) {
       await waitUntilSettled(() => readValue(INTERNAL_CALLS), {
-        stableFrames: STABLE_CALL_FRAMES,
+        stableFrames: STABLE_CALL_READS,
       });
       return;
     }
@@ -191,7 +198,7 @@ async function scrollToAndSettle(offset: number) {
   sendScroll(offset);
   await expectEventually(readInternalOffset).toBe(offset, ComparisonMode.PIXEL);
   await waitUntilSettled(() => readValue(INTERNAL_CALLS), {
-    stableFrames: STABLE_CALL_FRAMES,
+    stableFrames: STABLE_CALL_READS,
   });
 }
 
@@ -201,7 +208,7 @@ async function scrollToAndSettle(offset: number) {
  * handler is not composed.
  */
 async function measureEventsPerScroll() {
-  await render(<Scenario key={REFERENCE_KEY} passed={null} />);
+  await render(<Scenario key={REFERENCE_KEY} />);
   await waitForScrollHandlerReady();
   const callsBefore = await readValue(INTERNAL_CALLS);
   await scrollToAndSettle(FIRST_OFFSET);
@@ -210,15 +217,15 @@ async function measureEventsPerScroll() {
   return eventsPerScroll;
 }
 
-/** A late event can still arrive, so the count is checked until it matches. */
 async function expectCallsSince(
   counter: string,
   callsBefore: number,
   expectedCalls: number
 ) {
-  await expectEventually(
-    async () => (await readValue(counter)) - callsBefore
-  ).toBe(expectedCalls, ComparisonMode.NUMBER);
+  expect((await readValue(counter)) - callsBefore).toBe(
+    expectedCalls,
+    ComparisonMode.NUMBER
+  );
 }
 
 async function expectListColorAt(offset: number) {
