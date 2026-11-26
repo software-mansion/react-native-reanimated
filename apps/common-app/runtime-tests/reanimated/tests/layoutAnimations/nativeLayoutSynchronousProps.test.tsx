@@ -684,9 +684,9 @@ describe('native layout animations and the synchronous props path', () => {
     }
   }
 
-  const writeBeforeMount =
-    'an opacity write between a commit and its mount keeps the native start';
-  movingGeometryTest(writeBeforeMount, async () => {
+  const writeAtNativeStart =
+    'an opacity write at native start keeps the native start';
+  movingGeometryTest(writeAtNativeStart, async () => {
     const pair = pairOf((hasCallback) =>
       fadeLeaves(DURATION, 0.9, hasCallback)
     );
@@ -705,12 +705,31 @@ describe('native layout animations and the synchronous props path', () => {
       const rows = await takeOpacityRows(tag, frameTag, DURATION / 2);
       const startEvents = (await takeTraceOf(tag)).filter(isHostEvent);
       expect(summarize(startEvents)).toBe(GROUP_START);
-      for (const { native } of playingRowsOf(rows, startEvents)) {
+      const playing = playingRowsOf(rows, startEvents);
+      for (const { native } of playing) {
         expect(native.playbacks.length).toBe(2);
-        expect(isNear(native.model[0], 0.8)).toBe(true);
       }
+      expect(
+        modelOrderFaultsOf(
+          playing.map(({ native }) => native.model[0]),
+          0.5,
+          0.8
+        )
+      ).toBe('');
+      const trackStart = startEvents.find(
+        ({ event }) => event === 'TrackStarted'
+      )?.monotonicTimeMs;
+      const written = playing.find(({ native }) =>
+        isNear(native.model[0], 0.8)
+      );
+      expect(
+        written !== undefined &&
+          trackStart !== undefined &&
+          written.native.monotonicTimeMs - trackStart <= FRAME_MS &&
+          isNear(written.frame.model[0], 0.8)
+      ).toBe(true);
       expectOpacityReads(
-        writeBeforeMount,
+        writeAtNativeStart,
         rows,
         startEvents,
         clockOffset,
