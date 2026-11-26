@@ -58,7 +58,7 @@ internal class DrawPassObserver(
     fun requestDrawPass() {
         // A dialog has its own window, and so its own pre-draw callback.
         for (rootView in windowRootViews()) {
-            if (rootView.windowVisibility == View.VISIBLE) {
+            if (isDrawnOnUiThread(rootView)) {
                 observePreDraw(rootView.viewTreeObserver)
                 rootView.invalidate()
             }
@@ -85,6 +85,9 @@ internal class DrawPassObserver(
         } else {
             listOfNotNull(mDecorView)
         }
+
+    private fun isDrawnOnUiThread(rootView: View): Boolean =
+        rootView.windowVisibility == View.VISIBLE && rootView.handler?.looper === mHandler.looper
 
     private fun invalidateOnUiThread() {
         stopObservingDecorView()

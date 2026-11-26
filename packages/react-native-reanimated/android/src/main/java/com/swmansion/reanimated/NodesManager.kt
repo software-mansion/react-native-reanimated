@@ -128,8 +128,8 @@ class NodesManager(
         UiThreadUtil.assertOnUiThread()
         if (mNativeProxy?.performNonLayoutOperations() == true && !mHasDeferredLayoutOperations) {
             mHasDeferredLayoutOperations = true
-            mDrawPassObserver.requestDrawPass()
             startUpdatingOnAnimationFrame()
+            mDrawPassObserver.requestDrawPass()
         }
     }
 
