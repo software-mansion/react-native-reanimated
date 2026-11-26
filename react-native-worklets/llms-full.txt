@@ -1428,6 +1428,8 @@ Use the Worklets stable C++ interface when your React Native library needs to ca
 
 ## iOS
 
+### CocoaPods
+
 Add Worklets as a dependency of your library's pod. For a source-built CocoaPods integration, add the Worklets public header directory to your pod target's existing header search paths.
 
 ```ruby
@@ -1436,6 +1438,29 @@ s.pod_target_xcconfig = {
   'HEADER_SEARCH_PATHS' => '$(inherited) "$(PODS_ROOT)/Headers/Public/RNWorklets"',
   'OTHER_CPLUSPLUSFLAGS' => '$(inherited) -DWORKLETS_STABLE_API_TARGET=\"0.14.0\"'
 }
+```
+
+### Swift Package Manager
+
+In your library's `Package.swift`, add the local `RNWorklets` package and depend on its product from your native target. The example assumes React Native's Swift Package Manager autolinking places your package and `RNWorklets` next to each other.
+
+```swift
+let package = Package(
+    name: "MyLibrary",
+    platforms: [.iOS(.v15)],
+    dependencies: [
+        .package(name: "RNWorklets", path: "../RNWorklets"),
+    ],
+    targets: [
+        .target(
+            name: "MyLibrary",
+            dependencies: [.product(name: "RNWorklets", package: "RNWorklets")],
+            cSettings: [.define("WORKLETS_STABLE_API_TARGET", to: "\"0.14.0\"")],
+            cxxSettings: [.define("WORKLETS_STABLE_API_TARGET", to: "\"0.14.0\"")]
+        ),
+    ],
+    cxxLanguageStandard: .cxx20
+)
 ```
 
 ## Android
