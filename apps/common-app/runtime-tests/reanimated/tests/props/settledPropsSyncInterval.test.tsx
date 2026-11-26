@@ -1,7 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
 import Animated, {
-  getStaticFeatureFlag,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
@@ -37,45 +36,33 @@ function isSyncRunning() {
   return PropsRegistryGarbageCollector.intervalId !== null;
 }
 
-const isSettledPropsSyncEnabled =
-  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
-  !getStaticFeatureFlag('USE_ANIMATION_BACKEND');
-
-const intervalTest = isSettledPropsSyncEnabled ? test : test.skip;
-
 describe('settled props sync interval', () => {
-  intervalTest(
-    'stops when the mounted views have nothing to sync',
-    async () => {
-      await render(<StaticBox />);
+  test('stops when the mounted views have nothing to sync', async () => {
+    await render(<StaticBox />);
 
-      await wait(SYNC_AND_EVICT_WAIT_MS);
+    await wait(SYNC_AND_EVICT_WAIT_MS);
 
-      expect(isSyncRunning()).toBe(false);
-    }
-  );
+    expect(isSyncRunning()).toBe(false);
+  });
 
-  intervalTest(
-    'runs after an animated write and stops once the value is synced',
-    async () => {
-      await render(<ResizableBox />);
-      const box = getTestComponent(BOX_REF);
-      await wait(SYNC_AND_EVICT_WAIT_MS);
-      expect(isSyncRunning()).toBe(false);
+  test('runs after an animated write and stops once the value is synced', async () => {
+    await render(<ResizableBox />);
+    const box = getTestComponent(BOX_REF);
+    await wait(SYNC_AND_EVICT_WAIT_MS);
+    expect(isSyncRunning()).toBe(false);
 
-      widthValue!.value = UPDATED_WIDTH;
-      await expectEventually(() => box.getAnimatedStyle('width')).toBe(
-        UPDATED_WIDTH,
-        ComparisonMode.PIXEL
-      );
+    widthValue!.value = UPDATED_WIDTH;
+    await expectEventually(() => box.getAnimatedStyle('width')).toBe(
+      UPDATED_WIDTH,
+      ComparisonMode.PIXEL
+    );
 
-      await expectEventually(() => isSyncRunning()).toBe(true);
-      await wait(SYNC_AND_EVICT_WAIT_MS);
-      expect(isSyncRunning()).toBe(false);
-    }
-  );
+    await expectEventually(() => isSyncRunning()).toBe(true);
+    await wait(SYNC_AND_EVICT_WAIT_MS);
+    expect(isSyncRunning()).toBe(false);
+  });
 
-  intervalTest('runs again for a later write to the same view', async () => {
+  test('runs again for a later write to the same view', async () => {
     await render(<ResizableBox />);
     const box = getTestComponent(BOX_REF);
     await wait(SYNC_AND_EVICT_WAIT_MS);

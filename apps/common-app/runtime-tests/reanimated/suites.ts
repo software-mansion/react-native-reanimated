@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
+import { getStaticFeatureFlag } from 'react-native-reanimated';
 import { isBundleModeEnabled } from 'react-native-worklets';
 
 import type { RuntimeTestSuite } from '../types';
 
 type Describe = (name: string, buildSuite: () => void) => void;
+
+const SETTLED_PROPS_SYNC_ENABLED =
+  getStaticFeatureFlag('FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS') &&
+  !getStaticFeatureFlag('USE_ANIMATION_BACKEND');
 
 const SUITES: RuntimeTestSuite[] = [
   {
@@ -98,8 +103,10 @@ const SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'props',
     importTest: () => {
       require('./tests/props/backgroundImage.test');
-      require('./tests/props/syncBackToReact.test');
-      require('./tests/props/settledPropsSyncInterval.test');
+      if (SETTLED_PROPS_SYNC_ENABLED) {
+        require('./tests/props/syncBackToReact.test');
+        require('./tests/props/settledPropsSyncInterval.test');
+      }
       require('./tests/props/boxShadow.test');
       require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');
