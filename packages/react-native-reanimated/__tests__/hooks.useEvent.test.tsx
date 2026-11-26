@@ -59,26 +59,6 @@ beforeEach(() => {
 });
 
 describe('useEvent', () => {
-  function EventView({
-    label,
-    rebuild,
-    eventNames = ['onScroll'],
-  }: {
-    label: string;
-    rebuild: boolean;
-    eventNames?: string[];
-  }) {
-    const handler = useEvent(
-      () => {
-        'worklet';
-        received.push(label);
-      },
-      eventNames,
-      rebuild
-    );
-    return <Animated.ScrollView onScroll={handler} />;
-  }
-
   const received: string[] = [];
 
   beforeEach(() => {
@@ -161,6 +141,26 @@ describe('useEvent', () => {
     expect(received).toEqual(['first']);
   });
 
+  function EventView({
+    label,
+    rebuild,
+    eventNames = ['onScroll'],
+  }: {
+    label: string;
+    rebuild: boolean;
+    eventNames?: string[];
+  }) {
+    const handler = useEvent(
+      () => {
+        'worklet';
+        received.push(label);
+      },
+      eventNames,
+      rebuild
+    );
+    return <Animated.ScrollView onScroll={handler} />;
+  }
+
   function DiscardableEventView({ label }: { label: string }) {
     return (
       <Suspense fallback={null}>
@@ -179,13 +179,6 @@ describe('useEvent', () => {
 });
 
 describe('useAnimatedScrollHandler', () => {
-  function ScrollHandlerView({ offset }: { offset: SharedValue<number> }) {
-    const handler = useAnimatedScrollHandler((event) => {
-      offset.value = event.contentOffset.y;
-    });
-    return <Animated.ScrollView onScroll={handler} />;
-  }
-
   test('does not register again when the closure does not change', () => {
     const offset = makeMutable(0);
     const { rerender } = render(<ScrollHandlerView offset={offset} />);
@@ -209,17 +202,16 @@ describe('useAnimatedScrollHandler', () => {
     expect(first.value).toBe(0);
     expect(second.value).toBe(42);
   });
+
+  function ScrollHandlerView({ offset }: { offset: SharedValue<number> }) {
+    const handler = useAnimatedScrollHandler((event) => {
+      offset.value = event.contentOffset.y;
+    });
+    return <Animated.ScrollView onScroll={handler} />;
+  }
 });
 
 describe('useComposedEventHandler', () => {
-  function ComposedView({ offset }: { offset: SharedValue<number> }) {
-    const scrollHandler = useAnimatedScrollHandler((event) => {
-      offset.value = event.contentOffset.y;
-    });
-    const composedHandler = useComposedEventHandler([scrollHandler]);
-    return <Animated.ScrollView onScroll={composedHandler} />;
-  }
-
   test('registers a composed handler that calls the rebuilt handler', () => {
     const first = makeMutable(0);
     const second = makeMutable(0);
@@ -231,21 +223,17 @@ describe('useComposedEventHandler', () => {
     expect(first.value).toBe(0);
     expect(second.value).toBe(42);
   });
+
+  function ComposedView({ offset }: { offset: SharedValue<number> }) {
+    const scrollHandler = useAnimatedScrollHandler((event) => {
+      offset.value = event.contentOffset.y;
+    });
+    const composedHandler = useComposedEventHandler([scrollHandler]);
+    return <Animated.ScrollView onScroll={composedHandler} />;
+  }
 });
 
 describe('useScrollOffset', () => {
-  function ScrollOffsetView({
-    providedOffset,
-    onOffset,
-  }: {
-    providedOffset?: SharedValue<number>;
-    onOffset: (offset: SharedValue<number>) => void;
-  }) {
-    const animatedRef = useAnimatedRef<ScrollView>();
-    onOffset(useScrollOffset(animatedRef, providedOffset));
-    return <Animated.ScrollView ref={animatedRef} />;
-  }
-
   test('writes the scroll offset to the provided shared value and returns it', () => {
     const provided = makeMutable(0);
     let returned: SharedValue<number> | undefined;
@@ -263,6 +251,18 @@ describe('useScrollOffset', () => {
     expect(returned).toBe(provided);
     expect(provided.value).toBe(42);
   });
+
+  function ScrollOffsetView({
+    providedOffset,
+    onOffset,
+  }: {
+    providedOffset?: SharedValue<number>;
+    onOffset: (offset: SharedValue<number>) => void;
+  }) {
+    const animatedRef = useAnimatedRef<ScrollView>();
+    onOffset(useScrollOffset(animatedRef, providedOffset));
+    return <Animated.ScrollView ref={animatedRef} />;
+  }
 });
 
 function activeEventNames() {
