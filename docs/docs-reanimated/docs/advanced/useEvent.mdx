@@ -74,8 +74,9 @@ Array of event names that will be handled by the handler.
 #### `rebuild` <Optional/>
 
 Value indicating whether the handler should be rebuilt.
-When it is `true` in a render that React commits, the hook returns a new handler. Pass this new handler to each component that must use the new worklet.
-Use `doDependenciesDiffer` from [`useHandler`](./useHandler.mdx) as this value. It compares only the worklets that you pass to `useHandler`, so `handler` must not capture other values that change. A value that you compute differently can miss a rebuild, for example when React commits the render inside a hidden `Activity`.
+Use `doDependenciesDiffer` from [`useHandler`](./useHandler.mdx) as this value, because a value that you compute differently can miss a rebuild, for example inside a hidden `Activity`.
+`doDependenciesDiffer` follows only the worklets that you pass to `useHandler` (on the web without the Babel plugin, only its `dependencies`), so `handler` must not capture other values that change.
+When this value is `true` in a render that React commits, the hook returns a new handler that you must pass to each component that uses the new worklet.
 
 ### Returns
 
