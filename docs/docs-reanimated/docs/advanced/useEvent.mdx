@@ -75,7 +75,7 @@ Array of event names that will be handled by the handler.
 
 Value indicating whether the handler should be rebuilt.
 When it is `true` in a render that React commits, the hook returns a new handler. Pass this new handler to each component that must use the new worklet.
-Use `doDependenciesDiffer` from [`useHandler`](./useHandler.mdx) as this value. A value that you compute in a different way can miss a rebuild, for example when React commits the render inside a hidden `Activity`.
+Use `doDependenciesDiffer` from [`useHandler`](./useHandler.mdx) as this value. It compares only the worklets that you pass to `useHandler`, so `handler` must not capture other values that change. A value that you compute differently can miss a rebuild, for example when React commits the render inside a hidden `Activity`.
 
 ### Returns
 
