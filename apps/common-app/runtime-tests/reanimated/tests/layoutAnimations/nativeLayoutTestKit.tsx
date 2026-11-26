@@ -284,12 +284,7 @@ export const FIRST_FRAMES_MS = 3 * FRAME_MS;
  */
 export const APPLE_PRESENTATION_STAY_MS = 18;
 
-/** Android: each read has its frame in the frame clock of the view sampler. */
-export const HAS_FRAME_CLOCK = !IS_APPLE;
-
-if (HAS_FRAME_CLOCK) {
-  startFrameClock();
-}
+startFrameClock();
 
 let clockFrames: ClockFrame[] = [];
 
@@ -302,10 +297,10 @@ function clockFramesFor(isEnough: (frames: ClockFrame[]) => boolean) {
 }
 
 /**
- * Android: the frame of the frame clock that a read at a time of the sample
- * clock shows, the last frame that ran before the read. A read runs between two
- * frames on the UI thread (`NativeAnimationHost::sampleTarget`), and an
- * animator shows the value of the animation clock of its last frame.
+ * The frame of the frame clock that a read at a time of the sample clock shows,
+ * the last frame that ran before the read. A read runs between two frames on
+ * the UI thread (`NativeAnimationHost::sampleTarget`). Android: an animator
+ * shows the value of the animation clock of its last frame.
  */
 export function shownFrameAt(readTimeMs: number): ClockFrame {
   const frames = clockFramesFor((all) =>
@@ -340,10 +335,11 @@ export function shownBandAt(readTimeMs: number): Band {
 
 /**
  * The frame time of the frame callbacks of the frame that a read shows, on the
- * sample clock: the clock of the frame driver. Apple: the time of the read.
+ * sample clock: the clock of the frame driver. On an iPhone it is the time of
+ * the next display refresh, about one frame after the run of the frame.
  */
 export const shownFrameTimeAt = (readTimeMs: number) =>
-  IS_APPLE ? readTimeMs : shownFrameAt(readTimeMs).frameTimeMs;
+  shownFrameAt(readTimeMs).frameTimeMs;
 
 /**
  * Android: the frames of the frame clock that a frame driver record did not
@@ -1012,7 +1008,7 @@ export function readAfterGapOf(
     gapMs,
     before: before.presentation,
     isHeld:
-      !HAS_FRAME_CLOCK &&
+      IS_APPLE &&
       presentation.every((value, cell) => value === before.presentation[cell]),
   };
 }
@@ -3663,6 +3659,26 @@ export type FrameRecord = {
 };
 
 export type OperationFrameRecord = FrameRecord & { operation: number };
+
+/**
+ * Apple: the time from the run of the last frame of the frame driver records of
+ * a box to its target frame time: about one display frame on an iPhone. 0 with
+ * no frame, and on Android, where the frame time is not a target time.
+ */
+export function endFrameLeadOf(records: FrameRecord[], box: string) {
+  if (!IS_APPLE) {
+    return 0;
+  }
+  const frames = records
+    .filter((record) => record.box === box)
+    .flatMap((record) => record.frames);
+  const last = frames.reduce<(typeof frames)[number] | undefined>(
+    (latest, frame) =>
+      latest === undefined || frame.ranMs > latest.ranMs ? frame : latest,
+    undefined
+  );
+  return last ? last.timeMs - last.ranMs : 0;
+}
 
 export const isOperationRecord = (
   record: FrameRecord

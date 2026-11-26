@@ -1,7 +1,10 @@
 import type { TurboModule } from 'react-native';
-import { TurboModuleRegistry } from 'react-native';
+import { Platform, TurboModuleRegistry } from 'react-native';
 import { makeMutable } from 'react-native-reanimated';
 import { runOnUISync, scheduleOnUI } from 'react-native-worklets';
+
+const UI_FRAME_CLOCK_ROWS = '__runtimeTestsFrameClockRows';
+const FRAME_CLOCK_ROWS = 1800;
 
 /**
  * The drawn values of view properties, read from the view at each draw of the
@@ -106,7 +109,9 @@ const MODULE_NAME = 'RuntimeTestsViewSampler';
  * A frame of the UI thread, each time in ms of the monotonic clock of the
  * samples: the frame time that a frame callback gets, the animation clock of
  * the animators, and the run of the frame callback of the sampler. The two
- * clocks differ in the buffer stuffing recovery of Android 16.
+ * clocks differ in the buffer stuffing recovery of Android 16. iOS: the frame
+ * time is the time of the display refresh of the frame, and the animation clock
+ * is the frame time.
  */
 export type ClockFrame = {
   frameTimeMs: number;
@@ -114,13 +119,23 @@ export type ClockFrame = {
   ranMs: number;
 };
 
-/** Starts the frame clock of the sampler. It runs until the app ends. */
+/**
+ * Starts the frame clock: of the sampler on Android, of the frames of the UI
+ * runtime on iOS. It runs until the app ends.
+ */
 export function startFrameClock() {
+  if (Platform.OS === 'ios') {
+    scheduleOnUI(startUIFrameClock);
+    return;
+  }
   getEnforcedSamplerModule().startFrameClock();
 }
 
 /** The frames of the frame clock, the oldest first. */
 export function readFrameClock(): ClockFrame[] {
+  if (Platform.OS === 'ios') {
+    return runOnUISync(uiFrameClockRows);
+  }
   return getEnforcedSamplerModule()
     .frameClockRows()
     .map(([frameTimeMs, animationTimeMs, ranMs]) => ({
@@ -128,6 +143,36 @@ export function readFrameClock(): ClockFrame[] {
       animationTimeMs,
       ranMs,
     }));
+}
+
+/**
+ * A frame of the UI runtime on iOS gets the time of its display refresh on the
+ * animation clock. The row puts it on the sample clock from the run of the
+ * frame.
+ */
+function startUIFrameClock() {
+  'worklet';
+  const rows: ClockFrame[] = [];
+  (globalThis as Record<string, unknown>)[UI_FRAME_CLOCK_ROWS] = rows;
+  const onFrame = (timestampMs: number) => {
+    const ranMs = performance.now();
+    const frameTimeMs = ranMs + timestampMs - global._getAnimationTimestamp();
+    rows.push({ frameTimeMs, animationTimeMs: frameTimeMs, ranMs });
+    if (rows.length > FRAME_CLOCK_ROWS) {
+      rows.shift();
+    }
+    requestAnimationFrame(onFrame);
+  };
+  requestAnimationFrame(onFrame);
+}
+
+function uiFrameClockRows(): ClockFrame[] {
+  'worklet';
+  return [
+    ...((globalThis as Record<string, unknown>)[
+      UI_FRAME_CLOCK_ROWS
+    ] as ClockFrame[]),
+  ];
 }
 
 export function isViewSamplerAvailable(): boolean {

@@ -61,12 +61,14 @@
  * shows the model value plus the offset of the track is on neither and fails. The row prints the two
  * results apart.
  *
- * The end callback of the native box comes from n + 1 display frames before the callback of a twin of n
- * phases to two display frames after it, on the UI runtime and on the React Native runtime: the sum of the
- * bound of an end report and of the start rule of the twin. A track that plays to its end reports the end
- * from one display frame before to two after its declared end. The first row of a replacement comes in its
- * first three display frames. The frame driver has frames before the end report of a track that it took,
- * measured 0.833 to 3.216 ms before it, and its next frame comes two display frames or less after the end
+ * The end callback of the native box comes from n + 1 display frames before the callback of a twin of n phases
+ * to two display frames after it, on the UI runtime and on the React Native runtime: the sum of the bound of
+ * an end report and of the start rule of the twin. On Apple, when the native box ends natively, both are later
+ * by the time from the run of the last frame of the twin to its target frame time (one display frame on an
+ * iPhone: the twin callback runs before its end shows). A track that plays to its end reports the end from one
+ * display frame before to two after its declared end. The first row of a replacement comes in its first three
+ * display frames. The frame driver has frames before the end report of a track that it took, measured 0.833 to
+ * 3.216 ms before it, and its next frame comes (on Apple: runs) two display frames or less after the end
  * report, measured 8.806 to 11.108 ms in 5 of 5 rows with no load.
  *
  * This suite does not assert that the native box and a twin of several phases end in one display frame: a
@@ -74,9 +76,9 @@
  * phase start is a printed row.
  *
  * The twin has a frame in each display frame: on Android it gets each frame of the frame clock of the sampler
- * that runs 2 ms or more after its start, on Apple no frame comes more than one display frame and a half
- * after the frame before it. This statement and the pair statement assert on each row in each condition: no row
- * is skipped.
+ * that runs 2 ms or more after its start, on Apple no frame comes more than one display frame and a half after
+ * the step before it (`stepGapOf`). This statement and the pair statement assert on each row in each
+ * condition: no row is skipped.
  *
  * The rows cover the timelines: each phase of 100 ms or more of each track that plays to the end of the
  * phase has a row of the native box. A suite that checks each row that it has at the time of the row, and
@@ -117,6 +119,7 @@ import type {
   ReferenceCase,
 } from './nativeLayoutReferencePlay';
 import {
+  endsNativelyIn,
   expectNativeTimelineOf,
   expectReference,
   handOversOf,
@@ -160,9 +163,9 @@ import {
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   endedFromMsOf,
+  endFrameLeadOf,
   FRAME_MS,
   framesMissedBy,
-  HAS_FRAME_CLOCK,
   has3D,
   hasNativeLayoutRoute,
   isSameLeaf,
@@ -393,9 +396,16 @@ describe('native layout live clock', () => {
       const twinPhases = Math.max(
         ...twinChecks.map(({ timeline }) => timeline.phases.length)
       );
+      const twinEndLeadMs =
+        Platform.OS === 'ios' && endsNativelyIn(caseName, platformCase, played)
+          ? endFrameLeadOf(played.frameRecords, 'frame')
+          : 0;
+      console.log(
+        `LIVE | ${caseName} | lead of the twin end applied to the callback bound, ms | ${twinEndLeadMs.toFixed(3)}`
+      );
       const callbackGap = {
-        from: -(twinPhases + 1) * FRAME_MS,
-        to: 2 * FRAME_MS,
+        from: -(twinPhases + 1) * FRAME_MS + twinEndLeadMs,
+        to: 2 * FRAME_MS + twinEndLeadMs,
       };
       expectIn(
         'native end callback after the callback of the twin on the UI runtime, ms',
@@ -410,14 +420,13 @@ describe('native layout live clock', () => {
       for (const check of twinChecks) {
         const { record, timeline } = check;
         const leaf = describeLeaf(record);
-        const frameTimes = record.frames.map(({ timeMs }) => timeMs);
         const largestFrameGapMs = Math.max(
-          ...frameTimes
+          ...record.frames
             .slice(1)
-            .map((timeMs, frame) => timeMs - frameTimes[frame])
+            .map((step, index) => stepGapOf(record.frames[index], step))
         );
         const largestGapRow = `largest time from a frame of ${leaf} of the twin to the next, ms`;
-        if (HAS_FRAME_CLOCK) {
+        if (Platform.OS === 'android') {
           console.log(
             `LIVE | ${caseName} | ${largestGapRow} | ${largestFrameGapMs.toFixed(3)}`
           );
@@ -468,7 +477,12 @@ describe('native layout live clock', () => {
                 record.box === 'native' && isSameLeaf(record, track)
             )
             .flatMap(({ record }) => record.frames)
-            .map(({ timeMs }) => timeMs + clock - track.played.to);
+            .map(
+              ({ timeMs, ranMs }) =>
+                (Platform.OS === 'ios' ? ranMs : timeMs) +
+                clock -
+                track.played.to
+            );
           console.log(
             `LIVE | ${caseName} | frames of the frame driver for ${leaf} at or before the end report of its track, ms after it | ${frames
               .filter((afterMs) => afterMs <= 0)
@@ -554,6 +568,24 @@ const startsWithNoDuration = ({ phases: [first] }: Timeline) =>
 
 const lagAfterStartCallOf = ({ frames: [, next] }: FrameRecord) =>
   next ? Math.max(0, next.ranMs - next.timeMs) : 0;
+
+/**
+ * Apple: a gap to or from a step with no frame time after its run is by run
+ * time. Such a step is a call out of a frame (a start, a replacement), or a
+ * frame that ran after its target time.
+ */
+const stepGapOf = (
+  before: FrameRecord['frames'][number],
+  after: FrameRecord['frames'][number]
+) =>
+  Platform.OS === 'ios' && [before, after].some(ranAtOrAfterItsTime)
+    ? after.ranMs - before.ranMs
+    : after.timeMs - before.timeMs;
+
+const ranAtOrAfterItsTime = ({
+  timeMs,
+  ranMs,
+}: FrameRecord['frames'][number]) => ranMs >= timeMs;
 
 const isIn = ({ from, to }: Band, timeMs: number) =>
   timeMs >= from && timeMs <= to;

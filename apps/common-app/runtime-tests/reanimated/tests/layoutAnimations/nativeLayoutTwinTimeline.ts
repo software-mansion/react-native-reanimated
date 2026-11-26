@@ -32,7 +32,6 @@ import {
   FRAME_BOX_REF,
   FRAME_MS,
   frameTimesOf,
-  HAS_FRAME_CLOCK,
   isOperationRecord,
   laidOutValuesOf,
   layerPositionOf,
@@ -89,7 +88,7 @@ export function twinShiftAt(
   key: string,
   readTimeMs: number
 ): number {
-  if (!HAS_FRAME_CLOCK) {
+  if (Platform.OS === 'ios') {
     return 0;
   }
   const knots = twinTimelineOf(records, box, key).filter(

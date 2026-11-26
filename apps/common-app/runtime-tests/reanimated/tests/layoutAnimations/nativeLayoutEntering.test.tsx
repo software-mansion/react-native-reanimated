@@ -1938,7 +1938,7 @@ describe('native layout entering and a clip of its view', () => {
       .filter(({ value }) => value !== SMALL && value !== 1);
   const TWO_FRAMES_OF_SCALE =
     0.01 + (2 * FRAME_MS * (1 - SMALL)) / (SHORT_PART * ENTER_DURATION);
-  // The frame driver gives its first frame in a display frame after the platform reports the removal.
+  // The first moving frame of the frame driver runs from one display frame before to two after the removal report.
   const HAND_OVER_FRAMES = 2;
   // The start that a frame gives has the rounding of its progress.
   const SAME_START_MS = 0.01;
@@ -1979,8 +1979,8 @@ describe('native layout entering and a clip of its view', () => {
           ? ''
           : `frames of the frame driver for scaleY of the native box between ${SMALL} and 1: ${moving.length}, not more than 0`
       ).toBe('');
-      const firstTime = moving[0].timeMs;
-      const firstFrameRow = `first-frame window: the first frame of the frame driver for scaleY is at ${firstTime.toFixed(3)} ms, ${(firstTime - removedAt).toFixed(3)} ms after the removal report at ${removedAt.toFixed(3)} ms, window from ${(-FRAME_MS).toFixed(3)} ms to ${(HAND_OVER_FRAMES * FRAME_MS).toFixed(3)} ms`;
+      const firstTime = moving[0].ranMs;
+      const firstFrameRow = `first-frame window: the first frame of the frame driver for scaleY runs at ${firstTime.toFixed(3)} ms, ${(firstTime - removedAt).toFixed(3)} ms after the removal report at ${removedAt.toFixed(3)} ms, window from ${(-FRAME_MS).toFixed(3)} ms to ${(HAND_OVER_FRAMES * FRAME_MS).toFixed(3)} ms`;
       expect(firstTime > removedAt - FRAME_MS ? '' : firstFrameRow).toBe('');
       expect(
         firstTime < removedAt + HAND_OVER_FRAMES * FRAME_MS ? '' : firstFrameRow

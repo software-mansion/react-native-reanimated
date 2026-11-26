@@ -16,7 +16,7 @@
  * with the twin or with the declared level at planned times, with their own scene.
  */
 import React, { useEffect } from 'react';
-import { PixelRatio, StyleSheet, View } from 'react-native';
+import { PixelRatio, Platform, StyleSheet, View } from 'react-native';
 import type { LayoutAnimation } from 'react-native-reanimated';
 import Animated, {
   Easing,
@@ -70,7 +70,6 @@ import {
   declaredValueAt,
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
-  HAS_FRAME_CLOCK,
   FRAME_MS,
   frameDrivenOf,
   frameDriverFrameTime,
@@ -859,8 +858,8 @@ function completionOf({
   const twinFrames = frameChecks
     .filter(({ record }) => record.box === 'frame')
     .flatMap(({ record }) => record.frames);
-  const twinEndRanMs =
-    Math.max(...twinFrames.map(({ ranMs }) => ranMs)) +
+  const twinEndShownMs =
+    Math.max(...twinFrames.map(({ timeMs }) => timeMs)) +
     middleOf(clockOffset) -
     originMs;
   // The frame clock gets the frame times of the frame driver, with no clock conversion.
@@ -875,9 +874,11 @@ function completionOf({
     nativeCallbackFrameMs:
       shownFrameTimeAt(callbackTimeOf('native').ranMs) - originMs,
     twinCallback: emitted.frame + middleOf(clockOffset) - originMs,
-    twinEnd: emitted.frame - (twinStartMs ?? NaN),
+    twinEnd:
+      Math.max(...twinFrames.map(({ timeMs }) => timeMs)) -
+      (twinStartMs ?? NaN),
     clockWidth: clockOffset.to - clockOffset.from,
-    twinEndRanMs,
+    twinEndShownMs,
     twinEndFrameMs,
   };
 }
@@ -899,10 +900,10 @@ function logCompletion(
       `declared ${totalMs} ms`,
       `track ends ${describeTimes(completion.trackEnds)}`,
       `frames of the track ends ${describeTimes(completion.trackEndFrames)}`,
-      `native callback after the frame ${completion.nativeCallbackFrameMs.toFixed(1)}, end frame of the twin ${completion.twinEndFrameMs.toFixed(1)}`,
+      `native callback after the frame ${completion.nativeCallbackFrameMs.toFixed(1)}, end frame of the twin ${(Platform.OS === 'android' ? completion.twinEndFrameMs : completion.twinEndShownMs).toFixed(1)}`,
       `host end ${describeTimes(completion.hostEnds)}`,
       `native callback ${completion.nativeCallback.toFixed(1)}`,
-      `callback of the twin ${completion.twinCallback.toFixed(1)}, ${completion.twinEnd.toFixed(1)} ms after its start`,
+      `callback of the twin ${completion.twinCallback.toFixed(1)}, its last frame ${completion.twinEnd.toFixed(1)} ms after its start`,
       `width of the clock conversion ${completion.clockWidth.toFixed(2)} ms`,
       `events ${summarize(events.filter(isHostEvent))}`,
     ].join(' | ')
@@ -917,18 +918,18 @@ const isAfterTracks = ({ nativeCallback, trackEnds, clockWidth }: Completion) =>
 /**
  * The native callback comes in the frame of the end of the twin. Android: the
  * last frame that ran before the callback is not after the last frame of the
- * twin. Apple: before one display frame after the run of the last frame
- * function of the twin.
+ * twin. Apple: before one display frame after the frame time of the last frame
+ * of the twin, when its end shows.
  */
 const isInEndFrameOfTwin = ({
   nativeCallback,
   nativeCallbackFrameMs,
-  twinEndRanMs,
+  twinEndShownMs,
   twinEndFrameMs,
 }: Completion) =>
-  HAS_FRAME_CLOCK
+  Platform.OS === 'android'
     ? nativeCallbackFrameMs <= twinEndFrameMs
-    : nativeCallback < twinEndRanMs + FRAME_MS;
+    : nativeCallback < twinEndShownMs + FRAME_MS;
 
 const sortedBuilderCalls = () => [...namedBuilderCalls].sort().join();
 

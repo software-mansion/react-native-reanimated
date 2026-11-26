@@ -1434,6 +1434,17 @@ const valueRowOf = (
   result,
 });
 
+function endsNatively(stages: Stage[]) {
+  const last = lastOf(stages)!;
+  return last.route === 'native command' && last.playedMs.native !== undefined;
+}
+
+export const endsNativelyIn = (
+  caseName: string,
+  declaredCase: ReferenceCase,
+  played: Played
+) => endsNatively(stagesOf(caseName, routedCaseOf(declaredCase), played));
+
 /**
  * The duration of each stage on the two boxes, and the emission time of the
  * last callback of each box on the animation clock, against one display frame.
