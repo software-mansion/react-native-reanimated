@@ -1,13 +1,16 @@
 package com.swmansion.reanimated
 
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.View
 import android.view.ViewTreeObserver
+import android.view.inspector.WindowInspector
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
+import java.util.Collections
+import java.util.WeakHashMap
 
-/** Observes the draw passes of the window of the current Activity. */
 internal class DrawPassObserver(
     private val mContext: ReactApplicationContext,
     private val mOnBeforeDrawPass: () -> Unit,
@@ -16,6 +19,7 @@ internal class DrawPassObserver(
     private val mClearRunnable = Runnable { mIsInDrawPass = false }
     private var mIsInDrawPass = false
     private var mDecorView: View? = null
+    private val mPreDrawObservers: MutableSet<ViewTreeObserver> = Collections.newSetFromMap(WeakHashMap())
 
     private val mOnPreDrawListener =
         ViewTreeObserver.OnPreDrawListener {
@@ -37,26 +41,28 @@ internal class DrawPassObserver(
         val activity = mContext.currentActivity ?: return
 
         val decorView = activity.window.decorView
-        if (decorView === mDecorView) {
+        if (decorView === mDecorView || !decorView.isAttachedToWindow) {
             return
         }
 
         stopObservingDecorView()
 
         val observer = decorView.viewTreeObserver
-        if (!observer.isAlive) {
-            return
-        }
-
         mDecorView = decorView
-        observer.addOnPreDrawListener(mOnPreDrawListener)
         observer.addOnDrawListener(mOnDrawListener)
+        observePreDraw(observer)
     }
 
     fun isInDrawPass(): Boolean = mIsInDrawPass
 
     fun requestDrawPass() {
-        mDecorView?.invalidate()
+        // A dialog has its own window, and so its own pre-draw callback.
+        for (rootView in windowRootViews()) {
+            if (rootView.windowVisibility == View.VISIBLE) {
+                observePreDraw(rootView.viewTreeObserver)
+                rootView.invalidate()
+            }
+        }
     }
 
     fun invalidate() {
@@ -67,8 +73,27 @@ internal class DrawPassObserver(
         }
     }
 
+    private fun observePreDraw(observer: ViewTreeObserver) {
+        if (mPreDrawObservers.add(observer)) {
+            observer.addOnPreDrawListener(mOnPreDrawListener)
+        }
+    }
+
+    private fun windowRootViews(): List<View> =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WindowInspector.getGlobalWindowViews()
+        } else {
+            listOfNotNull(mDecorView)
+        }
+
     private fun invalidateOnUiThread() {
         stopObservingDecorView()
+        for (observer in mPreDrawObservers) {
+            if (observer.isAlive) {
+                observer.removeOnPreDrawListener(mOnPreDrawListener)
+            }
+        }
+        mPreDrawObservers.clear()
         mHandler.removeCallbacks(mClearRunnable)
         mIsInDrawPass = false
     }
@@ -77,7 +102,6 @@ internal class DrawPassObserver(
         mDecorView?.let { view ->
             val observer = view.viewTreeObserver
             if (observer.isAlive) {
-                observer.removeOnPreDrawListener(mOnPreDrawListener)
                 observer.removeOnDrawListener(mOnDrawListener)
             }
             mDecorView = null

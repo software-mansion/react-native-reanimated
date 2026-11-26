@@ -112,7 +112,6 @@ class NodesManager(
 
     internal fun performOperationsRespectingDrawPass() {
         if (mIsInsideEventDispatch) {
-            // onEventDispatch flushes after the handlers.
             return
         }
 
@@ -127,7 +126,7 @@ class NodesManager(
 
     private fun performNonLayoutOperationsAndDeferTheRest() {
         UiThreadUtil.assertOnUiThread()
-        if (mNativeProxy?.performNonLayoutOperations() == true) {
+        if (mNativeProxy?.performNonLayoutOperations() == true && !mHasDeferredLayoutOperations) {
             mHasDeferredLayoutOperations = true
             mDrawPassObserver.requestDrawPass()
             startUpdatingOnAnimationFrame()

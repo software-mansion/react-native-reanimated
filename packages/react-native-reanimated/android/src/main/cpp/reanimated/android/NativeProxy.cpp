@@ -133,7 +133,7 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
 
 void NativeProxy::performOperations(jboolean hasDeferredLayoutOperations) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // The backend flushes in its own loop. Only the updates that an event deferred need this call.
+    // The backend flushes in its own loop.
     if (hasDeferredLayoutOperations) {
       reanimatedModuleProxy_->flushDeferredEventUpdates();
     }

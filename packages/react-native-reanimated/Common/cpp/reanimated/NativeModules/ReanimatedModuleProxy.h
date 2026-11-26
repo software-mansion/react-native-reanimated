@@ -53,11 +53,9 @@ enum class GrandCallbackSource : std::uint8_t {
   // Used when a new vsync signal is triggered
   AnimationLoop,
 
-  // Used when handling an event that can update the layout at once
   Event,
 
-  // Used when handling an event inside an Android UI-thread dispatch, where a mount can break
-  // the view tree walk of the sender
+  // The sender can still walk the view tree.
   EventInAndroidDispatch,
 };
 

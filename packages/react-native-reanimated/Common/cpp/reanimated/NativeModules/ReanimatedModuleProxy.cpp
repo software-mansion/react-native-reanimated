@@ -967,9 +967,9 @@ bool ReanimatedModuleProxy::performNonLayoutOperations() {
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
-  auto [synchronousUpdatesBatch, shadowTreeUpdatesBatch] = partitionUpdates(std::move(updatesBatch), true);
-  applySynchronousUpdates(std::move(synchronousUpdatesBatch));
-  return !shadowTreeUpdatesBatch.empty();
+  const bool hasPendingUpdates = !updatesBatch.empty();
+  applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
+  return hasPendingUpdates;
 }
 
 void ReanimatedModuleProxy::flushDeferredEventUpdates() {

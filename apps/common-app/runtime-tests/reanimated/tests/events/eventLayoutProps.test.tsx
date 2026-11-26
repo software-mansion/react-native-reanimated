@@ -81,10 +81,6 @@ function sendScroll(offset: number) {
   });
 }
 
-/**
- * The native scroll view ignores a scroll command that arrives before it
- * mounts.
- */
 async function waitForScrollHandlerReady() {
   for (let attempt = 1; attempt <= READY_ATTEMPTS; attempt++) {
     const countBefore = await getSharedValue<number>(CALL_COUNT);
