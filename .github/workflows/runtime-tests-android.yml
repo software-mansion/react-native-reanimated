@@ -16,6 +16,10 @@ on:
         required: false
         type: boolean
         default: false
+      synchronousUIProps:
+        required: false
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -30,6 +34,10 @@ on:
         required: false
         type: boolean
         default: false
+      synchronousUIProps:
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -37,7 +45,7 @@ permissions:
 jobs:
   runtime-tests-android:
     if: github.repository == 'software-mansion/react-native-reanimated'
-    name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
+    name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}${{ !inputs.synchronousUIProps && ', synchronous UI props off' || '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     strategy:
@@ -49,7 +57,7 @@ jobs:
       REANIMATED_DIR: packages/react-native-reanimated
       CONFIGURATION: ${{ inputs.configuration || 'Debug' }}
     concurrency:
-      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}
+      group: runtime-tests-android-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ inputs.configuration || 'Debug' }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
       cancel-in-progress: true
     steps:
       - name: Check out Git repository
@@ -94,6 +102,13 @@ jobs:
       - name: Toggle Bundle Mode off (Legacy Eval)
         if: ${{ !matrix.bundleMode }}
         run: yarn toggle-bundle-mode
+
+      - name: Turn off synchronous UI prop updates
+        if: ${{ !inputs.synchronousUIProps }}
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          jq '.reanimated.staticFeatureFlags += {ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS: false, IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS: false}' package.json > package.json.new
+          mv package.json.new package.json
 
       - name: Build Reanimated package
         working-directory: ${{ env.REANIMATED_DIR }}
@@ -159,7 +174,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: android-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: android-crash-reports-${{ inputs.configuration || 'Debug' }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}${{ !inputs.synchronousUIProps && '-sync-ui-props-off' || '' }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14
