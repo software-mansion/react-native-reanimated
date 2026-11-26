@@ -1,0 +1,1622 @@
+---
+id: sending-native-data-to-the-ui-runtime
+sidebar_label: Sending native data to the UI Runtime
+---
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
+# Sending native data to the UI Runtime
+
+This guide is for library authors. It shows how a native library can send its data, for example sensor readings or a playback position, directly to the [UI Runtime](../concepts/runtimeKinds.mdx#ui-runtime).
+
+An ordinary native module sends events to the [RN Runtime](../concepts/runtimeKinds.mdx#rn-runtime). When the JavaScript thread is busy, the events wait, and animations that use the data stop at the last value. When the library calls a [worklet function](../tutorials/0-concurrency-model.mdx#worklet-functions) on the UI Runtime instead, the worklet function can write a [Reanimated shared value](https://docs.swmansion.com/react-native-reanimated/docs/fundamentals/glossary#shared-value), and animations that read it continue.
+
+The examples use a sample library named `Reading`. It gets a number from a native source, for example a sensor, and its users want the latest number in a shared value.
+
+## Pick a path
+
+For a working example package for each path, see the [worklets-integration-examples](https://github.com/pawicao/worklets-integration-examples) repository.
+
+| Your data comes from                          | Use                                                       | Example                                                                                                 |
+| --------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **C++ TurboModule** or another JSI binding      | [The C++ stable API of Worklets](#c-turbomodules-and-jsi) | -                               |
+| **Objective-C, Swift, Java or Kotlin TurboModule** | Add a C++ TurboModule for the listener methods, see [the C++ path](#c-turbomodules-and-jsi) | - |
+| **Expo module** (Expo Modules API) | [The Expo `Worklet` type](#expo-modules)                  | [`expo-hinge/reanimated`](https://github.com/expo/expo/pull/51829)                                      |
+| **Nitro Module**                                | [A Nitro callback on the UI Runtime](#nitro-modules)      | -                                                                                                       |
+| **Native view**                                 | [A view event](#view-events)                              | [`react-native-keyboard-controller`](https://github.com/kirillzyusko/react-native-keyboard-controller) |
+
+All paths need `react-native-worklets` in the app, and a shared value needs `react-native-reanimated`. If your library also works without them, see [Optional dependencies](#optional-dependencies).
+
+## C++ TurboModules and JSI
+
+Add two methods to your C++ TurboModule: `addWorkletListener` and `removeWorkletListener`. JavaScript gives a worklet function to `addWorkletListener`. Your C++ code keeps it and runs it on the UI Runtime with each new value.
+
+The C++ code uses `<worklets/Compat/StableApi.h>`. This header is the stable API of Worklets. Do not include other Worklets headers, because they can change in any release. The header also defines `WORKLETS_STABLE_API_VERSION`, so that your library can check that it builds with a compatible version. For a complete package, see [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule).
+
+#### Step 1: Link Worklets
+
+Your C++ code includes a Worklets header, so your native build must depend on Worklets. On iOS, add `RNWorklets` to the dependencies of your podspec. On Android, link the `worklets` library in your `CMakeLists.txt`.
+
+```ruby title="Reading.podspec"
+s.dependency 'RNWorklets'
+```
+
+```cmake title="android/CMakeLists.txt"
+find_package(react-native-worklets REQUIRED CONFIG)
+target_link_libraries(reading react-native-worklets::worklets)
+```
+
+#### Step 2: Add the listener methods to your TurboModule spec
+
+JavaScript needs a way to give a worklet function to your C++ code. Add two methods:
+
+- `addWorkletListener` takes the worklet with the holders of the UI Runtime and of its scheduler, and returns an ID.
+- `removeWorkletListener` takes that ID.
+
+Type the three arguments of `addWorkletListener` as `CodegenTypes.UnsafeObject`:
+
+- Each of them carries native data that only C++ code can read.
+- With `UnsafeObject`, codegen passes them on unchanged, and the C++ method gets the same `jsi::Object` values.
+- An Objective-C or Java TurboModule converts the holders to empty maps, so the methods must be in C++.
+
+```ts title="src/NativeReading.ts"
+import { TurboModuleRegistry, type CodegenTypes, type TurboModule } from 'react-native';
+
+export interface Spec extends TurboModule {
+  addWorkletListener(
+    uiRuntimeHolder: CodegenTypes.UnsafeObject,
+    uiSchedulerHolder: CodegenTypes.UnsafeObject,
+    worklet: CodegenTypes.UnsafeObject
+  ): CodegenTypes.Int32;
+  removeWorkletListener(id: CodegenTypes.Int32): void;
+}
+
+export default TurboModuleRegistry.getEnforcing<Spec>('Reading');
+```
+
+#### Step 3: Add a function that adds a worklet listener
+
+Give your users one function instead of the two native methods. It rejects a function that is not a worklet, and returns an object with `remove()`. [`createSerializable`](../memory/createSerializable.mdx) converts the worklet function into a value that C++ code can keep.
+
+```ts title="src/worklets.ts"
+import {
+  createSerializable,
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
+  isWorkletFunction,
+} from 'react-native-worklets';
+
+import NativeReading from './NativeReading';
+
+export function addReadingWorkletListener(worklet: (value: number) => void): { remove(): void } {
+  if (!isWorkletFunction(worklet)) {
+    throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
+  }
+  const id = NativeReading.addWorkletListener(
+    getUIRuntimeHolder(),
+    getUISchedulerHolder(),
+    createSerializable(worklet)
+  );
+  return { remove: () => NativeReading.removeWorkletListener(id) };
+}
+```
+
+#### Step 4: Keep the listeners
+
+Your native code gets new values at any time. To run the worklets then, it must keep each worklet with its runtime and scheduler. The JavaScript thread adds and removes listeners while your data thread reads them, so protect them with a lock. `snapshot()` copies them, so that the lock is free before the worklets run. Keep only a `std::weak_ptr` to the runtime, because a JavaScript reload destroys it.
+
+```cpp
+#include <worklets/Compat/StableApi.h>
+
+#include <jsi/jsi.h>
+
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
+
+using namespace facebook;
+
+class ReadingListeners {
+ private:
+  struct Listener {
+    std::weak_ptr<worklets::WorkletRuntime> uiRuntime;
+    std::shared_ptr<worklets::UIScheduler> uiScheduler;
+    std::shared_ptr<worklets::Serializable> worklet;
+  };
+
+  std::vector<Listener> snapshot() {
+    std::lock_guard lock(mutex_);
+    std::vector<Listener> listeners;
+    for (const auto &[id, listener] : listeners_) {
+      listeners.push_back(listener);
+    }
+    return listeners;
+  }
+
+  std::mutex mutex_;
+  int lastId_ = 0;
+  std::unordered_map<int, Listener> listeners_;
+};
+```
+
+#### Step 5: Add and remove listeners
+
+`add` takes the runtime, the scheduler and the worklet out of the objects from JavaScript, and keeps them under a new ID. `remove` deletes a listener, so that a component that unmounts stops getting values. Add both methods to the public part of the class.
+
+```cpp
+ public:
+  int add(
+      jsi::Runtime &rnRuntime,
+      const jsi::Object &uiRuntimeHolder,
+      const jsi::Object &uiSchedulerHolder,
+      const jsi::Object &worklet) {
+    Listener listener{
+        worklets::getWorkletRuntimeFromHolder(rnRuntime, uiRuntimeHolder),
+        worklets::getUISchedulerFromHolder(rnRuntime, uiSchedulerHolder),
+        worklets::extractSerializable(
+            rnRuntime,
+            jsi::Value(rnRuntime, worklet),
+            "[MyLibrary] The listener must be a worklet.",
+            worklets::Serializable::ValueType::WorkletType)};
+    std::lock_guard lock(mutex_);
+    listeners_.emplace(++lastId_, std::move(listener));
+    return lastId_;
+  }
+
+  void remove(int id) {
+    std::lock_guard lock(mutex_);
+    listeners_.erase(id);
+  }
+```
+
+#### Step 6: Send each value to the listeners
+
+`dispatch` gives a new value to all listeners. For each listener, it schedules a job that runs the worklet on the UI thread. Add it to the public methods, and call it from any thread. On Android, attach that thread to the JVM first, for example with `facebook::jni::ThreadScope`. Without it, `scheduleOnUI` throws, and the job waits until other work on the UI thread runs it.
+
+```cpp
+  void dispatch(double value) {
+    for (const auto &listener : snapshot()) {
+      worklets::scheduleOnUI(listener.uiScheduler, [listener, value] {
+        if (auto uiRuntime = listener.uiRuntime.lock()) {
+          worklets::runSyncOnRuntime(uiRuntime, listener.worklet, jsi::Value(value));
+        }
+      });
+    }
+  }
+```
+
+`runSyncOnRuntime` takes at most two worklet arguments. To send an object, create it in the job on `worklets::getJSIRuntimeFromWorkletRuntime(uiRuntime)`. The UI Runtime takes its lock around each JSI call.
+
+#### Step 7: Connect your TurboModule to the listeners
+
+JavaScript calls the methods of your TurboModule, not of `ReadingListeners`. Keep a `ReadingListeners` member in your TurboModule class, for example `workletListeners_`, and forward the two methods to it. Call `dispatch` from the code that gets new values.
+
+```cpp title="ReadingModule.cpp"
+int ReadingModule::addWorkletListener(
+    jsi::Runtime &rt,
+    jsi::Object uiRuntimeHolder,
+    jsi::Object uiSchedulerHolder,
+    jsi::Object worklet) {
+  return workletListeners_.add(rt, uiRuntimeHolder, uiSchedulerHolder, worklet);
+}
+
+void ReadingModule::removeWorkletListener(jsi::Runtime & /*rt*/, int id) {
+  workletListeners_.remove(id);
+}
+```
+
+#### Step 8: Add a hook that gives a shared value
+
+The hook gives your users the latest number in a shared value. It adds a listener that writes the shared value, and removes it on unmount.
+
+```ts title="src/worklets.ts"
+import { useEffect } from 'react';
+import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+
+export function useReadingSharedValue(): SharedValue<number | null> {
+  const reading = useSharedValue<number | null>(null);
+
+  useEffect(() => {
+    const subscription = addReadingWorkletListener((newReading) => {
+      'worklet';
+      reading.set(newReading);
+    });
+    return () => subscription.remove();
+  }, [reading]);
+
+  return reading;
+}
+```
+
+**Start with a real value.** If your module always has a value, add a synchronous getter to the spec, for example `getReading(): number`, and give it to the hook: `useSharedValue(NativeReading.getReading)`. The JS thread calls the getter while your source thread writes the value, so keep the value in a `std::atomic`, for example `std::atomic<double>`, or read it with the lock. A source that has no value before its first sample must keep `null`. The [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule) package shows a getter.
+
+<details>
+  <summary>Full code</summary>
+
+  <Tabs groupId="native-data-cpp">
+    <TabItem value="spec" label="Spec">
+      ```ts title="src/NativeReading.ts"
+      import { TurboModuleRegistry, type CodegenTypes, type TurboModule } from 'react-native';
+
+      export interface Spec extends TurboModule {
+        addWorkletListener(
+          uiRuntimeHolder: CodegenTypes.UnsafeObject,
+          uiSchedulerHolder: CodegenTypes.UnsafeObject,
+          worklet: CodegenTypes.UnsafeObject
+        ): CodegenTypes.Int32;
+        removeWorkletListener(id: CodegenTypes.Int32): void;
+      }
+
+      export default TurboModuleRegistry.getEnforcing<Spec>('Reading');
+      ```
+    </TabItem>
+
+    <TabItem value="js" label="JavaScript">
+      ```ts title="src/worklets.ts"
+      import { useEffect } from 'react';
+      import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+      import {
+        createSerializable,
+        getUIRuntimeHolder,
+        getUISchedulerHolder,
+        isWorkletFunction,
+      } from 'react-native-worklets';
+
+      import NativeReading from './NativeReading';
+
+      export function addReadingWorkletListener(worklet: (value: number) => void): { remove(): void } {
+        if (!isWorkletFunction(worklet)) {
+          throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
+        }
+        const id = NativeReading.addWorkletListener(
+          getUIRuntimeHolder(),
+          getUISchedulerHolder(),
+          createSerializable(worklet)
+        );
+        return { remove: () => NativeReading.removeWorkletListener(id) };
+      }
+
+      export function useReadingSharedValue(): SharedValue<number | null> {
+        const reading = useSharedValue<number | null>(null);
+
+        useEffect(() => {
+          const subscription = addReadingWorkletListener((newReading) => {
+            'worklet';
+            reading.set(newReading);
+          });
+          return () => subscription.remove();
+        }, [reading]);
+
+        return reading;
+      }
+      ```
+    </TabItem>
+
+    <TabItem value="listeners" label="Listeners">
+      ```cpp title="ReadingListeners.h"
+      #pragma once
+
+      #include <worklets/Compat/StableApi.h>
+
+      #include <jsi/jsi.h>
+
+      #include <memory>
+      #include <mutex>
+      #include <unordered_map>
+      #include <vector>
+
+      using namespace facebook;
+
+      class ReadingListeners {
+       public:
+        int add(
+            jsi::Runtime &rnRuntime,
+            const jsi::Object &uiRuntimeHolder,
+            const jsi::Object &uiSchedulerHolder,
+            const jsi::Object &worklet) {
+          Listener listener{
+              worklets::getWorkletRuntimeFromHolder(rnRuntime, uiRuntimeHolder),
+              worklets::getUISchedulerFromHolder(rnRuntime, uiSchedulerHolder),
+              worklets::extractSerializable(
+                  rnRuntime,
+                  jsi::Value(rnRuntime, worklet),
+                  "[MyLibrary] The listener must be a worklet.",
+                  worklets::Serializable::ValueType::WorkletType)};
+          std::lock_guard lock(mutex_);
+          listeners_.emplace(++lastId_, std::move(listener));
+          return lastId_;
+        }
+
+        void remove(int id) {
+          std::lock_guard lock(mutex_);
+          listeners_.erase(id);
+        }
+
+        void dispatch(double value) {
+          for (const auto &listener : snapshot()) {
+            worklets::scheduleOnUI(listener.uiScheduler, [listener, value] {
+              if (auto uiRuntime = listener.uiRuntime.lock()) {
+                worklets::runSyncOnRuntime(uiRuntime, listener.worklet, jsi::Value(value));
+              }
+            });
+          }
+        }
+
+       private:
+        struct Listener {
+          std::weak_ptr<worklets::WorkletRuntime> uiRuntime;
+          std::shared_ptr<worklets::UIScheduler> uiScheduler;
+          std::shared_ptr<worklets::Serializable> worklet;
+        };
+
+        std::vector<Listener> snapshot() {
+          std::lock_guard lock(mutex_);
+          std::vector<Listener> listeners;
+          for (const auto &[id, listener] : listeners_) {
+            listeners.push_back(listener);
+          }
+          return listeners;
+        }
+
+        std::mutex mutex_;
+        int lastId_ = 0;
+        std::unordered_map<int, Listener> listeners_;
+      };
+      ```
+    </TabItem>
+
+    <TabItem value="module" label="TurboModule">
+      ```cpp title="ReadingModule.h"
+      #pragma once
+
+      #include <ReadingSpecJSI.h>
+
+      #include <atomic>
+      #include <memory>
+      #include <thread>
+
+      #include "ReadingListeners.h"
+
+      namespace facebook::react {
+
+      class ReadingModule : public NativeReadingCxxSpec<ReadingModule> {
+       public:
+        explicit ReadingModule(std::shared_ptr<CallInvoker> jsInvoker);
+        ~ReadingModule() override;
+
+        int addWorkletListener(
+            jsi::Runtime &rt,
+            jsi::Object uiRuntimeHolder,
+            jsi::Object uiSchedulerHolder,
+            jsi::Object worklet);
+        void removeWorkletListener(jsi::Runtime &rt, int id);
+
+       private:
+        void readUntilStopped();
+
+        std::atomic<bool> isReading_{true};
+        ReadingListeners workletListeners_;
+        std::thread readingThread_;
+      };
+
+      } // namespace facebook::react
+      ```
+
+      ```cpp title="ReadingModule.cpp"
+      #include "ReadingModule.h"
+
+      #include <chrono>
+
+      #ifdef __ANDROID__
+      #include <fbjni/fbjni.h>
+      #endif
+
+      namespace facebook::react {
+
+      ReadingModule::ReadingModule(std::shared_ptr<CallInvoker> jsInvoker)
+          : NativeReadingCxxSpec(std::move(jsInvoker)),
+            readingThread_([this] { readUntilStopped(); }) {}
+
+      ReadingModule::~ReadingModule() {
+        isReading_ = false;
+        readingThread_.join();
+      }
+
+      int ReadingModule::addWorkletListener(
+          jsi::Runtime &rt,
+          jsi::Object uiRuntimeHolder,
+          jsi::Object uiSchedulerHolder,
+          jsi::Object worklet) {
+        return workletListeners_.add(rt, uiRuntimeHolder, uiSchedulerHolder, worklet);
+      }
+
+      void ReadingModule::removeWorkletListener(jsi::Runtime & /*rt*/, int id) {
+        workletListeners_.remove(id);
+      }
+
+      void ReadingModule::readUntilStopped() {
+      #ifdef __ANDROID__
+        jni::ThreadScope attachedToJavaVM;
+      #endif
+        double value = 0;
+        while (isReading_) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(16));
+          workletListeners_.dispatch(++value);
+        }
+      }
+
+      } // namespace facebook::react
+      ```
+    </TabItem>
+
+    <TabItem value="build" label="Build">
+      ```ruby title="Reading.podspec"
+      s.dependency 'RNWorklets'
+      ```
+
+      ```cmake title="android/CMakeLists.txt"
+      find_package(react-native-worklets REQUIRED CONFIG)
+      target_link_libraries(reading react-native-worklets::worklets)
+      ```
+    </TabItem>
+  </Tabs>
+
+  To register the TurboModule, follow [Cross-Platform Native Modules (C++)](https://reactnative.dev/docs/the-new-architecture/pure-cxx-modules), or see the [`with-cpp-turbomodule`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-cpp-turbomodule) package.
+</details>
+
+## Expo modules
+
+[Expo Modules API](https://docs.expo.dev/modules/overview/) has a `Worklet` type for function arguments. Native code keeps the worklet and runs it on the UI Runtime. Expo calls `Function` on the JavaScript thread, and the worklets run on the main thread, because the UI Runtime runs there. For a complete package, see [`with-expo-module`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-expo-module).
+
+:::info
+
+[Expo Modules API 2.0](https://expo.dev/blog/an-early-look-at-expo-modules-2-0) also accepts `Worklet` in `@JS` functions on iOS, since [expo/expo#53489](https://github.com/expo/expo/pull/53489). This section uses the Expo Modules API that works on both platforms.
+
+:::
+
+### JavaScript side
+
+#### Step 1: Add a function that adds a worklet listener
+
+Your native module must get the worklet function in a form that it can keep and run on the UI Runtime. This function prepares the worklet and the UI Runtime, and gives the worklet to the module.
+
+```ts title="src/worklets.ts"
+import { installOnUIRuntime, type EventSubscription } from 'expo';
+import { useEffect } from 'react';
+import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+import {
+  createSerializable,
+  getUIRuntimeHolder,
+  isWorkletFunction,
+} from 'react-native-worklets';
+
+import NativeModule from './NativeModule';
+
+let isInstalledOnUIRuntime = false;
+
+export function addReadingWorkletListener(
+  worklet: (reading: number) => void
+): EventSubscription {
+  if (!isWorkletFunction(worklet)) {
+    throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
+  }
+  if (!isInstalledOnUIRuntime) {
+    installOnUIRuntime(getUIRuntimeHolder());
+    isInstalledOnUIRuntime = true;
+  }
+  const id = NativeModule.addWorkletListener(createSerializable(worklet));
+  return { remove: () => NativeModule.removeWorkletListener(id) };
+}
+```
+
+- [`isWorkletFunction`](../utility/isWorkletFunction.mdx) rejects a plain function early, with a clear message.
+- `installOnUIRuntime` makes Expo Modules available on the UI Runtime. Call it before native code runs the first worklet. On Android, `execute` throws if you did not call it.
+- [`createSerializable`](../memory/createSerializable.mdx) converts the worklet function into a value that native code can keep.
+
+#### Step 2: Add a hook that gives a shared value
+
+The hook gives your users the latest value in a shared value. It adds a listener that writes the shared value, and removes it on unmount.
+
+```ts title="src/worklets.ts"
+export function useReadingSharedValue(): SharedValue<number | null> {
+  const reading = useSharedValue<number | null>(null);
+
+  useEffect(() => {
+    const subscription = addReadingWorkletListener((newReading) => {
+      'worklet';
+      reading.set(newReading);
+    });
+    return () => subscription.remove();
+  }, [reading]);
+
+  return reading;
+}
+```
+
+### iOS
+
+#### Step 1: Add the Worklets dependency
+
+The `Worklet` type is in `ExpoModulesWorklets`. Add it to the dependencies of your podspec.
+
+```ruby title="ios/Reading.podspec"
+s.dependency 'ExpoModulesWorklets'
+```
+
+#### Step 2: Keep the worklets in a dictionary with a lock
+
+Your module must keep each worklet until JavaScript removes it. The functions run on the JavaScript thread, and `onReading` reads the worklets on the main thread, so protect them with a lock.
+
+```swift title="ios/ReadingModule.swift"
+import ExpoModulesCore
+import ExpoModulesWorklets
+
+public final class ReadingModule: Module {
+  private let lock = NSLock()
+  private var nextId = 0
+  private var worklets: [Int: Worklet] = [:]
+}
+```
+
+#### Step 3: Add and remove listeners
+
+JavaScript gives a worklet to `addWorkletListener` and gets an ID. It gives that ID to `removeWorkletListener` to stop the worklet. Add the definition with the two functions to the class. It also removes all worklets when the module is destroyed.
+
+```swift title="ios/ReadingModule.swift"
+  public func definition() -> ModuleDefinition {
+    Name("Reading")
+
+    Function("addWorkletListener") { (worklet: Worklet) -> Int in
+      return lock.withLock {
+        nextId += 1
+        worklets[nextId] = worklet
+        return nextId
+      }
+    }
+
+    Function("removeWorkletListener") { (id: Int) in
+      lock.withLock { worklets[id] = nil }
+    }
+
+    OnDestroy {
+      lock.withLock { worklets.removeAll() }
+    }
+  }
+```
+
+#### Step 4: Run the worklets on the main thread
+
+Each new value must reach all worklets on the UI Runtime, and the UI Runtime runs on the main thread. Add `onReading` to the class, and call it with each new value. It can run on any thread, because it goes to the main thread first.
+
+```swift title="ios/ReadingModule.swift"
+  func onReading(_ reading: Double) {
+    DispatchQueue.main.async { [weak self] in
+      guard let self, let runtime = try? self.appContext?.uiRuntime as? WorkletRuntime else {
+        return
+      }
+      for worklet in self.lock.withLock({ Array(self.worklets.values) }) {
+        worklet.execute(on: runtime, arguments: [reading])
+      }
+    }
+  }
+```
+
+If your value has no native event, read it on each frame with a `CADisplayLink` while a listener exists. Create and stop the display link on the main thread after each add or remove, and run the worklets in its callback. `CADisplayLink` keeps a strong reference to its target, so give it a small target object that holds the module weakly. For the tested code, see [`updateDisplayLink` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/ios/CounterModule.swift#L97-L137).
+
+### Android
+
+The module needs no Gradle change.
+
+#### Step 1: Keep the worklets in a thread-safe map
+
+Your module must keep each worklet until JavaScript removes it. The functions run on the JavaScript thread, and `onReading` reads the worklets on the main thread, so use a thread-safe map.
+
+```kotlin title="android/.../ReadingModule.kt"
+import expo.modules.kotlin.jni.worklets.Worklet
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
+
+class ReadingModule : Module() {
+  private val lastId = AtomicInteger()
+  private val worklets = ConcurrentHashMap<Int, Worklet>()
+}
+```
+
+#### Step 2: Add and remove listeners
+
+JavaScript gives a worklet to `addWorkletListener` and gets an ID. It gives that ID to `removeWorkletListener` to stop the worklet. Add the definition with the two functions to the class. It also removes all worklets when the module is destroyed.
+
+```kotlin title="android/.../ReadingModule.kt"
+  override fun definition() = ModuleDefinition {
+    Name("Reading")
+
+    Function("addWorkletListener") { worklet: Worklet ->
+      lastId.incrementAndGet().also { worklets[it] = worklet }
+    }
+
+    Function("removeWorkletListener") { id: Int ->
+      worklets -= id
+    }
+
+    OnDestroy {
+      worklets.clear()
+    }
+  }
+```
+
+#### Step 3: Run the worklets on the main thread
+
+Each new value must reach all worklets on the UI Runtime, and the UI Runtime runs on the main thread. Add `onReading` to the class, and call it on the main thread, for example through `Handler(Looper.getMainLooper())`.
+
+```kotlin title="android/.../ReadingModule.kt"
+  fun onReading(reading: Double) {
+    if (worklets.isEmpty()) {
+      return
+    }
+    val runtime = appContext.uiRuntime
+    worklets.values.forEach { it.execute(runtime, reading) }
+  }
+```
+
+If your value has no native event, for example a playback position, read it on each frame while a listener exists. Post a `Choreographer` frame callback on the main thread after each add or remove, because `Choreographer.getInstance()` belongs to the thread that calls it. In the callback, run the worklets and post the callback again. Stop when no listener is left. For the tested code, see [`updateFrameCallback` and `runFrameWorklets`](https://github.com/pawicao/worklets-integration-examples/blob/6005cdd0c9436a917d449e4ef236473c5e56eb6f/packages/with-expo-module/android/src/main/java/com/example/withexpomodule/CounterModule.kt#L79-L101).
+
+<details>
+  <summary>Full code</summary>
+
+  <Tabs groupId="native-data-expo">
+    <TabItem value="js" label="JavaScript">
+      ```ts title="src/worklets.ts"
+      import { installOnUIRuntime, type EventSubscription } from 'expo';
+      import { useEffect } from 'react';
+      import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+      import {
+        createSerializable,
+        getUIRuntimeHolder,
+        isWorkletFunction,
+      } from 'react-native-worklets';
+
+      import NativeModule from './NativeModule';
+
+      let isInstalledOnUIRuntime = false;
+
+      export function addReadingWorkletListener(
+        worklet: (reading: number) => void
+      ): EventSubscription {
+        if (!isWorkletFunction(worklet)) {
+          throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
+        }
+        if (!isInstalledOnUIRuntime) {
+          installOnUIRuntime(getUIRuntimeHolder());
+          isInstalledOnUIRuntime = true;
+        }
+        const id = NativeModule.addWorkletListener(createSerializable(worklet));
+        return { remove: () => NativeModule.removeWorkletListener(id) };
+      }
+
+      export function useReadingSharedValue(): SharedValue<number | null> {
+        const reading = useSharedValue<number | null>(null);
+
+        useEffect(() => {
+          const subscription = addReadingWorkletListener((newReading) => {
+            'worklet';
+            reading.set(newReading);
+          });
+          return () => subscription.remove();
+        }, [reading]);
+
+        return reading;
+      }
+      ```
+    </TabItem>
+
+    <TabItem value="swift" label="Swift">
+      ```swift title="ios/ReadingModule.swift"
+      import ExpoModulesCore
+      import ExpoModulesWorklets
+
+      public final class ReadingModule: Module {
+        private let lock = NSLock()
+        private var nextId = 0
+        private var worklets: [Int: Worklet] = [:]
+
+        public func definition() -> ModuleDefinition {
+          Name("Reading")
+
+          Function("addWorkletListener") { (worklet: Worklet) -> Int in
+            return lock.withLock {
+              nextId += 1
+              worklets[nextId] = worklet
+              return nextId
+            }
+          }
+
+          Function("removeWorkletListener") { (id: Int) in
+            lock.withLock { worklets[id] = nil }
+          }
+
+          OnDestroy {
+            lock.withLock { worklets.removeAll() }
+          }
+        }
+
+        func onReading(_ reading: Double) {
+          DispatchQueue.main.async { [weak self] in
+            guard let self, let runtime = try? self.appContext?.uiRuntime as? WorkletRuntime else {
+              return
+            }
+            for worklet in self.lock.withLock({ Array(self.worklets.values) }) {
+              worklet.execute(on: runtime, arguments: [reading])
+            }
+          }
+        }
+      }
+      ```
+    </TabItem>
+
+    <TabItem value="kotlin" label="Kotlin">
+      ```kotlin title="android/.../ReadingModule.kt"
+      import expo.modules.kotlin.jni.worklets.Worklet
+      import expo.modules.kotlin.modules.Module
+      import expo.modules.kotlin.modules.ModuleDefinition
+      import java.util.concurrent.ConcurrentHashMap
+      import java.util.concurrent.atomic.AtomicInteger
+
+      class ReadingModule : Module() {
+        private val lastId = AtomicInteger()
+        private val worklets = ConcurrentHashMap<Int, Worklet>()
+
+        override fun definition() = ModuleDefinition {
+          Name("Reading")
+
+          Function("addWorkletListener") { worklet: Worklet ->
+            lastId.incrementAndGet().also { worklets[it] = worklet }
+          }
+
+          Function("removeWorkletListener") { id: Int ->
+            worklets -= id
+          }
+
+          OnDestroy {
+            worklets.clear()
+          }
+        }
+
+        fun onReading(reading: Double) {
+          if (worklets.isEmpty()) {
+            return
+          }
+          val runtime = appContext.uiRuntime
+          worklets.values.forEach { it.execute(runtime, reading) }
+        }
+      }
+      ```
+    </TabItem>
+  </Tabs>
+
+  For the module registration and the frame listener, see the [`with-expo-module`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-expo-module) package.
+</details>
+
+## Nitro Modules
+
+A Nitro Module can use the same pattern as the C++ path, with a serialized worklet. This section uses an ordinary Nitro callback that you create on the UI Runtime. A Hybrid Object works inside a worklet, because Nitro registers it as a custom serializable. For a complete package, see [`with-nitro`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-nitro).
+
+#### Step 1: Link Worklets
+
+Your C++ code includes a Worklets header, so your native build must depend on Worklets. On iOS, add `RNWorklets` to the dependencies of your podspec. On Android, add the Gradle dependency, turn on prefab, and link the `worklets` library in your `CMakeLists.txt`.
+
+```ruby title="Reading.podspec"
+s.dependency 'RNWorklets'
+```
+
+```groovy title="android/build.gradle"
+android {
+  buildFeatures {
+    prefab true
+  }
+}
+
+dependencies {
+  implementation project(':react-native-worklets')
+}
+```
+
+```cmake title="android/CMakeLists.txt"
+find_package(react-native-worklets REQUIRED CONFIG)
+target_link_libraries(Reading react-native-worklets::worklets)
+```
+
+#### Step 2: Write the spec and run Nitrogen
+
+Nitrogen, the code generator of Nitro, makes the `HybridReadingSpec` base class and the autolinking files from your spec. Write the spec, and add your C++ class to `nitro.json`. The `cxxNamespace` sets the C++ namespace of the generated code. Then run `npx nitrogen`. To start a new module with this setup, run `npx nitrogen@latest init <name>`.
+
+```ts title="src/specs/Reading.nitro.ts"
+import type { HybridObject } from 'react-native-nitro-modules';
+
+export interface Reading extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
+  addListener(listener: (value: number) => void): number;
+  removeListener(id: number): void;
+}
+```
+
+```json title="nitro.json"
+{
+  "cxxNamespace": ["reading"],
+  "ios": {
+    "iosModuleName": "Reading"
+  },
+  "android": {
+    "androidNamespace": ["reading"],
+    "androidCxxLibName": "Reading"
+  },
+  "autolinking": {
+    "Reading": {
+      "all": {
+        "language": "c++",
+        "implementationClassName": "HybridReading"
+      }
+    }
+  }
+}
+```
+
+#### Step 3: Make a `Dispatcher` for the UI Runtime
+
+Nitro calls a callback through a `Dispatcher` of the runtime that created it. The UI Runtime needs a `Dispatcher` that runs jobs on the UI thread, so make one from the stable API of Worklets.
+
+```cpp
+#include <NitroModules/Dispatcher.hpp>
+#include <worklets/Compat/StableApi.h>
+
+#include <memory>
+#include <stdexcept>
+
+namespace margelo::nitro::reading {
+
+class WorkletsUIDispatcher final : public Dispatcher {
+ public:
+  WorkletsUIDispatcher(std::weak_ptr<worklets::WorkletRuntime> uiRuntime, std::shared_ptr<worklets::UIScheduler> uiScheduler)
+      : uiRuntime_(std::move(uiRuntime)), uiScheduler_(std::move(uiScheduler)) {}
+
+  void runAsync(std::function<void()> &&function) override {
+    worklets::scheduleOnUI(uiScheduler_, [uiRuntime = uiRuntime_, function = std::move(function)] {
+      if (auto runtime = uiRuntime.lock()) {
+        function();
+      }
+    });
+  }
+
+  void runSync(std::function<void()> &&function) override {
+    if (!worklets::isOnUIThread(uiScheduler_)) {
+      throw std::runtime_error("WorkletsUIDispatcher::runSync() works only on the UI thread.");
+    }
+    function();
+  }
+
+ private:
+  std::weak_ptr<worklets::WorkletRuntime> uiRuntime_;
+  std::shared_ptr<worklets::UIScheduler> uiScheduler_;
+};
+
+} // namespace margelo::nitro::reading
+```
+
+#### Step 4: Install the `Dispatcher` on the UI Runtime
+
+Nitro looks for the `Dispatcher` in a global of the runtime. `install` sets that global on the UI Runtime, on the UI thread. Add this method to the public part of the class. Expose it as a raw method of your Hybrid Object (`registerRawHybridMethod`), so that it gets the holders as `jsi::Value`. A UI Runtime has one `Dispatcher`. If another library installed one before, the install throws in a debug build of Nitro, and replaces the first one in a release build.
+
+```cpp
+  static void install(jsi::Runtime &rnRuntime, const jsi::Value &uiRuntimeHolder, const jsi::Value &uiSchedulerHolder) {
+    std::weak_ptr<worklets::WorkletRuntime> uiRuntime =
+        worklets::getWorkletRuntimeFromHolder(rnRuntime, uiRuntimeHolder.asObject(rnRuntime));
+    auto uiScheduler = worklets::getUISchedulerFromHolder(rnRuntime, uiSchedulerHolder.asObject(rnRuntime));
+    worklets::scheduleOnUI(uiScheduler, [uiRuntime, uiScheduler] {
+      if (auto runtime = uiRuntime.lock()) {
+        installRuntimeGlobalDispatcher(
+            worklets::getJSIRuntimeFromWorkletRuntime(runtime),
+            std::make_shared<WorkletsUIDispatcher>(uiRuntime, uiScheduler));
+      }
+    });
+  }
+```
+
+#### Step 5: Install the `Dispatcher` from JavaScript
+
+Only JavaScript can get the holders that `install` needs. Nitrogen does not make types for raw methods, so add the method to the type of your Hybrid Object. Call it before the first callback, and again after each JavaScript reload, because a reload makes a new UI Runtime.
+
+```ts
+import { NitroModules } from 'react-native-nitro-modules';
+import {
+  createSynchronizable,
+  getUIRuntimeHolder,
+  getUISchedulerHolder,
+  scheduleOnUI,
+} from 'react-native-worklets';
+
+import type { Reading } from './specs/Reading.nitro';
+
+type ReadingWithUIRuntimeDispatcher = Reading & {
+  installUIRuntimeDispatcher(uiRuntimeHolder: object, uiSchedulerHolder: object): void;
+};
+
+const readingModule = NitroModules.createHybridObject<Reading>('Reading');
+
+(readingModule as ReadingWithUIRuntimeDispatcher).installUIRuntimeDispatcher(
+  getUIRuntimeHolder(),
+  getUISchedulerHolder()
+);
+```
+
+#### Step 6: Add and remove the listener on the UI Runtime
+
+Nitro calls a callback on the runtime that created it. Create the callback on the UI Runtime, so that Nitro calls it there. Keep the listener ID in a [Synchronizable](../memory/createSynchronizable.mdx), so that you can remove the listener later.
+
+```ts
+const listenerId = createSynchronizable(0);
+scheduleOnUI(() => {
+  'worklet';
+  listenerId.setBlocking(readingModule.addListener((value) => reading.set(value)));
+});
+
+function remove() {
+  scheduleOnUI(() => {
+    'worklet';
+    readingModule.removeListener(listenerId.getBlocking());
+  });
+}
+```
+
+<details>
+  <summary>Full code</summary>
+
+  <Tabs groupId="native-data-nitro">
+    <TabItem value="spec" label="Spec">
+      ```ts title="src/specs/Reading.nitro.ts"
+      import type { HybridObject } from 'react-native-nitro-modules';
+
+      export interface Reading extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
+        addListener(listener: (value: number) => void): number;
+        removeListener(id: number): void;
+      }
+      ```
+    </TabItem>
+
+    <TabItem value="js" label="JavaScript">
+      ```ts title="src/worklets.ts"
+      import { useEffect } from 'react';
+      import { NitroModules } from 'react-native-nitro-modules';
+      import { useSharedValue, type SharedValue } from 'react-native-reanimated';
+      import {
+        createSynchronizable,
+        getUIRuntimeHolder,
+        getUISchedulerHolder,
+        isWorkletFunction,
+        scheduleOnUI,
+      } from 'react-native-worklets';
+
+      import type { Reading } from './specs/Reading.nitro';
+
+      type ReadingWithUIRuntimeDispatcher = Reading & {
+        installUIRuntimeDispatcher(uiRuntimeHolder: object, uiSchedulerHolder: object): void;
+      };
+
+      const readingModule = NitroModules.createHybridObject<Reading>('Reading');
+
+      let isDispatcherInstalled = false;
+
+      export function addReadingWorkletListener(worklet: (value: number) => void): { remove(): void } {
+        if (!isWorkletFunction(worklet)) {
+          throw new Error("The listener must be a worklet. Add the 'worklet' directive.");
+        }
+        if (!isDispatcherInstalled) {
+          (readingModule as ReadingWithUIRuntimeDispatcher).installUIRuntimeDispatcher(
+            getUIRuntimeHolder(),
+            getUISchedulerHolder()
+          );
+          isDispatcherInstalled = true;
+        }
+        const listenerId = createSynchronizable(0);
+        scheduleOnUI(() => {
+          'worklet';
+          listenerId.setBlocking(readingModule.addListener(worklet));
+        });
+        return {
+          remove: () =>
+            scheduleOnUI(() => {
+              'worklet';
+              readingModule.removeListener(listenerId.getBlocking());
+            }),
+        };
+      }
+
+      export function useReadingSharedValue(): SharedValue<number | null> {
+        const reading = useSharedValue<number | null>(null);
+
+        useEffect(() => {
+          const subscription = addReadingWorkletListener((newReading) => {
+            'worklet';
+            reading.set(newReading);
+          });
+          return () => subscription.remove();
+        }, [reading]);
+
+        return reading;
+      }
+      ```
+    </TabItem>
+
+    <TabItem value="hybrid" label="Hybrid Object">
+      ```cpp title="HybridReading.hpp"
+      #pragma once
+
+      #include "HybridReadingSpec.hpp"
+
+      #include <atomic>
+      #include <functional>
+      #include <mutex>
+      #include <thread>
+      #include <unordered_map>
+
+      namespace margelo::nitro::reading {
+
+      class HybridReading : public HybridReadingSpec {
+       public:
+        HybridReading();
+        ~HybridReading() override;
+
+        double addListener(const std::function<void(double)> &listener) override;
+        void removeListener(double id) override;
+
+       protected:
+        void loadHybridMethods() override;
+
+       private:
+        jsi::Value installUIRuntimeDispatcher(jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count);
+        void readUntilStopped();
+
+        std::mutex mutex_;
+        int lastListenerId_ = 0;
+        std::unordered_map<int, std::function<void(double)>> listeners_;
+        std::atomic<bool> isReading_{true};
+        std::thread readingThread_;
+      };
+
+      } // namespace margelo::nitro::reading
+      ```
+
+      ```cpp title="HybridReading.cpp"
+      #include "HybridReading.hpp"
+
+      #include <chrono>
+      #include <vector>
+
+      #ifdef __ANDROID__
+      #include <fbjni/fbjni.h>
+      #endif
+
+      #include "WorkletsUIDispatcher.hpp"
+
+      namespace margelo::nitro::reading {
+
+      HybridReading::HybridReading()
+          : HybridObject(TAG), readingThread_([this] { readUntilStopped(); }) {}
+
+      HybridReading::~HybridReading() {
+        isReading_ = false;
+        readingThread_.join();
+      }
+
+      void HybridReading::loadHybridMethods() {
+        HybridReadingSpec::loadHybridMethods();
+        registerHybrids(this, [](Prototype &prototype) {
+          prototype.registerRawHybridMethod("installUIRuntimeDispatcher", 2, &HybridReading::installUIRuntimeDispatcher);
+        });
+      }
+
+      jsi::Value HybridReading::installUIRuntimeDispatcher(
+          jsi::Runtime &rt,
+          const jsi::Value & /*thisValue*/,
+          const jsi::Value *args,
+          size_t count) {
+        if (count != 2) {
+          throw jsi::JSError(rt, "installUIRuntimeDispatcher() takes 2 arguments.");
+        }
+        WorkletsUIDispatcher::install(rt, args[0], args[1]);
+        return jsi::Value::undefined();
+      }
+
+      double HybridReading::addListener(const std::function<void(double)> &listener) {
+        std::lock_guard lock(mutex_);
+        listeners_.emplace(++lastListenerId_, listener);
+        return lastListenerId_;
+      }
+
+      void HybridReading::removeListener(double id) {
+        std::lock_guard lock(mutex_);
+        listeners_.erase(static_cast<int>(id));
+      }
+
+      void HybridReading::readUntilStopped() {
+      #ifdef __ANDROID__
+        facebook::jni::ThreadScope attachedToJavaVM;
+      #endif
+        double value = 0;
+        while (isReading_) {
+          std::this_thread::sleep_for(std::chrono::milliseconds(16));
+          value += 1;
+          std::vector<std::function<void(double)>> listeners;
+          {
+            std::lock_guard lock(mutex_);
+            for (const auto &[id, listener] : listeners_) {
+              listeners.push_back(listener);
+            }
+          }
+          for (const auto &listener : listeners) {
+            listener(value);
+          }
+        }
+      }
+
+      } // namespace margelo::nitro::reading
+      ```
+    </TabItem>
+
+    <TabItem value="dispatcher" label="Dispatcher">
+      ```cpp title="WorkletsUIDispatcher.hpp"
+      #pragma once
+
+      #include <NitroModules/Dispatcher.hpp>
+      #include <worklets/Compat/StableApi.h>
+
+      #include <memory>
+      #include <stdexcept>
+
+      namespace margelo::nitro::reading {
+
+      class WorkletsUIDispatcher final : public Dispatcher {
+       public:
+        static void install(jsi::Runtime &rnRuntime, const jsi::Value &uiRuntimeHolder, const jsi::Value &uiSchedulerHolder) {
+          std::weak_ptr<worklets::WorkletRuntime> uiRuntime =
+              worklets::getWorkletRuntimeFromHolder(rnRuntime, uiRuntimeHolder.asObject(rnRuntime));
+          auto uiScheduler = worklets::getUISchedulerFromHolder(rnRuntime, uiSchedulerHolder.asObject(rnRuntime));
+          worklets::scheduleOnUI(uiScheduler, [uiRuntime, uiScheduler] {
+            if (auto runtime = uiRuntime.lock()) {
+              installRuntimeGlobalDispatcher(
+                  worklets::getJSIRuntimeFromWorkletRuntime(runtime),
+                  std::make_shared<WorkletsUIDispatcher>(uiRuntime, uiScheduler));
+            }
+          });
+        }
+
+        WorkletsUIDispatcher(std::weak_ptr<worklets::WorkletRuntime> uiRuntime, std::shared_ptr<worklets::UIScheduler> uiScheduler)
+            : uiRuntime_(std::move(uiRuntime)), uiScheduler_(std::move(uiScheduler)) {}
+
+        void runAsync(std::function<void()> &&function) override {
+          worklets::scheduleOnUI(uiScheduler_, [uiRuntime = uiRuntime_, function = std::move(function)] {
+            if (auto runtime = uiRuntime.lock()) {
+              function();
+            }
+          });
+        }
+
+        void runSync(std::function<void()> &&function) override {
+          if (!worklets::isOnUIThread(uiScheduler_)) {
+            throw std::runtime_error("WorkletsUIDispatcher::runSync() works only on the UI thread.");
+          }
+          function();
+        }
+
+       private:
+        std::weak_ptr<worklets::WorkletRuntime> uiRuntime_;
+        std::shared_ptr<worklets::UIScheduler> uiScheduler_;
+      };
+
+      } // namespace margelo::nitro::reading
+      ```
+    </TabItem>
+
+    <TabItem value="build" label="Build">
+      ```ruby title="Reading.podspec"
+      s.dependency 'RNWorklets'
+      ```
+
+      ```groovy title="android/build.gradle"
+      android {
+        buildFeatures {
+          prefab true
+        }
+      }
+
+      dependencies {
+        implementation project(':react-native-worklets')
+      }
+      ```
+
+      ```cmake title="android/CMakeLists.txt"
+      find_package(react-native-worklets REQUIRED CONFIG)
+      target_link_libraries(Reading react-native-worklets::worklets)
+      ```
+    </TabItem>
+  </Tabs>
+
+  For the build files that Nitrogen needs, follow [Nitrogen](https://nitro.margelo.com/docs/concepts/nitrogen), or see the [`with-nitro`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-nitro) package.
+</details>
+
+## View events
+
+When a native view sends the data, send it as an ordinary Fabric component event. Reanimated can run a worklet function for that event on the UI Runtime. For a complete package, see [`with-view-event`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-view-event).
+
+#### Step 1: Declare the event in the codegen spec
+
+Codegen makes the event emitter that your native code calls to send the event. If your view does not have the event yet, add it to the codegen spec of the view.
+
+```ts title="src/ReadingViewNativeComponent.ts"
+import {
+  codegenNativeComponent,
+  type CodegenTypes,
+  type HostComponent,
+  type ViewProps,
+} from 'react-native';
+
+export type ReadingEvent = Readonly<{
+  value: CodegenTypes.Double;
+}>;
+
+export interface NativeProps extends ViewProps {
+  onReading?: CodegenTypes.DirectEventHandler<ReadingEvent>;
+}
+
+export default codegenNativeComponent<NativeProps>(
+  'ReadingView'
+) as HostComponent<NativeProps>;
+```
+
+#### Step 2: Send the event from native code
+
+Your view sends each new value as an event. On iOS, send it on the main thread, because Reanimated ignores events from other threads.
+
+```objc title="ios/ReadingComponentView.mm"
+- (void)emitReading:(double)value
+{
+  if (_eventEmitter != nullptr) {
+    std::static_pointer_cast<const ReadingViewEventEmitter>(_eventEmitter)
+        ->onReading(ReadingViewEventEmitter::OnReading{.value = value});
+  }
+}
+```
+
+On Android, dispatch an event with the name of the prop.
+
+```kotlin title="android/.../ReadingView.kt"
+  private fun emitReading(value: Double) {
+    UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
+      ?.dispatchEvent(ReadingEvent(UIManagerHelper.getSurfaceId(reactContext), id, value))
+  }
+
+  private class ReadingEvent(surfaceId: Int, viewId: Int, private val value: Double) :
+    Event<ReadingEvent>(surfaceId, viewId) {
+    override fun getEventName() = "onReading"
+
+    override fun getEventData() = Arguments.createMap().apply { putDouble("value", value) }
+  }
+```
+
+#### Step 3: Make an animated version of your view
+
+Reanimated runs event worklets only for an animated component.
+
+```ts title="src/AnimatedReadingView.ts"
+import type { NativeSyntheticEvent } from 'react-native';
+import Animated, {
+  useEvent,
+  useHandler,
+  type ReanimatedEvent,
+} from 'react-native-reanimated';
+
+import ReadingView, { type ReadingEvent } from './ReadingViewNativeComponent';
+
+export const AnimatedReadingView = Animated.createAnimatedComponent(ReadingView);
+```
+
+#### Step 4: Add a hook for the event
+
+Your users need a worklet that runs for each event. Build the hook on [`useEvent`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useEvent) and [`useHandler`](https://docs.swmansion.com/react-native-reanimated/docs/advanced/useHandler).
+
+```ts title="src/AnimatedReadingView.ts"
+type ReadingNativeEvent = NativeSyntheticEvent<ReadingEvent>;
+
+type ReadingHandlers<Context extends Record<string, unknown>> = {
+  onReading?: (event: ReanimatedEvent<ReadingNativeEvent>, context: Context) => void;
+};
+
+export function useReadingHandler<Context extends Record<string, unknown>>(
+  handlers: ReadingHandlers<Context>,
+  dependencies?: unknown[]
+) {
+  const { context, doDependenciesDiffer } = useHandler(handlers, dependencies);
+
+  return useEvent<ReadingNativeEvent>(
+    (event) => {
+      'worklet';
+      handlers.onReading?.(event, context);
+    },
+    ['onReading'],
+    doDependenciesDiffer
+  );
+}
+```
+
+Your users write the shared value in their handler, and pass the result of the hook to the animated view:
+
+```tsx
+const reading = useSharedValue(0);
+const onReading = useReadingHandler({
+  onReading: (event) => {
+    'worklet';
+    reading.set(event.value);
+  },
+});
+
+return <AnimatedReadingView onReading={onReading} />;
+```
+
+<details>
+  <summary>Full code</summary>
+
+  <Tabs groupId="native-data-view">
+    <TabItem value="spec" label="Codegen spec">
+      ```ts title="src/ReadingViewNativeComponent.ts"
+      import {
+        codegenNativeComponent,
+        type CodegenTypes,
+        type HostComponent,
+        type ViewProps,
+      } from 'react-native';
+
+      export type ReadingEvent = Readonly<{
+        value: CodegenTypes.Double;
+      }>;
+
+      export interface NativeProps extends ViewProps {
+        onReading?: CodegenTypes.DirectEventHandler<ReadingEvent>;
+      }
+
+      export default codegenNativeComponent<NativeProps>(
+        'ReadingView'
+      ) as HostComponent<NativeProps>;
+      ```
+    </TabItem>
+
+    <TabItem value="js" label="JavaScript">
+      ```ts title="src/AnimatedReadingView.ts"
+      import type { NativeSyntheticEvent } from 'react-native';
+      import Animated, {
+        useEvent,
+        useHandler,
+        type ReanimatedEvent,
+      } from 'react-native-reanimated';
+
+      import ReadingView, { type ReadingEvent } from './ReadingViewNativeComponent';
+
+      export const AnimatedReadingView = Animated.createAnimatedComponent(ReadingView);
+
+      type ReadingNativeEvent = NativeSyntheticEvent<ReadingEvent>;
+
+      type ReadingHandlers<Context extends Record<string, unknown>> = {
+        onReading?: (event: ReanimatedEvent<ReadingNativeEvent>, context: Context) => void;
+      };
+
+      export function useReadingHandler<Context extends Record<string, unknown>>(
+        handlers: ReadingHandlers<Context>,
+        dependencies?: unknown[]
+      ) {
+        const { context, doDependenciesDiffer } = useHandler(handlers, dependencies);
+
+        return useEvent<ReadingNativeEvent>(
+          (event) => {
+            'worklet';
+            handlers.onReading?.(event, context);
+          },
+          ['onReading'],
+          doDependenciesDiffer
+        );
+      }
+      ```
+    </TabItem>
+
+    <TabItem value="objc" label="Objective-C++">
+      ```objc title="ios/ReadingComponentView.mm"
+      #import <React/RCTViewComponentView.h>
+
+      #import <react/renderer/components/ReadingViewSpec/ComponentDescriptors.h>
+      #import <react/renderer/components/ReadingViewSpec/EventEmitters.h>
+      #import <react/renderer/components/ReadingViewSpec/Props.h>
+
+      using namespace facebook::react;
+
+      @interface ReadingComponentView : RCTViewComponentView
+      @end
+
+      @implementation ReadingComponentView {
+        dispatch_source_t _timer;
+        double _value;
+      }
+
+      + (ComponentDescriptorProvider)componentDescriptorProvider
+      {
+        return concreteComponentDescriptorProvider<ReadingViewComponentDescriptor>();
+      }
+
+      - (instancetype)initWithFrame:(CGRect)frame
+      {
+        if (self = [super initWithFrame:frame]) {
+          static const auto defaultProps = std::make_shared<const ReadingViewProps>();
+          _props = defaultProps;
+        }
+        return self;
+      }
+
+      - (void)didMoveToWindow
+      {
+        [super didMoveToWindow];
+        [self stopReading];
+        if (self.window != nil) {
+          [self startReading];
+        }
+      }
+
+      - (void)startReading
+      {
+        _timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0));
+        dispatch_source_set_timer(_timer, DISPATCH_TIME_NOW, 16 * NSEC_PER_MSEC, 0);
+        __weak ReadingComponentView *weakSelf = self;
+        dispatch_source_set_event_handler(_timer, ^{
+          dispatch_async(dispatch_get_main_queue(), ^{
+            [weakSelf emitNextReading];
+          });
+        });
+        dispatch_resume(_timer);
+      }
+
+      - (void)stopReading
+      {
+        if (_timer != nil) {
+          dispatch_source_cancel(_timer);
+          _timer = nil;
+        }
+      }
+
+      - (void)emitNextReading
+      {
+        _value += 1;
+        [self emitReading:_value];
+      }
+
+      - (void)emitReading:(double)value
+      {
+        if (_eventEmitter != nullptr) {
+          std::static_pointer_cast<const ReadingViewEventEmitter>(_eventEmitter)
+              ->onReading(ReadingViewEventEmitter::OnReading{.value = value});
+        }
+      }
+
+      @end
+      ```
+    </TabItem>
+
+    <TabItem value="kotlin" label="Kotlin">
+      ```kotlin title="android/.../ReadingView.kt"
+      import android.view.View
+      import com.facebook.react.bridge.Arguments
+      import com.facebook.react.uimanager.ThemedReactContext
+      import com.facebook.react.uimanager.UIManagerHelper
+      import com.facebook.react.uimanager.events.Event
+      import java.util.concurrent.Executors
+      import java.util.concurrent.ScheduledExecutorService
+      import java.util.concurrent.TimeUnit
+
+      class ReadingView(private val reactContext: ThemedReactContext) : View(reactContext) {
+        private var value = 0.0
+        private var readingThread: ScheduledExecutorService? = null
+
+        override fun onAttachedToWindow() {
+          super.onAttachedToWindow()
+          readingThread = Executors.newSingleThreadScheduledExecutor().apply {
+            scheduleAtFixedRate(::emitNextReading, 0, 16, TimeUnit.MILLISECONDS)
+          }
+        }
+
+        override fun onDetachedFromWindow() {
+          readingThread?.shutdownNow()
+          readingThread = null
+          super.onDetachedFromWindow()
+        }
+
+        private fun emitNextReading() {
+          value += 1
+          emitReading(value)
+        }
+
+        private fun emitReading(value: Double) {
+          UIManagerHelper.getEventDispatcherForReactTag(reactContext, id)
+            ?.dispatchEvent(ReadingEvent(UIManagerHelper.getSurfaceId(reactContext), id, value))
+        }
+
+        private class ReadingEvent(surfaceId: Int, viewId: Int, private val value: Double) :
+          Event<ReadingEvent>(surfaceId, viewId) {
+          override fun getEventName() = "onReading"
+
+          override fun getEventData() = Arguments.createMap().apply { putDouble("value", value) }
+        }
+      }
+      ```
+    </TabItem>
+  </Tabs>
+
+  For the view registration, follow [Fabric Native Components](https://reactnative.dev/docs/fabric-native-components-introduction), or see the [`with-view-event`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/with-view-event) package.
+</details>
+
+## The other direction
+
+A worklet on the UI Runtime can also call your native methods, for example to read the latest value on each frame. A native method is a host function, and a worklet can call a host function on any Runtime (see [Tried to synchronously call a Remote Function](./troubleshooting.mdx#tried-to-synchronously-call-a-remote-function)).
+
+Read the method on the RN Runtime, and capture only the function, as [Transfer granular objects](./good-practices.mdx#transfer-granular-objects) recommends:
+
+```ts
+const { getReading } = NativeReading;
+
+export function getReadingFromWorklet(): number {
+  'worklet';
+  return getReading();
+}
+```
+
+For a complete package, see [`ui-to-native`](https://github.com/pawicao/worklets-integration-examples/tree/main/packages/ui-to-native).
+
+## Optional dependencies
+
+If your library also works without Worklets and Reanimated, do not make all your users install them. The way depends on the path.
+
+### C++ TurboModules and Nitro Modules
+
+Your native code links Worklets, so the package that holds this code needs `react-native-worklets`. Put this code and its JavaScript in a second package, and make `react-native-worklets` a peer dependency of that package. Your main package then builds without Worklets. [VisionCamera](https://github.com/margelo/react-native-vision-camera/tree/main/packages/react-native-vision-camera-worklets) and [React Native Audio API](https://github.com/software-mansion/react-native-audio-api/tree/main/packages/react-native-audio-worklets) do this.
+
+### Expo modules and view events
+
+Your native code does not link `react-native-worklets`, so one package is sufficient. [`expo-hinge`](https://github.com/expo/expo/pull/51829) ships this way. To do it:
+
+1. Move the code that imports the two packages to a separate entry point, and list it in `exports`.
+1. Make the two packages optional peer dependencies.
+
+```json title="package.json"
+{
+  "exports": {
+    ".": "./build/index.js",
+    "./reanimated": "./build/reanimated.js",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "react-native-reanimated": "*",
+    "react-native-worklets": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native-reanimated": { "optional": true },
+    "react-native-worklets": { "optional": true }
+  }
+}
+```
+
+A new `exports` field is a breaking change: tools that follow `exports`, for example Node.js and Jest, reject each import path that the field does not list. List all paths that your users import.
+
+## Checklist
+
+- Run worklet functions on the UI thread.
+- On Android, attach native threads to the JVM before they call Worklets or Nitro.
+- Start the native data source with the first listener and stop it after the last. Count JavaScript listeners and worklet listeners.
+- Remove all worklets when your module is destroyed, and do nothing in a job whose runtime is gone.
+- Test with a blocked JavaScript thread: the animation must continue. Test a JavaScript reload too.
+
+To keep the code short, the samples start the source with the module.

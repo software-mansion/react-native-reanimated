@@ -1,0 +1,11 @@
+---
+id: shared-values-in-your-library
+title: Shared values in your library
+sidebar_label: Shared values in your library
+---
+
+# Shared values in your library
+
+If you write a native library, you can give its data to your users as a [shared value](../fundamentals/glossary.mdx#shared-value). Your native code runs a worklet on the UI thread with each new value, and the worklet writes the shared value. Animations that read it continue when the JavaScript thread is busy. The guide covers C++ TurboModules, Expo modules, Nitro Modules and native views.
+
+To learn how, read [Sending native data to the UI Runtime](https://docs.swmansion.com/react-native-worklets/docs/guides/sending-native-data-to-the-ui-runtime) in the Worklets documentation.
