@@ -105,6 +105,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/props/animatedText.test');
       require('./tests/props/nonLayoutPropAndRender.test');
       require('./tests/props/mountedViewProps.test');
+      require('./tests/props/setNativeProps.test');
       require('./tests/props/hostReplacement.test');
       require('./tests/props/cssArrayKeyframes.test');
     },
