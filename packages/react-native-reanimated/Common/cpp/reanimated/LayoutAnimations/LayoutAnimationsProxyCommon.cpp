@@ -1092,6 +1092,11 @@ ShadowViewMutation LayoutAnimationsProxyCommon::frameUpdate(
     [[maybe_unused]] const bool sendsOnlyChangedProps) const {
   auto newView = animation.finalView;
   updateLayoutMetrics(newView.layoutMetrics, frame.frame, animation.frameOffset + animation.pathOffset);
+  if (animation.geometryProgress) {
+    if (auto textState = textStateAt(animation.startView, animation.finalView, *animation.geometryProgress)) {
+      newView.state = std::move(textState);
+    }
+  }
 #ifdef ANDROID
   if (sendsOnlyChangedProps && !ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return changedPropsUpdate(animation, frame, std::move(newView));

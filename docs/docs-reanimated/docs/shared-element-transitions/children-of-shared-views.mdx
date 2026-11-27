@@ -32,7 +32,7 @@ A child with its own matching `sharedTransitionTag` moves from its place in the 
 
 Give the child the same tag on both screens, and use the same native component on both screens, as for any [shared view](./shared-transition-props.mdx#sharedtransitiontag).
 
-The moving view keeps its own content, so a different `fontSize` on the two screens changes at once when the transition ends. To change the size of a child smoothly, give it the same `fontSize` on both screens and scale it with `transform`, which animates.
+From React Native 0.89, a shared `Text` animates a different `fontSize` on the two screens, together with its line height and letter spacing, in built-in timed transitions. Other text attributes, such as the font weight, change when the transition ends. A child without its own tag, a gesture transition and older React Native versions keep the font size of the moving view until the transition ends. There, give the child the same `fontSize` on both screens and scale it with `transform`, which animates.
 
 ## `fadeContent()`
 
