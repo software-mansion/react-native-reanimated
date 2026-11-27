@@ -1,7 +1,9 @@
 import {
   createWorkletRuntime,
   isBundleModeEnabled,
+  runOnRuntimeAsync,
   runOnRuntimeSync,
+  scheduleOnRuntime,
 } from 'react-native-worklets';
 
 import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
@@ -39,6 +41,38 @@ describe('module loaded while a worklet is unpacked', () => {
         return evaluationLog.join(', ');
       });
 
+      expect(log).toBe('module begins, module ends, worklet body, microtask');
+    }
+  );
+
+  reentrantModuleTest(
+    'runs module microtasks after a scheduled worklet is unpacked',
+    async () => {
+      const runtime = createWorkletRuntime({
+        name: 'scheduled reentrant module load',
+      });
+      runOnRuntimeSync(
+        runtime,
+        (runtimeId: number) => {
+          'worklet';
+          (globalThis as ReentrantModuleGlobal).__reentrantModuleRuntimeId =
+            runtimeId;
+        },
+        runtime.runtimeId
+      );
+
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        evaluationLog.push('worklet body');
+      });
+      await runOnRuntimeAsync(runtime, () => {
+        'worklet';
+      });
+
+      const log = runOnRuntimeSync(runtime, () => {
+        'worklet';
+        return evaluationLog.join(', ');
+      });
       expect(log).toBe('module begins, module ends, worklet body, microtask');
     }
   );

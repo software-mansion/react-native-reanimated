@@ -32,6 +32,35 @@ import { WorkletsModule } from './WorkletsModule/NativeWorklets';
 const SHOULD_CAPTURE_SCHEDULE_STACK =
   __DEV__ && getStaticFeatureFlag('ENABLE_CROSS_RUNTIME_STACK_TRACES');
 
+function runSyncRuntimeJob<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args
+): SerializableRef<ReturnValue> {
+  'worklet';
+  return makeShareableCloneOnUIRecursive(
+    worklet(...args)
+  ) as SerializableRef<ReturnValue>;
+}
+
+function runAsyncRuntimeJob<Args extends unknown[], ReturnValue>(
+  worklet: WorkletFunction<Args, ReturnValue>,
+  args: Args,
+  resolve: (value: ReturnValue | PromiseLike<ReturnValue>) => void,
+  reject: (reason: unknown) => void
+): void {
+  'worklet';
+  try {
+    const result = worklet(...args);
+    const serializedResult = globalThis.__serializer(
+      result
+    ) as SerializableRef<ReturnValue>;
+    globalThis.__workletsModuleProxy.handlePromise(resolve, serializedResult);
+  } catch (error) {
+    const serializedError = globalThis.__serializer(error);
+    globalThis.__workletsModuleProxy.handlePromise(reject, serializedError);
+  }
+}
+
 /**
  * The ID of the [UI Worklet
  * Runtime](https://docs.swmansion.com/react-native-worklets/docs/fundamentals/runtimeKinds#ui-runtime).
@@ -198,10 +227,8 @@ export function scheduleOnRuntime<Args extends unknown[], ReturnValue>(
 
   WorkletsModule.scheduleOnRuntime(
     workletRuntime,
-    createSerializable(() => {
-      'worklet';
-      worklet(...args);
-    }),
+    createSerializable(worklet),
+    createSerializable(args),
     SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
@@ -221,10 +248,8 @@ if (!isBundleModeEnabled()) {
 
     globalThis.__workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
-      globalThis.__serializer(() => {
-        'worklet';
-        worklet(...args);
-      })
+      globalThis.__serializer(worklet),
+      globalThis.__serializer(args)
     );
   }
 
@@ -274,10 +299,8 @@ export function scheduleOnRuntimeWithId<Args extends unknown[], ReturnValue>(
 
   WorkletsModule.scheduleOnRuntimeWithId(
     runtimeId,
-    createSerializable(() => {
-      'worklet';
-      worklet(...args);
-    }),
+    createSerializable(worklet),
+    createSerializable(args),
     SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
@@ -297,10 +320,8 @@ if (!isBundleModeEnabled()) {
 
     globalThis.__workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
-      globalThis.__serializer(() => {
-        'worklet';
-        worklet(...args);
-      })
+      globalThis.__serializer(worklet),
+      globalThis.__serializer(args)
     );
   }
 
@@ -369,11 +390,8 @@ export function runOnRuntimeSync<Args extends unknown[], ReturnValue>(
 
   return WorkletsModule.runOnRuntimeSync(
     workletRuntime,
-    createSerializable(() => {
-      'worklet';
-      const result = worklet(...args);
-      return makeShareableCloneOnUIRecursive(result);
-    }),
+    createSerializable(runSyncRuntimeJob),
+    createSerializable([worklet, args]),
     SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
@@ -419,11 +437,8 @@ export function runOnRuntimeSyncWithId<Args extends unknown[], ReturnValue>(
 
   return WorkletsModule.runOnRuntimeSyncWithId(
     runtimeId,
-    createSerializable(() => {
-      'worklet';
-      const result = worklet(...args);
-      return makeShareableCloneOnUIRecursive(result);
-    }),
+    createSerializable(runSyncRuntimeJob),
+    createSerializable([worklet, args]),
     SHOULD_CAPTURE_SCHEDULE_STACK ? new Error().stack : undefined
   );
 }
@@ -480,25 +495,8 @@ export function runOnRuntimeAsync<Args extends unknown[], ReturnValue>(
 
     WorkletsModule.scheduleOnRuntime(
       workletRuntime,
-      createSerializable(() => {
-        'worklet';
-        try {
-          const result = worklet(...args);
-          const serializedResult = globalThis.__serializer(
-            result
-          ) as SerializableRef<ReturnValue>;
-          globalThis.__workletsModuleProxy.handlePromise(
-            resolve,
-            serializedResult
-          );
-        } catch (error) {
-          const serializedError = globalThis.__serializer(error);
-          globalThis.__workletsModuleProxy.handlePromise(
-            reject,
-            serializedError
-          );
-        }
-      }),
+      createSerializable(runAsyncRuntimeJob),
+      createSerializable([worklet, args, resolve, reject]),
       scheduleStack,
       serializableResolve,
       serializableReject
@@ -559,25 +557,8 @@ export function runOnRuntimeAsyncWithId<Args extends unknown[], ReturnValue>(
 
     WorkletsModule.scheduleOnRuntimeWithId(
       runtimeId,
-      createSerializable(() => {
-        'worklet';
-        try {
-          const result = worklet(...args);
-          const serializedResult = globalThis.__serializer(
-            result
-          ) as SerializableRef<ReturnValue>;
-          globalThis.__workletsModuleProxy.handlePromise(
-            resolve,
-            serializedResult
-          );
-        } catch (error) {
-          const serializedError = globalThis.__serializer(error);
-          globalThis.__workletsModuleProxy.handlePromise(
-            reject,
-            serializedError
-          );
-        }
-      }),
+      createSerializable(runAsyncRuntimeJob),
+      createSerializable([worklet, args, resolve, reject]),
       scheduleStack,
       serializableResolve,
       serializableReject
