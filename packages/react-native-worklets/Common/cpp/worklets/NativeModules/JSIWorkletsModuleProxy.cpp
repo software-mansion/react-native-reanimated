@@ -711,6 +711,9 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
 
         const auto enableEventLoop = at<4>(args).getBool();
+        if (enableEventLoop && !asyncQueue) {
+          throw jsi::JSError(rt, "[Worklets] The Event Loop cannot be enabled on a runtime without a queue.");
+        }
         const auto enableLocking = at<5>(args).getBool();
         const auto enableNetworking = at<6>(args).getBool();
         const auto abortable = at<7>(args).getBool();

@@ -142,7 +142,8 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * Determines whether to enable the default Event Loop, which provides
          * `setTimeout`, `setInterval`, `requestAnimationFrame` and other
          * scheduling APIs. If not specified, it defaults to `true`. Cannot be
-         * enabled when {@link enableLocking} is set to `false`.
+         * enabled when {@link enableLocking} is set to `false` or when
+         * `queue` is `null`.
          */
         enableEventLoop?: boolean;
         /**
@@ -186,7 +187,8 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * - `'default'` (the default): use the built-in queue implementation.
          * - An object implementing the C++ `AsyncQueue` interface from
          *   `<worklets/RunLoop/AsyncQueue.h>`: use the provided custom queue.
-         * - `null`: do not attach any queue to the runtime.
+         * - `null`: do not attach any queue to the runtime. The Event Loop is
+         *   disabled on such a runtime.
          */
         queue?: 'default' | object | null;
         useDefaultQueue?: never;
