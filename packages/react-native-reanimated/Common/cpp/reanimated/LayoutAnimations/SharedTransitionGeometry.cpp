@@ -1,5 +1,6 @@
 #include <react/renderer/components/text/ParagraphShadowNode.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
 
@@ -46,6 +47,11 @@ SharedTransitionGeometry interpolateSharedTransitionGeometry(
 }
 
 State::Shared textStateAt(const ShadowView &start, const ShadowView &target, const double progress) {
+#if REACT_NATIVE_VERSION_MINOR < 89
+  // Before React Native 0.89, the paragraph state has no layout size on iOS and its prepared layout has no point
+  // scale factor on Android.
+  return nullptr;
+#else
   if (target.componentHandle != ParagraphShadowNode::Handle() || !target.state) {
     return nullptr;
   }
@@ -99,6 +105,7 @@ State::Shared textStateAt(const ShadowView &start, const ShadowView &target, con
 #endif
   return std::make_shared<const ParagraphShadowNode::ConcreteState>(
       std::make_shared<const ParagraphState>(std::move(data)), state);
+#endif
 }
 
 namespace {

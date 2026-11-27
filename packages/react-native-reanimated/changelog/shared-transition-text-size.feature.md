@@ -1,1 +1,1 @@
-A shared element transition of a `Text` now animates its font size between the two screens.
+From React Native 0.89, a shared element transition of a `Text` animates its font size between the two screens.
