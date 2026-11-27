@@ -1,10 +1,12 @@
+import type { BoxShadowValue } from 'react-native';
+
 import { withTiming } from '../src/animation';
 import { logger } from '../src/common';
 import { ReduceMotion } from '../src/commonTypes';
 import type {
   AnimationObject,
   LayoutAnimation,
-  LayoutAnimationsValues,
+  LayoutAnimationValues,
   StyleProps,
 } from '../src/commonTypes';
 import type { SharedTransitionAnimationsValues } from '../src/layoutReanimation/SharedTransition';
@@ -69,7 +71,17 @@ const VALUES = {
 } as unknown as SharedTransitionAnimationsValues;
 
 function runLayoutAnimation(transition: SharedTransition): LayoutAnimation {
-  return transition.build()(VALUES as unknown as LayoutAnimationsValues);
+  return transition.build()(VALUES as unknown as LayoutAnimationValues);
+}
+
+// Animations such as `withTiming` are typed as the value they animate to, so
+// `animations` declares style values. Its index signature gives back the
+// animation definitions it holds.
+function definitionOf(
+  animations: StyleProps,
+  key: string
+): AnimationObject | (() => AnimationObject) {
+  return animations[key];
 }
 
 function rotationOf(style: StyleProps) {
@@ -156,11 +168,9 @@ describe('SharedTransition', () => {
 
     function timedSamples(values: SharedTransitionAnimationsValues) {
       const { initialValues, animations } = new SharedTransition().build()(
-        values as unknown as LayoutAnimationsValues
+        values as unknown as LayoutAnimationValues
       );
-      const definition = animations.backgroundColor as
-        | AnimationObject
-        | (() => AnimationObject);
+      const definition = definitionOf(animations, 'backgroundColor');
       const animation =
         typeof definition === 'function' ? definition() : definition;
       animation.onStart(
@@ -223,7 +233,7 @@ describe('SharedTransition', () => {
           );
           return {};
         }).build()(
-          colorValues(current, target) as unknown as LayoutAnimationsValues
+          colorValues(current, target) as unknown as LayoutAnimationValues
         );
         SharedTransition.progressAnimation((values) => {
           'worklet';
@@ -303,18 +313,25 @@ describe('SharedTransition', () => {
           return { transform: [{ matrix }] };
         }).reduceMotion(ReduceMotion.Always)
       );
-      expect(animations.transform[0].matrix.reduceMotion).toBe(true);
+      expect(animations.transform).toHaveProperty(
+        '0.matrix.reduceMotion',
+        true
+      );
     });
 
     test('starts an animation defined outside the worklet', () => {
-      const width = () => ({ onFrame: () => true, onStart: () => undefined });
+      // Like `withTiming`, the animation factory is typed as the animated value.
+      const width = (() => ({
+        onFrame: () => true,
+        onStart: () => undefined,
+      })) as unknown as number;
       const { animations } = runLayoutAnimation(
         SharedTransition.custom(() => {
           'worklet';
           return { width };
         }).reduceMotion(ReduceMotion.Always)
       );
-      expect(animations.width.reduceMotion).toBe(true);
+      expect(animations.width).toHaveProperty('reduceMotion', true);
     });
 
     test('can come after other modifiers', () => {
@@ -408,7 +425,8 @@ describe('SharedTransition', () => {
       const [{ color }] = SharedTransition.progressAnimation(() => {
         'worklet';
         return { boxShadow: [shadow] };
-      }).getProgressAnimation()(VALUES, 0.5).boxShadow;
+      }).getProgressAnimation()(VALUES, 0.5)
+        .boxShadow as readonly BoxShadowValue[];
       expect(color).toEqual(expect.any(Number));
       expect(shadow.color).toBe('red');
     });
@@ -485,9 +503,7 @@ describe('SharedTransition', () => {
 
     test('drives the progress animation to 1', () => {
       const { animations } = runLayoutAnimation(transition);
-      const definition = animations.width as
-        | AnimationObject
-        | (() => AnimationObject);
+      const definition = definitionOf(animations, 'width');
       const width =
         typeof definition === 'function' ? definition() : definition;
       width.onStart(width, 0, 0, undefined!);
@@ -547,7 +563,7 @@ describe('SharedTransition with fadeContent', () => {
     currentContentOpacity: 1,
     targetContentOpacity: 0,
   } as unknown as SharedTransitionAnimationsValues;
-  const fadingLayoutValues = FADING_VALUES as unknown as LayoutAnimationsValues;
+  const fadingLayoutValues = FADING_VALUES as unknown as LayoutAnimationValues;
 
   test('fades the content out when a custom animation leaves it out', () => {
     const { initialValues, animations } = SharedTransition.custom((values) => {
@@ -605,7 +621,7 @@ describe('SharedTransition with a clip', () => {
     targetClipWidth: 200,
   } as unknown as SharedTransitionAnimationsValues;
   const clippedLayoutValues =
-    CLIPPED_VALUES as unknown as LayoutAnimationsValues;
+    CLIPPED_VALUES as unknown as LayoutAnimationValues;
 
   test.each([
     [

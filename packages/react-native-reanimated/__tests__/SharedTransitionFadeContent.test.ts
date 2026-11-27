@@ -1,9 +1,6 @@
 import { withSpring, withTiming } from '../src/animation';
 import { logger } from '../src/common';
-import type {
-  EntryAnimationsValues,
-  LayoutAnimationValues,
-} from '../src/commonTypes';
+import type { LayoutAnimationValues } from '../src/commonTypes';
 import { SharedTransition } from '../src/layoutReanimation';
 
 jest.mock('../src/animation', () => ({
@@ -14,7 +11,7 @@ jest.mock('../src/animation', () => ({
 
 function fadeInDuration(transition: SharedTransition) {
   jest.mocked(withTiming).mockClear();
-  transition.buildContentFade()?.fadeIn({} as EntryAnimationsValues);
+  transition.buildContentFade()?.fadeIn({} as LayoutAnimationValues);
   return jest.mocked(withTiming).mock.lastCall?.[1]?.duration;
 }
 
@@ -167,7 +164,7 @@ describe('SharedTransition content fade builder', () => {
       expect(transition).toBeInstanceOf(SharedTransition);
       transition.buildContentFade()?.fadeIn({
         targetOpacity: 0.4,
-      } as EntryAnimationsValues);
+      } as LayoutAnimationValues & { targetOpacity: number });
       expect(withTiming).toHaveBeenCalledWith(
         0.4,
         expect.objectContaining({ duration: 400 })
@@ -179,7 +176,7 @@ describe('SharedTransition content fade builder', () => {
     SharedTransition.springify()
       .fadeContent()
       .buildContentFade()
-      ?.fadeIn({} as EntryAnimationsValues);
+      ?.fadeIn({} as LayoutAnimationValues);
     expect(withTiming).toHaveBeenCalledWith(
       1,
       expect.objectContaining({ duration: 250 })

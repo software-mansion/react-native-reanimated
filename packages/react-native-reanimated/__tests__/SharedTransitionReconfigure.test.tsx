@@ -35,6 +35,7 @@ function sharedTransitionRegistrations() {
 function mountWith(sharedTransitionStyle: SharedTransition) {
   return new AnimatedComponent(
     View,
+    // @ts-expect-error `AnimatedComponentProps` asks the instance for `presetName`, which is static.
     { sharedTransitionTag: 'tag', sharedTransitionStyle },
     'View'
   );

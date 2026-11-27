@@ -142,7 +142,7 @@ describe('useAnimatedRef', () => {
       animatedRef = useAnimatedRef<Animated.View>();
       return (
         <Animated.View
-          ref={(instance) => {
+          ref={(instance: Animated.View | null) => {
             animatedRef?.(instance);
           }}
         />

@@ -53,14 +53,14 @@ describe('useAnimatedSensor on web', () => {
   beforeEach(() => {
     result = undefined;
     FakeAccelerometer.instances = [];
-    globalThis.__sensorContainer = undefined;
+    (globalThis as Partial<typeof globalThis>).__sensorContainer = undefined;
     (window as unknown as Record<string, unknown>).Accelerometer =
       FakeAccelerometer;
   });
 
   afterEach(() => {
     delete (window as unknown as Record<string, unknown>).Accelerometer;
-    globalThis.__sensorContainer = undefined;
+    (globalThis as Partial<typeof globalThis>).__sensorContainer = undefined;
   });
 
   test('starts the browser sensor with the requested frequency', () => {

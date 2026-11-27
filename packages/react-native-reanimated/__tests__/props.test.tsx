@@ -186,7 +186,7 @@ describe('Test of boxShadow prop', () => {
 
     const unprocessedStyle = getAnimatedStyle(pressable);
 
-    const parsedStyle = processBoxShadow(unprocessedStyle.boxShadow);
+    const parsedStyle = processBoxShadow(unprocessedStyle.boxShadow!);
 
     expect(parsedStyle).toEqual([
       {

@@ -1,4 +1,5 @@
 import { withDelay, withSpring, withTiming } from '../src/animation';
+import type { AffineMatrixFlat } from '../src/animation/transformationMatrix/matrixUtils';
 import {
   interpolateMatrix,
   prepareMatrixInterpolation,
@@ -215,8 +216,10 @@ describe('fresh shared transition geometry clocks', () => {
   test.each(configs.slice(0, 2))(
     'matches a $name spring on a 3D transform',
     ({ spring, transition }) => {
-      const source = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
-      const target = [
+      const source: AffineMatrixFlat = [
+        1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+      ];
+      const target: AffineMatrixFlat = [
         Math.cos(0.5),
         0,
         -Math.sin(0.5),
