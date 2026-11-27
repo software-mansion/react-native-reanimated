@@ -1,6 +1,7 @@
 import type { BabelFileResult, NodePath, PluginItem } from '@babel/core';
 import { traverse } from '@babel/core';
 import generate from '@babel/generator';
+import type { GeneratorOptions } from '@babel/generator';
 import type {
   File as BabelFile,
   Identifier,
@@ -25,6 +26,7 @@ import {
   variableDeclaration,
   variableDeclarator,
 } from '@babel/types';
+import { decode, encode } from '@jridgewell/sourcemap-codec';
 import { strict as assert } from 'assert';
 import * as convertSourceMap from 'convert-source-map';
 
@@ -116,11 +118,14 @@ export function buildWorkletString(
     },
   });
 
-  const code = generate(workletFunction).code;
-
   assert(inputMap, '`inputMap` is undefined.');
 
   const includeSourceMap = !(isRelease(state) || state.opts.disableSourceMaps);
+
+  const { code, map } = generate(workletFunction, {
+    sourceMaps: includeSourceMap,
+    inputSourceMap: inputMap,
+  } as GeneratorOptions);
 
   const transformed = workletTransformSync(code, {
     filename: state.file.opts.filename,
@@ -131,7 +136,7 @@ export function buildWorkletString(
     extraPresets: state.opts.extraPresets,
     compact: true,
     sourceMaps: includeSourceMap,
-    inputSourceMap: inputMap,
+    inputSourceMap: map ?? undefined,
     ast: false,
     babelrc: false,
     configFile: false,
@@ -151,12 +156,24 @@ export function buildWorkletString(
       // Therefore, we remove it to reduce the bandwith and avoid sending it potentially multiple times
       // in files that contain multiple worklets. Along with sourcesContent.
       delete sourceMap.sourcesContent;
+      sourceMap = shiftFirstLine(sourceMap, 1);
     }
   }
 
   const wrappedCode = `(${transformed.code})`;
 
   return [wrappedCode, JSON.stringify(sourceMap)];
+}
+
+export function shiftFirstLine<T extends { mappings: string }>(
+  map: T,
+  columns: number
+): T {
+  const lines = decode(map.mappings);
+  for (const segment of lines[0] ?? []) {
+    segment[0] += columns;
+  }
+  return { ...map, mappings: encode(lines) };
 }
 
 /**

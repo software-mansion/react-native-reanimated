@@ -19,24 +19,59 @@ static inline std::shared_ptr<const ShadowNode> shadowNodeFromValue(
   return Bridging<std::shared_ptr<const ShadowNode>>::fromJs(rt, shadowNodeWrapper);
 }
 
-// Rounds in place. Used only with USE_ANIMATION_BACKEND, where the props are read from JSI directly.
-[[maybe_unused]] static void roundTextMetrics(jsi::Runtime &rt, const jsi::Value &updates) {
-  const auto object = updates.asObject(rt);
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    const auto value = object.getProperty(rt, propName);
-    if (value.isNumber()) {
-      object.setProperty(rt, propName, roundTextMetric(value.asNumber()));
+static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value);
+
+static folly::dynamic propsFromObject(jsi::Runtime &rt, const jsi::Object &object) {
+  if (object.isArray(rt)) {
+    const auto array = object.getArray(rt);
+    const size_t size = array.size(rt);
+    folly::dynamic result = folly::dynamic::array();
+    result.reserve(size);
+    for (size_t i = 0; i < size; ++i) {
+      result.push_back(propsFromValue(rt, array.getValueAtIndex(rt, i)));
     }
+    return result;
   }
+  if (object.isFunction(rt)) {
+    return nullptr;
+  }
+  const auto names = object.getPropertyNames(rt);
+  const size_t size = names.size(rt);
+  folly::dynamic result = folly::dynamic::object();
+  for (size_t i = 0; i < size; ++i) {
+    const auto name = names.getValueAtIndex(rt, i).getString(rt);
+    const auto property = object.getProperty(rt, name);
+    if (property.isUndefined()) {
+      continue;
+    }
+    result.insert(name.utf8(rt), propsFromValue(rt, property));
+  }
+  return result;
 }
 
-static void roundTextMetrics(folly::dynamic &updates) {
-  for (const auto *propName : TEXT_METRIC_PROP_NAMES) {
-    auto *value = updates.get_ptr(propName);
-    if (value != nullptr && value->isNumber()) {
-      *value = roundTextMetric(value->asDouble());
-    }
+static folly::dynamic propsFromValue(jsi::Runtime &rt, const jsi::Value &value) {
+  if (value.isNumber()) {
+    return value.getNumber();
   }
+  if (value.isString()) {
+    return value.getString(rt).utf8(rt);
+  }
+  if (value.isObject()) {
+    return propsFromObject(rt, value.getObject(rt));
+  }
+  if (value.isUndefined() || value.isNull()) {
+    return nullptr;
+  }
+  if (value.isBool()) {
+    return value.getBool();
+  }
+  if (value.isBigInt()) {
+    throw jsi::JSError(rt, "JS BigInts are not convertible to dynamic");
+  }
+  if (value.isSymbol()) {
+    throw jsi::JSError(rt, "JS Symbols are not convertible to dynamic");
+  }
+  throw jsi::JSError(rt, "Value is not convertible to dynamic");
 }
 
 void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operations, const double timestamp) {
@@ -62,7 +97,7 @@ void AnimatedPropsRegistry::update(jsi::Runtime &rt, const jsi::Value &operation
       roundTextMetrics(rt, updates);
       addJSIPropsToAnimatedPropsBatch(shadowNode->getFamilyShared(), rt, updates);
     } else {
-      auto dynamicUpdates = jsi::dynamicFromValue(rt, updates);
+      auto dynamicUpdates = propsFromValue(rt, updates);
       roundTextMetrics(dynamicUpdates);
       // With USE_ANIMATION_BACKEND, no update reaches `updatesRegistry_`, so
       // `collectSettledUpdates` never reads `writeHistories_`.

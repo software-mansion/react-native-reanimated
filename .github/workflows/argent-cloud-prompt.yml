@@ -120,7 +120,7 @@ jobs:
   build:
     needs: resolve
     if: inputs.app == 'fabric-example'
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: 120
     permissions:
       contents: read
