@@ -5,7 +5,7 @@ import UIKit
 
 class SceneDelegate: RCTDefaultReactNativeFactoryDelegate, UIWindowSceneDelegate {
   var window: UIWindow?
-  var reactNativeFactory: RCTReactNativeFactory?
+  @objc var reactNativeFactory: RCTReactNativeFactory?
   let runtimeTestsLibrary: String? = {
     let library = ProcessInfo.processInfo.environment["RUNTIME_TESTS_LIBRARY"]
 #if RUNTIME_TESTS

@@ -31,9 +31,18 @@ class MountedAnimation {
   virtual void start(const std::vector<TrackKey> &replacedTracks) = 0;
 };
 
-/// The result is the reason why the command cannot start: SurfaceDestroyed when its surface does not run,
-/// else Rejected.
-using MountedAnimationResolution = std::variant<std::unique_ptr<MountedAnimation>, AnimationResult>;
+/// The reason is why the platform rejects the command.
+using MountedAnimationResolution = std::variant<std::unique_ptr<MountedAnimation>, AnimationResultReason>;
+
+#ifndef NDEBUG
+/// The components of the model value and of the value on screen.
+struct TargetSample {
+  std::vector<double> model;
+  std::vector<double> presentation;
+  /// On the clock of the trace events. The host sets it.
+  double monotonicTimeMs{0};
+};
+#endif
 
 /// The platform part of the host. All calls are on the platform UI thread.
 class NativeAnimationPlatform {
@@ -44,7 +53,9 @@ class NativeAnimationPlatform {
 
   virtual void setTrackEndListener(TrackEndListener listener) = 0;
 
-  /// Finds the mounted view, converts the tracks, and checks the model endpoints. Changes no state.
+  virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
+  /// Finds the mounted view, converts the tracks, and checks the model endpoints. Changes no state and reads
+  /// no surface state.
   virtual MountedAnimationResolution resolve(const AnimationRequest &request) = 0;
 
   /// Removes the physical track. The track end listener does not report a stopped track; each report with
@@ -54,6 +65,13 @@ class NativeAnimationPlatform {
   /// Runs `operation` on the UI thread later, also when the caller is on that thread. The caller can
   /// thus hold a lock that the operation or a client callback takes.
   virtual void postToUIThread(std::function<void()> operation) = 0;
+
+#ifndef NDEBUG
+  virtual std::optional<TargetSample> sample(Tag tag, AnimationTarget target) = 0;
+  /// The receiver gets the sample at the next display frame.
+  virtual void
+  sampleAtNextFrame(Tag tag, AnimationTarget target, std::function<void(std::optional<TargetSample>)> receiver) = 0;
+#endif
 };
 
 } // namespace reanimated::native_animation
