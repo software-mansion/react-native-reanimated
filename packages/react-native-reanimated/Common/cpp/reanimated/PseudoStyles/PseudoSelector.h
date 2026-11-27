@@ -1,12 +1,12 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 
 namespace reanimated {
 
 // Defines all supported selectors and their merge priority (last = highest priority).
-// When you update this remember to also change kPseudoSelectorBits so it uses the last value
 enum class PseudoSelector : std::uint8_t {
   FocusWithin = 0,
   Focus = 1,
@@ -15,9 +15,27 @@ enum class PseudoSelector : std::uint8_t {
   ActiveDeepest = 4,
 };
 
-inline constexpr int kPseudoSelectorBits = static_cast<int>(PseudoSelector::ActiveDeepest) + 1;
+// Names the view whose selector states drive the selectors of the views that follow it.
+using PseudoGroup = std::int32_t;
 
-using PseudoSelectorMask = std::uint8_t;
+// A selector matched against the view itself, or against the view that hosts `group`.
+struct PseudoSelectorKey {
+  PseudoSelector selector;
+  std::optional<PseudoGroup> group;
+
+  bool operator==(const PseudoSelectorKey &other) const = default;
+
+  // Merge order: every group selector below the view's own, each kind in selector priority.
+  bool operator<(const PseudoSelectorKey &other) const {
+    if (group.has_value() != other.group.has_value()) {
+      return group.has_value();
+    }
+    if (selector != other.selector) {
+      return selector < other.selector;
+    }
+    return group < other.group;
+  }
+};
 
 inline std::optional<PseudoSelector> pseudoSelectorFromString(const std::string &s) {
   if (s == ":focus-within") {
