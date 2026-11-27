@@ -10,5 +10,4 @@ if ! which cmake-format >/dev/null; then
   exit 1
 fi
 
-cmake-lint "$@" --line-width 120
-cmake-format --check "$@"
+cmake-lint "$@" --line-width 120 && cmake-format --check "$@"
