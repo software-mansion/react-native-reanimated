@@ -40,7 +40,9 @@ import type {
   DeclaredKey,
   FrameCheck,
   FrameMatrix,
+  BoxLayouts,
   FrameRecord,
+  LayoutKey,
   FrameResidual,
   Leaf,
   Leaves,
@@ -113,11 +115,14 @@ import {
   POSITION_TOLERANCE,
   PRESENTATION_STAY_MS,
   READ_GAP_MS,
+  LAYOUT_KEYS,
+  LAYOUT_PROPS,
   readFrameRecords,
   REMOVAL_LEAD_MS,
   REMOVES_TRACKS_OUT_OF_WINDOW,
   resetCallbacks,
   resetFrameRecords,
+  shadowLayoutsOf,
   residualInBandOf,
   routeOf,
   sample,
@@ -285,18 +290,6 @@ const READERS: Record<string, Reader> = {
   borderRadius: { target: 'BorderRadius', tolerance: POSITION_TOLERANCE },
 };
 
-/** The property of the shadow tree of each layout key. */
-const LAYOUT_PROPS = {
-  originX: 'left',
-  originY: 'top',
-  width: 'width',
-  height: 'height',
-} as const;
-
-type LayoutKey = keyof typeof LAYOUT_PROPS;
-
-const LAYOUT_KEYS = Object.keys(LAYOUT_PROPS) as LayoutKey[];
-
 const isLayoutKey = (key: string): key is LayoutKey => key in LAYOUT_PROPS;
 
 /** A frame check with the key that its leaf declares. */
@@ -332,6 +325,8 @@ export type Played = {
   end?: Samples;
   mounted: MountedValue[];
   tracks: PlayedTrack[];
+  /** The keys of each build (`buildsOf`), one entry for each commit first. */
+  builtKeys: BuiltKey[][];
   /** The trace of the native box from the first commit. */
   events: TraceEvent[];
   captures: Capture[];
@@ -486,9 +481,15 @@ export async function play(declaredCase: ReferenceCase): Promise<Played> {
     end,
     mounted,
     tracks,
+    builtKeys,
     events,
     captures: capturesOf(events, tracks, clockOffset, (track) =>
-      frameDriverOriginOf(track, frameChecks, clockOffset)
+      frameDriverOriginOf(
+        isHandOverOf(track),
+        describeHandOver(track),
+        frameChecks,
+        clockOffset
+      )
     ),
     frameChecks,
     frameRecords,
@@ -566,7 +567,7 @@ function scrollTo(y: number) {
  */
 function mountedValuesOf(
   places: (Place | undefined)[],
-  layouts: (Layouts | undefined)[]
+  layouts: (BoxLayouts | undefined)[]
 ): MountedValue[] {
   return places.flatMap((place, index) => {
     const rest = place && restOf(place);
@@ -597,7 +598,7 @@ function mountedValuesOf(
  */
 async function layoutsInFlightOf(referenceCase: ReferenceCase) {
   const { places, box, clip } = referenceCase;
-  const layouts: (Layouts | undefined)[] = [];
+  const layouts: (BoxLayouts | undefined)[] = [];
   for (const place of places.slice(1, -1)) {
     const rest = place && restOf(place);
     if (!rest || LAYOUT_KEYS.every((key) => isOnPixelGrid(rest[key]))) {
@@ -625,36 +626,10 @@ async function layoutsInFlightOf(referenceCase: ReferenceCase) {
 const NO_ANIMATIONS: Record<BoxName, Animations> = { native: {}, frame: {} };
 const LAYOUT_SETTLE_FRAMES = 2;
 
-/**
- * A laid-out value is a whole number of pixels; the shadow tree gives it with
- * float noise (measured: 49.90477 and 49.904755 for 131 px at 2.625).
- */
-const onPixelGrid = (value: number) =>
-  Math.round(value * PixelRatio.get()) / PixelRatio.get();
-
 const isOnPixelGrid = (value: number) => {
   const pixels = value * PixelRatio.get();
   return Math.abs(pixels - Math.round(pixels)) < 1e-6;
 };
-
-type Layouts = Record<BoxName, Record<LayoutKey, number>>;
-
-async function shadowLayoutsOf(): Promise<Layouts> {
-  const layoutOf = async (refName: string) => {
-    const component = getTestComponent(refName);
-    const values: Partial<Record<LayoutKey, number>> = {};
-    for (const key of LAYOUT_KEYS) {
-      values[key] = onPixelGrid(
-        Number(await component.getAnimatedStyle(LAYOUT_PROPS[key]))
-      );
-    }
-    return values as Record<LayoutKey, number>;
-  };
-  return {
-    native: await layoutOf(BOX_REF),
-    frame: await layoutOf(FRAME_BOX_REF),
-  };
-}
 
 const restsOf = (
   places: (Place | undefined)[],
@@ -674,26 +649,34 @@ const restsOf = (
   );
 
 /**
- * The origin on the sample clock of the build that gave a track to the frame
- * driver: the start call of the record of the native box that replaced the
- * record of the track.
+ * The origin on the sample clock of a build of the frame driver: the start call
+ * of the record of the first check of `isStart`. `text` names the build in the
+ * error.
  */
 function frameDriverOriginOf(
-  track: ScalarTrack,
+  isStart: (check: LeafCheck) => boolean,
+  text: string,
   frameChecks: LeafCheck[],
   clockOffset: Band
 ) {
-  const start = frameChecks.find(
-    ({ record, replaced }) =>
-      record.box === 'native' && replaced?.declared === track.declaration
-  )?.record.start;
+  const start = frameChecks.find(isStart)?.record.start;
   if (!start) {
-    throw new Error(
-      `The frame driver has no start call of the build that took ${describeLeaf(track)} of the command ${track.generation}.`
-    );
+    throw new Error(`The frame driver has no start call of ${text}.`);
   }
   return start.timeMs + middleOf(clockOffset);
 }
+
+/**
+ * The check of the record of the native box that replaced the record of a
+ * track.
+ */
+const isHandOverOf =
+  (track: PlayedTrack) =>
+  ({ record, replaced }: LeafCheck) =>
+    record.box === 'native' && replaced?.declared === track.declaration;
+
+const describeHandOver = (track: PlayedTrack) =>
+  `the build that took ${describeLeaf(track)} of the command ${track.generation}`;
 
 /**
  * Each animation gives its callback `true` one time, after one `false` for each
@@ -2607,13 +2590,8 @@ function tracksOf(
   const commands = events.filter(({ event }) => event === 'Admitted');
   const tracks: PlayedTrack[] = [];
   builtKeys.forEach((keys, commit) => {
-    const started = keys
-      .filter(({ continuesTrack }) => !continuesTrack)
-      .map(({ declared }) => declared);
-    if (
-      started.length === 0 ||
-      declarationOf(referenceCase, commit).isFrameDriven
-    ) {
+    const started = commandKeysOf(referenceCase, keys, commit);
+    if (started.length === 0) {
       return;
     }
     const command = commands.shift();
@@ -2656,6 +2634,21 @@ function tracksOf(
   }
   return tracks;
 }
+
+/**
+ * The keys of the native command of a commit: none when the commit gives no key
+ * a new timeline or when the frame driver plays it.
+ */
+const commandKeysOf = (
+  referenceCase: ReferenceCase,
+  keys: BuiltKey[],
+  commit: number
+): DeclaredKey[] =>
+  declarationOf(referenceCase, commit).isFrameDriven
+    ? []
+    : keys
+        .filter(({ continuesTrack }) => !continuesTrack)
+        .map(({ declared }) => declared);
 
 /**
  * After a restyle or a write of a target, the model of a box is not the end

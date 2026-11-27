@@ -27,6 +27,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyRegistry.h>
 #include <reanimated/NativeModules/PropValueProcessor.h>
 #include <reanimated/PseudoStyles/PseudoStylesRegistry.h>
+#include <reanimated/Tools/ContainerSizes.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 #include <reanimated/Tools/SingleInstanceChecker.h>
 
@@ -100,6 +101,10 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void takeNativeAnimationTrace(jsi::Runtime &rt, const jsi::Value &callback);
   void
   sampleNativeAnimationTarget(jsi::Runtime &rt, Tag tag, const std::string &targetName, const jsi::Value &callback);
+  /// Gives the callback the sizes of the containers of the native animation host, its platform, the layout
+  /// animation proxies, and the layout animations manager, all read in one operation of the host. Gives
+  /// undefined when the build has no host.
+  void nativeAnimationContainerSizes(jsi::Runtime &rt, const jsi::Value &callback);
   /// The native animation routes of this build: `hasHost`, `cssTransitions`, `layoutRoute` (`off`,
   /// `configured`, or `admitted`), `synchronousProps`, and `apiLevel` (null on Apple).
   jsi::Value nativeAnimationRoutes(jsi::Runtime &rt) const;

@@ -7,6 +7,7 @@
 #import <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #import <reanimated/RuntimeDecorators/RNRuntimeDecorator.h>
 #import <reanimated/Tools/FeatureFlags.h>
+#import <reanimated/Tools/ReanimatedSystraceSection.h>
 #import <reanimated/Tools/SingleInstanceChecker.h>
 #import <reanimated/apple/REAAssertJavaScriptQueue.h>
 #import <reanimated/apple/REAAssertTurboModuleManagerQueue.h>
@@ -42,6 +43,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
 
 - (void)invalidate
 {
+  ReanimatedSystraceSection section("ReanimatedModule::invalidate");
   REAAssertTurboModuleManagerQueue();
 
   [_nodesManager invalidate];

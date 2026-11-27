@@ -64,6 +64,7 @@ class AndroidNativeAnimationPlatform final : public NativeAnimationPlatform,
   void postToUIThread(std::function<void()> operation) override;
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   std::optional<TargetSample> sample(Tag tag, AnimationTarget target) override;
+  ContainerSizes containerSizes() override;
   /// The next view lookup of `resolve` for the tag finds no view. UI thread only.
   void failNextViewLookup(Tag tag);
   /// The playbacks on the view at the failed lookup, five values for each (surface, tag, owner, generation,

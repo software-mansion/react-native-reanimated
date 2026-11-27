@@ -99,6 +99,15 @@ export type NativeAnimationRoutes = {
   apiLevel: number | null;
 };
 
+/**
+ * `ReanimatedModuleProxy::nativeAnimationContainerSizes`: the number of entries
+ * of each container, by name (`host.commands`, `host.platform.tracks`,
+ * `registry.proxies.layoutAnimations`, `manager.enteringAnimations` and the
+ * others). The names of the platform containers differ between Apple and
+ * Android. The host reads all containers in one of its operations.
+ */
+export type NativeAnimationContainerSizes = Readonly<Record<string, number>>;
+
 type NativeAnimationTestHooks = {
   takeNativeAnimationTrace: (callback: (events: TraceEvent[]) => void) => void;
   sampleNativeAnimationTarget: (
@@ -107,12 +116,16 @@ type NativeAnimationTestHooks = {
     callback: (sample: TargetSample | undefined) => void
   ) => void;
   nativeAnimationRoutes: () => NativeAnimationRoutes;
+  nativeAnimationContainerSizes: (
+    callback: (sizes: NativeAnimationContainerSizes | undefined) => void
+  ) => void;
 };
 
 export const NATIVE_ANIMATION_TEST_HOOKS: (keyof NativeAnimationTestHooks)[] = [
   'takeNativeAnimationTrace',
   'sampleNativeAnimationTarget',
   'nativeAnimationRoutes',
+  'nativeAnimationContainerSizes',
 ];
 
 export function testHookOf<TName extends keyof NativeAnimationTestHooks>(
