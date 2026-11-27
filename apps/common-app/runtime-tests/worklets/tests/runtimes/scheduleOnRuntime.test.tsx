@@ -2,7 +2,6 @@ import {
   scheduleOnRuntime,
   scheduleOnRN,
   scheduleOnUI,
-  runOnRuntimeSync,
 } from 'react-native-worklets';
 
 import {
@@ -28,13 +27,6 @@ describe('scheduleOnRuntime', () => {
 
   beforeEach(() => {
     value = 0;
-
-    [workletRuntime1, workletRuntime2].forEach((runtime) => {
-      runOnRuntimeSync(runtime, () => {
-        'worklet';
-        globalThis.scheduleOnRN = scheduleOnRN;
-      });
-    });
   });
 
   test('schedules on RN Runtime to a Worker Runtime', async () => {
@@ -53,7 +45,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime1, () => {
         'worklet';
-        globalThis.scheduleOnRN(callbackPass, 42);
+        scheduleOnRN(callbackPass, 42);
       });
     });
 
@@ -67,7 +59,7 @@ describe('scheduleOnRuntime', () => {
 
       scheduleOnRuntime(workletRuntime2, () => {
         'worklet';
-        globalThis.scheduleOnRN(callbackPass, 42);
+        scheduleOnRN(callbackPass, 42);
       });
     });
 

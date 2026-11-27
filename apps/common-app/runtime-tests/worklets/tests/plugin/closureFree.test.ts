@@ -1,9 +1,5 @@
 import type { WorkletFunction } from 'react-native-worklets';
-import {
-  isBundleModeEnabled,
-  runOnRuntimeSync,
-  runOnUISync,
-} from 'react-native-worklets';
+import { runOnRuntimeSync, runOnUISync } from 'react-native-worklets';
 
 import {
   describe,
@@ -40,34 +36,32 @@ describe('Closure-free worklets', () => {
     expect(runOnRuntimeSync(runtime, worklet, 6)).toBe(720);
   });
 
-  if (isBundleModeEnabled()) {
-    test('serializes nested worklets from UI to a Worker Runtime', () => {
-      function outer(value: string) {
+  test('serializes nested worklets from UI to a Worker Runtime', () => {
+    function outer(value: string) {
+      'worklet';
+      const captured = () => {
         'worklet';
-        const captured = () => {
-          'worklet';
-          return value;
-        };
-        const empty = () => {
-          'worklet';
-          return 42;
-        };
-        return [captured, empty] as const;
-      }
-
-      const result = runOnUISync(() => {
+        return value;
+      };
+      const empty = () => {
         'worklet';
-        const [captured, empty] = outer('nested');
-        return [
-          '__closure' in outer,
-          '__closure' in captured,
-          '__closure' in empty,
-          runOnRuntimeSync(runtime, captured),
-          runOnRuntimeSync(runtime, empty),
-        ];
-      });
+        return 42;
+      };
+      return [captured, empty] as const;
+    }
 
-      expect(result).toBe([false, true, false, 'nested', 42]);
+    const result = runOnUISync(() => {
+      'worklet';
+      const [captured, empty] = outer('nested');
+      return [
+        '__closure' in outer,
+        '__closure' in captured,
+        '__closure' in empty,
+        runOnRuntimeSync(runtime, captured),
+        runOnRuntimeSync(runtime, empty),
+      ];
     });
-  }
+
+    expect(result).toBe([false, true, false, 'nested', 42]);
+  });
 });
