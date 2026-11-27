@@ -2973,6 +2973,21 @@ std::vector<SharedTransitionRun *> LayoutAnimationsProxy::contentFadeRuns() cons
   return runs;
 }
 
+// The content fade multiplies the opacity in the props of a child, which a native track does not read.
+bool LayoutAnimationsProxy::fadesWithCarrierContent(const std::shared_ptr<LightNode> &node) const {
+  std::optional<std::unordered_set<Tag>> hiddenTags;
+  for (const auto *run : contentFadeRuns()) {
+    if (!hiddenTags) {
+      hiddenTags = hiddenViewTags();
+    }
+    const auto children = fadingChildren(run->carrier, *hiddenTags);
+    if (std::ranges::find(children, node) != children.end()) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // Runs after all other mutations of the pull, so that React updates of the children keep the fade.
 // All restores come first, so that a child that moves to another carrier gets the fade of that carrier.
 void LayoutAnimationsProxy::composeCarrierContent(
@@ -3088,6 +3103,7 @@ void LayoutAnimationsProxy::startHeldEntering(
       queuedLayout != transaction.layout.end() ? queuedLayout->before : node->current);
   std::erase_if(transaction.layout, isOfNode);
   cancelLayoutAnimation(tag);
+  cancelNativeLayoutAnimation(tag);
   const auto parent = node->parent.lock();
   transaction.filteredMutations.push_back(createPropsUpdate(
       mounted,
@@ -3112,7 +3128,8 @@ void LayoutAnimationsProxy::fadeInTargetContent(
       continue;
     }
     const auto tag = child->current.tag;
-    if (child->isExiting() || isQueuedOrRunning(layoutAnimationPhase(tag))) {
+    if (child->isExiting() || isQueuedOrRunning(layoutAnimationPhase(tag)) ||
+        (nativeLayoutGroups_ && !nativeLayoutGroups_->members(tag).empty())) {
       continue;
     }
     const auto &view = mountedView(child);

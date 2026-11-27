@@ -616,8 +616,9 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
   return LayoutAnimationStop{cancellation.tag};
 }
 
-void LayoutAnimationsProxyCommon::reconcileLayoutAnimationOperations(
+std::vector<uint64_t> LayoutAnimationsProxyCommon::reconcileLayoutAnimationOperations(
     std::deque<LayoutAnimationOperation> &operations) const {
+  std::vector<uint64_t> droppedBuildIds;
   std::unordered_set<Tag> cancelledTags;
   auto reconciled = std::deque<LayoutAnimationOperation>{};
   for (auto operationIt = operations.rbegin(); operationIt != operations.rend(); operationIt++) {
@@ -632,9 +633,13 @@ void LayoutAnimationsProxyCommon::reconcileLayoutAnimationOperations(
     const auto tag = std::visit([](const auto &start) { return start.tag; }, operation);
     if (!cancelledTags.contains(tag)) {
       reconciled.push_front(std::move(operation));
+    } else if (const auto *managedStart = std::get_if<ManagedLayoutAnimationStart>(&operation);
+               managedStart && managedStart->buildId) {
+      droppedBuildIds.push_back(*managedStart->buildId);
     }
   }
   operations = std::move(reconciled);
+  return droppedBuildIds;
 }
 
 void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
@@ -645,7 +650,9 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
   }
   auto operations = std::exchange(layoutAnimationOperations_, std::deque<LayoutAnimationOperation>{});
   pendingLayoutAnimations_.clear();
-  reconcileLayoutAnimationOperations(operations);
+  for (const auto buildId : reconcileLayoutAnimationOperations(operations)) {
+    layoutAnimationsManager_->releaseBuiltLayoutAnimation(uiRuntime_, buildId);
+  }
   auto deferredStarts = takeDeferredLayoutAnimationStarts(operations);
   bool hasFailedStart = false;
   for (auto operation = takeNextLayoutAnimationOperation(operations); operation;
@@ -664,42 +671,11 @@ void LayoutAnimationsProxyCommon::flushLayoutAnimationOperationsLocked() const {
       layoutAnimationsManager_->cancelLayoutAnimation(uiRuntime_, start.tag);
     }
 
-    jsi::Object values(uiRuntime_);
-    if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
-      values = SharedTransitionValuesFactory(uiRuntime_).create(start.before, start.after);
-      if (start.contentOpacity) {
-        values.setProperty(uiRuntime_, "currentContentOpacity", start.contentOpacity->from);
-        values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
-      }
-      if (start.clip) {
-        setClipValues(uiRuntime_, values, *start.clip);
-      }
-    } else {
-      const Snapshot current(start.before, window);
-      const Snapshot target(start.after, window);
-      if (start.type != LayoutAnimationType::ENTERING) {
-        values.setProperty(uiRuntime_, "currentOriginX", current.x);
-        values.setProperty(uiRuntime_, "currentGlobalOriginX", current.x);
-        values.setProperty(uiRuntime_, "currentOriginY", current.y);
-        values.setProperty(uiRuntime_, "currentGlobalOriginY", current.y);
-        values.setProperty(uiRuntime_, "currentWidth", current.width);
-        values.setProperty(uiRuntime_, "currentHeight", current.height);
-      }
-      if (start.isContentFadeIn && start.opacity) {
-        values.setProperty(uiRuntime_, "targetOpacity", *start.opacity);
-      }
-      if (start.type != LayoutAnimationType::EXITING) {
-        values.setProperty(uiRuntime_, "targetOriginX", target.x);
-        values.setProperty(uiRuntime_, "targetGlobalOriginX", target.x);
-        values.setProperty(uiRuntime_, "targetOriginY", target.y);
-        values.setProperty(uiRuntime_, "targetGlobalOriginY", target.y);
-        values.setProperty(uiRuntime_, "targetWidth", target.width);
-        values.setProperty(uiRuntime_, "targetHeight", target.height);
-      }
-    }
-    values.setProperty(uiRuntime_, "windowWidth", window.width);
-    values.setProperty(uiRuntime_, "windowHeight", window.height);
-    if (!layoutAnimationsManager_->startLayoutAnimation(uiRuntime_, start.tag, start.type, values, start.config)) {
+    const bool started = start.buildId
+        ? layoutAnimationsManager_->startBuiltLayoutAnimation(uiRuntime_, start.tag, start.type, *start.buildId)
+        : layoutAnimationsManager_->startLayoutAnimation(
+              uiRuntime_, start.tag, start.type, layoutAnimationValues(start, window), start.config);
+    if (!started) {
       endLayoutAnimation(start.tag, start.type == LayoutAnimationType::EXITING);
       hasFailedStart = true;
     }
@@ -746,6 +722,47 @@ void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<Layout
         },
         layoutAnimationOperations_[index]);
   }
+}
+
+jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
+    const ManagedLayoutAnimationStart &start,
+    const Rect window) const {
+  jsi::Object values(uiRuntime_);
+  if (start.type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION) {
+    values = SharedTransitionValuesFactory(uiRuntime_).create(start.before, start.after);
+    if (start.contentOpacity) {
+      values.setProperty(uiRuntime_, "currentContentOpacity", start.contentOpacity->from);
+      values.setProperty(uiRuntime_, "targetContentOpacity", start.contentOpacity->to);
+    }
+    if (start.clip) {
+      setClipValues(uiRuntime_, values, *start.clip);
+    }
+  } else {
+    const Snapshot current(start.before, window);
+    const Snapshot target(start.after, window);
+    if (start.type != LayoutAnimationType::ENTERING) {
+      values.setProperty(uiRuntime_, "currentOriginX", current.x);
+      values.setProperty(uiRuntime_, "currentGlobalOriginX", current.x);
+      values.setProperty(uiRuntime_, "currentOriginY", current.y);
+      values.setProperty(uiRuntime_, "currentGlobalOriginY", current.y);
+      values.setProperty(uiRuntime_, "currentWidth", current.width);
+      values.setProperty(uiRuntime_, "currentHeight", current.height);
+    }
+    if (start.isContentFadeIn && start.opacity) {
+      values.setProperty(uiRuntime_, "targetOpacity", *start.opacity);
+    }
+    if (start.type != LayoutAnimationType::EXITING) {
+      values.setProperty(uiRuntime_, "targetOriginX", target.x);
+      values.setProperty(uiRuntime_, "targetGlobalOriginX", target.x);
+      values.setProperty(uiRuntime_, "targetOriginY", target.y);
+      values.setProperty(uiRuntime_, "targetGlobalOriginY", target.y);
+      values.setProperty(uiRuntime_, "targetWidth", target.width);
+      values.setProperty(uiRuntime_, "targetHeight", target.height);
+    }
+  }
+  values.setProperty(uiRuntime_, "windowWidth", window.width);
+  values.setProperty(uiRuntime_, "windowHeight", window.height);
+  return values;
 }
 
 void LayoutAnimationsProxyCommon::flushLayoutAnimationOperations() const {

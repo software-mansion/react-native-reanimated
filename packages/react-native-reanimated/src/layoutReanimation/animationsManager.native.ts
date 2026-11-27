@@ -7,7 +7,9 @@ import { cancelAnimation, withStyleAnimation } from '../animation';
 import { isValidLayoutAnimationProp } from '../animation/util';
 import { logger } from '../common';
 import type {
+  AnimationObject,
   LayoutAnimation,
+  LayoutAnimationBuildSummary,
   LayoutAnimationsManager,
   LayoutAnimationValues,
   Mutable,
@@ -71,10 +73,33 @@ function warnAboutUnsupportedProps(animations: Record<string, unknown>) {
   }
 }
 
+type LayoutAnimationBuild = {
+  /** Absent when the builder threw `error`. */
+  style?: LayoutAnimation;
+  error?: unknown;
+  originMs: number;
+  hasCallbackResult?: boolean;
+};
+
+function summarizeLeaf(
+  key: string,
+  initialValue: unknown,
+  animation: unknown
+): LayoutAnimationBuildSummary['leaves'][number] {
+  'worklet';
+  const { reduceMotion, __nativeTiming } = (animation ?? {}) as AnimationObject;
+  return {
+    key,
+    initialValue,
+    timing: reduceMotion ? undefined : __nativeTiming,
+  };
+}
+
 function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const builds = new Map<number, LayoutAnimationBuild>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
@@ -139,73 +164,139 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
       yogaValues: Partial<LayoutAnimationValues>,
       config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation
     ) {
+      startStyle(tag, type, () => config(yogaValues), getStartTimestamp());
+    },
+    build(
+      buildId: number,
+      yogaValues: Partial<LayoutAnimationValues>,
+      config: (arg: Partial<LayoutAnimationValues>) => LayoutAnimation,
+      maxLeaves: number
+    ): LayoutAnimationBuildSummary | undefined {
+      const originMs = getStartTimestamp();
+      let style: LayoutAnimation;
       try {
-        const style = config(yogaValues);
-        if (__DEV__ && type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION) {
-          warnAboutUnsupportedProps(style.animations);
-        }
-        let currentAnimation = style.animations;
-
-        // When layout animation is requested, but a previous one is still running, we merge
-        // new layout animation targets into the ongoing animation
-        const previousAnimation = currentAnimationForTag.get(tag);
-        if (
-          previousAnimation &&
-          type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION
-        ) {
-          currentAnimation = { ...previousAnimation, ...style.animations };
-        }
-        currentAnimationForTag.set(tag, currentAnimation);
-
-        let value = mutableValuesForTag.get(tag);
-        if (value === undefined) {
-          value = makeMutableUI(style.initialValues);
-          mutableValuesForTag.set(tag, value);
-        } else {
-          removeProgressListener(tag, value);
-          value._value = style.initialValues;
-        }
-
-        const animation = withStyleAnimation(
-          currentAnimation,
-          (finished) => {
-            if (finished) {
-              currentAnimationForTag.delete(tag);
-              mutableValuesForTag.delete(tag);
-              const shouldRemoveView = type === LayoutAnimationType.EXITING;
-              stopObservingProgress(
-                tag,
-                value,
-                scheduleFlush,
-                shouldRemoveView
-              );
-            }
-            if (style.callback) {
-              style.callback(finished);
-            }
-          },
-          type === LayoutAnimationType.EXITING
-        );
-
-        startObservingProgress(tag, value, scheduleFlush);
-        const previousFrameTimestamp = global.__frameTimestamp;
-        global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
-        try {
-          value.value = animation;
-        } finally {
-          global.__frameTimestamp = previousFrameTimestamp;
-        }
+        style = config(yogaValues);
       } catch (error) {
-        try {
-          stop(tag);
-        } catch {
-          throw error;
-        }
-        throw error;
+        builds.set(buildId, { error, originMs });
+        return undefined;
       }
+      builds.set(buildId, { style, originMs });
+      const animations = (style.animations ?? {}) as Record<string, unknown>;
+      const initialValues = (style.initialValues ?? {}) as Record<
+        string,
+        unknown
+      >;
+      const keys = Object.keys(animations);
+      const exceedsLimit = keys.length > maxLeaves;
+      return {
+        originMs,
+        exceedsLimit,
+        hasInitialOnlyKeys: Object.keys(initialValues).some(
+          (key) => !(key in animations)
+        ),
+        leaves: exceedsLimit
+          ? []
+          : keys.map((key) =>
+              summarizeLeaf(key, initialValues[key], animations[key])
+            ),
+      };
+    },
+    startBuilt(tag: number, type: LayoutAnimationType, buildId: number) {
+      const build = builds.get(buildId)!;
+      builds.delete(buildId);
+      startStyle(
+        tag,
+        type,
+        () => {
+          if (!build.style) {
+            throw build.error;
+          }
+          return build.style;
+        },
+        build.originMs
+      );
+    },
+    finishBuilt(buildId: number, finished: boolean) {
+      const build = builds.get(buildId);
+      if (build && !build.hasCallbackResult) {
+        build.hasCallbackResult = true;
+        build.style?.callback?.(finished);
+      }
+    },
+    releaseBuilt(buildId: number) {
+      builds.delete(buildId);
     },
     stop,
   };
+
+  function getStartTimestamp(): number {
+    return global.__frameTimestamp ?? getLayoutAnimationStartTimestamp();
+  }
+
+  function startStyle(
+    tag: number,
+    type: LayoutAnimationType,
+    makeStyle: () => LayoutAnimation,
+    startTimestamp: number
+  ) {
+    try {
+      const style = makeStyle();
+      if (__DEV__ && type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION) {
+        warnAboutUnsupportedProps(style.animations);
+      }
+      let currentAnimation = style.animations;
+
+      const previousAnimation = currentAnimationForTag.get(tag);
+      if (
+        previousAnimation &&
+        type !== LayoutAnimationType.SHARED_ELEMENT_TRANSITION
+      ) {
+        currentAnimation = { ...previousAnimation, ...style.animations };
+      }
+      currentAnimationForTag.set(tag, currentAnimation);
+
+      let value = mutableValuesForTag.get(tag);
+      if (value === undefined) {
+        value = makeMutableUI(style.initialValues);
+        mutableValuesForTag.set(tag, value);
+      } else {
+        removeProgressListener(tag, value);
+        value._value = style.initialValues;
+      }
+
+      const animation = withStyleAnimation(
+        currentAnimation,
+        (finished) => {
+          if (finished) {
+            currentAnimationForTag.delete(tag);
+            mutableValuesForTag.delete(tag);
+            const shouldRemoveView = type === LayoutAnimationType.EXITING;
+            stopObservingProgress(tag, value, scheduleFlush, shouldRemoveView);
+          }
+          if (style.callback) {
+            style.callback(finished);
+          }
+        },
+        type === LayoutAnimationType.EXITING
+      );
+
+      startObservingProgress(tag, value, scheduleFlush);
+      const previousFrameTimestamp = global.__frameTimestamp;
+      global.__frameTimestamp = startTimestamp;
+      try {
+        value.value = animation;
+      } finally {
+        global.__frameTimestamp = previousFrameTimestamp;
+      }
+    } catch (error) {
+      try {
+        stop(tag);
+      } catch {
+        throw error;
+      }
+      throw error;
+    }
+  }
 }
 
 let isLayoutAnimationsManagerInitialized = false;

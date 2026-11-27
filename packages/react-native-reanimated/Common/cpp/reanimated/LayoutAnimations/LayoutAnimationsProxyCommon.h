@@ -11,7 +11,6 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
-#include <reanimated/LayoutAnimations/NativeLayoutStart.h>
 #include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -113,6 +112,8 @@ struct ManagedLayoutAnimationStart {
   std::optional<AncestorClipRange> clip;
   // A shared transition content fade-in gets the target opacity of the view.
   bool isContentFadeIn = false;
+  /// Has a value when the UI runtime already holds the result of the builder of `config`.
+  std::optional<uint64_t> buildId;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -152,7 +153,6 @@ struct LayoutAnimationsProxyDependencies {
   std::function<void(std::function<void()>)> scheduleOnNextUIFrame;
   std::function<std::optional<double>(Tag)> readSynchronousOpacity;
   std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost;
-  GetAnimationTimestampFunction getAnimationTimestamp;
 #ifdef ANDROID
   PreserveMountedTagsFunction filterUnmountedTagsFunction;
   ReleaseViewTransitionsFunction releaseViewTransitions;
@@ -210,14 +210,6 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   /// The platform reports that the transaction of the last pull is on the host views. UI thread only.
   virtual void surfaceDidMount() {}
   virtual void surfaceDidUnmount();
-#ifndef NDEBUG
-  virtual bool armNativeLayoutStart(Tag /*tag*/, const ArmedNativeLayoutStart & /*armedStart*/) {
-    return false;
-  }
-  virtual bool cancelNativeLayoutCommand(Tag /*tag*/) {
-    return false;
-  }
-#endif
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
   ~LayoutAnimationsProxyCommon() override = default;
@@ -237,6 +229,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void enqueueLayoutAnimation(ManagedLayoutAnimationStart start) const;
   void enqueueLayoutAnimation(ProgressLayoutAnimationStart start) const;
   void flushLayoutAnimationOperations(std::unique_lock<std::recursive_mutex> &lock) const;
+  /// The values that the builder of the layout animation gets.
+  jsi::Object layoutAnimationValues(const ManagedLayoutAnimationStart &start, Rect window) const;
   void cancelLayoutAnimation(Tag tag) const;
   void cancelAllLayoutAnimations() const;
   bool hasPendingLayoutAnimation(Tag tag) const;
@@ -333,7 +327,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       folly::dynamic style,
       const Frame &frame,
       bool animatesOpacity) const;
-  void reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
+  /// Gives the builds of the starts that it removes.
+  std::vector<uint64_t> reconcileLayoutAnimationOperations(std::deque<LayoutAnimationOperation> &operations) const;
   // A start that waits keeps its place in the queue, and its animation time does not run yet.
   virtual bool defersLayoutAnimationStart(Tag /*tag*/) const {
     return false;
