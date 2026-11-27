@@ -1,6 +1,5 @@
 'use strict';
 
-import { logger } from '../debug/logger';
 import type { WorkletFactory, WorkletFunction } from '../types';
 
 export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
@@ -19,20 +18,28 @@ export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
 function getWorklet(
   workletHash: number,
   closureVariables: unknown[] | undefined
-): WorkletFunction | undefined {
-  let worklet;
+): WorkletFunction {
   if (__DEV__) {
     try {
-      worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
+      return getWorkletFromMetroRequire(workletHash, closureVariables);
     } catch (e) {
-      logger.error(
-        `Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${(e as Error).message}`
-      );
+      return (() => {
+        throw new Error(
+          `[Worklets] Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${describeThrownValue(e)}`
+        );
+      }) as unknown as WorkletFunction;
     }
   } else {
-    worklet = getWorkletFromMetroRequire(workletHash, closureVariables);
+    return getWorkletFromMetroRequire(workletHash, closureVariables);
   }
-  return worklet;
+}
+
+function describeThrownValue(value: unknown): string {
+  try {
+    return String(value instanceof Error ? value.message : value);
+  } catch {
+    return 'a value that cannot be converted to a string';
+  }
 }
 
 const metroRequire = globalThis.__r;
