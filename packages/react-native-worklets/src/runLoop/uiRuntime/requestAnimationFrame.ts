@@ -2,6 +2,8 @@
 
 export function setupRequestAnimationFrame() {
   'worklet';
+  const UNREPORTABLE_ERROR_MESSAGE =
+    '[Worklets] A requestAnimationFrame callback threw a value that cannot be reported.';
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
   let queuedCallbacksBegin = 0;
@@ -24,19 +26,21 @@ export function setupRequestAnimationFrame() {
     flushedCallbacksEnd = queuedCallbacksEnd;
     queuedCallbacksBegin = queuedCallbacksEnd;
 
-    try {
-      if (flushedCallbacks.length > 0) {
-        for (const callback of flushedCallbacks) {
+    const errors: unknown[] = [];
+    if (flushedCallbacks.length > 0) {
+      for (const callback of flushedCallbacks) {
+        try {
           callback(timestamp);
-          globalThis.__drainMicrotasks();
+        } catch (error) {
+          errors.push(error);
         }
-      } else {
-        globalThis.__drainMicrotasks();
+        drainMicrotasks(errors);
       }
-    } finally {
-      flushedCallbacksBegin = flushedCallbacksEnd;
-      flushedCallbacks = [];
+    } else {
+      drainMicrotasks(errors);
     }
+    flushedCallbacksBegin = flushedCallbacksEnd;
+    flushedCallbacks = [];
 
     const finalizers = queuedFinalizers;
     queuedFinalizers = [];
@@ -45,6 +49,8 @@ export function setupRequestAnimationFrame() {
       for (; finalizerIndex < finalizers.length; finalizerIndex++) {
         finalizers[finalizerIndex]();
       }
+    } catch (error) {
+      errors.push(error);
     } finally {
       if (finalizerIndex < finalizers.length) {
         queuedFinalizers = finalizers
@@ -52,7 +58,66 @@ export function setupRequestAnimationFrame() {
           .concat(queuedFinalizers);
       }
     }
-    globalThis.__drainMicrotasks();
+    drainMicrotasks(errors);
+
+    throwErrors(errors);
+  }
+
+  function drainMicrotasks(errors: unknown[]) {
+    for (;;) {
+      try {
+        globalThis.__drainMicrotasks();
+        return;
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+  }
+
+  function throwErrors(errors: unknown[]) {
+    if (errors.length === 0) {
+      return;
+    }
+    for (let i = 1; i < errors.length; i++) {
+      reportError(errors[i]);
+    }
+    throw errors[0];
+  }
+
+  function reportError(error: unknown) {
+    try {
+      const { message, stack, name } = describeError(error);
+      globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
+        message,
+        stack,
+        name
+      );
+    } catch {
+      globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
+        UNREPORTABLE_ERROR_MESSAGE,
+        '',
+        'Error'
+      );
+    }
+  }
+
+  function describeError(error: unknown) {
+    if (error instanceof Error) {
+      return {
+        message: typeof error.message === 'string' ? error.message : '',
+        stack: typeof error.stack === 'string' ? error.stack : '',
+        name: typeof error.name === 'string' ? error.name : 'Error',
+      };
+    }
+    return { message: describeThrownValue(error), stack: '', name: 'Error' };
+  }
+
+  function describeThrownValue(value: unknown): string {
+    try {
+      return String(value);
+    } catch {
+      return Object.prototype.toString.call(value);
+    }
   }
 
   function requestAnimationFrame(
