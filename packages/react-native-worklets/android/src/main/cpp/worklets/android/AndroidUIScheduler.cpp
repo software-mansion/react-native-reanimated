@@ -11,6 +11,13 @@ class UISchedulerWrapper : public UIScheduler {
  private:
   jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler_;
 
+  void requestTrigger() {
+    if (!scheduledOnUI_.exchange(true)) {
+      static const auto method = androidUiScheduler_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
+      method(androidUiScheduler_);
+    }
+  }
+
   bool queryIsOnUIThread() const override {
     static const auto method = androidUiScheduler_->getClass()->getMethod<jboolean()>("isOnUIThread");
     return method(androidUiScheduler_);
@@ -21,20 +28,20 @@ class UISchedulerWrapper : public UIScheduler {
       : androidUiScheduler_(std::move(androidUiScheduler)) {}
 
   void onUIThreadTrigger() {
-    triggerUI();
+    triggerUI([this] { requestTrigger(); });
   }
 
   void scheduleOnUI(std::function<void()> job) override {
-    UIScheduler::scheduleOnUI(std::move(job));
-    if (isOnUIThread()) {
-      triggerUI();
+    if (canInvokeSync()) {
+      invokeSync(job, [this] { requestTrigger(); });
       return;
     }
-    if (!scheduledOnUI_) {
-      scheduledOnUI_ = true;
-      static const auto method = androidUiScheduler_->getClass()->getMethod<void()>("scheduleTriggerOnUI");
-      method(androidUiScheduler_);
+
+    UIScheduler::scheduleOnUI(std::move(job));
+    if (isOnUIThread() && drainingUI_) {
+      return;
     }
+    requestTrigger();
   }
 };
 

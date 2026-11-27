@@ -12,6 +12,9 @@ class IOSUIScheduler : public UIScheduler, public std::enable_shared_from_this<I
 
  protected:
   bool queryIsOnUIThread() const override;
+
+ private:
+  void requestTrigger();
 };
 
 } // namespace worklets

@@ -117,6 +117,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/css/platformColor.test');
       require('./tests/css/transformNone.test');
       require('./tests/css/transitionOnRecycledView.test');
+      require('./tests/css/transitionDelayUIJobs.test');
     },
   },
   {
