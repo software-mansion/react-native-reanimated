@@ -104,57 +104,82 @@ AnimationTiming segmentEasing(jsi::Runtime &rt, const jsi::Object &segment) {
   return CubicBezierTiming{controlPoint("0"), controlPoint("1"), controlPoint("2"), controlPoint("3")};
 }
 
-std::variant<AnimationValue, TrackBuildFailure> transformOf(jsi::Runtime &rt, const jsi::Value &value) {
-  if (!value.isObject() || !value.getObject(rt).isArray(rt)) {
-    return TrackBuildFailure::UnsupportedValue;
+std::optional<TransformOperationKind> operationKind(jsi::Runtime &rt, const jsi::Object &operation) {
+  const auto kind = operation.getProperty(rt, "kind").asString(rt).utf8(rt);
+  const auto name = std::ranges::find_if(
+      OPERATION_NAMES, [&kind](const OperationName &operationName) { return kind == operationName.name; });
+  return name == OPERATION_NAMES.end() ? std::nullopt : std::optional(name->kind);
+}
+
+/// True when the initial value of the build summary is a number, or for a `transform` leaf a list of operations
+/// that each have a native kind.
+bool hasNativeForm(jsi::Runtime &rt, const jsi::Value &initialValue, const AnimationTarget target) {
+  if (target != AnimationTarget::Transform) {
+    return initialValue.isNumber();
   }
-  const auto operations = value.getObject(rt).getArray(rt);
-  const auto count = operations.size(rt);
-  AnimationTransform transform;
-  transform.operations.reserve(count);
-  for (size_t index = 0; index < count; ++index) {
-    const auto operation = operations.getValueAtIndex(rt, index).asObject(rt);
-    const auto kind = operation.getProperty(rt, "kind").asString(rt).utf8(rt);
-    const auto name = std::ranges::find_if(
-        OPERATION_NAMES, [&kind](const OperationName &operationName) { return kind == operationName.name; });
-    if (name == OPERATION_NAMES.end()) {
-      return TrackBuildFailure::UnsupportedValue;
+  if (!initialValue.isObject() || !initialValue.getObject(rt).isArray(rt)) {
+    return false;
+  }
+  const auto operations = initialValue.getObject(rt).getArray(rt);
+  for (size_t index = 0; index < operations.size(rt); ++index) {
+    if (!operationKind(rt, operations.getValueAtIndex(rt, index).asObject(rt))) {
+      return false;
     }
-    transform.operations.push_back({name->kind, numberOf(operation.getProperty(rt, "value"))});
   }
-  return transform;
+  return true;
 }
 
-/// The native value of a leaf value of the build summary on the view that the commit leaves.
-std::variant<AnimationValue, TrackBuildFailure>
-nativeValue(jsi::Runtime &rt, const jsi::Value &value, const AnimationTarget target, const ShadowView &after) {
-  if (target == AnimationTarget::Transform) {
-    return transformOf(rt, value);
-  }
-  if (!value.isNumber()) {
-    return TrackBuildFailure::UnsupportedValue;
-  }
-  return AnimationValue{value.getNumber() + modelOffset(target, after)};
-}
-
-std::variant<std::vector<AnimationSegment>, TrackBuildFailure>
-makeSegments(jsi::Runtime &rt, const jsi::Object &leafTrack, const AnimationTarget target, const ShadowView &after) {
-  const auto leafSegments = leafTrack.getProperty(rt, "segments").asObject(rt).asArray(rt);
+/// The segments of a timeline of numbers of the build summary. `valueOf` gives the native value of a number.
+template <typename Value, typename ValueOf>
+std::vector<TimelineSegment<Value>>
+makeSegments(jsi::Runtime &rt, const jsi::Object &timeline, const ValueOf &valueOf) {
+  const auto leafSegments = timeline.getProperty(rt, "segments").asObject(rt).asArray(rt);
   const auto count = leafSegments.size(rt);
-  std::vector<AnimationSegment> segments;
+  std::vector<TimelineSegment<Value>> segments;
   segments.reserve(count);
   for (size_t index = 0; index < count; ++index) {
     const auto leafSegment = leafSegments.getValueAtIndex(rt, index).asObject(rt);
-    auto endValue = nativeValue(rt, leafSegment.getProperty(rt, "endValue"), target, after);
-    if (const auto *failure = std::get_if<TrackBuildFailure>(&endValue)) {
-      return *failure;
-    }
     segments.push_back(
         {.endOffset = numberOf(leafSegment.getProperty(rt, "endOffset")),
-         .endValue = std::get<AnimationValue>(std::move(endValue)),
+         .endValue = valueOf(numberOf(leafSegment.getProperty(rt, "endValue"))),
          .timingFromPrevious = segmentEasing(rt, leafSegment)});
   }
   return segments;
+}
+
+std::variant<TrackBody, TrackBuildFailure> makeTransformBody(jsi::Runtime &rt, const jsi::Object &leafTrack) {
+  const auto leafOperations = leafTrack.getProperty(rt, "operations").asObject(rt).asArray(rt);
+  const auto count = leafOperations.size(rt);
+  TransformTimelines body;
+  body.operations.reserve(count);
+  for (size_t index = 0; index < count; ++index) {
+    const auto leafOperation = leafOperations.getValueAtIndex(rt, index).asObject(rt);
+    const auto kind = operationKind(rt, leafOperation);
+    if (!kind) {
+      return TrackBuildFailure::UnsupportedValue;
+    }
+    body.operations.push_back(
+        {.kind = *kind,
+         .start = numberOf(leafOperation.getProperty(rt, "start")),
+         .segments = makeSegments<double>(rt, leafOperation, [](const double value) { return value; })});
+  }
+  return body;
+}
+
+/// The value body of a scalar leaf on the view that the commit leaves.
+TrackBody makeValueBody(
+    jsi::Runtime &rt,
+    const jsi::Object &leafTrack,
+    const jsi::Value &initialValue,
+    const AnimationTarget target,
+    const ShadowView &after) {
+  const auto nativeValue = [offset = modelOffset(target, after)](const double value) {
+    return AnimationValue{value + offset};
+  };
+  return ValueTimeline{
+      .start = nativeValue(numberOf(initialValue)),
+      .segments = makeSegments<AnimationValue>(rt, leafTrack, nativeValue),
+  };
 }
 
 std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
@@ -167,9 +192,9 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
   if (!target) {
     return TrackBuildFailure::UnsupportedTarget;
   }
-  auto start = nativeValue(rt, leaf.getProperty(rt, "initialValue"), *target, after);
-  if (const auto *failure = std::get_if<TrackBuildFailure>(&start)) {
-    return *failure;
+  const auto initialValue = leaf.getProperty(rt, "initialValue");
+  if (!hasNativeForm(rt, initialValue, *target)) {
+    return TrackBuildFailure::UnsupportedValue;
   }
   const auto leafTrackValue = leaf.getProperty(rt, "track");
   if (!leafTrackValue.isObject()) {
@@ -177,14 +202,15 @@ std::variant<AnimationTrack, TrackBuildFailure> makeTrack(
                                                                  : TrackBuildFailure::UnsupportedTiming;
   }
   const auto leafTrack = leafTrackValue.asObject(rt);
-  auto segments = makeSegments(rt, leafTrack, *target, after);
-  if (const auto *failure = std::get_if<TrackBuildFailure>(&segments)) {
+  auto body = leafTrack.getProperty(rt, "kind").asString(rt).utf8(rt) == "transform"
+      ? makeTransformBody(rt, leafTrack)
+      : std::variant<TrackBody, TrackBuildFailure>(makeValueBody(rt, leafTrack, initialValue, *target, after));
+  if (const auto *failure = std::get_if<TrackBuildFailure>(&body)) {
     return *failure;
   }
   AnimationTrack track{
       .target = *target,
-      .start = std::get<AnimationValue>(std::move(start)),
-      .segments = std::get<std::vector<AnimationSegment>>(std::move(segments)),
+      .body = std::get<TrackBody>(std::move(body)),
       .delayMs = numberOf(leafTrack.getProperty(rt, "delayMs")),
       .durationMs = numberOf(leafTrack.getProperty(rt, "durationMs")),
       .endpointPolicy = endpointPolicy,
@@ -231,11 +257,11 @@ LeafValue leafValue(const AnimationTarget target, const ShadowView &view) {
 }
 
 bool endsAtMountedValue(const AnimationTrack &track, const ShadowView &view) {
-  const auto &end = track.segments.back().endValue;
   const auto mounted = leafValue(track.target, view);
-  if (const auto *matrix = std::get_if<facebook::react::Transform>(&mounted)) {
-    return isSameMatrix(matrixOf(std::get<AnimationTransform>(end)), *matrix);
+  if (const auto *body = std::get_if<TransformTimelines>(&track.body)) {
+    return isSameMatrix(matrixOf(endpointsOf(*body).end), std::get<facebook::react::Transform>(mounted));
   }
+  const auto &end = std::get<ValueTimeline>(track.body).segments.back().endValue;
   const auto endKeyValue = std::get<double>(end) - modelOffset(track.target, view);
   return std::abs(endKeyValue - std::get<double>(mounted)) <= ENDPOINT_TOLERANCE;
 }

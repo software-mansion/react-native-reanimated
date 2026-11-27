@@ -1,0 +1,1 @@
+Fix the edges of a view that a native layout animation rotates on iOS: the layer has edge antialiasing for the time of a native `transform` track with a perspective, a rotation about the Z axis, or rotations about the X and the Y axes at one time, and a `transform` leaf that has such a rotation for only a part of its time, the delay included, stays frame-driven.

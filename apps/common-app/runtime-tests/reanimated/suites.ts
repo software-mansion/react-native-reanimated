@@ -227,6 +227,12 @@ const SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout transform',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutTransform.test');
+    },
+  },
+  {
     testSuiteName: 'native layout entering',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutEntering.test');
