@@ -12,6 +12,8 @@ namespace worklets {
 using namespace facebook;
 using namespace worklets;
 
+class UISchedulerWrapper;
+
 class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
  public:
   static auto constexpr kJavaDescriptor = "Lcom/swmansion/worklets/AndroidUIScheduler;";
@@ -19,9 +21,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
       jni::alias_ref<jhybridobject> jThis); // NOLINT //(performance-unnecessary-value-param)
   static void registerNatives();
 
-  std::shared_ptr<UIScheduler> getUIScheduler() {
-    return uiScheduler_;
-  }
+  std::shared_ptr<UIScheduler> getUIScheduler();
 
  private:
   friend HybridBase;
@@ -30,7 +30,7 @@ class AndroidUIScheduler : public jni::HybridClass<AndroidUIScheduler> {
 
   void invalidate();
 
-  std::shared_ptr<UIScheduler> uiScheduler_;
+  std::shared_ptr<UISchedulerWrapper> uiScheduler_;
 
   explicit AndroidUIScheduler(const jni::alias_ref<AndroidUIScheduler::jhybridobject> &jThis);
 };

@@ -20,8 +20,8 @@ class UISchedulerWrapper : public UIScheduler {
   explicit UISchedulerWrapper(jni::global_ref<AndroidUIScheduler::javaobject> androidUiScheduler)
       : androidUiScheduler_(std::move(androidUiScheduler)) {}
 
-  void triggerUI() override {
-    UIScheduler::triggerUI();
+  void onUIThreadTrigger() {
+    triggerUI();
   }
 
   void scheduleOnUI(std::function<void()> job) override {
@@ -46,11 +46,15 @@ jni::local_ref<AndroidUIScheduler::jhybriddata> AndroidUIScheduler::initHybrid(
   return makeCxxInstance(jThis);
 }
 
+std::shared_ptr<UIScheduler> AndroidUIScheduler::getUIScheduler() {
+  return uiScheduler_;
+}
+
 void AndroidUIScheduler::triggerUI() {
   if (!uiScheduler_) {
     return;
   }
-  uiScheduler_->triggerUI();
+  uiScheduler_->onUIThreadTrigger();
 }
 
 void AndroidUIScheduler::invalidate() {
