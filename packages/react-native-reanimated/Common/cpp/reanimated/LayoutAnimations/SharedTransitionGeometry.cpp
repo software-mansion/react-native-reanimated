@@ -81,7 +81,7 @@ State::Shared textStateWithFontSize(const ShadowView &text, const Float fontSize
     return nullptr;
   }
   const auto ownFontSize = drawnFontSize(text);
-  if (ownFontSize <= 0 || fontSize <= 0 || fontSize == ownFontSize) {
+  if (ownFontSize <= 0 || !std::isfinite(fontSize) || fontSize <= 0 || fontSize == ownFontSize) {
     return nullptr;
   }
   const auto scale = fontSize / ownFontSize;
