@@ -1,6 +1,5 @@
 import {
   getCurrentThreadId,
-  isBundleModeEnabled,
   runOnRNSync,
   runOnUISync,
   scheduleOnRN,
@@ -93,159 +92,135 @@ describe('runOnRNSync', () => {
     expect(rnThreadId).toBe(getCurrentThreadId());
   });
 
-  if (isBundleModeEnabled()) {
-    workletSources.forEach(({ name, scheduleOnTarget }) => {
-      test(`returns the result of a remote function from ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          scheduleOnRN(
-            callbackPass,
-            runOnRNSync(add, 20, 22),
-            getCurrentThreadId()
-          );
-        });
-
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(value).toBe(42);
-        expect(rnThreadId).toBe(callerThreadId);
-      });
-
-      test(`runs a remote function on the RN Runtime from ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          scheduleOnRN(
-            callbackPass,
-            runOnRNSync(getRuntimeKind),
-            getCurrentThreadId()
-          );
-        });
-
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(value).toBe(1);
-        expect(rnThreadId).toBe(callerThreadId);
-      });
-
-      test(`runs a worklet on the RN Runtime from ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          const [runtimeKind, threadId] = runOnRNSync(() => {
-            'worklet';
-            return [globalThis.__RUNTIME_KIND, getCurrentThreadId()];
-          });
-          scheduleOnRN(
-            callbackPass,
-            runtimeKind,
-            threadId === getCurrentThreadId() ? 'same' : 'different'
-          );
-        });
-
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(value).toBe(1);
-        expect(callerThreadId).toBe('same');
-      });
-
-      test(`returns an object from ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          scheduleOnRN(
-            callbackPass,
-            JSON.stringify(runOnRNSync(makeObject)),
-            getCurrentThreadId()
-          );
-        });
-
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(rnThreadId).toBe(callerThreadId);
-        expect(value).toBe(JSON.stringify(makeObject()));
-      });
-
-      test(`sees RN Runtime state synchronously from ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          const first = runOnRNSync(increment);
-          const second = runOnRNSync(increment);
-          scheduleOnRN(
-            callbackPass,
-            JSON.stringify([first, second]),
-            getCurrentThreadId()
-          );
-        });
-
-        await waitForNotification(PASS_NOTIFICATION);
-        expect(value).toBe(JSON.stringify([1, 2]));
-        expect(rnThreadId).toBe(callerThreadId);
-      });
-
-      test(`rethrows an error from the RN Runtime on ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          try {
-            runOnRNSync(throwError);
-          } catch (error) {
-            scheduleOnRN(
-              callbackFail,
-              (error as Error).message,
-              getCurrentThreadId()
-            );
-          }
-        });
-
-        await waitForNotification(FAIL_NOTIFICATION);
-        expect(errorMessage).toInclude('Error thrown on the RN Runtime');
-        expect(rnThreadId).toBe(callerThreadId);
-      });
-
-      test(`throws when a locally defined function is passed on ${name} Runtime`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          try {
-            runOnRNSync(() => 42);
-          } catch (error) {
-            scheduleOnRN(
-              callbackFail,
-              (error as Error).message,
-              getCurrentThreadId()
-            );
-          }
-        });
-
-        await waitForNotification(FAIL_NOTIFICATION);
-        expect(errorMessage).toInclude(
-          'Locally defined function passed to runOnRNSync'
-        );
-      });
-    });
-
-    test('runs on the RN Runtime from runOnUISync without a deadlock', () => {
-      const result = runOnUISync(() => {
+  workletSources.forEach(({ name, scheduleOnTarget }) => {
+    test(`returns the result of a remote function from ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
         'worklet';
-        return runOnRNSync(add, 20, 22);
-      });
-
-      expect(result).toBe(42);
-      expect(rnThreadId).toBe(getCurrentThreadId());
-    });
-  } else if (__DEV__) {
-    workletSources.forEach(({ name, scheduleOnTarget }) => {
-      test(`throws on ${name} Runtime outside of the Bundle Mode`, async () => {
-        scheduleOnTarget(() => {
-          'worklet';
-          try {
-            runOnRNSync(add, 20, 22);
-          } catch (error) {
-            scheduleOnRN(
-              callbackFail,
-              error instanceof Error ? error.message : String(error),
-              getCurrentThreadId()
-            );
-          }
-        });
-
-        await waitForNotification(FAIL_NOTIFICATION);
-        expect(errorMessage).toBe(
-          '[Worklets] runOnRNSync cannot be called on Worklet Runtimes outside of the Bundle Mode.'
+        scheduleOnRN(
+          callbackPass,
+          runOnRNSync(add, 20, 22),
+          getCurrentThreadId()
         );
       });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(42);
+      expect(rnThreadId).toBe(callerThreadId);
     });
-  }
+
+    test(`runs a remote function on the RN Runtime from ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
+        'worklet';
+        scheduleOnRN(
+          callbackPass,
+          runOnRNSync(getRuntimeKind),
+          getCurrentThreadId()
+        );
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(1);
+      expect(rnThreadId).toBe(callerThreadId);
+    });
+
+    test(`runs a worklet on the RN Runtime from ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
+        'worklet';
+        const [runtimeKind, threadId] = runOnRNSync(() => {
+          'worklet';
+          return [globalThis.__RUNTIME_KIND, getCurrentThreadId()];
+        });
+        scheduleOnRN(
+          callbackPass,
+          runtimeKind,
+          threadId === getCurrentThreadId() ? 'same' : 'different'
+        );
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(1);
+      expect(callerThreadId).toBe('same');
+    });
+
+    test(`returns an object from ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
+        'worklet';
+        scheduleOnRN(
+          callbackPass,
+          JSON.stringify(runOnRNSync(makeObject)),
+          getCurrentThreadId()
+        );
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(rnThreadId).toBe(callerThreadId);
+      expect(value).toBe(JSON.stringify(makeObject()));
+    });
+
+    test(`sees RN Runtime state synchronously from ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
+        'worklet';
+        const first = runOnRNSync(increment);
+        const second = runOnRNSync(increment);
+        scheduleOnRN(
+          callbackPass,
+          JSON.stringify([first, second]),
+          getCurrentThreadId()
+        );
+      });
+
+      await waitForNotification(PASS_NOTIFICATION);
+      expect(value).toBe(JSON.stringify([1, 2]));
+      expect(rnThreadId).toBe(callerThreadId);
+    });
+
+    test(`rethrows an error from the RN Runtime on ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
+        'worklet';
+        try {
+          runOnRNSync(throwError);
+        } catch (error) {
+          scheduleOnRN(
+            callbackFail,
+            (error as Error).message,
+            getCurrentThreadId()
+          );
+        }
+      });
+
+      await waitForNotification(FAIL_NOTIFICATION);
+      expect(errorMessage).toInclude('Error thrown on the RN Runtime');
+      expect(rnThreadId).toBe(callerThreadId);
+    });
+
+    test(`throws when a locally defined function is passed on ${name} Runtime`, async () => {
+      scheduleOnTarget(() => {
+        'worklet';
+        try {
+          runOnRNSync(() => 42);
+        } catch (error) {
+          scheduleOnRN(
+            callbackFail,
+            (error as Error).message,
+            getCurrentThreadId()
+          );
+        }
+      });
+
+      await waitForNotification(FAIL_NOTIFICATION);
+      expect(errorMessage).toInclude(
+        'Locally defined function passed to runOnRNSync'
+      );
+    });
+  });
+
+  test('runs on the RN Runtime from runOnUISync without a deadlock', () => {
+    const result = runOnUISync(() => {
+      'worklet';
+      return runOnRNSync(add, 20, 22);
+    });
+
+    expect(result).toBe(42);
+    expect(rnThreadId).toBe(getCurrentThreadId());
+  });
 });

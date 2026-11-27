@@ -1,6 +1,5 @@
 import {
   createWorkletRuntime,
-  isBundleModeEnabled,
   runOnRuntimeSync,
   RuntimeKind,
 } from 'react-native-worklets';
@@ -34,10 +33,7 @@ async function fetchCloseRecord(recordUrl: string): Promise<CloseRecord> {
   throw new Error('no close record after 100 attempts');
 }
 
-const describeFn = isBundleModeEnabled() ? describe : describe.skip;
-const testFn = isBundleModeEnabled() ? test : test.skip;
-
-describeFn('WebSocket (live)', () => {
+describe('WebSocket (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'WebSocket opens and echoes a text frame, runtime: **%s**',
     async (runtimeKind) => {
@@ -836,38 +832,35 @@ describeFn('WebSocket (live)', () => {
    * collect the runtime, so this is a smoke test that an abandoned runtime with
    * an open socket does not break the next one - not teardown coverage.
    */
-  testFn(
-    'WebSocket survives an abandoned runtime with a socket open',
-    async () => {
-      const socketUrl = SOCKET_URL;
-      const [flag, setFlag] = createTestValue('not_ok');
+  test('WebSocket survives an abandoned runtime with a socket open', async () => {
+    const socketUrl = SOCKET_URL;
+    const [flag, setFlag] = createTestValue('not_ok');
 
-      {
-        const doomedRuntime = createWorkletRuntime({ name: 'doomedSocket' });
-        runOnRuntimeSync(doomedRuntime, () => {
-          'worklet';
-          const socket = new globalThis.WebSocket(socketUrl);
-          socket.onopen = () => socket.send('never read');
-          return true;
-        });
-      }
-
-      dispatchWorklet(() => {
+    {
+      const doomedRuntime = createWorkletRuntime({ name: 'doomedSocket' });
+      runOnRuntimeSync(doomedRuntime, () => {
         'worklet';
         const socket = new globalThis.WebSocket(socketUrl);
-        socket.onerror = () => setFlag('socket errored', 'ws_teardown_done');
-        socket.onopen = () => socket.send('still works');
-        socket.onmessage = (event: { data: string | ArrayBuffer }) => {
-          setFlag(
-            event.data === 'still works' ? 'ok' : 'wrong echo',
-            'ws_teardown_done'
-          );
-          socket.close();
-        };
-      }, RuntimeKind.Worker);
-
-      await waitForNotification('ws_teardown_done');
-      expect(flag.value).toBe('ok');
+        socket.onopen = () => socket.send('never read');
+        return true;
+      });
     }
-  );
+
+    dispatchWorklet(() => {
+      'worklet';
+      const socket = new globalThis.WebSocket(socketUrl);
+      socket.onerror = () => setFlag('socket errored', 'ws_teardown_done');
+      socket.onopen = () => socket.send('still works');
+      socket.onmessage = (event: { data: string | ArrayBuffer }) => {
+        setFlag(
+          event.data === 'still works' ? 'ok' : 'wrong echo',
+          'ws_teardown_done'
+        );
+        socket.close();
+      };
+    }, RuntimeKind.Worker);
+
+    await waitForNotification('ws_teardown_done');
+    expect(flag.value).toBe('ok');
+  });
 });
