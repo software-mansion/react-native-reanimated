@@ -33,7 +33,9 @@ describe('bundleValueUnpacker', () => {
         const thrownBareObject = unpack({
           __workletHash: 4,
         } as never) as () => void;
-        expect(thrownBareObject).toThrow(TypeError);
+        expect(thrownBareObject).toThrow(
+          'Original error: a value that cannot be converted to a string'
+        );
       });
     } finally {
       globals.__r = previousRequire;
