@@ -86,6 +86,7 @@ export const WORKLETS_TEST_SUITES: RuntimeTestSuite[] = [
       require('./tests/runLoop/requestAnimationFrame.test');
       require('./tests/runLoop/cancelAnimationFrame.test');
       require('./tests/runLoop/setTimeout.test');
+      require('./tests/runLoop/timerErrors.test');
       require('./tests/runLoop/clearTimeout.test');
       require('./tests/runLoop/setImmediate.test');
       require('./tests/runLoop/clearImmediate.test');
