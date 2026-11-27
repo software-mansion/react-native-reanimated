@@ -14,6 +14,7 @@ import {
   getTestComponent,
   mockAnimationTimer,
   recordAnimationUpdates,
+  stopRecordingAnimationUpdates,
   render,
   test,
   unmockAnimationTimer,
@@ -148,6 +149,7 @@ describe('Compare a sequence of three delays, with one delay of their sum', () =
     const delaySum = delays.reduce((current, sum) => sum + current, 0);
     await wait(150 + delaySum);
 
+    await stopRecordingAnimationUpdates();
     const updates = await updatesContainer.getUpdates(
       getTestComponent(componentType)
     );

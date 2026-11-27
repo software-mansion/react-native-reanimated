@@ -7,6 +7,7 @@ import { TestRunner } from './TestRunner/TestRunner';
 import type {
   DefaultValue,
   MaybeAsync,
+  RecordingOptions,
   TestConfiguration,
   TestValue,
 } from './types';
@@ -19,6 +20,7 @@ import {
 export { Presets } from './Presets';
 export { isFullRun } from './utils/fullRun';
 export { isViewMountedNatively } from './utils/nativeViewHierarchy';
+export { commitsSynchronousProps } from './utils/synchronousProps';
 
 const testRunner = new TestRunner();
 const windowDimensionsMocker = testRunner.getWindowDimensionsMocker();
@@ -276,8 +278,8 @@ export async function unmockWindowDimensions() {
   await windowDimensionsMocker.unmockWindowDimensions();
 }
 
-export async function recordAnimationUpdates() {
-  return animationRecorder.recordAnimationUpdates();
+export async function recordAnimationUpdates(options: RecordingOptions = {}) {
+  return animationRecorder.recordAnimationUpdates(options);
 }
 
 export async function stopRecordingAnimationUpdates() {
