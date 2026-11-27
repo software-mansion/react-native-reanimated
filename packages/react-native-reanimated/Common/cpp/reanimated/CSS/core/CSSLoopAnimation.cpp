@@ -47,18 +47,27 @@ void CSSLoopAnimation::abort(const double timestamp) {
 
 folly::dynamic CSSLoopAnimation::getCurrentInterpolationStyle(
     const std::shared_ptr<const ShadowNode> &shadowNode) const {
-  return interpolator_->interpolate(shadowNode, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+  progressProvider_->beginInterpolation();
+  auto style = interpolator_->interpolate(shadowNode, progressProvider_, FALLBACK_INTERPOLATION_THRESHOLD);
+  progressProvider_->endInterpolation();
+  return style;
 }
 
 bool CSSLoopAnimation::update(const double timestamp, OperationsLoop & /*loop*/) {
   progressProvider_->update(timestamp);
-  observer_.onAnimationUpdate(viewTag_);
+  const auto state = progressProvider_->getState();
 
-  if (progressProvider_->getState() == AnimationProgressState::Finished && !settings_->hasForwardsFillMode()) {
+  // Between the steps of a steps() easing the style stays the same, so don't
+  // recompute and re-apply it on every frame.
+  if (state != AnimationProgressState::Running || !progressProvider_->isLastInterpolationUnchanged()) {
+    observer_.onAnimationUpdate(viewTag_);
+  }
+
+  if (state == AnimationProgressState::Finished && !settings_->hasForwardsFillMode()) {
     observer_.onAnimationNeedsRevert(viewTag_);
   }
 
-  return progressProvider_->getState() == AnimationProgressState::Running;
+  return state == AnimationProgressState::Running;
 }
 
 void CSSLoopAnimation::schedule(OperationsLoop &loop) {
