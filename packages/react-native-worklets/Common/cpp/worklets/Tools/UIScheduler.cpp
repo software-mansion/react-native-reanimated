@@ -32,7 +32,7 @@ void UIScheduler::invokeSync(const std::function<void()> &job, const std::functi
   }
 }
 
-void UIScheduler::triggerUI() {
+void UIScheduler::triggerUI(const std::function<void()> &requestTrigger) {
   if (drainingUI_) {
     scheduledOnUI_ = false;
     return;
@@ -46,6 +46,9 @@ void UIScheduler::triggerUI() {
     }
   } catch (...) {
     drainingUI_ = false;
+    if (!uiJobs_.empty()) {
+      requestTrigger();
+    }
     throw;
   }
   drainingUI_ = false;

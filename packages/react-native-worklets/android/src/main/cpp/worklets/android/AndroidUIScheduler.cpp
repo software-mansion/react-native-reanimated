@@ -28,7 +28,7 @@ class UISchedulerWrapper : public UIScheduler {
       : androidUiScheduler_(std::move(androidUiScheduler)) {}
 
   void onUIThreadTrigger() {
-    triggerUI();
+    triggerUI([this] { requestTrigger(); });
   }
 
   void scheduleOnUI(std::function<void()> job) override {

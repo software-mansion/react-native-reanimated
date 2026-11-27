@@ -37,7 +37,7 @@ void IOSUIScheduler::requestTrigger()
       // issues, because when this async callback here gets executed, the original `IOSUIScheduler` object may have been
       // destroyed.
       if (auto strongThis = weakThis.lock()) {
-        strongThis->triggerUI();
+        strongThis->triggerUI([strongThis] { strongThis->requestTrigger(); });
       }
     });
   }

@@ -30,8 +30,10 @@ class UIScheduler {
   /**
    * Drains all queued jobs in FIFO order on the UI thread. Jobs enqueued by a
    * running job are included in the active drain. Reentrant calls are ignored.
+   * If a job throws, requestTrigger is called for the remaining jobs before the
+   * exception is rethrown.
    */
-  void triggerUI();
+  void triggerUI(const std::function<void()> &requestTrigger);
 
   virtual bool queryIsOnUIThread() const = 0;
 
