@@ -17,6 +17,9 @@ describe('bundleValueUnpacker', () => {
       if (id === 1) {
         return { default: worklet };
       }
+      if (id === 3) {
+        throw null;
+      }
       throw new Error(`Requiring unknown module "${id}".`);
     };
     try {
@@ -28,6 +31,8 @@ describe('bundleValueUnpacker', () => {
         expect(unpack({ __moduleId: 1 } as never)).toBe(worklet);
         const unresolved = unpack({ __moduleId: 2 } as never) as () => void;
         expect(unresolved).toThrow('Unable to resolve worklet from module 2');
+        const thrownNull = unpack({ __moduleId: 3 } as never) as () => void;
+        expect(thrownNull).toThrow('Original error: null');
       });
     } finally {
       globals.__r = previousRequire;

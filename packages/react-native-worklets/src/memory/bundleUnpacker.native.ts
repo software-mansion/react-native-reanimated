@@ -27,7 +27,7 @@ function getWorklet(
     try {
       return getWorkletFromMetroRequire(moduleId, closureVariables);
     } catch (e) {
-      const originalMessage = (e as Error).message;
+      const originalMessage = e instanceof Error ? e.message : String(e);
       return (() => {
         throw new Error(
           `[Worklets] Unable to resolve worklet from module ${moduleId}. Try reloading the app. Original error: ${originalMessage}`
