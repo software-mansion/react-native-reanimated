@@ -17,7 +17,7 @@ use crate::types::State;
 use crate::worklet_factory::{FactoryContext, WorkletInput, make_worklet_factory};
 
 pub struct WorkletPass<'a, 'b> {
-    pub state: &'b mut State,
+    pub state: &'b mut State<'a>,
     scoping: &'b mut Scoping,
     pub builder: AstBuilder<'a>,
     pub allocator: &'a Allocator,
@@ -180,7 +180,7 @@ impl<'a, 'b> VisitMut<'a> for WorkletPass<'a, 'b> {
 
 impl<'a, 'b> WorkletPass<'a, 'b> {
     pub fn new(
-        state: &'b mut State,
+        state: &'b mut State<'a>,
         scoping: &'b mut Scoping,
         builder: AstBuilder<'a>,
         allocator: &'a Allocator,

@@ -22,7 +22,9 @@ import { initializeState } from './globals';
 import { processInlineStylesWarning } from './inlineStylesWarning';
 import type { WorkletsPluginPass } from './types';
 import { WorkletizableFunction } from './types';
+import { isRelease } from './utils';
 import { substituteWebCallExpression } from './webOptimization';
+import { restoreWorkletFileLocations } from './workletFileSourceMap';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
 module.exports = function WorkletsBabelPlugin(): PluginItem {
@@ -46,6 +48,9 @@ module.exports = function WorkletsBabelPlugin(): PluginItem {
     pre(this: WorkletsPluginPass) {
       runWithTaggedExceptions(this, () => {
         initializeState(this);
+        if (this.skipFile && !isRelease(this)) {
+          restoreWorkletFileLocations(this.file);
+        }
         /**
          * We run the micro-plugin in the `pre` step of the whole pipeline to
          * add all 'worklet' directives before React Compiler kicks in.

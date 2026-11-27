@@ -54,14 +54,17 @@ function wrapWithReanimatedMetroConfig(config) {
     },
     symbolicator: {
       async customizeFrame(frame) {
+        const customizations =
+          (await config?.symbolicator?.customizeFrame?.(frame)) ?? {};
         const collapse = Boolean(
           // Collapse the stack frame based on user's config symbolicator settings
-          (await config?.symbolicator?.customizeFrame?.(frame))?.collapse ||
+          customizations.collapse ||
           // or, if not already collapsed, collapse the stack frame with path
           // to react-native-reanimated source code
           (frame.file && COLLAPSED_STACK_REGEX.test(frame.file))
         );
         return {
+          ...customizations,
           collapse,
         };
       },

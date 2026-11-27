@@ -5,7 +5,8 @@
   "main": "index.js",
   "types": "index.d.ts",
   "dependencies": {
-    "@jridgewell/remapping": "2.3.5"
+    "@jridgewell/remapping": "2.3.5",
+    "@jridgewell/trace-mapping": "0.3.31"
   },
   "files": [
     "babel.js",

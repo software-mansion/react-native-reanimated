@@ -115,6 +115,8 @@ Defaults to `false`.
 
 This option turns off the source map generation for worklet functions. Mostly used for testing purposes.
 
+In [Bundle Mode](../bundleMode/overview.mdx), it also stops the plugin from adding a source map to each generated worklet file. Errors in worklets then point to the generated files in `react-native-worklets/.worklets` instead of your code.
+
 <Badges version="0.7.0">
   ### disableWorkletClasses
 </Badges>

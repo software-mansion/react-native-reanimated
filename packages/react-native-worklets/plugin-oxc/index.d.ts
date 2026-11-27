@@ -6,6 +6,7 @@ export interface PluginOptions {
     relativePaths?: string[];
   };
   silenceDangerousPathsWarning?: boolean;
+  disableSourceMaps?: boolean;
 }
 
 export interface TransformOptions extends PluginOptions {
@@ -26,6 +27,8 @@ export interface TransformResult {
   /** Whether the transform rewrote anything; if not, the input AST still stands. */
   changed: boolean;
 }
+
+export function isRelease(envName?: string | null): boolean;
 
 export function transform(
   sourceText: string,

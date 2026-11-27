@@ -81,6 +81,7 @@
     "@babel/types": "^7.27.1",
     "@jridgewell/remapping": "^2.3.5",
     "@jridgewell/sourcemap-codec": "^1.5.5",
+    "@jridgewell/trace-mapping": "^0.3.31",
     "convert-source-map": "^2.0.0",
     "semver": "^7.7.4",
     "whatwg-fetch": "^3.6.20"

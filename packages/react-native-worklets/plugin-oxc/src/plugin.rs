@@ -10,7 +10,7 @@ use crate::worklet_pass::WorkletPass;
 
 pub fn process_program<'a>(
     program: &mut Program<'a>,
-    state: &mut State,
+    state: &mut State<'a>,
     scoping: &mut Scoping,
     builder: AstBuilder<'a>,
     allocator: &'a Allocator,

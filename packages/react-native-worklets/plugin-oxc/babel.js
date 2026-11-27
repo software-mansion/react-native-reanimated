@@ -8,6 +8,17 @@ const oxc = require('./index.js');
 // it needs to be merged with this plugin's one
 // to preserve correct mappings
 const remapping = require('@jridgewell/remapping');
+const {
+  GREATEST_LOWER_BOUND,
+  LEAST_UPPER_BOUND,
+  originalPositionFor,
+  TraceMap,
+} = require('@jridgewell/trace-mapping');
+
+const GENERATED_WORKLETS_DIR = 'react-native-worklets/.worklets';
+const SOURCE_MAP_COMMENT_PREFIX = '# workletSourceMap=';
+const ORIGIN_COMMENT_PREFIX = ' __workletOrigin:';
+const restoredFiles = new WeakSet();
 
 const PARSE_ERROR_CODE = 'WORKLETS_ERR_PARSE';
 const FLOW_ERROR_CODE = 'WORKLETS_ERR_FLOW';
@@ -24,6 +35,15 @@ let cachedSyntaxTypescript;
 function workletsPluginOxcBabelShim(babelApi) {
   return {
     name: 'worklets-oxc-plugin',
+    pre(file) {
+      const filename = file.opts.filename?.replace(/\\/g, '/');
+      if (
+        filename?.includes(GENERATED_WORKLETS_DIR) &&
+        !oxc.isRelease(file.opts.envName)
+      ) {
+        restoreWorkletFileLocations(file);
+      }
+    },
     visitor: {
       Program: {
         enter(programPath, state) {
@@ -53,6 +73,77 @@ function workletsPluginOxcBabelShim(babelApi) {
       },
     },
   };
+}
+
+/** @param {import('@babel/core').BabelFile} file */
+function restoreWorkletFileLocations(file) {
+  if (restoredFiles.has(file)) {
+    return;
+  }
+  restoredFiles.add(file);
+
+  const comments = file.ast.comments ?? [];
+  const sourceMapComment = comments.find((comment) =>
+    comment.value.startsWith(SOURCE_MAP_COMMENT_PREFIX)
+  );
+  if (!sourceMapComment) {
+    return;
+  }
+
+  const map = new TraceMap(
+    Buffer.from(
+      sourceMapComment.value.slice(SOURCE_MAP_COMMENT_PREFIX.length),
+      'base64'
+    ).toString('utf8')
+  );
+  const lineOffset =
+    comments[0]?.value.startsWith(ORIGIN_COMMENT_PREFIX) &&
+    comments[0].loc?.start.line === 1
+      ? 1
+      : 0;
+
+  const toOriginal = (position) => {
+    const needle = {
+      line: position.line - lineOffset,
+      column: position.column,
+    };
+    const lower = originalPositionFor(map, {
+      ...needle,
+      bias: GREATEST_LOWER_BOUND,
+    });
+    const original =
+      lower.line !== null
+        ? lower
+        : originalPositionFor(map, { ...needle, bias: LEAST_UPPER_BOUND });
+    if (original.line === null) {
+      return null;
+    }
+    return {
+      position: { line: original.line, column: original.column, index: 0 },
+      source: original.source,
+    };
+  };
+
+  let lastStart = null;
+  file.path.traverse({
+    enter(path) {
+      const { loc } = path.node;
+      if (!loc) {
+        return;
+      }
+      const start = toOriginal(loc.start) ?? lastStart;
+      if (!start) {
+        return;
+      }
+      lastStart = start;
+      path.node.loc = {
+        ...loc,
+        filename: start.source ?? loc.filename,
+        start: start.position,
+        end: toOriginal(loc.end)?.position ?? start.position,
+      };
+    },
+  });
 }
 
 /**

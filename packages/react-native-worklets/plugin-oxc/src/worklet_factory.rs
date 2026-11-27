@@ -54,7 +54,7 @@ pub struct FactoryContext<'a, 'b> {
 
 pub fn make_worklet_factory<'a>(
     input: WorkletInput<'a, '_>,
-    state: &mut State,
+    state: &mut State<'a>,
     scoping: &mut Scoping,
     ctx: FactoryContext<'a, '_>,
 ) -> FactoryOutput<'a> {
@@ -102,7 +102,7 @@ pub fn make_worklet_factory<'a>(
         &closure.closure_variables,
         recursive_name,
         allocator,
-        &state.source_text,
+        state.source_text,
     );
 
     let hash = worklet_hash(&body_string);
@@ -132,7 +132,9 @@ pub fn make_worklet_factory<'a>(
         factory_expr,
         &closure.imports,
         filename,
+        state.source_text,
         state.opts.worklets_package_dir.as_deref(),
+        !state.opts.disable_source_maps.unwrap_or(false),
     );
     let file_path = format!("react-native-worklets/.worklets/{hash}.js");
 

@@ -26,6 +26,11 @@ mod worklet_string_code;
 pub use options::PluginOptions;
 use program::run;
 
+#[napi]
+pub fn is_release(env_name: Option<String>) -> bool {
+    version::is_release(env_name.as_deref())
+}
+
 #[napi(object)]
 pub struct EmittedFile {
     pub path: String,

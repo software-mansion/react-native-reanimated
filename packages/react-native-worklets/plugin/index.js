@@ -722,7 +722,7 @@ var require_class = __commonJS({
     var directives_12 = require_directives();
     var transform_1 = require_transform();
     var types_2 = require_types();
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var classWorkletMarker = "__workletClass";
     function processIfWorkletClass(classPath, state) {
       if (!isWorkletizableClass(classPath, state) || state.opts.bundleMode) {
@@ -742,7 +742,7 @@ var require_class = __commonJS({
       polyfilledClassAst.program.body.push((0, types_12.returnStatement)((0, types_12.identifier)(className)));
       const factoryFactory = (0, types_12.functionExpression)(null, [], (0, types_12.blockStatement)([...polyfilledClassAst.program.body]));
       const factoryCall = (0, types_12.callExpression)(factoryFactory, []);
-      (0, utils_1.replaceWithFactoryCall)(classPath, className, factoryCall);
+      (0, utils_12.replaceWithFactoryCall)(classPath, className, factoryCall);
     }
     function getPolyfilledAst(classNode, state) {
       var _a;
@@ -1330,7 +1330,7 @@ var require_inlineStylesWarning = __commonJS({
     exports2.processInlineStylesWarning = processInlineStylesWarning;
     var types_12 = require("@babel/types");
     var assert_1 = require("assert");
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     function generateInlineStylesWarning(path) {
       return (0, types_12.callExpression)((0, types_12.arrowFunctionExpression)([], (0, types_12.blockStatement)([
         (0, types_12.expressionStatement)((0, types_12.callExpression)((0, types_12.memberExpression)((0, types_12.identifier)("console"), (0, types_12.identifier)("warn")), [
@@ -1373,7 +1373,7 @@ var require_inlineStylesWarning = __commonJS({
       }
     }
     function processInlineStylesWarning(path, state) {
-      if ((0, utils_1.isRelease)(state)) {
+      if ((0, utils_12.isRelease)(state)) {
         return;
       }
       if (state.opts.disableInlineStylesWarning) {
@@ -1417,6 +1417,72 @@ var require_webOptimization = __commonJS({
           path.replaceWith((0, types_12.booleanLiteral)(true));
         }
       }
+    }
+  }
+});
+
+// lib/workletFileSourceMap.js
+var require_workletFileSourceMap = __commonJS({
+  "lib/workletFileSourceMap.js"(exports2) {
+    "use strict";
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.appendWorkletSourceMap = appendWorkletSourceMap;
+    exports2.restoreWorkletFileLocations = restoreWorkletFileLocations;
+    var core_1 = require("@babel/core");
+    var trace_mapping_1 = require("@jridgewell/trace-mapping");
+    var SOURCE_MAP_COMMENT_PREFIX = "# workletSourceMap=";
+    var ORIGIN_COMMENT_PREFIX = " __workletOrigin:";
+    var restoredFiles = /* @__PURE__ */ new WeakSet();
+    function appendWorkletSourceMap(code, map) {
+      const encoded = Buffer.from(JSON.stringify(map)).toString("base64");
+      return `${code}
+//${SOURCE_MAP_COMMENT_PREFIX}${encoded}
+`;
+    }
+    function restoreWorkletFileLocations(file) {
+      var _a, _b, _c;
+      if (restoredFiles.has(file)) {
+        return;
+      }
+      restoredFiles.add(file);
+      const comments = (_a = file.ast.comments) !== null && _a !== void 0 ? _a : [];
+      const sourceMapComment = comments.find((comment) => comment.value.startsWith(SOURCE_MAP_COMMENT_PREFIX));
+      if (!sourceMapComment) {
+        return;
+      }
+      const map = new trace_mapping_1.TraceMap(Buffer.from(sourceMapComment.value.slice(SOURCE_MAP_COMMENT_PREFIX.length), "base64").toString("utf8"));
+      const lineOffset = ((_b = comments[0]) === null || _b === void 0 ? void 0 : _b.value.startsWith(ORIGIN_COMMENT_PREFIX)) && ((_c = comments[0].loc) === null || _c === void 0 ? void 0 : _c.start.line) === 1 ? 1 : 0;
+      const toOriginal = (position) => {
+        const needle = {
+          line: position.line - lineOffset,
+          column: position.column
+        };
+        const lower = (0, trace_mapping_1.originalPositionFor)(map, Object.assign(Object.assign({}, needle), { bias: trace_mapping_1.GREATEST_LOWER_BOUND }));
+        const original = lower.line !== null ? lower : (0, trace_mapping_1.originalPositionFor)(map, Object.assign(Object.assign({}, needle), { bias: trace_mapping_1.LEAST_UPPER_BOUND }));
+        if (original.line === null) {
+          return null;
+        }
+        return {
+          position: { line: original.line, column: original.column, index: 0 },
+          source: original.source
+        };
+      };
+      let lastStart = null;
+      (0, core_1.traverse)(file.ast, {
+        enter(path) {
+          var _a2, _b2, _c2, _d;
+          const { loc } = path.node;
+          if (!loc || path.isProgram()) {
+            return;
+          }
+          const start = (_a2 = toOriginal(loc.start)) !== null && _a2 !== void 0 ? _a2 : lastStart;
+          if (!start) {
+            return;
+          }
+          lastStart = start;
+          path.node.loc = Object.assign(Object.assign({}, loc), { filename: (_b2 = start.source) !== null && _b2 !== void 0 ? _b2 : loc.filename, start: start.position, end: (_d = (_c2 = toOriginal(loc.end)) === null || _c2 === void 0 ? void 0 : _c2.position) !== null && _d !== void 0 ? _d : start.position });
+        }
+      });
     }
   }
 });
@@ -1520,6 +1586,7 @@ var require_generate = __commonJS({
     var path_1 = require("path");
     var imports_1 = require_imports();
     var types_2 = require_types();
+    var workletFileSourceMap_12 = require_workletFileSourceMap();
     function generateWorkletFile(moduleBindingsToImport, relativeBindingsToImport, factory, workletHash, state) {
       var _a, _b;
       const libraryImports = Array.from(moduleBindingsToImport).filter((binding) => (binding.path.isImportSpecifier() || binding.path.isImportDefaultSpecifier()) && binding.path.parentPath.isImportDeclaration()).map((binding) => (0, types_12.importDeclaration)([(0, types_12.cloneNode)(binding.path.node, true)], (0, types_12.stringLiteral)(binding.path.parentPath.node.source.value)));
@@ -1533,19 +1600,23 @@ var require_generate = __commonJS({
         ...imports,
         ...factory.params.length === 0 ? [...statements, (0, types_12.exportDefaultDeclaration)(returnedWorklet.argument)] : [(0, types_12.exportDefaultDeclaration)(factory)]
       ]);
-      const transformedProg = (_a = (0, core_1.transformFromAstSync)(newProg, void 0, {
+      const transformed = (0, core_1.transformFromAstSync)(newProg, void 0, {
         filename: state.file.opts.filename,
         presets: [resolvePresetTypescript()],
         plugins: [stripJsxDevAttributesPlugin],
         ast: false,
         babelrc: false,
         configFile: false,
-        comments: false
-      })) === null || _a === void 0 ? void 0 : _a.code;
+        comments: false,
+        sourceMaps: !state.opts.disableSourceMaps,
+        sourceFileName: (_a = state.file.opts.filename) !== null && _a !== void 0 ? _a : void 0
+      });
+      const transformedProg = transformed === null || transformed === void 0 ? void 0 : transformed.code;
       (0, assert_1.default)(transformedProg, "[Worklets] `transformedProg` is undefined.");
       const dedicatedFilePath = (0, path_1.resolve)(filesDirPath, `${workletHash}.js`);
+      const withSourceMap = (transformed === null || transformed === void 0 ? void 0 : transformed.map) ? (0, workletFileSourceMap_12.appendWorkletSourceMap)(transformedProg, transformed.map) : transformedProg;
       const output = process.env.WORKLETS_WRITE_ORIGIN ? `// __workletOrigin: ${(_b = state.file.opts.filename) !== null && _b !== void 0 ? _b : "unknown"}
-${transformedProg}` : transformedProg;
+${withSourceMap}` : withSourceMap;
       (0, fs_1.writeFileSync)(dedicatedFilePath, output);
     }
     function resolvePresetTypescript() {
@@ -1745,7 +1816,7 @@ var require_workletStringCode = __commonJS({
     var convertSourceMap = __importStar(require("convert-source-map"));
     var transform_1 = require_transform();
     var types_2 = require_types();
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var MOCK_SOURCE_MAP = "mock source map";
     function buildWorkletString(fun, state, closureVariables, workletName, inputMap) {
       var _a;
@@ -1785,7 +1856,7 @@ var require_workletStringCode = __commonJS({
         }
       });
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
-      const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
+      const includeSourceMap = !((0, utils_12.isRelease)(state) || state.opts.disableSourceMaps);
       const { code, map } = (0, generator_1.default)(workletFunction, {
         sourceMaps: includeSourceMap,
         inputSourceMap: inputMap
@@ -1897,7 +1968,7 @@ var require_workletFactory = __commonJS({
     var imports_1 = require_imports();
     var transform_1 = require_transform();
     var types_2 = require_types();
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var workletStringCode_1 = require_workletStringCode();
     var REAL_VERSION = require("../package.json").version;
     var MOCK_VERSION = "x.y.z";
@@ -1963,14 +2034,14 @@ var require_workletFactory = __commonJS({
       (0, assert_1.strict)(pathForStringDefinitions.parentPath, "`pathForStringDefinitions.parentPath` is null.");
       const initDataId = pathForStringDefinitions.parentPath.scope.generateUidIdentifier(`worklet_${workletHash}_init_data`);
       const shouldIncludeInitData = !state.opts.omitNativeOnlyData && !state.opts.bundleMode;
-      const shouldEmitBytecode = !!state.opts.hermesBytecode && (0, utils_1.isRelease)(state) && shouldIncludeInitData;
+      const shouldEmitBytecode = !!state.opts.hermesBytecode && (0, utils_12.isRelease)(state) && shouldIncludeInitData;
       const bytecode = shouldEmitBytecode ? (0, hermesBytecode_1.compileWorkletToHbc)(funString, workletHash, state) : null;
       const initDataObjectExpression = (0, types_12.objectExpression)(bytecode ? [
         (0, types_12.objectProperty)((0, types_12.identifier)("bytecode"), (0, types_12.memberExpression)((0, types_12.newExpression)((0, types_12.identifier)("Uint8Array"), [
           (0, types_12.arrayExpression)(Array.from(bytecode, (byte) => (0, types_12.numericLiteral)(byte)))
         ]), (0, types_12.identifier)("buffer")))
       ] : [(0, types_12.objectProperty)((0, types_12.identifier)("code"), (0, types_12.stringLiteral)(funString))]);
-      const shouldInjectLocation = !(0, utils_1.isRelease)(state);
+      const shouldInjectLocation = !(0, utils_12.isRelease)(state);
       if (shouldInjectLocation) {
         let location = state.file.opts.filename;
         if (state.opts.relativeSourceLocation) {
@@ -2004,14 +2075,14 @@ var require_workletFactory = __commonJS({
         ] : [],
         (0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__workletHash"), false), (0, types_12.numericLiteral)(workletHash)))
       ];
-      const shouldInjectVersion = !(0, utils_1.isRelease)(state);
+      const shouldInjectVersion = !(0, utils_12.isRelease)(state);
       if (shouldInjectVersion) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__pluginVersion")), (0, types_12.stringLiteral)(shouldMockVersion() ? MOCK_VERSION : REAL_VERSION))));
       }
       if (shouldIncludeInitData) {
         statements.push((0, types_12.expressionStatement)((0, types_12.assignmentExpression)("=", (0, types_12.memberExpression)((0, types_12.identifier)(reactName), (0, types_12.identifier)("__initData"), false), (0, types_12.cloneNode)(initDataId, true))));
       }
-      if (!(0, utils_1.isRelease)(state) && !state.opts.bundleMode) {
+      if (!(0, utils_12.isRelease)(state) && !state.opts.bundleMode) {
         statements.unshift((0, types_12.variableDeclaration)("const", [
           (0, types_12.variableDeclarator)((0, types_12.identifier)("_e"), (0, types_12.arrayExpression)([
             (0, types_12.newExpression)((0, types_12.memberExpression)((0, types_12.identifier)("global"), (0, types_12.identifier)("Error")), []),
@@ -2172,7 +2243,7 @@ var require_workletSubstitution = __commonJS({
     exports2.substituteObjectMethodWithObjectProperty = substituteObjectMethodWithObjectProperty;
     var types_12 = require("@babel/types");
     var types_2 = require_types();
-    var utils_1 = require_utils();
+    var utils_12 = require_utils();
     var workletFactoryCall_1 = require_workletFactoryCall();
     function processIfWithWorkletDirective(path, state) {
       if (!(0, types_12.isBlockStatement)(path.node.body)) {
@@ -2204,7 +2275,7 @@ var require_workletSubstitution = __commonJS({
         substituteObjectMethodWithObjectProperty(path, workletFactoryCall);
       } else {
         const name = "id" in path.node ? (_a = path.node.id) === null || _a === void 0 ? void 0 : _a.name : void 0;
-        (0, utils_1.replaceWithFactoryCall)(path, name, workletFactoryCall);
+        (0, utils_12.replaceWithFactoryCall)(path, name, workletFactoryCall);
       }
     }
     function substituteObjectMethodWithObjectProperty(path, workletFactoryCall) {
@@ -2226,7 +2297,9 @@ var file_1 = require_file();
 var globals_1 = require_globals();
 var inlineStylesWarning_1 = require_inlineStylesWarning();
 var types_1 = require_types();
+var utils_1 = require_utils();
 var webOptimization_1 = require_webOptimization();
+var workletFileSourceMap_1 = require_workletFileSourceMap();
 var workletSubstitution_1 = require_workletSubstitution();
 module.exports = function WorkletsBabelPlugin() {
   function runWithTaggedExceptions(state, fun) {
@@ -2247,6 +2320,9 @@ module.exports = function WorkletsBabelPlugin() {
     pre() {
       runWithTaggedExceptions(this, () => {
         (0, globals_1.initializeState)(this);
+        if (this.skipFile && !(0, utils_1.isRelease)(this)) {
+          (0, workletFileSourceMap_1.restoreWorkletFileLocations)(this.file);
+        }
         this.file.path.traverse(getAutoworkletizationMicroPlugin(), this);
       });
     },

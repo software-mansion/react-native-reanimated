@@ -2,6 +2,8 @@ import '../src/jestMatchers';
 
 import type { TransformOptions } from '@babel/core';
 import { transformSync } from '@babel/core';
+import type { EncodedSourceMap } from '@jridgewell/trace-mapping';
+import { originalPositionFor, TraceMap } from '@jridgewell/trace-mapping';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
 import * as fs from 'fs';
@@ -83,6 +85,49 @@ function runPlugin(
   const transformed = transformSync(strippedInput, config);
   assert(transformed);
   return { code: transformed.code ?? '', files: emittedFiles() };
+}
+
+function transformWorkletFile(
+  file: CapturedFile,
+  transformOpts: TransformOptions = {},
+  copies = 1
+) {
+  const transformed = transformSync(file.content, {
+    filename: file.path,
+    babelrc: false,
+    configFile: false,
+    sourceMaps: true,
+    ...transformOpts,
+    plugins: Array.from({ length: copies }, (_, index) => [
+      plugin,
+      { bundleMode: true },
+      `copy-${index}`,
+    ]),
+  });
+  assert(transformed?.code && transformed.map);
+  return { code: transformed.code, map: transformed.map };
+}
+
+function positionIn(code: string, needle: string) {
+  const lines = code.split('\n');
+  const line = lines.findIndex((text) => text.includes(needle));
+  return { line: line + 1, column: lines[line].indexOf(needle) };
+}
+
+function originalPositionOf(
+  output: ReturnType<typeof transformWorkletFile>,
+  needle: string
+) {
+  const { line, column } = positionIn(output.code, needle);
+  const original = originalPositionFor(
+    new TraceMap(output.map as EncodedSourceMap),
+    { line, column }
+  );
+  return {
+    source: original.source,
+    line: original.line,
+    column: original.column,
+  };
 }
 
 describe('babel plugin in bundleMode', () => {
@@ -173,7 +218,11 @@ describe('babel plugin in bundleMode', () => {
   describe('import forwarding by module name', () => {
     test.each([
       ['forwards an import of the module itself', 'some-library', true],
-      ['does not forward an import of a subpath', 'some-library/sub/file', false],
+      [
+        'does not forward an import of a subpath',
+        'some-library/sub/file',
+        false,
+      ],
       [
         'does not forward a module that only shares the prefix',
         'some-library-extra',
@@ -280,7 +329,9 @@ describe('babel plugin in bundleMode', () => {
         runPlugin(input, {}, pluginOpts);
         return warn.mock.calls
           .map(([message]) => String(message))
-          .filter((message) => message.includes('importForwarding.relativePaths'));
+          .filter((message) =>
+            message.includes('importForwarding.relativePaths')
+          );
       } finally {
         warn.mockRestore();
       }
@@ -371,6 +422,101 @@ describe('babel plugin in bundleMode', () => {
       const { files } = runPlugin(input);
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('written file carries a source map to the original lines', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+          return x;
+        }
+      </script>`;
+
+      const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+      expect(files).toHaveLength(1);
+      const encoded = files[0].content.match(
+        /^\/\/# workletSourceMap=(\S+)$/m
+      )?.[1];
+      assert(encoded);
+      const map = JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
+      expect(map.sources).toEqual([expect.stringContaining(MOCK_LOCATION)]);
+      const writtenByBabel = capturedFiles.length > 0;
+      expect(map.mappings).toBe(
+        writtenByBabel
+          ? 'wBACuB;EAAA;;EAEb,IAAIA,CAAC,GAAG,CAAC;EACT,OAAOA,CAAC;AACV,CAAC;AAAAC,GAAA,CAAAC,aAAA;AAAAD,GAAA,CAAAE,eAAA;AAAA,eAAAF,GAAA'
+          : 'uBACuB;;CAEb,IAAI,IAAI;CACR,OAAO;AACT'
+      );
+    });
+
+    test('restores worklet file locations once when the plugin runs twice', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+          return x;
+        }
+      </script>`;
+
+      const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+      expect(files).toHaveLength(1);
+
+      expect(transformWorkletFile(files[0], {}, 2).map).toEqual(
+        transformWorkletFile(files[0]).map
+      );
+    });
+
+    test.each([false, true])(
+      'maps worklet file statements to their original lines (origin comment: %s)',
+      (withOrigin) => {
+        const input = html`<script>
+          function foo(width) {
+            'worklet';
+            const doubled = width * 2;
+            throw new Error(doubled);
+          }
+        </script>`;
+
+        const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+        expect(files).toHaveLength(1);
+        const content = withOrigin
+          ? `// __workletOrigin: ${MOCK_LOCATION}\n${files[0].content}`
+          : files[0].content;
+
+        for (const statement of ['const doubled', 'throw new Error']) {
+          expect(
+            originalPositionOf(
+              transformWorkletFile({ ...files[0], content }),
+              statement
+            )
+          ).toEqual({
+            source: expect.stringContaining(MOCK_LOCATION),
+            ...positionIn(input, statement),
+          });
+        }
+      }
+    );
+
+    test('keeps the generated locations of worklet files in release builds', () => {
+      const input = html`<script>
+        function foo(width) {
+          'worklet';
+          throw new Error(width);
+        }
+      </script>`;
+
+      const { files } = runPlugin(input, {}, { disableSourceMaps: false });
+      expect(files).toHaveLength(1);
+
+      expect(
+        originalPositionOf(
+          transformWorkletFile(files[0], { envName: 'production' }),
+          'throw new Error'
+        )
+      ).toEqual({
+        source: expect.stringContaining(path.basename(files[0].path)),
+        ...positionIn(files[0].content, 'throw new Error'),
+      });
     });
 
     test('does not emit init data', () => {
@@ -596,9 +742,7 @@ describe('babel plugin in bundleMode', () => {
       );
       const { files } = runPlugin(input, {}, {}, fakeFilename);
       expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(
-        `import("../../some-library/helper")`
-      );
+      expect(files[0].content).toContain(`import("../../some-library/helper")`);
       expect(files[0].content).toMatchSnapshot();
     });
 
