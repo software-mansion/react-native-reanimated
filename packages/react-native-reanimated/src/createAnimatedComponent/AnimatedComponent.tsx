@@ -137,9 +137,31 @@ export default class AnimatedComponent
       } else if (element.style) {
         element.style.visibility = 'initial';
       }
+    } else if (this._isFirstRender && this.props.entering) {
+      this._skipEnteringWithoutElement(
+        this.props.entering as BaseAnimationBuilder
+      );
     }
 
     this._isFirstRender = false;
+  }
+
+  _skipEnteringWithoutElement(entering: BaseAnimationBuilder) {
+    if (getReducedMotionFromConfig(entering as CustomConfig)) {
+      entering.callbackV?.(true);
+      return;
+    }
+    // Render again without the hiding style.
+    this.forceUpdate();
+    entering.callbackV?.(false);
+  }
+
+  _isHiddenUntilEntering() {
+    return (
+      this._isFirstRender &&
+      !!this.props.entering &&
+      !getReducedMotionFromConfig(this.props.entering as CustomConfig)
+    );
   }
 
   componentWillUnmount() {
@@ -378,11 +400,7 @@ export default class AnimatedComponent
     // Because of that we can encounter a situation in which component is visible for a short amount of time, and later on animation triggers.
     // I've tested that on various browsers and devices and it did not happen to me. To be sure that it won't happen to someone else,
     // I've decided to hide component at first render. Its visibility is reset in `componentDidMount`.
-    if (
-      this._isFirstRender &&
-      filteredProps.entering &&
-      !getReducedMotionFromConfig(filteredProps.entering as CustomConfig)
-    ) {
+    if (this._isHiddenUntilEntering()) {
       filteredProps.style = Array.isArray(filteredProps.style)
         ? filteredProps.style.concat([{ visibility: 'hidden' }])
         : {
