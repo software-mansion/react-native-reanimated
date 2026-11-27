@@ -138,6 +138,14 @@ void LayoutAnimationsProxyRegistry::composeSynchronousProps(UpdatesBatch &update
   }
 }
 
+void LayoutAnimationsProxyRegistry::composeAnimationMutations(
+    AnimationMutations &mutations,
+    std::vector<Tag> &hiddenViewTags) const {
+  for (const auto &instance : instances()) {
+    instance->composeAnimationMutations(mutations, hiddenViewTags);
+  }
+}
+
 std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> LayoutAnimationsProxyRegistry::instances() const {
   assertUpdatesRegistryUnlocked();
   const std::lock_guard<std::mutex> lock(instancesMutex_);

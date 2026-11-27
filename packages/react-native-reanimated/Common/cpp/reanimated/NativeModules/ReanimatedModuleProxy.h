@@ -218,6 +218,7 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
 
   std::shared_ptr<UIManagerAnimationBackend> getAnimationBackend();
   AnimationMutations runGrandCallback(AnimationTimestamp timestamp, GrandCallbackSource source);
+  AnimationMutations collectGrandCallbackMutations(AnimationTimestamp timestamp, GrandCallbackSource source);
   void executeOperationsLoop(AnimationTimestamp timestamp);
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);

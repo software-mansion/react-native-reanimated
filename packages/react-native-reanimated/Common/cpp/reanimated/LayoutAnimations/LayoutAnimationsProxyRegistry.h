@@ -32,6 +32,7 @@ class LayoutAnimationsProxyRegistry {
   void flushLayoutAnimationOperations() const;
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree);
   void composeSynchronousProps(UpdatesBatch &updatesBatch) const;
+  void composeAnimationMutations(AnimationMutations &mutations, std::vector<Tag> &hiddenViewTags) const;
 
  private:
   std::vector<std::shared_ptr<LayoutAnimationsProxyCommon>> instances() const;

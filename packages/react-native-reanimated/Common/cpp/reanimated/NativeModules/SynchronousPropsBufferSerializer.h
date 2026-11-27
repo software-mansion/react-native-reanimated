@@ -13,6 +13,12 @@ void serializeSynchronousPropsToBuffers(
     std::vector<int> &intBuffer,
     std::vector<double> &doubleBuffer);
 
+void serializeOpacityToBuffers(
+    const std::vector<Tag> &viewTags,
+    double opacity,
+    std::vector<int> &intBuffer,
+    std::vector<double> &doubleBuffer);
+
 } // namespace reanimated
 
 #endif // ANDROID

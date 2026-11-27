@@ -1357,6 +1357,7 @@ void LayoutAnimationsProxy::detachCarrier(
   std::erase_if(heldEnterings_, isCarrier);
 
   forgetHiddenView(tag);
+  restoreBackendOpacity(tag, std::nullopt);
   // Android writes only the raw props of an Update, so the opacity must be in them to show
   // a carrier that was hidden.
   run.carrierStartView = cloneViewWithOpacity(startView, getViewProps(startView).opacity, propsParserContext);
@@ -2867,16 +2868,33 @@ ShadowView LayoutAnimationsProxy::withContentOpacity(
   return cloneViewWithOpacity(view, ownOpacity(child, view) * contentOpacity, propsParserContext);
 }
 
-// The light tree does not take synchronous writes, so a view without a layout animation gets its newest
-// opacity from them.
+// The light tree does not take synchronous writes or animation backend writes, so a view without a layout
+// animation gets its newest opacity from them.
 double LayoutAnimationsProxy::ownOpacity(const std::shared_ptr<LightNode> &node, const ShadowView &animatedView) const {
   const auto tag = node->current.tag;
   if (layoutAnimationPhase(tag) != LayoutAnimationPhase::NONE) {
     return getViewProps(animatedView).opacity;
   }
   resolveLightNodeProps(node);
-  const auto synchronousOpacity = readSynchronousOpacity_ ? readSynchronousOpacity_(tag) : std::nullopt;
-  return synchronousOpacity.value_or(getViewProps(node->current).opacity);
+  if (const auto synchronousOpacity = readSynchronousOpacity_ ? readSynchronousOpacity_(tag) : std::nullopt) {
+    return *synchronousOpacity;
+  }
+  if (const auto heldOpacity = heldBackendOpacities_.find(tag); heldOpacity != heldBackendOpacities_.end()) {
+    return heldOpacity->second.opacity;
+  }
+  return getViewProps(node->current).opacity;
+}
+
+// The content opacity of each child of a fading carrier, by the tag of the child.
+std::unordered_map<Tag, double> LayoutAnimationsProxy::contentFadeFactors(
+    const std::unordered_set<Tag> &hiddenTags) const {
+  std::unordered_map<Tag, double> factors;
+  for (const auto *run : contentFadeRuns()) {
+    for (const auto &child : fadingChildren(run->carrier, hiddenTags)) {
+      factors[child->current.tag] = run->contentFade->mountedOpacity;
+    }
+  }
+  return factors;
 }
 
 // Synchronous writes skip pullTransaction. Only pull mutations change the opacity of a hidden view, because a pull
@@ -2884,12 +2902,7 @@ double LayoutAnimationsProxy::ownOpacity(const std::shared_ptr<LightNode> &node,
 void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) const {
   const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
   const auto hiddenTags = viewTagsKeptHidden();
-  std::unordered_map<Tag, double> factors;
-  for (const auto *run : contentFadeRuns()) {
-    for (const auto &child : fadingChildren(run->carrier, hiddenTags)) {
-      factors[child->current.tag] = run->contentFade->mountedOpacity;
-    }
-  }
+  const auto factors = contentFadeFactors(hiddenTags);
   if (hiddenTags.empty() && factors.empty()) {
     return;
   }
@@ -2908,6 +2921,101 @@ void LayoutAnimationsProxy::composeSynchronousProps(UpdatesBatch &updatesBatch) 
     }
   }
   std::erase_if(updatesBatch, [](const auto &update) { return update.second.empty(); });
+}
+
+// The animation backend writes the props of a mutation directly to the view, so like a synchronous write it skips
+// pullTransaction. The proxy drops the opacity of a write to a hidden view, holds it, and the restore shows the view
+// with it. Android applies the earlier backend writes of a view over each later mount, so the platform writes opacity
+// 0 to the views in `hiddenViewTags`. A restore also writes the opacity back through the backend, so the backend has
+// the opacity that is on screen.
+void LayoutAnimationsProxy::composeAnimationMutations(AnimationMutations &mutations, std::vector<Tag> &hiddenViewTags)
+    const {
+  const auto lock = std::unique_lock<std::recursive_mutex>(mutex);
+  const auto hiddenTags = viewTagsKeptHidden();
+  const auto factors = contentFadeFactors(hiddenTags);
+  if (hiddenTags.empty() && factors.empty() && backendOpacityRestores_.empty()) {
+    return;
+  }
+  bool hasEmptiedMutation = false;
+  for (auto &mutation : mutations.batch) {
+    if (mutation.family->getSurfaceId() != surfaceId_) {
+      continue;
+    }
+    const bool isHidden = hiddenTags.contains(mutation.tag);
+    const auto factor = factors.find(mutation.tag);
+    const auto restore = backendOpacityRestores_.find(mutation.tag);
+    if (!isHidden && factor == factors.end() && restore == backendOpacityRestores_.end()) {
+      continue;
+    }
+    auto &props = mutation.props;
+    // A typed opacity comes after the raw props, so it wins when both exist.
+    std::optional<double> ownOpacity;
+    if (props.rawProps) {
+      auto rawProps = props.rawProps->toDynamic();
+      if (const auto opacity = rawProps.get_ptr("opacity"); opacity && (opacity->isNumber() || opacity->isNull())) {
+        ownOpacity = opacity->isNull() ? defaultViewOpacity() : opacity->asDouble();
+        if (isHidden) {
+          rawProps.erase("opacity");
+          props.rawProps = rawProps.empty() ? nullptr : std::make_unique<RawProps>(std::move(rawProps));
+        } else if (factor != factors.end()) {
+          *opacity = *ownOpacity * factor->second;
+          props.rawProps = std::make_unique<RawProps>(std::move(rawProps));
+        }
+      }
+    }
+    for (auto &prop : props.props) {
+      if (prop->propName == OPACITY) {
+        auto &opacity = static_cast<AnimatedProp<Float> &>(*prop).value;
+        ownOpacity = opacity;
+        if (!isHidden && factor != factors.end()) {
+          opacity = static_cast<Float>(opacity * factor->second);
+        }
+      }
+    }
+    if (!ownOpacity) {
+      continue;
+    }
+    // A newer write replaces the opacity that a restore would write.
+    if (restore != backendOpacityRestores_.end()) {
+      backendOpacityRestores_.erase(restore);
+    }
+    if (!isHidden) {
+      continue;
+    }
+    std::erase_if(props.props, [](const auto &prop) { return prop->propName == OPACITY; });
+    heldBackendOpacities_.insert_or_assign(
+        mutation.tag, HeldBackendOpacity{.family = mutation.family, .opacity = *ownOpacity});
+    hiddenViewTags.push_back(mutation.tag);
+    hasEmptiedMutation |= props.props.empty() && !props.rawProps && !props.text;
+  }
+  if (hasEmptiedMutation) {
+    std::erase_if(mutations.batch, [](const auto &mutation) {
+      return mutation.props.props.empty() && !mutation.props.rawProps && !mutation.props.text;
+    });
+  }
+  for (auto &[tag, restore] : backendOpacityRestores_) {
+    AnimatedProps props;
+    props.props.push_back(std::make_unique<AnimatedProp<Float>>(OPACITY, static_cast<Float>(restore.opacity)));
+    mutations.batch.push_back(AnimationMutation{tag, std::move(restore.family), std::move(props), false});
+  }
+  backendOpacityRestores_.clear();
+}
+
+// The backend gets the opacity of a restored view, because it did not get the writes that the proxy dropped.
+void LayoutAnimationsProxy::restoreBackendOpacity(const Tag tag, const std::optional<double> opacity) const {
+  const auto held = heldBackendOpacities_.find(tag);
+  if (held == heldBackendOpacities_.end()) {
+    return;
+  }
+  backendOpacityRestores_.insert_or_assign(
+      tag, HeldBackendOpacity{.family = held->second.family, .opacity = opacity.value_or(held->second.opacity)});
+  heldBackendOpacities_.erase(held);
+  requestLayoutAnimationFlush_(surfaceId_);
+}
+
+void LayoutAnimationsProxy::forgetBackendOpacity(const Tag tag) const {
+  heldBackendOpacities_.erase(tag);
+  backendOpacityRestores_.erase(tag);
 }
 
 void LayoutAnimationsProxy::applyContentOpacity(
@@ -3323,6 +3431,7 @@ void LayoutAnimationsProxy::cleanupSharedTransitions(
       continue;
     }
     const auto opacity = ownOpacity(node, view);
+    restoreBackendOpacity(node->current.tag, opacity);
     filteredMutations.push_back(createPropsUpdate(
         cloneViewWithoutOpacity(view, propsParserContext),
         cloneViewWithOpacity(view, opacity, propsParserContext),
