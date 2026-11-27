@@ -11,6 +11,10 @@ import LayoutTransitionsSrc from '!!raw-loader!@site/src/examples/LayoutTransiti
 
 <InteractiveExample src={LayoutTransitionsSrc} component={LayoutTransitions}/>
 
+## Text size
+
+From React Native 0.89, a layout transition of a `Text` whose `fontSize` changes also animates the size of the text. The size follows how far the frame has moved from the old size to the new one. When the outer `Text` and its nested `Text`s keep the same strings in the same order, a nested `Text` moves between its own old and new size, so a nested `Text` with its own `fontSize` keeps it. When the strings change, every nested `Text` scales with the outer one. Other text attributes, such as the font weight, change at once.
+
 ## Predefined Transitions
 
 Below we listed all of the currently available predefined layout transitions with their [layout animation modifiers](../fundamentals/glossary.mdx#layout-animation-modifier).

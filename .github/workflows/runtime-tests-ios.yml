@@ -53,7 +53,7 @@ jobs:
   runtime-tests-ios:
     if: github.repository == 'software-mansion/react-native-reanimated'
     name: ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }}
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: ${{ inputs.sanitizer && 240 || 90 }}
     strategy:
       fail-fast: false
@@ -177,20 +177,8 @@ jobs:
 
       # With halt_on_error=0 a detected race does not fail the tests that
       # triggered it, so the collected reports have to fail the job here.
+      # Reports listed in sanitizer-known-issues.json are warnings only.
       - name: Fail on sanitizer reports
         if: ${{ always() && inputs.sanitizer != '' }}
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: |
-          shopt -s nullglob
-          reports=(sanitizer-reports/*)
-          if [ ${#reports[@]} -eq 0 ]; then
-            echo "No sanitizer reports."
-            exit 0
-          fi
-          for report in "${reports[@]}"; do
-            echo "::group::$report"
-            cat "$report"
-            echo "::endgroup::"
-          done
-          echo "::error::The ${{ inputs.sanitizer }} sanitizer produced ${#reports[@]} report file(s), printed above."
-          exit 1
+        run: node --experimental-strip-types scripts/sanitizer-reports.mts --sanitizer "${{ inputs.sanitizer }}"

@@ -77,10 +77,6 @@ const CombinedTest: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/Combined').default as React.FC
   );
-const ComposedHandlerConditionalExample: React.FC = () =>
-  React.createElement(
-    require('./ComposedHandlerConditionalExample').default as React.FC
-  );
 const ComposedHandlerDifferentEventsExample: React.FC = () =>
   React.createElement(
     require('./ComposedHandlerDifferentEventsExample').default
@@ -149,6 +145,10 @@ const ExtrapolationExample: React.FC = () =>
   React.createElement(require('./ExtrapolationExample').default as React.FC);
 const FilterExample: React.FC = () =>
   React.createElement(require('./FilterExample').default as React.FC);
+const LayoutTextSizeExample: React.FC = () =>
+  React.createElement(
+    require('./LayoutAnimations/TextSize').default as React.FC
+  );
 const FinalFrameAccuracyExample: React.FC = () =>
   React.createElement(
     require('./LayoutAnimations/FinalFrameAccuracy').default as React.FC
@@ -165,8 +165,6 @@ const FlatListWithLayoutAnimations: React.FC = () =>
   React.createElement(
     require('./FlatListWithLayoutAnimationsExample').default as React.FC
   );
-const FrameCallbackExample: React.FC = () =>
-  React.createElement(require('./FrameCallbackExample').default as React.FC);
 const GalleryExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/Gallery').default as React.FC
@@ -318,6 +316,10 @@ const SynchronousPropsExample: React.FC = () =>
 const TabNavigatorExample: React.FC = () =>
   React.createElement(
     require('./SharedElementTransitions/TabNavigatorExample').default
+  );
+const TextSizeExample: React.FC = () =>
+  React.createElement(
+    require('./SharedElementTransitions/TextSize').default as React.FC
   );
 const ThirdPartyComponentsExample: React.FC = () =>
   React.createElement(
@@ -518,11 +520,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'useAnimatedSensor',
     screen: AnimatedSensorExample,
   },
-  FrameCallbackExample: {
-    icon: '🗣',
-    title: 'useFrameCallback',
-    screen: FrameCallbackExample,
-  },
   ScrollToExample: {
     icon: '🦘',
     title: 'scrollTo',
@@ -617,11 +614,6 @@ const ALL_EXAMPLES: Record<string, Example> = {
     title: 'Performance monitor',
     section: REGRESSIONS,
     screen: PerformanceMonitorExample,
-  },
-  ComposedHandlerConditionalExample: {
-    icon: '🎛️',
-    title: 'Composed handler conditional compose',
-    screen: ComposedHandlerConditionalExample,
   },
   ComposedHandlerDifferentEventsExample: {
     icon: '📣',
@@ -830,6 +822,11 @@ const ALL_EXAMPLES: Record<string, Example> = {
     screen: EnteringMovedBeforeFirstPaint,
     disabledPlatforms: [REAPlatform.WEB],
   },
+  LayoutTextSizeExample: {
+    title: '[LA] Text size',
+    screen: LayoutTextSizeExample,
+    disabledPlatforms: [REAPlatform.WEB],
+  },
 
   // Shared Element Transitions
 
@@ -980,6 +977,15 @@ const ALL_EXAMPLES: Record<string, Example> = {
   FadeContentExample: {
     title: '[SET] Fade content',
     screen: FadeContentExample,
+    disabledPlatforms: [REAPlatform.WEB],
+    shouldWork: {
+      ios: true,
+      android: true,
+    },
+  },
+  TextSizeExample: {
+    title: '[SET] Text size',
+    screen: TextSizeExample,
     disabledPlatforms: [REAPlatform.WEB],
     shouldWork: {
       ios: true,

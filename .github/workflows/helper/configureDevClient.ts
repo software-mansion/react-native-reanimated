@@ -55,6 +55,45 @@ function patchExpoModulesCore(): void {
     });`,
       'workletRuntime->runSync(func);'
     );
+
+    const podspecPath = path.join(
+      packagePath,
+      'ExpoModulesWorkletsAdapter.podspec'
+    );
+    if (
+      !fs
+        .readFileSync(podspecPath, 'utf8')
+        .includes('WORKLETS_STABLE_API_TARGET')
+    ) {
+      patchFile(
+        podspecPath,
+        `  s.source_files = 'ios/WorkletsAdapter/**/*.{h,m,mm}'`,
+        `  s.compiler_flags = '-DWORKLETS_STABLE_API_TARGET=\\"0.14.0\\"'
+
+  s.source_files = 'ios/WorkletsAdapter/**/*.{h,m,mm}'`
+      );
+    }
+
+    const cmakePath = path.join(packagePath, 'android/cmake/worklets.cmake');
+    if (
+      !fs.readFileSync(cmakePath, 'utf8').includes('WORKLETS_STABLE_API_TARGET')
+    ) {
+      patchFile(
+        cmakePath,
+        `  "\${REACT_NATIVE_WORKLETS_DIR}/android/src/main/cpp"
+)
+`,
+        `  "\${REACT_NATIVE_WORKLETS_DIR}/android/src/main/cpp"
+)
+
+target_compile_definitions(
+  expo-modules-worklets
+  PRIVATE
+  "WORKLETS_STABLE_API_TARGET=\\"0.14.0\\""
+)
+`
+      );
+    }
   }
 }
 

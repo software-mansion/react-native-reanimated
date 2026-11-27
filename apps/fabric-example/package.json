@@ -16,7 +16,7 @@
   "dependencies": {
     "common-app": "workspace:*",
     "react": "19.3.0",
-    "react-native": "0.89.0-rc.2",
+    "react-native": "0.89.0-rc.3",
     "react-native-screens": "patch:react-native-screens@npm%3A4.30.1#~/.yarn/patches/react-native-screens-npm-4.30.1.patch"
   },
   "devDependencies": {

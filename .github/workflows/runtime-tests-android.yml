@@ -69,6 +69,9 @@ jobs:
           distribution: 'zulu'
           java-version: 17
 
+      - name: Set up Gradle network access
+        uses: $/.github/actions/setup-gradle-network
+
       - name: Install Android NDK
         uses: $/.github/actions/install-android-ndk
 

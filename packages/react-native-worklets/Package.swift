@@ -126,6 +126,7 @@ let package = Package(
                 .headerSearchPath("apple"),
                 .define("WORKLETS_VERSION", to: version),
                 .define("WORKLETS_FEATURE_FLAGS", to: featureFlags),
+                .define("WORKLETS_STABLE_API_TARGET", to: "\"0.14.0\""),
                 .define("HERMES_ENABLE_DEBUGGER", to: "1", .when(configuration: .debug)),
             ],
             cxxSettings: [
@@ -135,6 +136,7 @@ let package = Package(
                 .headerSearchPath("apple"),
                 .define("WORKLETS_VERSION", to: version),
                 .define("WORKLETS_FEATURE_FLAGS", to: featureFlags),
+                .define("WORKLETS_STABLE_API_TARGET", to: "\"0.14.0\""),
                 .define("HERMES_ENABLE_DEBUGGER", to: "1", .when(configuration: .debug)),
                 .define("DEBUG", .when(configuration: .debug)),
                 .define("NDEBUG", .when(configuration: .release)),

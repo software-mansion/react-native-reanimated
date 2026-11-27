@@ -82,6 +82,31 @@ bool isCarrierKey(const std::string &name) {
       std::ranges::find(kClipKeys, name, &ClipKey::name) != kClipKeys.end();
 }
 
+// A Text draws the font size that the animation sets. Without one, the font size follows the progress of a built-in
+// shared transition, or the change of the size of a layout transition. When a layout transition keeps the runs of a
+// Text, each run moves between its own sizes.
+State::Shared textStateOf(const LayoutAnimation &animation, const Frame &frame) {
+  const auto &start = animation.startView;
+  const auto &target = animation.finalView;
+  if (animation.type == LayoutAnimationType::LAYOUT && haveSameRuns(start, target)) {
+    const auto progress =
+        animation.fontSize ? fontSizeProgress(start, target, *animation.fontSize) : sizeProgress(start, target, frame);
+    if (progress) {
+      return textStateBetween(start, target, *progress);
+    }
+  }
+  auto fontSize = animation.fontSize;
+  if (!fontSize) {
+    const auto progress = animation.geometryProgress    ? animation.geometryProgress
+        : animation.type == LayoutAnimationType::LAYOUT ? sizeProgress(start, target, frame)
+                                                        : std::nullopt;
+    if (progress) {
+      fontSize = textFontSizeAt(start, target, *progress);
+    }
+  }
+  return fontSize ? textStateWithFontSize(target, *fontSize) : nullptr;
+}
+
 SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation) {
   const auto baseOpacity = std::static_pointer_cast<const ViewProps>(animation.framePropsBase())->opacity;
   return interpolateSharedTransitionGeometry(
@@ -210,6 +235,9 @@ std::optional<SurfaceId> LayoutAnimationsProxyCommon::progressLayoutAnimation(
   const bool animatesContentOpacity = newStyle.hasProperty(uiRuntime_, kContentOpacity);
   if (animatesContentOpacity) {
     layoutAnimation.contentOpacity = std::clamp(newStyle.getProperty(uiRuntime_, kContentOpacity).asNumber(), 0.0, 1.0);
+  }
+  if (newStyle.hasProperty(uiRuntime_, "fontSize")) {
+    layoutAnimation.fontSize = newStyle.getProperty(uiRuntime_, "fontSize").asNumber();
   }
   const bool animatesClip = isSharedTransition(layoutAnimation.type) && readClip(uiRuntime_, newStyle, layoutAnimation);
   const auto viewStyle = animatesContentOpacity || animatesClip ? withoutCarrierKeys(uiRuntime_, newStyle)
@@ -1052,6 +1080,7 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
         finalView = animation.finalView;
       } else {
         finalView.layoutMetrics = animation.finalView.layoutMetrics;
+        finalView.state = animation.finalView.state;
       }
     }
     if (!completedAnimation.shouldRemove && animation.opacity) {
@@ -1066,7 +1095,8 @@ void LayoutAnimationsProxyCommon::cleanupCompletedAnimations(
     }
     if (!completedAnimation.shouldRemove &&
         (finalView.props != animation.currentView.props ||
-         finalView.layoutMetrics != animation.currentView.layoutMetrics)) {
+         finalView.layoutMetrics != animation.currentView.layoutMetrics ||
+         finalView.state != animation.currentView.state)) {
       mutations.push_back(ShadowViewMutation::UpdateMutation(animation.currentView, finalView, animation.parentTag));
     }
     updateMap_.erase(tag);
@@ -1092,6 +1122,9 @@ ShadowViewMutation LayoutAnimationsProxyCommon::frameUpdate(
     [[maybe_unused]] const bool sendsOnlyChangedProps) const {
   auto newView = animation.finalView;
   updateLayoutMetrics(newView.layoutMetrics, frame.frame, animation.frameOffset + animation.pathOffset);
+  if (auto textState = textStateOf(animation, frame.frame)) {
+    newView.state = std::move(textState);
+  }
 #ifdef ANDROID
   if (sendsOnlyChangedProps && !ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
     return changedPropsUpdate(animation, frame, std::move(newView));
