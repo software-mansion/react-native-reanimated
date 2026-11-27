@@ -1,3 +1,4 @@
+import { withTiming } from '../src/animation';
 import { logger } from '../src/common';
 import type {
   AnimatableValue,
@@ -6,6 +7,7 @@ import type {
   Timestamp,
 } from '../src/commonTypes';
 import { LayoutAnimationType } from '../src/commonTypes';
+import { Easing } from '../src/Easing';
 import { initializeLayoutAnimationsManager } from '../src/layoutReanimation/animationsManager.native';
 import {
   SharedTransition,
@@ -70,13 +72,21 @@ function makePendingConfig(callback: jest.Mock) {
   });
 }
 
+const performanceNow = Object.getOwnPropertyDescriptor(performance, 'now')!;
+
 describe('LayoutAnimationsManager', () => {
   let frameFinalizers: Array<() => void>;
   let getAnimationTimestamp: jest.Mock;
+  let now: jest.Mock<number, []>;
 
   beforeEach(() => {
     frameFinalizers = [];
     getAnimationTimestamp = jest.fn();
+    now = jest.fn<number, []>().mockReturnValue(0);
+    Object.defineProperty(performance, 'now', {
+      configurable: true,
+      value: now,
+    });
     globalThis.__frameTimestamp = undefined;
     globalThis._getAnimationTimestamp = getAnimationTimestamp;
     globalThis.requestAnimationFrameFinalizer = (callback) => {
@@ -89,6 +99,7 @@ describe('LayoutAnimationsManager', () => {
 
   afterEach(() => {
     frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+    Object.defineProperty(performance, 'now', performanceNow);
     globalThis.__frameTimestamp = originalGlobals.frameTimestamp;
     globalThis._getAnimationTimestamp = originalGlobals.getAnimationTimestamp;
     globalThis.requestAnimationFrameFinalizer =
@@ -241,6 +252,191 @@ describe('LayoutAnimationsManager', () => {
       frameFinalizers.splice(0).forEach((finalizer) => finalizer());
       frames.splice(0).forEach((frame) => frame(140));
     }
+
+    const linear = (toValue: number) =>
+      withTiming(toValue, { duration: 1000, easing: Easing.linear });
+    const blockedTime = 600 - 1000 / 60;
+
+    // Starts an opacity timing at 100 ms in a mount that blocks until 700 ms.
+    function startBlocked(tag: number) {
+      now.mockReturnValue(100);
+      getAnimationTimestamp.mockReturnValue(100);
+      manager.start(tag, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { opacity: 0 },
+        animations: { opacity: linear(1) },
+      }));
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      now.mockReturnValue(700);
+      getAnimationTimestamp.mockReturnValue(700);
+    }
+
+    test('does not count the time a mount blocks the start, beyond one frame', () => {
+      startBlocked(20);
+      frames.splice(0).forEach((frame) => frame(100));
+      frames.splice(0).forEach((frame) => frame(750));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(20, {
+        opacity: expect.closeTo((750 - blockedTime - 100) / 1000),
+      });
+      manager.stop(20);
+    });
+
+    test('measures the block once for all animations that start together', () => {
+      now.mockReturnValue(100);
+      getAnimationTimestamp.mockReturnValue(100);
+      for (const tag of [21, 22]) {
+        manager.start(tag, LayoutAnimationType.ENTERING, {}, () => ({
+          initialValues: { opacity: 0 },
+          animations: { opacity: makeLinearAnimation(1) },
+        }));
+      }
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      now.mockReturnValueOnce(120).mockReturnValue(140);
+      getAnimationTimestamp.mockReturnValue(140);
+      frames.splice(0).forEach((frame) => frame(140));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenCalledWith(21, {
+        opacity: 0.4,
+      });
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(22, {
+        opacity: 0.4,
+      });
+      manager.stop(21);
+      manager.stop(22);
+    });
+
+    test('does not skip time when the clock stood still during the block', () => {
+      startBlocked(27);
+      getAnimationTimestamp.mockReturnValue(100);
+      frames.splice(0).forEach((frame) => frame(100));
+      frames.splice(0).forEach((frame) => frame(600));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(27, {
+        opacity: 0.5,
+      });
+      manager.stop(27);
+    });
+
+    test('keeps the time shift of a blocked start when a retarget continues its timing', () => {
+      startBlocked(23);
+      frames.splice(0).forEach((frame) => frame(100));
+      frames.splice(0).forEach((frame) => frame(750));
+      now.mockReturnValue(760);
+      getAnimationTimestamp.mockReturnValue(760);
+      manager.start(23, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { width: 0 },
+        animations: { width: linear(50) },
+      }));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(23, {
+        opacity: expect.closeTo((760 - blockedTime - 100) / 1000),
+        width: 0,
+      });
+
+      now.mockReturnValue(776);
+      frames.splice(0).forEach((frame) => frame(776));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(23, {
+        opacity: expect.closeTo((776 - blockedTime - 100) / 1000),
+        width: expect.closeTo((16 / 1000) * 50),
+      });
+      manager.stop(23);
+    });
+
+    test('keeps the time shift when a retarget starts in a stale frame', () => {
+      startBlocked(28);
+      frames.splice(0).forEach((frame) => frame(100));
+      globalThis.__frameTimestamp = 100;
+      manager.start(28, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { width: 0 },
+        animations: { width: linear(50) },
+      }));
+      globalThis.__frameTimestamp = undefined;
+      now.mockReturnValue(750);
+      getAnimationTimestamp.mockReturnValue(750);
+      frames.splice(0).forEach((frame) => frame(750));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(28, {
+        opacity: expect.closeTo((750 - blockedTime - 100) / 1000),
+        width: expect.closeTo(((750 - blockedTime - 100) / 1000) * 50),
+      });
+      manager.stop(28);
+    });
+
+    test('keeps the shifted start of a retarget out of the callbacks it triggers', () => {
+      const callbackTimestamps: Array<number | undefined> = [];
+      now.mockReturnValue(100);
+      getAnimationTimestamp.mockReturnValue(100);
+      manager.start(29, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { opacity: 0 },
+        animations: { opacity: linear(1) },
+        callback: () => callbackTimestamps.push(globalThis.__frameTimestamp),
+      }));
+      frameFinalizers.splice(0).forEach((finalizer) => finalizer());
+      now.mockReturnValue(700);
+      getAnimationTimestamp.mockReturnValue(700);
+      frames.splice(0).forEach((frame) => frame(100));
+      frames.splice(0).forEach((frame) => frame(750));
+      now.mockReturnValue(760);
+      getAnimationTimestamp.mockReturnValue(760);
+      manager.start(29, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { width: 0 },
+        animations: { width: linear(50) },
+      }));
+
+      expect(callbackTimestamps).toEqual([760]);
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(29, {
+        opacity: expect.closeTo((760 - blockedTime - 100) / 1000),
+        width: 0,
+      });
+      manager.stop(29);
+    });
+
+    test('measures the block at the first frame when a retarget comes in the same batch', () => {
+      now.mockReturnValue(100);
+      getAnimationTimestamp.mockReturnValue(100);
+      manager.start(26, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { opacity: 0 },
+        animations: { opacity: linear(1) },
+      }));
+      manager.start(26, LayoutAnimationType.LAYOUT, {}, () => ({
+        initialValues: { width: 0 },
+        animations: { width: linear(50) },
+      }));
+      now.mockReturnValue(700);
+      getAnimationTimestamp.mockReturnValue(700);
+      frames.splice(0).forEach((frame) => frame(700));
+
+      expect(globalThis._notifyAboutProgress).toHaveBeenLastCalledWith(26, {
+        opacity: expect.closeTo((700 - blockedTime - 100) / 1000),
+        width: expect.closeTo(((700 - blockedTime - 100) / 1000) * 50),
+      });
+      manager.stop(26);
+    });
+
+    test.each(['stopped', 'finished'])(
+      'does not keep the time shift of a %s animation',
+      (ending) => {
+        startBlocked(25);
+        frames.splice(0).forEach((frame) => frame(100));
+        if (ending === 'stopped') {
+          manager.stop(25);
+        } else {
+          frames.splice(0).forEach((frame) => frame(5000));
+        }
+        const startTimestamps: number[] = [];
+        now.mockReturnValue(5000);
+        getAnimationTimestamp.mockReturnValue(5000);
+        manager.start(
+          25,
+          LayoutAnimationType.LAYOUT,
+          {},
+          makeConfig(startTimestamps)
+        );
+
+        expect(startTimestamps).toEqual([5000]);
+      }
+    );
 
     beforeEach(() => {
       frames = [];

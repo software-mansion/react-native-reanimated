@@ -3,6 +3,7 @@
 import type { ShareableHost } from 'react-native-worklets';
 import { runOnUISync } from 'react-native-worklets';
 
+import type { StyleLayoutAnimation } from '../animation';
 import { cancelAnimation, withStyleAnimation } from '../animation';
 import { isValidLayoutAnimationProp } from '../animation/util';
 import { logger } from '../common';
@@ -12,12 +13,79 @@ import type {
   LayoutAnimationValues,
   Mutable,
   SharedValue,
+  Timestamp,
 } from '../commonTypes';
 import { LayoutAnimationType } from '../commonTypes';
 import { getStaticFeatureFlag } from '../featureFlags';
 import { mutableHostDecorator } from '../mutablesCommon';
 
 const TAG_OFFSET = 1e9;
+const FRAME_DURATION = 1000 / 60;
+// Android moves the start of an animator whose first frame is two frames late.
+const MIN_BLOCKED_TIME = 2 * FRAME_DURATION;
+
+type LayoutAnimationStart = {
+  timestamp: Timestamp;
+  realTime: number;
+  blockedTime?: number;
+};
+
+type LayoutAnimationTimeline = {
+  startTimestamp: Timestamp;
+  timeShift: number;
+};
+
+// The first frame after a start can carry a timestamp from before the block,
+// so the block is measured on the clock. Real time caps it because the clock
+// can be scaled (slow animations) or frozen (tests).
+function measureBlockedTime(start: LayoutAnimationStart) {
+  'worklet';
+  const realBlockedTime = performance.now() - start.realTime;
+  if (realBlockedTime < MIN_BLOCKED_TIME) {
+    return 0;
+  }
+  const clockBlockedTime = global._getAnimationTimestamp() - start.timestamp;
+  return Math.max(
+    0,
+    Math.min(realBlockedTime, clockBlockedTime) - FRAME_DURATION
+  );
+}
+
+// The start can run in a mount that blocks the main thread for longer than
+// the animation. That time does not count, except for one frame. A retarget
+// keeps the time shift of the animation it continues, because it keeps that
+// animation's start times. The shifted start reaches only this animation, not
+// the animations that its interrupted animation's callback starts.
+function shiftTimestamps(
+  animation: StyleLayoutAnimation,
+  start: LayoutAnimationStart,
+  startTimestamp: Timestamp,
+  previousTimeShift: number,
+  timelines: WeakMap<object, LayoutAnimationTimeline>
+) {
+  'worklet';
+  const { onStart, onFrame } = animation;
+  const timeline = { startTimestamp, timeShift: previousTimeShift };
+  timelines.set(animation, timeline);
+  let isStarting = true;
+  let timeShift: number | undefined;
+  animation.onStart = (self, value, _timestamp, previousAnimation) =>
+    onStart(self, value, startTimestamp, previousAnimation);
+  animation.onFrame = (self, timestamp) => {
+    if (isStarting) {
+      return onFrame(self, startTimestamp);
+    }
+    if (timeShift === undefined) {
+      start.blockedTime ??= measureBlockedTime(start);
+      timeShift = previousTimeShift + start.blockedTime;
+      timeline.timeShift = timeShift;
+    }
+    return onFrame(self, Math.max(startTimestamp, timestamp - timeShift));
+  };
+  return () => {
+    isStarting = false;
+  };
+}
 
 function makeMutableUI<TValue>(initial: TValue): Mutable<TValue> {
   'worklet';
@@ -75,21 +143,24 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
   'worklet';
   const currentAnimationForTag = new Map();
   const mutableValuesForTag = new Map();
+  const timelines = new WeakMap<object, LayoutAnimationTimeline>();
 
   // Layout animation starts are scheduled separately on the UI runtime. With
   // a large number of views, sampling the clock for every start noticeably
   // staggers animations which belong to the same frame. Cache the first start
-  // timestamp until the frame finalizers run so the whole batch shares one
-  // timeline.
-  let layoutAnimationStartTimestamp: number | undefined;
-  const getLayoutAnimationStartTimestamp = () => {
-    if (layoutAnimationStartTimestamp === undefined) {
-      layoutAnimationStartTimestamp = global._getAnimationTimestamp();
+  // until the frame finalizers run so the whole batch shares one timeline.
+  let layoutAnimationStart: LayoutAnimationStart | undefined;
+  const getLayoutAnimationStart = () => {
+    if (layoutAnimationStart === undefined) {
+      layoutAnimationStart = {
+        timestamp: global._getAnimationTimestamp(),
+        realTime: performance.now(),
+      };
       globalThis.requestAnimationFrameFinalizer(() => {
-        layoutAnimationStartTimestamp = undefined;
+        layoutAnimationStart = undefined;
       });
     }
-    return layoutAnimationStartTimestamp;
+    return layoutAnimationStart;
   };
 
   // Flush layout-animation progress once per frame via the frame finalizer
@@ -189,10 +260,38 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
 
         startObservingProgress(tag, value, scheduleFlush);
         const previousFrameTimestamp = global.__frameTimestamp;
-        global.__frameTimestamp ??= getLayoutAnimationStartTimestamp();
+        // A start inside a frame does not run in a mount.
+        const start =
+          previousFrameTimestamp === undefined
+            ? getLayoutAnimationStart()
+            : {
+                timestamp: previousFrameTimestamp,
+                realTime: 0,
+                blockedTime: 0,
+              };
+        const previous = value._animation && timelines.get(value._animation);
+        const previousTimeShift = previous ? previous.timeShift : 0;
+        // A retarget in a frame with a stale timestamp must not start before
+        // the animation it continues.
+        const startTimestamp =
+          previous && previousTimeShift > 0
+            ? Math.max(
+                previous.startTimestamp,
+                start.timestamp - previousTimeShift
+              )
+            : start.timestamp;
+        global.__frameTimestamp = start.timestamp;
+        const onStarted = shiftTimestamps(
+          animation,
+          start,
+          startTimestamp,
+          previousTimeShift,
+          timelines
+        );
         try {
           value.value = animation;
         } finally {
+          onStarted();
           global.__frameTimestamp = previousFrameTimestamp;
         }
       } catch (error) {
