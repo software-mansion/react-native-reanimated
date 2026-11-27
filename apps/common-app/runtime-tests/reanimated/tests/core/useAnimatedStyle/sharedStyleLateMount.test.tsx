@@ -38,6 +38,7 @@ const INITIAL_WIDTH = 100;
 const FIRST_WIDTH = 250;
 const SECOND_WIDTH = 180;
 const THIRD_WIDTH = 220;
+const FOURTH_WIDTH = 140;
 const DURATION_MS = 300;
 /**
  * Frames for the React commit, the native mount and one mapper run, with slack
@@ -241,6 +242,7 @@ describe('animated style shared by views that mount at different times', () => {
       // The toggled views mount again.
       const remount = { toggled: true, counter: 2, stored: 2 };
       await renderAndExpectWidths(remount, THIRD_WIDTH);
+      await animateTo(remount, FOURTH_WIDTH);
     }
   );
 });
