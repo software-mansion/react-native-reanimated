@@ -18,6 +18,7 @@ namespace worklets {
 struct Timeout {
   std::function<void(jsi::Runtime &rt)> callback;
   int64_t targetTime;
+  bool immediate = false;
   bool operator<(const Timeout &v) const {
     return targetTime < v.targetTime;
   }
@@ -43,6 +44,7 @@ class EventLoop : public std::enable_shared_from_this<EventLoop> {
   void run();
   void pushTask(std::function<void(jsi::Runtime &rt)> &&job);
   void pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t delay);
+  void pushImmediate(std::function<void(jsi::Runtime &rt)> &&job);
   void abortPending();
 
  protected:

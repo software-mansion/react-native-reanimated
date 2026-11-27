@@ -103,6 +103,20 @@ declare global {
     worklet: SerializableRef<() => void>
   ) => void;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
+  /**
+   * Schedules the timeout callback with the given handler id as a task that
+   * does not wait for the next display v-sync, also on runtimes created with
+   * `enableVSync`. Installed by native code on Worker Runtimes with the Event
+   * Loop.
+   */
+  var __scheduleImmediateCallback: (handlerId: number) => void;
+  /**
+   * `setImmediate` of a Worker Runtime. Set by the Worker Runtime's
+   * `setTimeout` polyfill; the UI Runtime falls back to `setTimeout`.
+   */
+  var __scheduleImmediate:
+    | ((callback: (...args: unknown[]) => void, ...args: unknown[]) => number)
+    | undefined;
   var __runTimeoutCallback: (handlerId: number) => void;
   /**
    * Requests the next display v-sync for a Worker Runtime created with

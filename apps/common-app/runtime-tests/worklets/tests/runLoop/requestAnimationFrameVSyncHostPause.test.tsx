@@ -63,6 +63,29 @@ describe('Test enableVSync while the host is paused', () => {
       expect(firedAfterResume.setTimeout).toBe(true);
     }
   );
+
+  androidTest(
+    'runs setImmediate callbacks while the host is paused',
+    async () => {
+      // Arrange
+      const runtime = createWorkletRuntime({
+        name: 'vsync',
+        enableVSync: true,
+      });
+      const watch = watchCallbacks(['setImmediate']);
+      await pauseHost();
+
+      // Act
+      scheduleOnRuntime(runtime, () => {
+        'worklet';
+        setImmediate(() => scheduleOnRN(watch.onFired, 'setImmediate'));
+      });
+      const firedWhilePaused = await watch.waitForAll();
+
+      // Assert
+      expect(firedWhilePaused.setImmediate).toBe(true);
+    }
+  );
 });
 
 async function pauseHost() {

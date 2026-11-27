@@ -26,3 +26,10 @@ export function pushTask(callback: Callback, handlerId: number, delay: number) {
   queue.timeoutCallbacks.set(handlerId, callback);
   globalThis._scheduleTimeoutCallback(delay, handlerId);
 }
+
+export function pushImmediateTask(callback: Callback, handlerId: number) {
+  'worklet';
+  const queue = globalThis._taskQueue;
+  queue.timeoutCallbacks.set(handlerId, callback);
+  globalThis.__scheduleImmediateCallback(handlerId);
+}

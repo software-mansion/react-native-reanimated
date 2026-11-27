@@ -26,11 +26,22 @@ void VSyncEventLoop::runOnNextFrame(std::function<void(jsi::Runtime &rt, double 
 }
 
 void VSyncEventLoop::releaseDueTimeouts(std::vector<Timeout> &&dueTimeouts) {
+  std::vector<std::function<void(jsi::Runtime & rt)>> frameAlignedTimeouts;
+  for (auto &timeout : dueTimeouts) {
+    if (timeout.immediate) {
+      pushTask(std::move(timeout.callback));
+    } else {
+      frameAlignedTimeouts.push_back(std::move(timeout.callback));
+    }
+  }
+  if (frameAlignedTimeouts.empty()) {
+    return;
+  }
   bool shouldRequestFrame = false;
   {
     std::lock_guard<std::mutex> lock(frameTimeoutsMutex_);
-    for (auto &timeout : dueTimeouts) {
-      frameTimeouts_.push_back(std::move(timeout.callback));
+    for (auto &timeout : frameAlignedTimeouts) {
+      frameTimeouts_.push_back(std::move(timeout));
     }
     shouldRequestFrame = !frameRequested_;
     frameRequested_ = true;

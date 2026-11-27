@@ -149,6 +149,20 @@ void EventLoop::pushTimeout(std::function<void(jsi::Runtime &rt)> &&job, int64_t
   timeoutsQueueState_->cv.notify_one();
 }
 
+void EventLoop::pushImmediate(std::function<void(jsi::Runtime &rt)> &&job) {
+  {
+    std::unique_lock<std::mutex> lock(timeoutsQueueState_->mutex);
+    if (!timeoutsQueueState_->running) {
+      return;
+    }
+    const auto timeout = Timeout{std::move(job), getCurrentTimeInMs(), true};
+    auto &queue = timeoutsQueueState_->queue;
+    auto it = std::upper_bound(queue.begin(), queue.end(), timeout);
+    queue.insert(it, timeout);
+  }
+  timeoutsQueueState_->cv.notify_one();
+}
+
 int64_t EventLoop::getCurrentTimeInMs() {
   const auto currentTime = std::chrono::system_clock::now().time_since_epoch();
   return std::chrono::duration_cast<std::chrono::milliseconds>(currentTime).count();
