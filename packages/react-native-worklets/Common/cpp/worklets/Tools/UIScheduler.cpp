@@ -15,6 +15,23 @@ bool UIScheduler::canInvokeSync() const {
   return isOnUIThread() && !drainingUI_ && uiJobs_.empty();
 }
 
+void UIScheduler::invokeSync(const std::function<void()> &job, const std::function<void()> &requestTrigger) {
+  drainingUI_ = true;
+  try {
+    job();
+  } catch (...) {
+    drainingUI_ = false;
+    if (!uiJobs_.empty()) {
+      requestTrigger();
+    }
+    throw;
+  }
+  drainingUI_ = false;
+  if (!uiJobs_.empty()) {
+    requestTrigger();
+  }
+}
+
 void UIScheduler::triggerUI() {
   if (drainingUI_) {
     return;

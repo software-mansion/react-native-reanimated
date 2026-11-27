@@ -48,7 +48,7 @@ const LONG_MS = 60_000;
 // its properties in, most boxes see a delayed one first.
 const BOX_COUNT = PROPERTIES.length * 4;
 const HANDSHAKE_ROUNDS = 20;
-const STRESS_DURATION_MS = 3000;
+const STRESS_ROUNDS = 1000;
 const UI_RESPONSE_TIMEOUT_MS = 3000;
 
 let targetRef: AnimatedRef<View> | null = null;
@@ -96,9 +96,9 @@ async function startTransitions() {
   return targetRef!;
 }
 
-function queueSetNativeProps(ref: AnimatedRef<View>) {
+function queueSetNativeProps(ref: AnimatedRef<View>, opacity: number) {
   scheduleOnUI(() => {
-    setNativeProps(ref, { opacity: Math.random() });
+    setNativeProps(ref, { opacity });
   });
 }
 
@@ -121,7 +121,10 @@ async function uiThreadResponds() {
 
 // Queues the job while the UI thread is inside a frame callback, so the job is
 // still waiting when the CSS transitions update later in the same frame.
-async function queueSetNativePropsDuringFrame(ref: AnimatedRef<View>) {
+async function queueSetNativePropsDuringFrame(
+  ref: AnimatedRef<View>,
+  opacity: number
+) {
   const inFrame = createSynchronizable(false);
   const queued = createSynchronizable(false);
   scheduleOnUI(() => {
@@ -136,7 +139,7 @@ async function queueSetNativePropsDuringFrame(ref: AnimatedRef<View>) {
   if (!(await waitOnJS(() => inFrame.getBlocking(), 2000))) {
     return false;
   }
-  queueSetNativeProps(ref);
+  queueSetNativeProps(ref, opacity);
   queueMicrotask(() => queued.setBlocking(true));
   await Promise.resolve();
   return true;
@@ -147,7 +150,7 @@ describe('CSS transition with a delayed property and UI jobs queued from JS', ()
     const ref = await startTransitions();
     let stuckAfterRound = -1;
     for (let round = 0; round < HANDSHAKE_ROUNDS; round++) {
-      const queued = await queueSetNativePropsDuringFrame(ref);
+      const queued = await queueSetNativePropsDuringFrame(ref, round % 2);
       if (!queued || !(await uiThreadResponds())) {
         stuckAfterRound = round;
         console.error(`UI thread is stuck in round ${round}`);
@@ -160,16 +163,15 @@ describe('CSS transition with a delayed property and UI jobs queued from JS', ()
     }
   });
 
-  test('setNativeProps queued at random times', async () => {
+  test('setNativeProps queued at staggered times', async () => {
     const ref = await startTransitions();
     const done = createSynchronizable(0);
-    const start = performance.now();
     let queued = 0;
     let stuck = false;
-    while (performance.now() - start < STRESS_DURATION_MS) {
+    for (let round = 0; round < STRESS_ROUNDS; round++) {
       queued += 1;
       scheduleOnUI(() => {
-        setNativeProps(ref, { opacity: Math.random() });
+        setNativeProps(ref, { opacity: round % 2 });
         done.setBlocking(done.getBlocking() + 1);
       });
       const target = queued;
@@ -183,7 +185,7 @@ describe('CSS transition with a delayed property and UI jobs queued from JS', ()
         console.error(`UI thread is stuck after ${queued} jobs`);
         break;
       }
-      const pause = performance.now() + Math.random() * 4;
+      const pause = performance.now() + (round % 4);
       while (performance.now() < pause) {
         // spread the jobs over the frame
       }

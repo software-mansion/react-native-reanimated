@@ -15,7 +15,10 @@ class UIScheduler {
   /**
    * Schedules a job for execution on the UI thread.
    *
-   * A job submitted from the UI thread executes inline when no drain is active and no older job is queued.
+   * A job submitted from another thread is queued and requests a UI-thread
+   * drain. A job submitted from the UI thread executes inline only when no
+   * drain is active and no older job is queued. Jobs submitted by that inline
+   * job are queued for a later UI-thread turn.
    */
   virtual void scheduleOnUI(std::function<void()> job);
 
@@ -37,6 +40,13 @@ class UIScheduler {
    * entering an active drain.
    */
   bool canInvokeSync() const;
+
+  /**
+   * Executes a job inline under the drain guard. Jobs submitted by the running
+   * job remain queued, and requestTrigger is called after the guard is released
+   * so that they run on a later UI-thread turn.
+   */
+  void invokeSync(const std::function<void()> &job, const std::function<void()> &requestTrigger);
 
   bool drainingUI_{false};
   std::atomic<bool> scheduledOnUI_{false};

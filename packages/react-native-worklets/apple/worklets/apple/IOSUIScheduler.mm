@@ -17,16 +17,21 @@ bool IOSUIScheduler::queryIsOnUIThread() const
 void IOSUIScheduler::scheduleOnUI(std::function<void()> job)
 {
   if (canInvokeSync()) {
-    job();
+    invokeSync(job, [this] { requestTrigger(); });
     return;
   }
 
   UIScheduler::scheduleOnUI(std::move(job));
-  if (isOnUIThread()) {
+  if (isOnUIThread() && drainingUI_) {
     return;
   }
 
-  if (!scheduledOnUI_) {
+  requestTrigger();
+}
+
+void IOSUIScheduler::requestTrigger()
+{
+  if (!scheduledOnUI_.exchange(true)) {
     dispatch_async(dispatch_get_main_queue(), [weakThis = weak_from_this()] {
       // Before triggering the UI, we check if the weak pointer is still valid to avoid possible dangling pointer
       // issues, because when this async callback here gets executed, the original `IOSUIScheduler` object may have been
