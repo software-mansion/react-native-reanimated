@@ -221,6 +221,12 @@ const SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout route',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutRoute.test');
+    },
+  },
+  {
     testSuiteName: 'native layout starts',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutStarts.test');
@@ -242,6 +248,12 @@ const SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'native layout exiting',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutExiting.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout continuity',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutContinuity.test');
     },
   },
   {

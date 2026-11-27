@@ -8,25 +8,34 @@ export function waitForFrames(
   count: number = 1,
   timeout: number = DEFAULT_TIMEOUT_MS
 ) {
-  const framesRendered = new Promise<void>((resolve) => {
+  const framesRendered = new Promise<number[]>((resolve) => {
     scheduleOnUI(() => {
       'worklet';
-      let remaining = count;
-      const onFrame = () => {
-        remaining -= 1;
-        if (remaining > 0) {
-          requestAnimationFrame(onFrame);
-        } else {
-          scheduleOnRN(resolve);
-        }
-      };
-      requestAnimationFrame(onFrame);
+      requestFrames(count, [], (timestamps) =>
+        scheduleOnRN(resolve, timestamps)
+      );
     });
   });
 
   return withTimeout(framesRendered, {
     description: `${count} animation frame${count === 1 ? '' : 's'}`,
     timeout,
+  });
+}
+
+function requestFrames(
+  remaining: number,
+  timestamps: number[],
+  done: (timestamps: number[]) => void
+) {
+  'worklet';
+  requestAnimationFrame((timestamp: number) => {
+    timestamps.push(timestamp);
+    if (remaining > 1) {
+      requestFrames(remaining - 1, timestamps, done);
+    } else {
+      done(timestamps);
+    }
   });
 }
 
