@@ -1,0 +1,122 @@
+name: Integration examples e2e Android
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  integration-examples-e2e-android:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      WORKING_DIRECTORY: apps/integration-examples
+      DO_NOT_TRACK: 1
+    concurrency:
+      group: integration-examples-e2e-android-${{ github.workflow }}-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Setup Java 17
+        uses: actions/setup-java@17f84c3641ba7b8f6deff6309fc4c864478f5d62
+        with:
+          distribution: 'zulu'
+          java-version: 17
+
+      - name: Set up Gradle network access
+        uses: $/.github/actions/setup-gradle-network
+
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Save Yarn cache
+        uses: $/.github/actions/save-yarn-cache
+        with:
+          cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
+          cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
+          cache-path: ${{ steps.setup-node.outputs.cache-path }}
+
+      - name: Install Android NDK
+        uses: $/.github/actions/install-android-ndk
+        with:
+          gradle-file: ${{ env.WORKING_DIRECTORY }}/node_modules/react-native/gradle/libs.versions.toml
+
+      - name: Build app
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          yarn prebuild --platform android --no-install
+          cd android
+          ./gradlew assembleRelease --build-cache -PreactNativeArchitectures=x86_64
+
+      - name: Install Argent
+        run: npm install --global --omit=optional @swmansion/argent@0.32.0
+
+      - name: AVD cache
+        id: avd-cache
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-x86_64
+
+      - name: Install Android Emulator
+        uses: $/.github/actions/install-android-emulator
+        with:
+          api-level: 34
+          arch: x86_64
+
+      - name: Create AVD and generate a boot snapshot
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Run e2e tests on the emulator
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -grpc 8554
+          disable-animations: true
+          working-directory: ${{ env.WORKING_DIRECTORY }}
+          script: |
+            adb install android/app/build/outputs/apk/release/app-release.apk
+            argent e2e run .argent/e2e --platform android --output "$GITHUB_WORKSPACE/argent-report"
+
+      - name: Upload Argent report
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: integration-examples-e2e-android
+          path: |
+            argent-report
+            ~/.argent/tool-server.log
+          if-no-files-found: ignore
+          retention-days: 14
