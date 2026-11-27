@@ -39,7 +39,7 @@ describe('CSSAnimationsManager', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     manager = new CSSAnimationsManager(
-      shadowNodeWrapper,
+      () => shadowNodeWrapper,
       viewTag,
       COMPOUND_COMPONENT_NAME
     );
@@ -151,12 +151,12 @@ describe('CSSAnimationsManager', () => {
 
       test('reuses the same CSSKeyframesRuleImpl instances when the same inline keyframes are passed to different components', () => {
         const manager1 = new CSSAnimationsManager(
-          shadowNodeWrapper,
+          () => shadowNodeWrapper,
           1,
           COMPOUND_COMPONENT_NAME
         );
         const manager2 = new CSSAnimationsManager(
-          shadowNodeWrapper,
+          () => shadowNodeWrapper,
           2,
           COMPOUND_COMPONENT_NAME
         );
@@ -193,12 +193,12 @@ describe('CSSAnimationsManager', () => {
         const rule2 = new CSSKeyframesRuleImpl(keyframes);
 
         const manager1 = new CSSAnimationsManager(
-          shadowNodeWrapper,
+          () => shadowNodeWrapper,
           1,
           COMPOUND_COMPONENT_NAME
         );
         const manager2 = new CSSAnimationsManager(
-          shadowNodeWrapper,
+          () => shadowNodeWrapper,
           2,
           COMPOUND_COMPONENT_NAME
         );

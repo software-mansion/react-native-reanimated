@@ -21,7 +21,7 @@ import { validatePseudoStyles } from './validatePseudoStyles';
 
 export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private readonly viewTag: number;
-  private readonly shadowNodeWrapper: ShadowNodeWrapper;
+  private readonly getShadowNodeWrapper: () => ShadowNodeWrapper;
   private readonly propsBuilder: NativePropsBuilder;
   private readonly componentName: string;
 
@@ -30,12 +30,12 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
   private isRegistered = false;
 
   constructor(
-    shadowNodeWrapper: ShadowNodeWrapper,
+    getShadowNodeWrapper: () => ShadowNodeWrapper,
     viewTag: number,
     propsBuilder: NativePropsBuilder,
     componentName: string
   ) {
-    this.shadowNodeWrapper = shadowNodeWrapper;
+    this.getShadowNodeWrapper = getShadowNodeWrapper;
     this.viewTag = viewTag;
     this.propsBuilder = propsBuilder;
     this.componentName = componentName;
@@ -119,7 +119,7 @@ export default class CSSPseudoStylesManager implements ICSSPseudoStylesManager {
           this.componentName
         );
       }
-      registerPseudoStyles(this.shadowNodeWrapper, {
+      registerPseudoStyles(this.getShadowNodeWrapper(), {
         defaultStyle: builtDefaultStyle,
         selectors,
       });

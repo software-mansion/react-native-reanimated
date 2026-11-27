@@ -115,6 +115,7 @@ const SUITES: RuntimeTestSuite[] = [
       require('./tests/css/animationCancellation.test');
       require('./tests/css/backgroundImage.test');
       require('./tests/css/platformColor.test');
+      require('./tests/css/shadowNodeWrapperRetention.test');
       require('./tests/css/transformNone.test');
       require('./tests/css/transitionOnRecycledView.test');
     },

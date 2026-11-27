@@ -38,7 +38,7 @@ describe('CSSTransitionsManager', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    manager = new CSSTransitionsManager(shadowNodeWrapper, viewTag);
+    manager = new CSSTransitionsManager(() => shadowNodeWrapper, viewTag);
   });
 
   describe('update', () => {

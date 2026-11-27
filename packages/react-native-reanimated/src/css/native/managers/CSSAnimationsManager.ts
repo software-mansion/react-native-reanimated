@@ -23,7 +23,7 @@ type ProcessedAnimation = {
 };
 
 export default class CSSAnimationsManager implements ICSSAnimationsManager {
-  private readonly shadowNodeWrapper: ShadowNodeWrapper;
+  private readonly getShadowNodeWrapper: () => ShadowNodeWrapper;
   private readonly viewTag: number;
   private readonly compoundComponentName: string;
 
@@ -31,11 +31,11 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
   private appliedEventMask = 0;
 
   constructor(
-    shadowNodeWrapper: ShadowNodeWrapper,
+    getShadowNodeWrapper: () => ShadowNodeWrapper,
     viewTag: number,
     compoundComponentName: string
   ) {
-    this.shadowNodeWrapper = shadowNodeWrapper;
+    this.getShadowNodeWrapper = getShadowNodeWrapper;
     this.viewTag = viewTag;
     this.compoundComponentName = compoundComponentName;
   }
@@ -81,10 +81,14 @@ export default class CSSAnimationsManager implements ICSSAnimationsManager {
 
   private apply(animationUpdates: CSSAnimationUpdates, eventMask: number) {
     this.appliedEventMask = eventMask;
-    applyCSSAnimations(this.shadowNodeWrapper, this.compoundComponentName, {
-      ...animationUpdates,
-      eventMask,
-    });
+    applyCSSAnimations(
+      this.getShadowNodeWrapper(),
+      this.compoundComponentName,
+      {
+        ...animationUpdates,
+        eventMask,
+      }
+    );
   }
 
   private detach() {

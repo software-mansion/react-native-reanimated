@@ -15,7 +15,7 @@ import type {
 
 export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private readonly viewTag: number;
-  private readonly shadowNodeWrapper: ShadowNodeWrapper;
+  private readonly getShadowNodeWrapper: () => ShadowNodeWrapper;
 
   // All props from the previous update
   private prevProps: UnknownRecord | null = null;
@@ -26,9 +26,9 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
   private hasTransition = false;
   private appliedEventMask = 0;
 
-  constructor(shadowNodeWrapper: ShadowNodeWrapper, viewTag: number) {
+  constructor(getShadowNodeWrapper: () => ShadowNodeWrapper, viewTag: number) {
     this.viewTag = viewTag;
-    this.shadowNodeWrapper = shadowNodeWrapper;
+    this.getShadowNodeWrapper = getShadowNodeWrapper;
   }
 
   /**
@@ -71,12 +71,12 @@ export default class CSSTransitionsManager implements ICSSTransitionsManager {
 
     if (Object.keys(config).length) {
       this.appliedEventMask = eventMask;
-      runCSSTransition(this.shadowNodeWrapper, config, eventMask);
+      runCSSTransition(this.getShadowNodeWrapper(), config, eventMask);
       this.hasTransition = true;
     } else if (this.hasTransition && eventMask !== this.appliedEventMask) {
       // Only the mask changed, but the native side still has to learn about it.
       this.appliedEventMask = eventMask;
-      runCSSTransition(this.shadowNodeWrapper, {}, eventMask);
+      runCSSTransition(this.getShadowNodeWrapper(), {}, eventMask);
     }
 
     return false;
