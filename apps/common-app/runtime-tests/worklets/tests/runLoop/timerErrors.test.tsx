@@ -24,6 +24,9 @@ const FRAME_CANCEL_ERROR =
   'error thrown by a requestAnimationFrame callback that cancels another one';
 const FIRST_FRAME_ERROR = 'first error thrown in a frame';
 const SECOND_FRAME_ERROR = 'second error thrown in a frame';
+const REPEATED_FRAME_ERROR = 'error thrown by a callback in every frame';
+const SINGLE_FRAME_ERROR = 'error thrown once next to a repeating error';
+const REPEATED_FRAMES = 10;
 const FRAME_MICROTASK_ERROR =
   'error thrown by a microtask of a requestAnimationFrame callback';
 const CANCELLED_CALLBACK_NOTIFICATION = 'CANCELLED_FRAME_CALLBACK_RESULT';
@@ -181,6 +184,44 @@ describe('errors thrown by timer callbacks', () => {
         ).toBe(true);
         expect(
           messages.some((message) => message.includes(SECOND_FRAME_ERROR))
+        ).toBe(true);
+      }
+    );
+
+    debugTest(
+      `reports a second error of a frame while another callback keeps throwing on the ${runtimeName} Runtime`,
+      async () => {
+        const messages = await captureReportedErrors(
+          REPEATED_FRAMES + 1,
+          () => {
+            runOnTarget(() => {
+              'worklet';
+              let frame = 0;
+              const repeatingCallback = () => {
+                frame++;
+                if (frame < REPEATED_FRAMES) {
+                  requestAnimationFrame(repeatingCallback);
+                }
+                throw new Error(`${REPEATED_FRAME_ERROR} ${frame}`);
+              };
+              requestAnimationFrame(repeatingCallback);
+              requestAnimationFrame(() => {
+                throw new Error(SINGLE_FRAME_ERROR);
+              });
+            });
+          }
+        );
+
+        const singleErrorIndex = messages.findIndex((message) =>
+          message.includes(SINGLE_FRAME_ERROR)
+        );
+        const lastRepeatedErrorIndex = messages.findIndex((message) =>
+          message.includes(`${REPEATED_FRAME_ERROR} ${REPEATED_FRAMES}`)
+        );
+        expect(singleErrorIndex !== -1).toBe(true);
+        expect(
+          lastRepeatedErrorIndex === -1 ||
+            singleErrorIndex < lastRepeatedErrorIndex
         ).toBe(true);
       }
     );

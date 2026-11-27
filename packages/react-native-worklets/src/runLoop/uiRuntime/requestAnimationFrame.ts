@@ -77,12 +77,19 @@ export function setupRequestAnimationFrame() {
       return;
     }
     for (let i = 1; i < errors.length; i++) {
-      const error = errors[i];
-      setTimeout(() => {
-        throw error;
-      });
+      reportError(errors[i]);
     }
     throw errors[0];
+  }
+
+  function reportError(error: unknown) {
+    const reportedError =
+      error instanceof Error ? error : new Error(String(error));
+    globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
+      reportedError.message,
+      reportedError.stack ?? '',
+      reportedError.name
+    );
   }
 
   function requestAnimationFrame(
