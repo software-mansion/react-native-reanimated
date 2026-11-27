@@ -16,7 +16,6 @@ export interface Example {
     android: boolean;
   };
   disabledPlatforms?: Array<(typeof REAPlatform)[keyof typeof REAPlatform]>;
-  needsBundleMode?: boolean;
 
   /** Title of the section this example is listed under in its group. */
   section?: string;

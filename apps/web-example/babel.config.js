@@ -1,8 +1,3 @@
-/** @type {import('react-native-worklets/plugin').PluginOptions} */
-const workletsPluginOptions = {
-  strictGlobal: true,
-};
-
 /** @type {import('@babel/core').ConfigFunction} */
 module.exports = function (api) {
   const plugins = [
@@ -27,7 +22,7 @@ module.exports = function (api) {
       process.env.DISABLE_BABEL_PLUGIN
     );
   } else {
-    plugins.push(['react-native-worklets/plugin', workletsPluginOptions]);
+    plugins.push('react-native-worklets/plugin');
   }
 
   return {

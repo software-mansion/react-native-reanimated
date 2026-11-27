@@ -135,10 +135,6 @@ function ExamplesApp({ examples, headerTitle, title }: ExamplesAppProps) {
       <Stack.Screen
         name="Examples"
         options={{
-          // eslint-disable-next-line no-underscore-dangle
-          headerStyle: globalThis._WORKLETS_BUNDLE_MODE_ENABLED
-            ? { backgroundColor: '#f9f9d9' }
-            : undefined,
           headerTitle,
           title,
         }}>
@@ -304,16 +300,11 @@ function ExampleListScreen({
 
       return (
         <Item
+          disabled={entry.disabledPlatforms?.includes(Platform.OS)}
           icon={entry.icon}
           shouldWork={platform ? entry.shouldWork?.[platform] : undefined}
           title={entry.title}
           wasClicked={wasClicked.includes(name)}
-          disabled={
-            entry.disabledPlatforms?.includes(Platform.OS) ||
-            (entry.needsBundleMode &&
-              // eslint-disable-next-line no-underscore-dangle
-              !globalThis._WORKLETS_BUNDLE_MODE_ENABLED)
-          }
           onPress={() => openExample(name)}
         />
       );
@@ -436,11 +427,6 @@ function ItemIcon({ icon }: { icon?: string }) {
 
 function ItemSeparator() {
   return <View style={styles.separator} />;
-}
-
-/* eslint-disable no-underscore-dangle, no-inner-declarations */
-declare global {
-  var _WORKLETS_BUNDLE_MODE_ENABLED: boolean | undefined;
 }
 
 const Stack = createStack<RootStackParamList>();
