@@ -7,6 +7,11 @@ type Describe = (name: string, buildSuite: () => void) => void;
 
 const SUITES: RuntimeTestSuite[] = [
   {
+    testSuiteName: 'queued layout removal',
+    importTest: () =>
+      require('./tests/layoutAnimations/queuedLayoutRemoval.test'),
+  },
+  {
     testSuiteName: 'matrixInterpolation',
     importTest: () =>
       require('./tests/animations/withTiming/transformMatrices.test'),

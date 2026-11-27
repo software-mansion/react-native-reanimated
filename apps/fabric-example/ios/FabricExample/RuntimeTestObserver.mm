@@ -1,5 +1,7 @@
 #if DEBUG || RUNTIME_TESTS
 
+#define WORKLETS_STABLE_API_TARGET "0.14.0"
+
 #import <React/RCTBackedTextInputViewProtocol.h>
 #import <React/RCTComponentViewRegistry.h>
 #import <React/RCTMountingManager.h>
@@ -7,11 +9,100 @@
 #import <React/RCTSurfacePresenter.h>
 #import <React/RCTViewComponentView.h>
 #import <RuntimeTestObserverSpec/RuntimeTestObserverSpec.h>
+#include <hermes/hermes.h>
 #import <objc/runtime.h>
 #import <react/renderer/components/rnscreens/EventEmitters.h>
 #import <react/renderer/mounting/ShadowTree.h>
 #import <react/renderer/uimanager/UIManager.h>
+#include <reanimated/LayoutAnimations/LayoutAnimationsProxy.h>
+#include <worklets/apple/IOSUIScheduler.h>
 #include <vector>
+
+namespace {
+// Observe the pending starts without replacing any of the proxy's implementation.
+struct LayoutTransactionTestProxy : reanimated::LayoutAnimationsProxy {
+  using LayoutAnimationsProxy::LayoutAnimationsProxy;
+  using LayoutAnimationsProxyCommon::hasPendingLayoutAnimation;
+};
+
+NSDictionary *replayLayoutUpdateRemoval(bool removeParent)
+{
+  using namespace facebook::react;
+  using namespace reanimated;
+  // Run off the UI thread, like a mounting transaction whose animation starts
+  // will be flushed on the next UI frame. No animation worklet is evaluated.
+  auto runtime = facebook::hermes::makeHermesRuntime();
+  auto manager = std::make_shared<LayoutAnimationsManager>();
+  int flushRequests = 0;
+  LayoutAnimationsProxyDependencies dependencies{
+      .layoutAnimationsManager = manager,
+      .contextContainer = std::make_shared<ContextContainer>(),
+      .uiRuntime = *runtime,
+      .uiScheduler = std::make_shared<worklets::IOSUIScheduler>(),
+      .requestLayoutAnimationFlush = [&](SurfaceId) { flushRequests++; },
+      .scheduleOnNextUIFrame = [](std::function<void()>) {},
+      .readSynchronousOpacity = [](Tag) { return std::optional<double>{}; },
+  };
+  constexpr SurfaceId surface = 1;
+  constexpr Tag parentTag = 2, childTag = 4, survivorTag = 6;
+  auto proxy = std::make_shared<LayoutTransactionTestProxy>(surface, dependencies);
+  proxy->initializeLightTree(ShadowTreeRevision{});
+  const auto view = [](Tag tag) {
+    ShadowView result;
+    result.tag = tag;
+    result.surfaceId = surface;
+    result.componentName = "View";
+    result.traits.set(ShadowNodeTraits::Trait::ViewKind);
+    result.props = std::make_shared<ViewProps>();
+    result.layoutMetrics.frame.size = {100, 20};
+    return result;
+  };
+  const auto parent = view(parentTag);
+  const auto child = view(childTag);
+  const auto survivor = view(survivorTag);
+  proxy->pullTransaction(
+      surface,
+      1,
+      TransactionTelemetry{},
+      {
+          ShadowViewMutation::CreateMutation(parent),
+          ShadowViewMutation::InsertMutation(surface, parent, 0),
+          ShadowViewMutation::CreateMutation(child),
+          ShadowViewMutation::InsertMutation(parentTag, child, 0),
+          ShadowViewMutation::CreateMutation(survivor),
+          ShadowViewMutation::InsertMutation(surface, survivor, 1),
+      });
+  manager->configureAnimationBatch({
+      {.tag = childTag, .type = LayoutAnimationType::LAYOUT, .config = worklets::Serializable::undefined()},
+      {.tag = survivorTag, .type = LayoutAnimationType::LAYOUT, .config = worklets::Serializable::undefined()},
+  });
+  auto updatedChild = child;
+  updatedChild.layoutMetrics.frame.size.width = 200;
+  auto updatedSurvivor = survivor;
+  updatedSurvivor.layoutMetrics.frame.size.width = 200;
+  ShadowViewMutationList mutations{
+      ShadowViewMutation::UpdateMutation(child, updatedChild, parentTag),
+      ShadowViewMutation::UpdateMutation(survivor, updatedSurvivor, surface),
+  };
+  if (removeParent) {
+    mutations.insert(
+        mutations.end(),
+        {
+            ShadowViewMutation::RemoveMutation(parentTag, updatedChild, 0),
+            ShadowViewMutation::DeleteMutation(updatedChild),
+            ShadowViewMutation::RemoveMutation(surface, parent, 0),
+            ShadowViewMutation::DeleteMutation(parent),
+        });
+  }
+  proxy->pullTransaction(surface, 2, TransactionTelemetry{}, std::move(mutations));
+  return @{
+    @"childMapped" : @(proxy->lightNodes_.contains(childTag)),
+    @"childAnimationPending" : @(proxy->hasPendingLayoutAnimation(childTag)),
+    @"survivorAnimationPending" : @(proxy->hasPendingLayoutAnimation(survivorTag)),
+    @"flushRequests" : @(flushRequests),
+  };
+}
+} // namespace
 
 static NSMutableArray<NSDictionary *> *recordedUnmounts;
 
@@ -293,6 +384,14 @@ RCT_EXPORT_MODULE()
 - (void)pauseHost:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
 {
   reject(@"E_PLATFORM", @"Host pause tests require Android", nil);
+}
+
+- (void)replayLayoutUpdateRemoval:(BOOL)removeParent
+                          resolve:(RCTPromiseResolveBlock)resolve
+                           reject:(RCTPromiseRejectBlock)reject
+{
+  dispatch_async(
+      dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ resolve(replayLayoutUpdateRemoval(removeParent)); });
 }
 
 - (void)resumeHost:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject

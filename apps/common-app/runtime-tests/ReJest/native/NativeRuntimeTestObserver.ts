@@ -45,6 +45,17 @@ export type UnmountObservation = {
 };
 
 export interface Spec extends TurboModule {
+  /**
+   * IOS only. Replays a layout update followed by removal in one native
+   * transaction.
+   */
+  replayLayoutUpdateRemoval(removeParent: boolean): Promise<{
+    childMapped: boolean;
+    childAnimationPending: boolean;
+    survivorAnimationPending: boolean;
+    flushRequests: number;
+  }>;
+
   emitScreenTransitionProgress(
     tag: CodegenTypes.Int32,
     progress: number,
