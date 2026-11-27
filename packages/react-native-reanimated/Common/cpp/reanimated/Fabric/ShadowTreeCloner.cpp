@@ -5,11 +5,14 @@
 #include <memory>
 #include <ranges>
 #include <string>
+#include <unordered_set>
 #include <utility>
 
 namespace reanimated {
 
 namespace {
+
+using ChildrenList = std::vector<std::shared_ptr<const ShadowNode>>;
 
 bool isTextComponent(const ShadowNode &shadowNode) {
   return !strcmp(shadowNode.getComponentName(), "Paragraph") || !strcmp(shadowNode.getComponentName(), "Text");
@@ -22,12 +25,12 @@ std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawT
   return rawTextNode.clone({newProps, ShadowNodeFragment::childrenPlaceholder(), rawTextNode.getState()});
 }
 
-} // namespace
-
+// `children` is null when no child of `shadowNode` changes. It is replaced when a Text node gets a new
+// `children` prop, which updates the text of its first child.
 Props::Shared mergeProps(
     const ShadowNode &shadowNode,
     const std::vector<folly::dynamic> &propsVector,
-    std::vector<std::shared_ptr<const ShadowNode>> &children) {
+    std::shared_ptr<const ChildrenList> &children) {
   ReanimatedSystraceSection s("ShadowTreeCloner::mergeProps");
 
   auto newPropsDynamic = propsVector.front();
@@ -37,8 +40,11 @@ Props::Shared mergeProps(
 
   if (isTextComponent(shadowNode)) {
     if (const auto *childrenProp = newPropsDynamic.get_ptr("children")) {
-      if ((childrenProp->isString() || childrenProp->isNumber()) && !children.empty()) {
-        children[0] = cloneRawTextWithNewText(*children[0], childrenProp->asString());
+      const auto &currentChildren = children ? *children : shadowNode.getChildren();
+      if ((childrenProp->isString() || childrenProp->isNumber()) && !currentChildren.empty()) {
+        auto newChildren = std::make_shared<ChildrenList>(currentChildren);
+        (*newChildren)[0] = cloneRawTextWithNewText(*(*newChildren)[0], childrenProp->asString());
+        children = std::move(newChildren);
       }
       newPropsDynamic.erase("children");
     }
@@ -53,61 +59,43 @@ Props::Shared mergeProps(
       propsParserContext, shadowNode.getProps(), RawProps(std::move(newPropsDynamic)));
 }
 
-std::shared_ptr<ShadowNode> cloneShadowTreeWithNewPropsRecursive(
-    const ShadowNode &shadowNode,
-    const ChildrenMap &childrenMap,
-    const PropsMap &propsMap) {
-  const auto family = shadowNode.getFamilyShared();
-  const auto affectedChildrenIt = childrenMap.find(family);
-  auto children = shadowNode.getChildren();
-
-  if (affectedChildrenIt != childrenMap.end()) {
-    for (const auto index : affectedChildrenIt->second) {
-      children[index] = cloneShadowTreeWithNewPropsRecursive(*children[index], childrenMap, propsMap);
-    }
-  }
-
-  Props::Shared newProps = ShadowNodeFragment::propsPlaceholder();
-  const auto propsIt = propsMap.find(family);
-  if (propsIt != propsMap.end() && !propsIt->second.empty()) {
-    newProps = mergeProps(shadowNode, propsIt->second, children);
-  }
-
-  return shadowNode.clone(
-      {newProps,
-       std::make_shared<std::vector<std::shared_ptr<const ShadowNode>>>(std::move(children)),
-       shadowNode.getState(),
-       false});
-}
+} // namespace
 
 RootShadowNode::Unshared cloneShadowTreeWithNewProps(const RootShadowNode &oldRootNode, const PropsMap &propsMap) {
   ReanimatedSystraceSection s("ShadowTreeCloner::cloneShadowTreeWithNewProps");
 
-  ChildrenMap childrenMap;
+  std::unordered_set<std::shared_ptr<const ShadowNodeFamily>> families;
+  families.reserve(propsMap.size());
+  for (const auto &[family, _] : propsMap) {
+    families.insert(family);
+  }
 
-  {
-    ReanimatedSystraceSection s("ShadowTreeCloner::prepareChildrenMap");
-
-    for (const auto &[family, _] : propsMap) {
-      const auto ancestors = family->getAncestors(oldRootNode);
-
-      for (const auto &[parentNode, index] : std::ranges::reverse_view(ancestors)) {
-        const auto parentFamily = parentNode.get().getFamilyShared();
-        auto &affectedChildren = childrenMap[parentFamily];
-
-        if (affectedChildren.contains(index)) {
-          continue;
+  // `cloneMultiple` finds the affected children through the families' parent links, so it stays linear
+  // in the number of animated nodes, also when many of them share a parent.
+  auto newRootNode = oldRootNode.cloneMultiple(
+      families, [&propsMap](const ShadowNode &shadowNode, const ShadowNodeFragment &fragment) {
+        auto children = fragment.children;
+        Props::Shared newProps = ShadowNodeFragment::propsPlaceholder();
+        const auto propsIt = propsMap.find(shadowNode.getFamilyShared());
+        if (propsIt != propsMap.end() && !propsIt->second.empty()) {
+          newProps = mergeProps(shadowNode, propsIt->second, children);
         }
+        return shadowNode.clone(
+            {newProps, children ? children : ShadowNodeFragment::childrenPlaceholder(), shadowNode.getState(), false});
+      });
 
-        affectedChildren.insert(index);
-      }
-    }
+  if (!newRootNode) {
+    // None of the families is mounted under this root.
+    newRootNode = oldRootNode.ShadowNode::clone(
+        {ShadowNodeFragment::propsPlaceholder(),
+         ShadowNodeFragment::childrenPlaceholder(),
+         oldRootNode.getState(),
+         false});
   }
 
   // This cast is safe, because this function returns a clone
   // of the oldRootNode, which is an instance of RootShadowNode
-  return std::static_pointer_cast<RootShadowNode>(
-      cloneShadowTreeWithNewPropsRecursive(oldRootNode, childrenMap, propsMap));
+  return std::static_pointer_cast<RootShadowNode>(newRootNode);
 }
 
 } // namespace reanimated
