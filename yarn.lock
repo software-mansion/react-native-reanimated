@@ -22674,13 +22674,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch":
+"metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-hmr-module-update-listener.patch":
   version: 0.88.0
-  resolution: "metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch::version=0.88.0&hash=8f19b7"
+  resolution: "metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-hmr-module-update-listener.patch::version=0.88.0&hash=9d809b"
   dependencies:
     "@babel/runtime": "npm:^7.25.0"
     flow-enums-runtime: "npm:^0.0.6"
-  checksum: 10/5c3be33ead99f22356e79dd08af1850f3bd7598994abfbbbee7d68443d32ed1c245bdf5d101597656673fc8b37a42b3c386c2a7c4954a47e541df336306dedc0
+  checksum: 10/ea623eaf765d3d37ab5043b644df60d936d30b4f01a0530954d0667e0ea51584a97d1cb29bda0b41e0f44e10ce7f0b70efe724785bc14197c982ae0e2dfa8802
   languageName: node
   linkType: hard
 
