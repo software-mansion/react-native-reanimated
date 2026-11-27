@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Worklets examples",
+    "slug": "worklets-integration-examples",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "ios": {
+      "bundleIdentifier": "com.example.workletsintegration"
+    },
+    "android": {
+      "package": "com.example.workletsintegration"
+    }
+  }
+}

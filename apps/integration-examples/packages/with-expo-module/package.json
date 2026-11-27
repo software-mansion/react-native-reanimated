@@ -1,0 +1,29 @@
+{
+  "name": "with-expo-module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sends native data to the UI Runtime with the Worklet type of Expo Modules API.",
+  "license": "MIT",
+  "homepage": "https://docs.swmansion.com/react-native-worklets/",
+  "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./reanimated": "./src/reanimated.ts",
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "react": "*",
+    "react-native": "*",
+    "react-native-reanimated": "*",
+    "react-native-worklets": "*"
+  },
+  "peerDependenciesMeta": {
+    "react-native-reanimated": {
+      "optional": true
+    },
+    "react-native-worklets": {
+      "optional": true
+    }
+  }
+}

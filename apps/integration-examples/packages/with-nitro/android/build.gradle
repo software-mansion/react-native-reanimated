@@ -1,0 +1,46 @@
+apply plugin: 'com.android.library'
+if (findProperty('android.builtInKotlin') == 'false') {
+  apply plugin: 'org.jetbrains.kotlin.android'
+}
+apply from: '../nitrogen/generated/android/WithNitro+autolinking.gradle'
+
+def reactNativeArchitectures = (rootProject.findProperty('reactNativeArchitectures') ?: 'arm64-v8a,x86_64').split(',')
+
+android {
+  namespace 'com.margelo.nitro.withnitro'
+  compileSdk rootProject.ext.compileSdkVersion
+  ndkVersion rootProject.ext.ndkVersion
+
+  defaultConfig {
+    minSdk rootProject.ext.minSdkVersion
+    externalNativeBuild {
+      cmake {
+        cppFlags '-frtti -fexceptions'
+        arguments '-DANDROID_STL=c++_shared'
+        abiFilters(*reactNativeArchitectures)
+      }
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path 'CMakeLists.txt'
+    }
+  }
+
+  buildFeatures {
+    prefab true
+  }
+
+  packaging {
+    jniLibs {
+      excludes += ['**/libc++_shared.so', '**/libfbjni.so', '**/libjsi.so', '**/libreactnative.so', '**/libNitroModules.so', '**/libworklets.so']
+    }
+  }
+}
+
+dependencies {
+  implementation 'com.facebook.react:react-android'
+  implementation project(':react-native-nitro-modules')
+  implementation project(':react-native-worklets')
+}
