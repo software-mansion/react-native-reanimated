@@ -1736,9 +1736,11 @@ var require_workletStringCode = __commonJS({
     };
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.buildWorkletString = buildWorkletString;
+    exports2.shiftFirstLine = shiftFirstLine;
     var core_1 = require("@babel/core");
     var generator_1 = __importDefault(require("@babel/generator"));
     var types_12 = require("@babel/types");
+    var sourcemap_codec_1 = require("@jridgewell/sourcemap-codec");
     var assert_1 = require("assert");
     var convertSourceMap = __importStar(require("convert-source-map"));
     var transform_1 = require_transform();
@@ -1782,9 +1784,12 @@ var require_workletStringCode = __commonJS({
           path.remove();
         }
       });
-      const code = (0, generator_1.default)(workletFunction).code;
       (0, assert_1.strict)(inputMap, "`inputMap` is undefined.");
       const includeSourceMap = !((0, utils_1.isRelease)(state) || state.opts.disableSourceMaps);
+      const { code, map } = (0, generator_1.default)(workletFunction, {
+        sourceMaps: includeSourceMap,
+        inputSourceMap: inputMap
+      });
       const transformed = (0, transform_1.workletTransformSync)(code, {
         filename: state.file.opts.filename,
         extraPlugins: [
@@ -1794,7 +1799,7 @@ var require_workletStringCode = __commonJS({
         extraPresets: state.opts.extraPresets,
         compact: true,
         sourceMaps: includeSourceMap,
-        inputSourceMap: inputMap,
+        inputSourceMap: map !== null && map !== void 0 ? map : void 0,
         ast: false,
         babelrc: false,
         configFile: false,
@@ -1808,10 +1813,19 @@ var require_workletStringCode = __commonJS({
         } else {
           sourceMap = convertSourceMap.fromObject(transformed.map).toObject();
           delete sourceMap.sourcesContent;
+          sourceMap = shiftFirstLine(sourceMap, 1);
         }
       }
       const wrappedCode = `(${transformed.code})`;
       return [wrappedCode, JSON.stringify(sourceMap)];
+    }
+    function shiftFirstLine(map, columns) {
+      var _a;
+      const lines = (0, sourcemap_codec_1.decode)(map.mappings);
+      for (const segment of (_a = lines[0]) !== null && _a !== void 0 ? _a : []) {
+        segment[0] += columns;
+      }
+      return Object.assign(Object.assign({}, map), { mappings: (0, sourcemap_codec_1.encode)(lines) });
     }
     function restoreRecursiveCalls(file, newName) {
       (0, core_1.traverse)(file, {
@@ -1897,7 +1911,11 @@ var require_workletFactory = __commonJS({
         sourceMaps: true,
         sourceFileName: state.file.opts.filename
       });
-      codeObject.code = "(" + (fun.isObjectMethod() ? "function " : "") + codeObject.code + "\n)";
+      const prefix = "(" + (fun.isObjectMethod() ? "function " : "");
+      codeObject.code = prefix + codeObject.code + "\n)";
+      if (codeObject.map) {
+        codeObject.map = (0, workletStringCode_1.shiftFirstLine)(codeObject.map, prefix.length);
+      }
       const transformed = (0, transform_1.workletTransformSync)(codeObject.code, {
         extraPlugins: [...extraPlugins, ...(_a = state.opts.extraPlugins) !== null && _a !== void 0 ? _a : []],
         extraPresets: state.opts.extraPresets,
@@ -1930,7 +1948,7 @@ var require_workletFactory = __commonJS({
       } else {
         mutatedClosureVariables = closureVariables;
       }
-      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, transformed.map);
+      let [funString, sourceMapString] = (0, workletStringCode_1.buildWorkletString)(transformed.ast, state, mutatedClosureVariables, workletName, codeObject.map);
       (0, assert_1.strict)(funString, "`funString` is undefined.");
       const workletHash = hash(funString);
       let lineOffset = 1;
