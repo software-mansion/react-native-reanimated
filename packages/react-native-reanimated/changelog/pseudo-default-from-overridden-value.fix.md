@@ -1,0 +1,1 @@
+Rest a pseudo-selector value without `default` at the value it overrides, such as the same property from an earlier entry of the style array or, for `animatedProps`, the plain prop, instead of the property's built-in default.

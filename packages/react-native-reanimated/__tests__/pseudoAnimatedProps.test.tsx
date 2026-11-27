@@ -31,6 +31,18 @@ describe('pseudo selector values in animatedProps', () => {
     expect(getByTestId('subject').props.fill).toBeUndefined();
   });
 
+  it('keeps the plain prop as the resting value of a pseudo object without default', () => {
+    const { getByTestId } = render(
+      <AnimatedView
+        animatedProps={{ fill: { ':hover': 'rgb(255,255,0)' } }}
+        fill="rgb(255,0,0)"
+        testID="subject"
+      />
+    );
+
+    expect(getByTestId('subject').props.fill).toBe('rgb(255,0,0)');
+  });
+
   it('forwards plain animatedProps values unchanged', () => {
     const { getByTestId } = render(
       <AnimatedView animatedProps={{ fill: 'rgb(0,0,255)' }} testID="subject" />
