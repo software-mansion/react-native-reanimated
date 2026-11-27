@@ -60,11 +60,6 @@ void NativeAnimationHost::startAfterMount(const std::vector<MountedStart> &start
   for (const auto &[request, client] : starts) {
     RECORD_TRACE(.event = TraceEventType::Received, .handle = request.handle);
     admit(request, client, deliveries);
-#ifndef NDEBUG
-    if (commands_.contains(request.handle)) {
-      traceFirstFrame(request);
-    }
-#endif
   }
   post(mountedStartReports_, [deliveries = std::move(deliveries)] {
     for (const auto &delivery : deliveries) {
@@ -100,26 +95,6 @@ void NativeAnimationHost::takeTrace(std::function<void(std::vector<TraceEvent>)>
 
 TraceRecorder &NativeAnimationHost::trace() {
   return trace_;
-}
-
-void NativeAnimationHost::traceFirstFrame(const AnimationRequest &request) {
-  for (const auto &track : request.tracks) {
-    platform_->sampleAtNextFrame(
-        request.handle.tag,
-        track.target,
-        [weakThis = weak_from_this(),
-         key = TrackKey{request.handle, track.target}](const std::optional<TargetSample> &sample) {
-          const auto strongThis = weakThis.lock();
-          if (strongThis && sample) {
-            strongThis->trace_.record(TraceEvent{
-                .event = TraceEventType::FirstFrameSampled,
-                .handle = key.handle,
-                .target = key.target,
-                .objective = 7,
-                .presentationValue = sample->presentation});
-          }
-        });
-  }
 }
 
 void NativeAnimationHost::sampleTarget(
@@ -258,6 +233,11 @@ void NativeAnimationHost::admit(
       strongClient->onAnimationAdmitted(handle);
     }
   });
+  for (const auto &track : request.tracks) {
+    if (playbackOf(track) == TrackPlayback::Immediate) {
+      endTrack({handle, track.target}, true, deliveries);
+    }
+  }
 }
 
 void NativeAnimationHost::runCancel(const AnimationHandle &handle, const TrackStopMode mode) {
@@ -281,6 +261,14 @@ void NativeAnimationHost::runCloseSurface(const SurfaceId surfaceId) {
 }
 
 void NativeAnimationHost::onTrackEnded(const TrackKey &key, const bool finished) {
+  Deliveries deliveries;
+  endTrack(key, finished, deliveries);
+  for (const auto &delivery : deliveries) {
+    delivery();
+  }
+}
+
+void NativeAnimationHost::endTrack(const TrackKey &key, const bool finished, Deliveries &deliveries) {
   const auto commandIt = commands_.find(key.handle);
   if (commandIt == commands_.end()) {
     return;
@@ -291,25 +279,22 @@ void NativeAnimationHost::onTrackEnded(const TrackKey &key, const bool finished)
     return;
   }
 
-  Deliveries deliveries;
   reportTrackEnd(command.client, *trackIt, key, finished, deliveries);
   const bool isHeld = finished && trackIt->endpointPolicy == EndpointPolicy::HoldWithoutCommit;
-  if (!isHeld) {
-    command.tracks.erase(trackIt);
-    if (command.tracks.empty()) {
-      if (!command.hasResult) {
-        const auto result = finished
-            ? AnimationResult{AnimationOutcome::Finished}
-            : AnimationResult{AnimationOutcome::Interrupted, AnimationResultReason::PlatformRemoved};
-        endCommand(key.handle, command, result, deliveries);
-      }
-      commands_.erase(commandIt);
-    }
+  if (isHeld) {
+    return;
   }
-
-  for (const auto &delivery : deliveries) {
-    delivery();
+  command.tracks.erase(trackIt);
+  if (!command.tracks.empty()) {
+    return;
   }
+  if (!command.hasResult) {
+    const auto result = finished
+        ? AnimationResult{AnimationOutcome::Finished}
+        : AnimationResult{AnimationOutcome::Interrupted, AnimationResultReason::PlatformRemoved};
+    endCommand(key.handle, command, result, deliveries);
+  }
+  commands_.erase(commandIt);
 }
 
 std::optional<AnimationResultReason> NativeAnimationHost::validate(const AnimationRequest &request) const {

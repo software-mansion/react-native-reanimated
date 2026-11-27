@@ -50,4 +50,17 @@ enum class TrackBuildFailure : uint8_t {
 
 std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track);
 
+enum class TrackPlayback : uint8_t {
+  /// The value moves from the start value to the end value. With no duration the platform gives its
+  /// default duration.
+  Interpolated,
+  /// The start value stays for the delay. Then the model value shows.
+  HeldThroughDelay,
+  /// No physical playback. The track ends inside the operation that admits it.
+  Immediate,
+};
+
+/// A track with no duration has a playback of its own only when the mounted model holds its end value.
+TrackPlayback playbackOf(const AnimationTrack &track);
+
 } // namespace reanimated::native_animation
