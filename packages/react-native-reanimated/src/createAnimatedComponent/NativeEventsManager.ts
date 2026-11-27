@@ -61,23 +61,13 @@ export class NativeEventsManager implements INativeEventsManager {
     }
 
     executeForEachEventHandler(prevProps, (key, prevHandler) => {
-      const newProp = this.#managedComponent.props[key];
-      if (!newProp) {
-        // Prop got deleted
+      if (!holdsHandler(this.#registeredProps[key], prevHandler)) {
         prevHandler.unregisterFromEvents(this.#eventViewTag, key);
-      } else if (
-        isWorkletEventHandler(newProp) &&
-        newProp.workletEventHandler !== prevHandler
-      ) {
-        // Prop got changed
-        prevHandler.unregisterFromEvents(this.#eventViewTag, key);
-        newProp.workletEventHandler.registerForEvents(this.#eventViewTag, key);
       }
     });
 
-    executeForEachEventHandler(this.#managedComponent.props, (key, handler) => {
-      if (!prevProps[key]) {
-        // Prop got added
+    executeForEachEventHandler(this.#registeredProps, (key, handler) => {
+      if (!holdsHandler(prevProps[key], handler)) {
         handler.registerForEvents(this.#eventViewTag, key);
       }
     });
@@ -127,15 +117,6 @@ export class NativeEventsManager implements INativeEventsManager {
   }
 }
 
-function isWorkletEventHandler(
-  prop: unknown
-): prop is WorkletEventHandlerHolder {
-  return (
-    has('workletEventHandler', prop) &&
-    prop.workletEventHandler instanceof WorkletEventHandler
-  );
-}
-
 function executeForEachEventHandler(
   props: ManagedAnimatedComponent['props'],
   callback: (
@@ -149,6 +130,22 @@ function executeForEachEventHandler(
       callback(key, prop.workletEventHandler);
     }
   }
+}
+
+function holdsHandler(
+  prop: unknown,
+  handler: WorkletEventHandlerHolder['workletEventHandler']
+) {
+  return isWorkletEventHandler(prop) && prop.workletEventHandler === handler;
+}
+
+function isWorkletEventHandler(
+  prop: unknown
+): prop is WorkletEventHandlerHolder {
+  return (
+    has('workletEventHandler', prop) &&
+    prop.workletEventHandler instanceof WorkletEventHandler
+  );
 }
 
 type ComponentOptions = {

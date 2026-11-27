@@ -129,6 +129,27 @@ describe('NativeEventsManager', () => {
     }
   );
 
+  test('unregisters a handler that a plain callback replaces', () => {
+    const { component, handler, manager } = setup();
+
+    component.props = { onScroll: () => undefined };
+    manager.updateEvents();
+
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
+  });
+
+  test('registers a handler that replaces a plain callback', () => {
+    const { component, manager } = setup();
+    const nextHandler = makeHandler();
+
+    component.props = { onScroll: () => undefined };
+    manager.updateEvents();
+    component.props = { onScroll: { workletEventHandler: nextHandler } };
+    manager.updateEvents();
+
+    expect(nextHandler.registerForEvents).toHaveBeenCalledWith(1, 'onScroll');
+  });
+
   test('detaches registered handlers if props change before unmount', () => {
     const { component, handler, manager } = setup();
 
