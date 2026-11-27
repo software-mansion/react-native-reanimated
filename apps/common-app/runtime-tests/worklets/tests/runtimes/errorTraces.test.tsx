@@ -1,6 +1,5 @@
 import {
   runOnRNSync,
-  isBundleModeEnabled,
   runOnUISync,
   scheduleOnUI,
   scheduleOnRuntime,
@@ -203,32 +202,30 @@ describe('Error traces from RN', () => {
     expect(errorData?.stack).toInclude('functionNameWorkerCaller');
   });
 
-  if (isBundleModeEnabled()) {
-    test('runOnRNSync rethrows with the RN stack and the caller stack', async () => {
-      scheduleOnUI(function functionNameSyncCaller() {
-        'worklet';
-        try {
-          runOnRNSync(functionNameRN);
-        } catch (error) {
-          scheduleOnRN(reportCaughtStack, (error as Error).stack ?? '');
-        }
-      });
-
-      await waitForNotification('stackCaught');
-      expect(caughtStack).toInclude('at [RN]: functionNameRN');
-      expect(caughtStack).toInclude('functionNameSyncCaller');
-    });
-
-    test('uncaught runOnRNSync error keeps RN frames and labels UI frames', async () => {
-      scheduleOnUI(function functionNameUncaughtCaller() {
-        'worklet';
+  test('runOnRNSync rethrows with the RN stack and the caller stack', async () => {
+    scheduleOnUI(function functionNameSyncCaller() {
+      'worklet';
+      try {
         runOnRNSync(functionNameRN);
-      });
-
-      await waitForNotification('errorReported');
-      expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
-      expect(errorData?.stack).toInclude('at [UI]: functionNameUncaughtCaller');
-      expect(errorData?.stack).not.toInclude('[UI]: [RN]');
+      } catch (error) {
+        scheduleOnRN(reportCaughtStack, (error as Error).stack ?? '');
+      }
     });
-  }
+
+    await waitForNotification('stackCaught');
+    expect(caughtStack).toInclude('at [RN]: functionNameRN');
+    expect(caughtStack).toInclude('functionNameSyncCaller');
+  });
+
+  test('uncaught runOnRNSync error keeps RN frames and labels UI frames', async () => {
+    scheduleOnUI(function functionNameUncaughtCaller() {
+      'worklet';
+      runOnRNSync(functionNameRN);
+    });
+
+    await waitForNotification('errorReported');
+    expect(errorData?.stack).toInclude('at [RN]: functionNameRN');
+    expect(errorData?.stack).toInclude('at [UI]: functionNameUncaughtCaller');
+    expect(errorData?.stack).not.toInclude('[UI]: [RN]');
+  });
 });

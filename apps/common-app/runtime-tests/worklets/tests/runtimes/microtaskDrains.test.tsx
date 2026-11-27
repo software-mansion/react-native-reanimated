@@ -1,7 +1,6 @@
 import type { Synchronizable } from 'react-native-worklets';
 import {
   createSynchronizable,
-  isBundleModeEnabled,
   runOnRuntimeAsync,
   runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
@@ -267,28 +266,21 @@ describe('microtask draining', () => {
     },
   ];
 
-  const nestedTest = isBundleModeEnabled() ? test : test.skip;
-
   nestedCases.forEach(({ name, invoke }, token) => {
     describe(`synchronous call into the same runtime ${name}`, () => {
-      nestedTest(
-        'runs queued microtasks only after the outer task ends',
-        async () => {
-          nestedResults.delete(token);
-          nestedCallsExecuted.delete(token);
-          nestedMicrotaskRanInOuterTask.delete(token);
+      test('runs queued microtasks only after the outer task ends', async () => {
+        nestedResults.delete(token);
+        nestedCallsExecuted.delete(token);
+        nestedMicrotaskRanInOuterTask.delete(token);
 
-          invoke(token);
-          await waitForNotification(`${NESTED_NOTIFICATION}_${token}`);
+        invoke(token);
+        await waitForNotification(`${NESTED_NOTIFICATION}_${token}`);
 
-          expect(nestedCallsExecuted.get(token)).toBe(true);
-          expect(nestedResults.get(token)).toBe(false);
-          await waitForNotification(
-            `${NESTED_MICROTASK_NOTIFICATION}_${token}`
-          );
-          expect(nestedMicrotaskRanInOuterTask.get(token)).toBe(true);
-        }
-      );
+        expect(nestedCallsExecuted.get(token)).toBe(true);
+        expect(nestedResults.get(token)).toBe(false);
+        await waitForNotification(`${NESTED_MICROTASK_NOTIFICATION}_${token}`);
+        expect(nestedMicrotaskRanInOuterTask.get(token)).toBe(true);
+      });
     });
   });
 });
