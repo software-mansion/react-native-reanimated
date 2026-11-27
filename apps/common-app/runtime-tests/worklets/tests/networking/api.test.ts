@@ -1,6 +1,5 @@
 import {
   createWorkletRuntime,
-  isBundleModeEnabled,
   runOnRuntimeSync,
   runOnUISync,
   RuntimeKind,
@@ -17,12 +16,8 @@ import {
 import { deriveEchoServerUrl } from '../../../ReJest/utils/serverUrl';
 import { dispatchWorklet } from '../runLoop/dispatchWorklet';
 
-const bundleModeEnabled = isBundleModeEnabled();
-
 describe('networking API on Worklet Runtimes', () => {
   const [workerRuntime] = getWorkletRuntimesFromPool(1);
-
-  const testFn = bundleModeEnabled ? test : test.skip;
 
   const targets = [
     {
@@ -38,7 +33,7 @@ describe('networking API on Worklet Runtimes', () => {
 
   targets.forEach(({ runOnTarget, targetRuntime }) => {
     describe(`on ${targetRuntime} Runtime`, () => {
-      testFn('installs the networking globals', () => {
+      test('installs the networking globals', () => {
         const missingGlobals = runOnTarget(() => {
           'worklet';
           const globalNames = [
@@ -66,7 +61,7 @@ describe('networking API on Worklet Runtimes', () => {
         expect(missingGlobals).toBe('');
       });
 
-      testFn('installs fetch from the whatwg-fetch polyfill', () => {
+      test('installs fetch from the whatwg-fetch polyfill', () => {
         const isPolyfill = runOnTarget(() => {
           'worklet';
           return (
@@ -78,7 +73,7 @@ describe('networking API on Worklet Runtimes', () => {
         expect(isPolyfill).toBe(true);
       });
 
-      testFn('XMLHttpRequest implements the state machine', () => {
+      test('XMLHttpRequest implements the state machine', () => {
         const outcome = runOnTarget(() => {
           'worklet';
           const xhr = new globalThis.XMLHttpRequest();
@@ -144,7 +139,7 @@ describe('networking API on Worklet Runtimes', () => {
     }
   );
 
-  testFn('keeps requests independent across two Worklet Runtimes', async () => {
+  test('keeps requests independent across two Worklet Runtimes', async () => {
     const baseUrl = deriveEchoServerUrl();
     const [uiFlag, setUiFlag] = createTestValue('not_ok');
     const [workerFlag, setWorkerFlag] = createTestValue('not_ok');
@@ -186,7 +181,7 @@ describe('networking API on Worklet Runtimes', () => {
     expect(workerFlag.value).toBe('ok');
   });
 
-  testFn('survives a runtime disposed with a request in flight', async () => {
+  test('survives a runtime disposed with a request in flight', async () => {
     const baseUrl = deriveEchoServerUrl();
     const [flag, setFlag] = createTestValue('not_ok');
 
@@ -218,7 +213,7 @@ describe('networking API on Worklet Runtimes', () => {
     expect(flag.value).toBe('ok');
   });
 
-  testFn('skips installation when enableNetworking is false', () => {
+  test('skips installation when enableNetworking is false', () => {
     const runtime = createWorkletRuntime({
       enableNetworking: false,
       name: 'noNetworking',
