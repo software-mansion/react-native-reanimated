@@ -1403,7 +1403,9 @@ jsi::Value LayoutAnimationsProxy::buildLayoutAnimation(ManagedLayoutAnimationSta
       layoutAnimationValues(start.type, capturedView, start.after, window_, start.liveLeaves, start.animatedKeys),
       start.config,
       NativeLayoutLimits{},
-      NativeLayoutPlatformRules{nativeAnimationHost_->movesOnlyPlanarTransforms()},
+      NativeLayoutPlatformRules{
+          .movesOnlyPlanarTransforms = nativeAnimationHost_->movesOnlyPlanarTransforms(),
+          .replacementLeadRefreshMs = nativeAnimationHost_->replacementLeadRefreshMs()},
       start.liveLeaves);
 }
 

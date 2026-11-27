@@ -96,6 +96,7 @@ import {
   END_OPACITY,
   FRAME_BOX_REF,
   FRAME_MS,
+  REPLACEMENT_LEAD_LIMIT_MS,
   Pair,
   PAIR_DURATION,
   PAIR_CELL_HEIGHT,
@@ -450,6 +451,12 @@ describe('native layout continuity', () => {
     intervalMs: number;
     /** The bound of the old pair comparison of a position. */
     tolerance: number;
+    /**
+     * The native X starts its curve at the replaced value at the end of the
+     * lead of a replacement: the replaced track moves up to this far in the
+     * lead.
+     */
+    xStepPt?: number;
   };
 
   /**
@@ -476,7 +483,11 @@ describe('native layout continuity', () => {
       caseName,
       twin,
       reads.flatMap(({ position, opacity }) => [
-        ...positionReadsOf(position, rest),
+        ...positionReadsOf(position, rest).map((read) =>
+          read.quantity === 'Position x'
+            ? { ...read, stepPt: parity.xStepPt }
+            : read
+        ),
         ...(exit ? [] : [opacityReadOf(opacity, rest)]),
       ])
     );
@@ -887,6 +898,7 @@ describe('native layout continuity', () => {
           checkpoints: 8,
           intervalMs: PAIR_DURATION / 12,
           tolerance: oneFrame(),
+          xStepPt: (PAIR_LEFT * REPLACEMENT_LEAD_LIMIT_MS) / PAIR_DURATION,
         }
       );
       expect((await sample(nativeTag, 'PositionX')).playbacks.length).toBe(0);

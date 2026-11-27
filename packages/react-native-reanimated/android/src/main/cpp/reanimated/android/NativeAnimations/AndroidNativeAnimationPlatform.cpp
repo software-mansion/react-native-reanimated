@@ -565,6 +565,10 @@ bool AndroidNativeAnimationPlatform::movesOnlyPlanarTransforms() const {
   return apiLevel_ >= __ANDROID_API_Q__;
 }
 
+double AndroidNativeAnimationPlatform::replacementLeadRefreshMs() const {
+  return 0;
+}
+
 bool AndroidNativeAnimationPlatform::playsSizeChange(
     const facebook::react::ShadowView &before,
     const facebook::react::ShadowView &after) {

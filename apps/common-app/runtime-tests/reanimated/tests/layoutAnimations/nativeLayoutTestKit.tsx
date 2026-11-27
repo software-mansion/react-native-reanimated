@@ -1554,12 +1554,14 @@ export const declaredSidesOf = (track: TimedTrack, timeMs: number) => [
 
 /**
  * A value that the route took from a track is the declared value of the track
- * at the origin of the build that took it: the route computes it there, so the
- * times are that origin with the uncertainty of the origin of the track: no
- * time before it and no removal window.
+ * at the origin of the build that took it, or at the end of the lead of the
+ * track when that origin is in the lead (`capturedTimeOf`). The route computes
+ * it there, so the times are that time with the uncertainty of the origin of
+ * the track: no time before it and no removal window.
  */
 export function expectCapturedStart(capture: Capture) {
-  const { track, value, timeMs } = capture;
+  const { track, value } = capture;
+  const timeMs = capturedTimeOf(capture);
   const {
     isOnTimeline,
     distances: [distance],
@@ -1567,12 +1569,20 @@ export function expectCapturedStart(capture: Capture) {
   expect(
     isOnTimeline
       ? ''
-      : `The captured value ${value} of ${describeLeaf(track)} of the command ${track.generation} is ${distance.toFixed(4)} from the declared value of the track at the origin of the build, ${(timeMs - middleOf(track.origin)).toFixed(3)} ms after the origin of the track.`
+      : `The captured value ${value} of ${describeLeaf(track)} of the command ${track.generation} is ${distance.toFixed(4)} from the declared value of the track ${(timeMs - middleOf(track.origin)).toFixed(3)} ms after its origin (the origin of the build, ${(capture.timeMs - middleOf(track.origin)).toFixed(3)} ms, or the end of the lead of the track).`
   ).toBe('');
 }
 
-export const capturedResidualOf = ({ track, value, timeMs }: Capture) =>
-  residualInBandOf([value], timeMs, [track], 0);
+export const capturedResidualOf = (capture: Capture) =>
+  residualInBandOf(
+    [capture.value],
+    capturedTimeOf(capture),
+    [capture.track],
+    0
+  );
+
+export const capturedTimeOf = ({ track, timeMs }: Capture) =>
+  Math.max(timeMs, middleOf(track.origin) + track.leadMs);
 
 const BAND_STEPS = 64;
 const NARROWING_ROUNDS = 8;
@@ -1783,6 +1793,11 @@ export type PlayedTrack = DeclaredKey &
     finished?: boolean;
     replaced?: PlayedTrack;
     /**
+     * The time from the origin at which the track starts its declared timeline
+     * after a lead from the replaced value (`replacementTimelineOf`).
+     */
+    leadMs: number;
+    /**
      * The value that the route took from the replaced track for the build of
      * the command: the start value of the track.
      */
@@ -1830,12 +1845,30 @@ export function playedTracksOf(
       declared.startsOnScreen && replacedTrack
         ? lastCaptureOf(events, replacedTrack, startedMs, clockOffset)
         : undefined;
-    const timeline = declaredTimelineOf(
+    const capturedTimeline = declaredTimelineOf(
       declared.leaf,
       captured?.value ?? declared.from,
       declared.to,
       declared.base
     );
+    const declaredMs = declaredDurationOf(capturedTimeline);
+    const leadMs = (started.durationMs ?? NaN) - declaredMs;
+    if (captured && declaredMs > 0) {
+      expect(
+        (
+          IS_APPLE
+            ? leadMs >= MIN_APPLE_LEAD_MS &&
+              leadMs <= REPLACEMENT_LEAD_LIMIT_MS + LEAD_FLOOR_MS
+            : Math.abs(leadMs) <= LEAD_FLOOR_MS
+        )
+          ? ''
+          : `replacement lead of ${describeLeaf(declared)}: ${leadMs.toFixed(3)} ms, ${IS_APPLE ? `not in ${MIN_APPLE_LEAD_MS.toFixed(3)}..${(REPLACEMENT_LEAD_LIMIT_MS + LEAD_FLOOR_MS).toFixed(3)}` : `over ${LEAD_FLOOR_MS}`} ms`
+      ).toBe('');
+    }
+    const hasLead = !!captured && !!replacedTrack && leadMs > LEAD_FLOOR_MS;
+    const timeline = hasLead
+      ? replacementTimelineOf(declared, replacedTrack, captured, leadMs)
+      : capturedTimeline;
     return {
       ...declared,
       declaration: declared,
@@ -1853,6 +1886,7 @@ export function playedTracksOf(
       finished: ended?.finished,
       replaced: replacedTrack,
       captured,
+      leadMs: hasLead ? leadMs : 0,
       checkedFromMs:
         declared.startsOnScreen || replacedTrack
           ? -Infinity
@@ -1867,6 +1901,70 @@ export function playedTracksOf(
         .map(({ timeline }) => timeline)
     ),
   }));
+}
+
+/**
+ * The longest lead of a native replacement (`replacementLeadMsOf` of the
+ * package): two display refreshes on Apple.
+ */
+export const REPLACEMENT_LEAD_LIMIT_MS = IS_APPLE ? 2 * FRAME_MS : 0;
+
+/**
+ * How much later the leads of native replacements make the end of the tracks
+ * that play to their end.
+ */
+export function endLeadShiftOf(tracks: PlayedTrack[]) {
+  const ending = tracks.filter(({ finished }) => finished !== false);
+  const lastEndOf = (withLeads: boolean) =>
+    Math.max(
+      ...ending.map(
+        ({ origin, timeline, leadMs }) =>
+          middleOf(origin) +
+          declaredDurationOf(timeline) -
+          (withLeads ? 0 : leadMs)
+      )
+    );
+  return ending.length === 0 ? 0 : lastEndOf(true) - lastEndOf(false);
+}
+
+/** A track duration that differs from its declared duration by less is no lead. */
+const LEAD_FLOOR_MS = 0.5;
+/** One refresh at 120 Hz. */
+const MIN_APPLE_LEAD_MS = FRAME_MS / 2 - LEAD_FLOOR_MS;
+
+/**
+ * The timeline of a track that starts its declared timeline at the value of the
+ * replaced track `leadMs` after the capture, after a linear lead to that value.
+ * Before its own lead ends, the replaced track has the value at that end.
+ */
+function replacementTimelineOf(
+  declared: DeclaredKey,
+  replaced: PlayedTrack,
+  captured: Capture,
+  leadMs: number
+): Timeline {
+  const fromReplacedOrigin =
+    captured.timeMs + leadMs - middleOf(replaced.origin);
+  const start = replaced.declared(
+    Math.max(fromReplacedOrigin, replaced.leadMs)
+  );
+  const timeline = declaredTimelineOf(
+    declared.leaf,
+    start,
+    declared.to,
+    declared.base
+  );
+  return {
+    ...timeline,
+    from: captured.value,
+    phases: [
+      {
+        durationMs: leadMs,
+        move: { to: start, curve: curveOf(Easing.linear) },
+      },
+      ...timeline.phases,
+    ],
+  };
 }
 
 /**

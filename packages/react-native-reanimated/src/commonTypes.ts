@@ -174,6 +174,11 @@ export type NativeLayoutLimits = {
 
 export type NativeLayoutPlatformRules = {
   movesOnlyPlanarTransforms: boolean;
+  /**
+   * The display refresh period in ms when the screen shows a new native track
+   * some refreshes after its command; 0 when the track starts at its command.
+   */
+  replacementLeadRefreshMs: number;
 };
 
 /** What the native route reads from the result of a layout animation builder. */

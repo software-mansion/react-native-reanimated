@@ -918,6 +918,43 @@ export function summarizeNativeLeaf(
   };
 }
 
+export function isTimingWithDuration(leaf: NativeLeaf): boolean {
+  'worklet';
+  return (
+    !Array.isArray(leaf) && (timingOf(leaf.__nativeTiming)?.durationMs ?? 0) > 0
+  );
+}
+
+/** `summary` after a linear lead of `leadMs` from `start`. */
+export function withReplacementLead(
+  summary: LeafSummary,
+  start: number,
+  leadMs: number
+): LeafSummary {
+  'worklet';
+  const { initialValue, track } = summary;
+  if (track?.kind !== 'scalar') {
+    return summary;
+  }
+  const durationMs = leadMs + track.durationMs;
+  return {
+    ...summary,
+    initialValue: start,
+    track: {
+      ...track,
+      durationMs,
+      segments: [
+        { endOffset: leadMs / durationMs, endValue: initialValue as number },
+        ...track.segments.map((segment) => ({
+          ...segment,
+          endOffset:
+            (leadMs + segment.endOffset * track.durationMs) / durationMs,
+        })),
+      ],
+    },
+  };
+}
+
 /**
  * The segments that a track takes from the segment budget of its animation. A
  * `transform` track takes the sum of the segments of its operation timelines,

@@ -1,0 +1,1 @@
+Fix a step of a native layout animation on iOS when a new layout animation replaces a running one, for example at a fast reversal: the new track continues the replaced value until the screen shows it, then plays from there, so its end and callback come one or two display refreshes later.

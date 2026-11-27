@@ -179,6 +179,7 @@ jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLay
 jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLayoutPlatformRules &platformRules) {
   jsi::Object object(rt);
   object.setProperty(rt, "movesOnlyPlanarTransforms", platformRules.movesOnlyPlanarTransforms);
+  object.setProperty(rt, "replacementLeadRefreshMs", platformRules.replacementLeadRefreshMs);
   return object;
 }
 

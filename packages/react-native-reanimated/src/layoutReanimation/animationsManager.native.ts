@@ -6,6 +6,7 @@ import { runOnUISync } from 'react-native-worklets';
 import { cancelAnimation, withStyleAnimation } from '../animation';
 import type { EasingCurveFits } from '../animation/nativeEasingCurve';
 import type {
+  AnimationObject,
   LayoutAnimation,
   LayoutAnimationBuildSummary,
   LayoutAnimationsManager,
@@ -26,11 +27,13 @@ import {
   animatePlainLeaves,
   currentOfNativeLeaf,
   hasMovingNonPlanarTransform,
+  isTimingWithDuration,
   leverOf,
   relateToLiveLeaf,
   replayTimesOfLeaves,
   segmentCountOf,
   summarizeNativeLeaf,
+  withReplacementLead,
 } from './nativeLeaves';
 
 const TAG_OFFSET = 1e9;
@@ -81,8 +84,44 @@ type LayoutAnimationBuild = {
   style?: LayoutAnimation;
   error?: unknown;
   originMs: number;
+  /**
+   * The start of each leaf that starts at the captured value of the leaf that
+   * it replaces: the replaced value at a later time (`replacementLeadMsOf`).
+   */
+  starts?: Record<string, { value: number; originMs: number }>;
   hasCallbackResult?: boolean;
 };
+
+/**
+ * An estimate, from 60 fps videos of an iPhone: the screen shows the first
+ * frame of a new native track this many refreshes after the refresh at or after
+ * its command.
+ */
+const REPLACEMENT_LEAD_REFRESHES = 1;
+
+/**
+ * The proxy gives the builder the captured frame values as 32-bit floats
+ * (`viewWithLiveLeafValues`).
+ */
+function startsAtCapturedValue(initialValue: unknown, liveValue: unknown) {
+  'worklet';
+  return (
+    typeof initialValue === 'number' &&
+    typeof liveValue === 'number' &&
+    Math.fround(initialValue) === Math.fround(liveValue)
+  );
+}
+
+/** Out of a frame callback the next refresh can be one period away. */
+function replacementLeadMsOf({
+  replacementLeadRefreshMs,
+}: NativeLayoutPlatformRules): number {
+  'worklet';
+  const refreshes =
+    REPLACEMENT_LEAD_REFRESHES +
+    (global.__frameTimestamp === undefined ? 1 : 0);
+  return refreshes * replacementLeadRefreshMs;
+}
 
 function jumpsAfterDelay(tracks: (NativeLeafTrack | undefined)[]): boolean {
   'worklet';
@@ -166,7 +205,8 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         builds.set(buildId, { error, originMs });
         return undefined;
       }
-      builds.set(buildId, { style, originMs });
+      const build: LayoutAnimationBuild = { style, originMs };
+      builds.set(buildId, build);
       const animations = (style.animations ?? {}) as Record<string, unknown>;
       const initialValues = (style.initialValues ?? {}) as Record<
         string,
@@ -202,29 +242,58 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
         return refusalOf(null, 'NonPlanarTransform');
       }
       animatePlainLeaves(animations);
+      const relations: Record<string, LiveLeafRelation> = {};
+      const liveValues: Record<string, unknown> = {};
+      for (const liveLeaf of liveLeaves) {
+        const live = advanceLiveLeaf(liveLeaf, originMs);
+        relations[liveLeaf.key] = relateToLiveLeaf(
+          live,
+          animations[liveLeaf.key] as NativeLeaf | undefined
+        );
+        liveValues[liveLeaf.key] = currentOfNativeLeaf(live);
+      }
+      const needsFrameDriver = Object.values(relations).includes('frameDriver');
+      const leadMs = needsFrameDriver ? 0 : replacementLeadMsOf(platformRules);
+      build.starts = {};
+      for (const liveLeaf of leadMs > 0 ? liveLeaves : []) {
+        const { key } = liveLeaf;
+        if (
+          relations[key] === 'replaces' &&
+          startsAtCapturedValue(initialValues[key], liveValues[key]) &&
+          isTimingWithDuration(animations[key] as NativeLeaf)
+        ) {
+          const startMs = originMs + leadMs;
+          build.starts[key] = {
+            value: replacedValueAt(liveLeaf, startMs),
+            originMs: startMs,
+          };
+        }
+      }
       const fitting = { fits: easingCurveFits, lever: leverOf(yogaValues) };
-      const summaries = keys.map((key) => ({
-        key,
-        ...summarizeNativeLeaf(
+      const summaries = keys.map((key) => {
+        const start = build.starts?.[key];
+        return {
           key,
-          initialValues[key],
-          animations[key],
-          fitting
-        ),
-      }));
+          ...(start
+            ? withReplacementLead(
+                summarizeNativeLeaf(key, start.value, animations[key], fitting),
+                initialValues[key] as number,
+                leadMs
+              )
+            : summarizeNativeLeaf(
+                key,
+                initialValues[key],
+                animations[key],
+                fitting
+              )),
+        };
+      });
       const segmentCount = summaries.reduce(
         (sum, { track }) => sum + (track ? segmentCountOf(track) : 0),
         0
       );
       if (segmentCount > limits.segments) {
         return refusalOf('segments');
-      }
-      const relations: Record<string, LiveLeafRelation> = {};
-      for (const liveLeaf of liveLeaves) {
-        relations[liveLeaf.key] = relateToLiveLeaf(
-          advanceLiveLeaf(liveLeaf, originMs),
-          animations[liveLeaf.key] as NativeLeaf | undefined
-        );
       }
       return {
         originMs,
@@ -234,7 +303,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           (key) => !(key in animations)
         ),
         jumpsAfterDelay: jumpsAfterDelay(summaries.map(({ track }) => track)),
-        needsFrameDriver: Object.values(relations).includes('frameDriver'),
+        needsFrameDriver,
         leaves: summaries.map((summary) => ({
           ...summary,
           continuesLiveLeaf: relations[summary.key] === 'continues',
@@ -294,16 +363,43 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
     },
   };
 
-  /** Gives the leaf in the state that the frame driver gives it at `now`. */
+  /**
+   * Gives the leaf in the state that the frame driver gives it at `now`. A leaf
+   * with a later start has its start value before that start.
+   */
   function advanceLiveLeaf(
     { buildId, key }: LiveLayoutLeaf,
     now: number
   ): NativeLeaf {
-    const { style, originMs } = builds.get(buildId)!;
+    const { style, originMs, starts } = builds.get(buildId)!;
     const leaf = (style!.animations as Record<string, NativeLeaf>)[key];
-    const initialValue = (style!.initialValues as Record<string, unknown>)[key];
-    advanceNativeLeaf(leaf, initialValue, originMs, now);
+    const start = starts?.[key];
+    if (start) {
+      advanceNativeLeaf(
+        leaf,
+        start.value,
+        start.originMs,
+        Math.max(now, start.originMs)
+      );
+    } else {
+      const initialValue = (style!.initialValues as Record<string, unknown>)[
+        key
+      ];
+      advanceNativeLeaf(leaf, initialValue, originMs, now);
+    }
     return leaf;
+  }
+
+  /**
+   * The value of a scalar live leaf at `timeMs`. Each advance starts the leaf
+   * again, so only its `finished` flag stays from this read; the read clears
+   * it.
+   */
+  function replacedValueAt(liveLeaf: LiveLayoutLeaf, timeMs: number): number {
+    const leaf = advanceLiveLeaf(liveLeaf, timeMs) as AnimationObject;
+    const value = leaf.current as number;
+    leaf.finished = false;
+    return value;
   }
 
   /**

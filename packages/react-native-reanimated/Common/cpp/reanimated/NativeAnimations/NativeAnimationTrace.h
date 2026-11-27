@@ -73,6 +73,8 @@ struct TraceEvent {
   /// Of a track start: the time of the platform pass that writes the start value, where the platform gives it
   /// (Android).
   std::optional<double> passTimestampMs;
+  /// Of a track start: the duration of the track, after its delay.
+  std::optional<double> durationMs;
   /// The value of the layout animation key that a capture got.
   std::optional<double> leafValue;
   /// The name that the layout domain gives to the type of the animation of a pending start, a refused start,

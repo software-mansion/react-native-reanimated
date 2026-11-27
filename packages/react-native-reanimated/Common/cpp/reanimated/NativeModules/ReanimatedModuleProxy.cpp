@@ -541,6 +541,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.passTimestampMs) {
     object.setProperty(rt, "passTimestampMs", *event.passTimestampMs);
   }
+  if (event.durationMs) {
+    object.setProperty(rt, "durationMs", *event.durationMs);
+  }
   if (event.leafValue) {
     object.setProperty(rt, "leafValue", *event.leafValue);
   }

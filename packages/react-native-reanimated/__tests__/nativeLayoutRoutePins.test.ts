@@ -21,7 +21,10 @@ initializeLayoutAnimationsManager();
 const manager = globalThis.LayoutAnimationsManager;
 
 const LIMITS = { leaves: 6, transformOperations: 4, segments: 64 };
-const PLATFORM_RULES = { movesOnlyPlanarTransforms: false };
+const PLATFORM_RULES = {
+  movesOnlyPlanarTransforms: false,
+  replacementLeadRefreshMs: 0,
+};
 const SIZES: [number, number][] = [
   [50, 50],
   [100, 60],

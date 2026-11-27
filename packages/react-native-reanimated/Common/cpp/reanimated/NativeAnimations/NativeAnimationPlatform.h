@@ -92,6 +92,10 @@ class NativeAnimationPlatform {
       const AnimationTrack &track,
       const facebook::react::ShadowView &view) = 0;
   virtual bool movesOnlyPlanarTransforms() const = 0;
+  /// The display refresh period in ms when the screen shows a new track some refreshes after its command, so a
+  /// track that replaces a live track starts that many refreshes later and continues the replaced value until then.
+  /// 0 when the track starts at its command.
+  virtual double replacementLeadRefreshMs() const = 0;
 
   /// False when the platform cannot play a change of the frame size from `before` to `after`. Reads no mounted
   /// state, so a client can ask before it builds the tracks.

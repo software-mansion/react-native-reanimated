@@ -133,6 +133,10 @@ bool NativeAnimationHost::movesOnlyPlanarTransforms() const {
   return platform_->movesOnlyPlanarTransforms();
 }
 
+double NativeAnimationHost::replacementLeadRefreshMs() const {
+  return platform_->replacementLeadRefreshMs();
+}
+
 bool NativeAnimationHost::playsSizeChange(
     const facebook::react::ShadowView &before,
     const facebook::react::ShadowView &after) const {
@@ -316,7 +320,8 @@ void NativeAnimationHost::admit(
             .handle = handle,
             .target = track.target,
             .endpointPolicy = track.endpointPolicy,
-            .passTimestampMs = mountedAnimation->passTimestampMs());
+            .passTimestampMs = mountedAnimation->passTimestampMs(),
+            .durationMs = track.durationMs);
   }
   commands_.emplace(handle, std::move(command));
   mountedAnimation->start(replacedTracks);

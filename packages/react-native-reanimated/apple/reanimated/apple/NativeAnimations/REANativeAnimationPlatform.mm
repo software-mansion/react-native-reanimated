@@ -910,6 +910,15 @@ class CoreAnimationPlatform final : public NativeAnimationPlatform,
     return false;
   }
 
+  double replacementLeadRefreshMs() const override
+  {
+#if TARGET_OS_IOS || TARGET_OS_TV
+    return 1000.0 / UIScreen.mainScreen.maximumFramesPerSecond;
+#else
+    return 0;
+#endif
+  }
+
   bool playsSizeChange(const facebook::react::ShadowView & /*before*/, const facebook::react::ShadowView & /*after*/)
       override
   {

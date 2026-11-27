@@ -132,6 +132,8 @@ import {
   LAYOUT_PROPS,
   readFrameRecords,
   removalLeadMs,
+  endLeadShiftOf,
+  capturedTimeOf,
   REMOVES_TRACKS_OUT_OF_WINDOW,
   resetCallbacks,
   resetFrameRecords,
@@ -1146,6 +1148,8 @@ type Stage = {
   playedMs: Partial<Record<BoxName, number>>;
   /** The native tracks of the command that replaced a native track. */
   replacingTracks: PlayedTrack[];
+  /** How much later the replacement leads make the native end of the stage. */
+  leadShiftMs: number;
   twinChecks: LeafCheck[];
 };
 
@@ -1222,7 +1226,7 @@ export function expectAtCommonTime(
       matrixToleranceOf(referenceCase),
       played
     ),
-    ...expectTimesAtCommonTime(stages),
+    ...expectTimesAtCommonTime(stages, played),
   ];
   const provenRows = rows.filter(({ stage, checkpoint, quantity }) =>
     PROVEN_ROWS.some(
@@ -1350,6 +1354,7 @@ function stagesOf(
         ),
         origin,
         durationMs: longestDurationOf(commandTracks),
+        leadShiftMs: endLeadShiftOf(commandTracks),
         playedMs: {
           native: commandTracks.every(({ finished }) => finished)
             ? Math.max(...commandTracks.map(({ played: { to } }) => to)) -
@@ -1370,6 +1375,7 @@ function stagesOf(
       ...common,
       route: 'frame driver',
       replacingTracks: [],
+      leadShiftMs: 0,
       origin: { from: startMs, to: startMs },
       durationMs: longestDurationOf(nativeChecks),
       playedMs: {
@@ -1578,8 +1584,10 @@ export const endsNativelyIn = (
 /**
  * The duration of each stage on the two boxes, and the emission time of the
  * last callback of each box on the animation clock, against one display frame.
+ * The native times are taken without the shift that the replacement leads give
+ * the end of the stage and of the group (`endLeadShiftOf`).
  */
-function expectTimesAtCommonTime(stages: Stage[]): CommonRow[] {
+function expectTimesAtCommonTime(stages: Stage[], played: Played): CommonRow[] {
   const native = callbackTimeOf('native');
   const frame = callbackTimeOf('frame');
   const assertsTimes =
@@ -1589,14 +1597,17 @@ function expectTimesAtCommonTime(stages: Stage[]): CommonRow[] {
       stage,
       checkpoint: 'whole command',
       quantity: 'duration',
-      native: stage.playedMs.native,
+      native:
+        stage.playedMs.native === undefined
+          ? undefined
+          : stage.playedMs.native - stage.leadShiftMs,
       twin: stage.playedMs.frame,
     })),
     {
       stage: lastOf(stages)!,
       checkpoint: 'end',
       quantity: 'callback emission',
-      native: native.emittedMs,
+      native: native.emittedMs - endLeadShiftOf(played.tracks),
       twin: frame.emittedMs,
       note: `delivery: the native callback came ${(native.receivedMs - frame.receivedMs).toFixed(3)} ms after the twin callback`,
     },
@@ -2819,9 +2830,9 @@ const describeReplacementReads = (reads: RowRead[]) =>
     });
 
 /**
- * For each captured value: the value, the origin of its build from the origin
- * of its track, and the steady-clock distance from that origin to the trace
- * event of the capture.
+ * For each captured value: the value, the origin of its build and the compared
+ * time (`capturedTimeOf`) from the origin of its track, and the steady-clock
+ * distance from the build origin to the trace event of the capture.
  */
 const describeCaptures = (captures: Capture[]) =>
   captures.map((capture) => {
@@ -2830,7 +2841,8 @@ const describeCaptures = (captures: Capture[]) =>
       distances: [distance],
       ageMs,
     } = capturedResidualOf(capture);
-    return `${track.key} of the command ${track.generation}: a build took ${value.toFixed(4)} at its origin, ${(timeMs - middleOf(track.origin)).toFixed(3)} ms after the origin of the track, ${distance.toFixed(4)} from the track at ${ageMs.toFixed(2)} ms before the origin of the build, and the trace event of the capture is ${(eventTimeMs - timeMs).toFixed(3)} ms after the origin of the build on the steady clock`;
+    const comparedMs = capturedTimeOf(capture);
+    return `${track.key} of the command ${track.generation}: a build took ${value.toFixed(4)} at its origin, ${(timeMs - middleOf(track.origin)).toFixed(3)} ms after the origin of the track, ${distance.toFixed(4)} from the track at ${ageMs.toFixed(2)} ms before the compared time ${(comparedMs - middleOf(track.origin)).toFixed(3)} ms after the origin of the track, and the trace event of the capture is ${(eventTimeMs - timeMs).toFixed(3)} ms after the origin of the build on the steady clock`;
   });
 
 // The frame driver and the timeline have the value of one function of one time.

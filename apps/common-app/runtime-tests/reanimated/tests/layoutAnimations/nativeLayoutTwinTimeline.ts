@@ -393,6 +393,8 @@ export type PairRead = {
   t: number;
   native: number;
   rest: TwinRest;
+  /** How far a position can step from the twin at a native replacement. */
+  stepPt?: number;
 };
 
 type Offset = { x: number; y: number };
@@ -455,7 +457,7 @@ const SCALAR_KEYS = {
 const pairQuantityOf = (
   records: FrameRecord[],
   { offset, recordOffset }: TwinPair,
-  { quantity, rest }: PairRead
+  { quantity, rest, stepPt = 0 }: PairRead
 ): TwinQuantity => {
   const keyOf = (key: keyof TwinRest, knotOffset = 0): TwinKey => ({
     knots: twinTimelineOf(records, 'frame', key).map((knot) => ({
@@ -482,7 +484,7 @@ const pairQuantityOf = (
           const [origin, size] = amounts(values);
           return (isX ? offset.x : offset.y) + layerPositionOf(origin, size);
         },
-        tolerance: POSITION_TOLERANCE,
+        tolerance: POSITION_TOLERANCE + stepPt,
       };
     }
     case 'Width':

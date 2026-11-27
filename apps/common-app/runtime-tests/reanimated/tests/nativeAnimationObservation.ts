@@ -56,6 +56,8 @@ export type TraceEvent = {
    * animation clock. A start writes the value of that time.
    */
   passTimestampMs?: number;
+  /** Of a `TrackStarted` event: the duration of the track, after its delay. */
+  durationMs?: number;
   leafValue?: number;
   layoutAnimationType?: string;
 };

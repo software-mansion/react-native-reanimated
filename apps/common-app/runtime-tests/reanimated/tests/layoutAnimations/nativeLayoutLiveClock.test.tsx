@@ -166,6 +166,7 @@ import {
   endedFromMsOf,
   endFrameLeadOf,
   FRAME_MS,
+  endLeadShiftOf,
   firstFrameTimeAtOrAfter,
   framesMissedBy,
   has3D,
@@ -405,9 +406,13 @@ describe('native layout live clock', () => {
       console.log(
         `LIVE | ${caseName} | lead of the twin end applied to the callback bound, ms | ${twinEndLeadMs.toFixed(3)}`
       );
+      const replacementLeadMs = endLeadShiftOf(played.tracks);
+      console.log(
+        `LIVE | ${caseName} | shift of the end by the replacement leads applied to the callback bound, ms | ${replacementLeadMs.toFixed(3)}`
+      );
       const callbackGap = {
-        from: -(twinPhases + 1) * FRAME_MS + twinEndLeadMs,
-        to: 2 * FRAME_MS + twinEndLeadMs,
+        from: -(twinPhases + 1) * FRAME_MS + twinEndLeadMs + replacementLeadMs,
+        to: 2 * FRAME_MS + twinEndLeadMs + replacementLeadMs,
       };
       expectIn(
         'native end callback after the callback of the twin on the UI runtime, ms',

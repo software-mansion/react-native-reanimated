@@ -98,7 +98,10 @@ function makePendingConfig(callback: jest.Mock) {
 }
 
 const LIMITS = { leaves: 3, transformOperations: 4, segments: 8 };
-const PLATFORM_RULES = { movesOnlyPlanarTransforms: false };
+const PLATFORM_RULES = {
+  movesOnlyPlanarTransforms: false,
+  replacementLeadRefreshMs: 0,
+};
 
 const linearPhase = (toValue: number | string, durationMs: number) => ({
   kind: 'timing',
@@ -288,7 +291,7 @@ describe('LayoutAnimationsManager', () => {
         {},
         () => onUIRuntime(config),
         LIMITS,
-        { movesOnlyPlanarTransforms },
+        { movesOnlyPlanarTransforms, replacementLeadRefreshMs: 0 },
         []
       )!;
       manager.releaseBuilt(id);
@@ -2129,6 +2132,81 @@ describe('LayoutAnimationsManager', () => {
       expect(summary).toMatchObject({
         needsFrameDriver: false,
         leaves: [{ key: 'originX', continuesLiveLeaf: false }],
+      });
+    });
+
+    test('out of a frame, a replacing leaf that starts at the captured value moves linearly for two refreshes to the live value, then plays from that value', () => {
+      const summary = manager.build(
+        22,
+        {},
+        configOf({ originX: 25 }, { originX: timing(50, 400) }),
+        LIMITS,
+        { ...PLATFORM_RULES, replacementLeadRefreshMs: 16 },
+        [X]
+      );
+      const record = { buildId: 22, key: 'originX' };
+      const valuesAt = (timestamp: number) => {
+        startBatchAt(timestamp);
+        return manager.captureLiveLeaves([record]);
+      };
+      expect(valuesAt(1120)).toEqual({ originX: 33 });
+      expect(valuesAt(1332)).toEqual({ originX: 41.5 });
+      manager.releaseBuilt(22);
+      expect(summary!.leaves[0]).toMatchObject({
+        initialValue: 25,
+        track: {
+          durationMs: 432,
+          segments: [
+            { endOffset: 32 / 432, endValue: 33 },
+            { endOffset: 1, endValue: 50 },
+          ],
+        },
+      });
+    });
+
+    test('a replacing leaf that starts at the captured value as a 32-bit float gets the lead', () => {
+      startBatchAt(1100.4);
+      const summary = manager.build(
+        22,
+        {},
+        configOf({ originX: Math.fround(25.1) }, { originX: timing(50, 400) }),
+        LIMITS,
+        { ...PLATFORM_RULES, replacementLeadRefreshMs: 16 },
+        [X]
+      );
+      manager.releaseBuilt(22);
+      expect(summary!.leaves[0]).toMatchObject({ track: { durationMs: 432 } });
+    });
+
+    test('a replacing timing with no duration starts at the command', () => {
+      const summary = manager.build(
+        22,
+        {},
+        configOf({ originX: 25 }, { originX: timing(50, 0) }),
+        LIMITS,
+        { ...PLATFORM_RULES, replacementLeadRefreshMs: 16 },
+        [X]
+      );
+      manager.releaseBuilt(22);
+      expect(summary!.leaves[0]).toMatchObject({
+        initialValue: 25,
+        track: { durationMs: 0 },
+      });
+    });
+
+    test('a replacing leaf with its own start value starts at the command', () => {
+      const summary = manager.build(
+        22,
+        {},
+        configOf({ originX: 0 }, { originX: timing(50, 400) }),
+        LIMITS,
+        { ...PLATFORM_RULES, replacementLeadRefreshMs: 16 },
+        [X]
+      );
+      manager.releaseBuilt(22);
+      expect(summary!.leaves[0]).toMatchObject({
+        initialValue: 0,
+        track: { durationMs: 400 },
       });
     });
 
