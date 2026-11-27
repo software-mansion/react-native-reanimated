@@ -19,18 +19,19 @@ function getWorklet(
   workletHash: number,
   closureVariables: unknown[] | undefined
 ): WorkletFunction {
-  if (!__DEV__) {
+  if (__DEV__) {
+    try {
+      return getWorkletFromMetroRequire(workletHash, closureVariables);
+    } catch (e) {
+      const originalMessage = (e as Error).message;
+      return (() => {
+        throw new Error(
+          `[Worklets] Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${originalMessage}`
+        );
+      }) as unknown as WorkletFunction;
+    }
+  } else {
     return getWorkletFromMetroRequire(workletHash, closureVariables);
-  }
-  try {
-    return getWorkletFromMetroRequire(workletHash, closureVariables);
-  } catch (e) {
-    const originalMessage = (e as Error).message;
-    return (() => {
-      throw new Error(
-        `[Worklets] Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${originalMessage}`
-      );
-    }) as unknown as WorkletFunction;
   }
 }
 
