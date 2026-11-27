@@ -151,9 +151,9 @@ State::Shared textStateBetween(const ShadowView &start, const ShadowView &target
   const auto &startData = paragraphDataOf(start);
   const auto &targetState = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
   auto data = targetState.getData();
-  // A size that one of the states does not set keeps the one of the target.
-  const auto interpolateIfSet = [progress](const Float from, Float &to) {
-    if (!std::isnan(from) && !std::isnan(to)) {
+  // A size that one of the states does not set or bound keeps the one of the target.
+  const auto interpolateIfFinite = [progress](const Float from, Float &to) {
+    if (std::isfinite(from) && std::isfinite(to)) {
       to = interpolate(from, to, progress);
     }
   };
@@ -161,12 +161,12 @@ State::Shared textStateBetween(const ShadowView &start, const ShadowView &target
   const auto interpolateSizes = [&](TextAttributes &attributes, const TextAttributes &from) {
     attributes.fontSize = interpolate(fontSizeOf(from), fontSizeOf(attributes), progress);
     fontSizesArePositive = fontSizesArePositive && std::isfinite(attributes.fontSize) && attributes.fontSize > 0;
-    interpolateIfSet(from.lineHeight, attributes.lineHeight);
-    interpolateIfSet(from.letterSpacing, attributes.letterSpacing);
+    interpolateIfFinite(from.lineHeight, attributes.lineHeight);
+    interpolateIfFinite(from.letterSpacing, attributes.letterSpacing);
   };
-  const auto interpolateSize = [progress](const facebook::react::Size &from, facebook::react::Size &to) {
-    to.width = interpolate(from.width, to.width, progress);
-    to.height = interpolate(from.height, to.height, progress);
+  const auto interpolateSize = [&interpolateIfFinite](const facebook::react::Size &from, facebook::react::Size &to) {
+    interpolateIfFinite(from.width, to.width);
+    interpolateIfFinite(from.height, to.height);
   };
   auto baseAttributes = data.attributedString.getBaseTextAttributes();
   interpolateSizes(baseAttributes, startData.attributedString.getBaseTextAttributes());
