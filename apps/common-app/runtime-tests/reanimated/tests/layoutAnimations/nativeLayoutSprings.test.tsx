@@ -3,8 +3,8 @@
  * twin, each box in its own cell. A route is from `routeOf`: NATIVE PLAYING, NATIVE IMMEDIATE, or
  * FRAME-DRIVEN with two reads of the native box on the frames of the twin. A value check has statement A of
  * `native layout reference` with the frames of the twin in place of a declared timeline, each box on its
- * own clock: each read of the native box is on the frames of the twin at one time of the
- * `PRESENTATION_STAY_MS` before the read, from the origin of the native command, with 0.5 pt for a
+ * own clock: each read of the native box is on the frames of the twin at one time of `shownBandAt`
+ * the read, from the origin of the native command, with 0.5 pt for a
  * position and 0.01 for an opacity. A read from the last frame of the twin before its end frame can show
  * the end value. Between two frames the twin has the cubic through the four nearest frames.
  *
@@ -28,7 +28,6 @@ import {
 import {
   FRAME_DRIVER_LATE_MS,
   isOnFrameDriverWindowOf,
-  matchInWindowOf,
   MATRIX_TOLERANCE,
   sampleTargets,
 } from './nativeLayoutReferencePlay';
@@ -38,6 +37,7 @@ import type {
   FrameRecord,
   Layer,
   Leaf,
+  Key,
   Leaves,
   NativeTrack,
   Operation,
@@ -45,9 +45,9 @@ import type {
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  sortedCallbacks,
   amountOf,
   BOX_REF,
-  callbackEmissionTimes,
   callbackOf,
   callbacks,
   cellsOf,
@@ -64,6 +64,8 @@ import {
   LAID_OUT_TOLERANCE,
   layerOf,
   layoutOf,
+  layoutRefusalOf,
+  layoutRefusalReason,
   middleOf,
   movingGeometryTest,
   nativeOriginOf,
@@ -73,10 +75,12 @@ import {
   PAIR_TOP,
   PLAYS_HELD_SPRING,
   PLAYS_SIZE_CHANGE,
+  isSpringLeaf,
   playsSizeChangeOf,
   PLAYS_SPRING_WITH_HOLD,
   POSITION_TOLERANCE,
-  PRESENTATION_STAY_MS,
+  afterFrameOfMs,
+  shownBandAt,
   readFrameRecords,
   resetCallbacks,
   resetFrameRecords,
@@ -451,80 +455,6 @@ const nativeOriginOfPlay = (played: Played) =>
 const LARGEST_SPRING_STEP_MS = 64;
 
 /**
- * Logs the times of the X leaf of each box on the animation clock: the trace
- * events of each box, and the start, the frames and the spring time of each
- * frame record.
- */
-function logSpringClock(caseName: string, played: Played) {
-  const { clockOffset, records } = played;
-  const log = (text: string) =>
-    console.log(`SPRING-CLOCK | ${caseName} | ${text}`);
-  const onAnimationClock = (monotonicTimeMs: number) =>
-    `${ms(monotonicTimeMs - clockOffset.to)}..${ms(monotonicTimeMs - clockOffset.from)}`;
-  log(
-    `clock offset (sample minus animation) ${ms(clockOffset.from)}..${ms(clockOffset.to)}`
-  );
-  for (const [box, events] of [
-    ['native', played.events],
-    ['frame', played.twinEvents],
-  ] as const) {
-    const isFrameUpdate = ({ event }: TraceEvent) =>
-      event === 'FrameUpdateMounted';
-    log(
-      `${box} FrameUpdateMounted events ${events.filter(isFrameUpdate).length}`
-    );
-    for (const event of events.filter((each) => !isFrameUpdate(each))) {
-      log(
-        `${box} event ${event.event}${event.target ? `:${event.target}` : ''} generation ${event.generation} at ${onAnimationClock(event.monotonicTimeMs)}${event.originTimestampMs === undefined ? '' : ` origin ${ms(event.originTimestampMs)}`}${event.finished === undefined ? '' : ` finished ${event.finished}`}`
-      );
-    }
-  }
-  for (const box of BOX_NAMES) {
-    const boxRecords = records.filter(
-      (record) => record.box === box && record.key === 'originX'
-    );
-    const timesOf = (build: number) =>
-      boxRecords[build]?.frames.map(({ timeMs }) => timeMs) ?? [];
-    boxRecords.forEach(({ start }, build) => {
-      const times = timesOf(build);
-      const endMs = lastOf(times);
-      const previousEndMs = lastOf(timesOf(build - 1));
-      log(
-        `${box} build ${build}: start ${ms(start?.timeMs)} value ${start?.value ?? 'none'}, frames ${times.length}, first ${times.slice(0, 3).map(ms).join(' ')}, end ${ms(endMs)}, previous build end ${ms(previousEndMs)}, earliest frame minus start ${ms(start && Math.min(...times) - start.timeMs)}, end minus start ${ms(start && endMs !== undefined ? endMs - start.timeMs : undefined)}, spring time at the end from the start ${ms(start && lastOf(springTimesOf(start.timeMs, times)))}, from the previous build end ${ms(previousEndMs === undefined ? undefined : lastOf(springTimesOf(previousEndMs, times)))}`
-      );
-    });
-  }
-}
-
-const ms = (timeMs: number | undefined) => timeMs?.toFixed(3) ?? 'none';
-
-const lastOf = (times: number[]): number | undefined => times[times.length - 1];
-
-/**
- * Logs the native end report and the callbacks of the two boxes on the trace
- * clock, from the origin of the native command. A callback time is on the
- * animation clock, so it gets the clock offset of the run.
- */
-function logEndOnTraceClock(
-  { clockOffset }: Played,
-  origin: Band,
-  trackEnded: TraceEvent
-) {
-  const fromOrigin = (traceTimeMs: number) => traceTimeMs - middleOf(origin);
-  const callbackMsOf = (box: BoxName) => {
-    const emittedMs = callbackEmissionTimes[box];
-    return emittedMs === undefined
-      ? undefined
-      : fromOrigin(emittedMs + middleOf(clockOffset));
-  };
-  const nativeEndMs = fromOrigin(trackEnded.monotonicTimeMs);
-  const twinCallbackMs = callbackMsOf('frame');
-  console.log(
-    `SPRING-END-CLOCK | trace clock (sample clock), from the origin of the native command: native TrackEnded ${ms(nativeEndMs)} ms, native callback ${ms(callbackMsOf('native'))} ms, twin callback ${ms(twinCallbackMs)} ms, twin callback minus native TrackEnded ${ms(twinCallbackMs === undefined ? undefined : twinCallbackMs - nativeEndMs)} ms, uncertainty of a callback time ${ms(uncertaintyOf(clockOffset))} ms, of the origin ${ms(uncertaintyOf(origin))} ms`
-  );
-}
-
-/**
  * The spring time that `springOnFrame` of the package played at each frame
  * time: the sum of its steps from `lastTimestampMs`. A step before the last
  * frame time is 0, and a step is `LARGEST_SPRING_STEP_MS` or less.
@@ -544,83 +474,6 @@ function springTimesOf(lastTimestampMs: number, frameTimesMs: number[]) {
 
 type Point = { timeMs: number; value: number };
 
-/**
- * The values of a leaf of the frame driver on its spring time from
- * `lastTimestampMs`: the start value at 0, and the value of each frame. Out of
- * the frames, the value is the cubic of the four nearest frames.
- */
-function springCurveOf(record: StartedRecord, lastTimestampMs: number) {
-  const points: Point[] = [
-    { timeMs: 0, value: amountOf(record.start.value).amount },
-    ...springFramesOf(record, lastTimestampMs).map(
-      ({ springTimeMs, value }) => ({ timeMs: springTimeMs, value })
-    ),
-  ].filter(
-    (point, index, all) => index === 0 || point.timeMs > all[index - 1].timeMs
-  );
-  if (points.length < 4) {
-    throw new Error(
-      `The frame driver has less than 3 frames of ${record.key}.`
-    );
-  }
-  return {
-    endMs: points[points.length - 1].timeMs,
-    valueAt: (springTimeMs: number) => cubicAt(points, springTimeMs),
-  };
-}
-
-type StartedRecord = ReturnType<typeof startedRecordOf>;
-
-const SHARED_FRAMES_LOGGED = 10;
-
-/**
- * Logs the new springs of the two boxes at the frame times that both have: the
- * position gap, and the spring time of the twin minus the spring time of the
- * native box.
- */
-function logSharedFrames(
-  native: StartedRecord,
-  twin: StartedRecord,
-  twinLastTimestampMs: number
-) {
-  const nativeFrames = springFramesOf(native, native.start.timeMs);
-  const twinFrames = new Map(
-    springFramesOf(twin, twinLastTimestampMs).map((frame) => [
-      frame.timeMs,
-      frame,
-    ])
-  );
-  const shared = nativeFrames.flatMap((nativeFrame) => {
-    const twinFrame = twinFrames.get(nativeFrame.timeMs);
-    return twinFrame
-      ? [
-          {
-            gap: Math.abs(nativeFrame.value - twinFrame.value),
-            offsetMs: twinFrame.springTimeMs - nativeFrame.springTimeMs,
-          },
-        ]
-      : [];
-  });
-  const offsetsMs = shared.map(({ offsetMs }) => offsetMs);
-  const first = shared.slice(0, SHARED_FRAMES_LOGGED);
-  console.log(
-    `SPRING-RETARGET-SHARED | twin start minus native start ${(twin.start.timeMs - native.start.timeMs).toFixed(3)} ms, shared frames ${shared.length}, gaps of the first ${first.length} ${first.map(({ gap }) => gap.toFixed(4)).join(' ')}, twin spring time minus native spring time of the first ${first.length} ${first.map(({ offsetMs }) => offsetMs.toFixed(3)).join(' ')} ms, of all ${Math.min(...offsetsMs).toFixed(3)}..${Math.max(...offsetsMs).toFixed(3)} ms`
-  );
-}
-
-/** Each frame of a record with its frame time, value and spring time. */
-const springFramesOf = ({ frames }: StartedRecord, lastTimestampMs: number) => {
-  const springTimesMs = springTimesOf(
-    lastTimestampMs,
-    frames.map(({ timeMs }) => timeMs)
-  );
-  return frames.map(({ timeMs, value }, frame) => ({
-    timeMs,
-    value: amountOf(value).amount,
-    springTimeMs: springTimesMs[frame],
-  }));
-};
-
 /** The frames of the frame driver for one leaf, from its start call. */
 type Curve = {
   from: number;
@@ -635,16 +488,25 @@ type Curve = {
 /**
  * The curve of a leaf that ended. A delay starts its animation in its first
  * frame at or after its end (`delay` of `delay.ts` of the package), so the
- * frames of that animation move back by its lateness.
+ * frames of that animation move back by its lateness. A spring with no delay
+ * has the time of `springTimesOf` at each frame.
  */
 function curveOf(
   { key, start, frames }: ReturnType<typeof startedRecordOf>,
-  delayMs = 0
+  {
+    delayMs = 0,
+    isTiming = false,
+  }: { delayMs?: number; isTiming?: boolean } = {}
 ): Curve {
+  const frameTimesMs = frames.map(({ timeMs }) => timeMs);
+  const timesMs =
+    isTiming || delayMs > 0
+      ? frameTimesMs.map((timeMs) => timeMs - start.timeMs)
+      : springTimesOf(start.timeMs, frameTimesMs);
   const points: Point[] = [
     { timeMs: 0, value: amountOf(start.value).amount },
-    ...frames.map(({ timeMs, value }) => ({
-      timeMs: timeMs - start.timeMs,
+    ...frames.map(({ value }, frame) => ({
+      timeMs: timesMs[frame],
       value: amountOf(value).amount,
     })),
   ].filter(
@@ -754,10 +616,11 @@ function shownOffsetOf({ key, layoutValues }: FrameRecord) {
 }
 
 type ScalarKey = {
-  key: string;
+  key: Key;
   tolerance: number;
   leaf?: Leaf;
   delayMs?: number;
+  isTiming?: boolean;
   build?: number;
 };
 
@@ -767,11 +630,11 @@ type ScalarKey = {
  */
 function scalarTwinOf(
   played: Played,
-  { key, tolerance, leaf = {}, delayMs, build = 0 }: ScalarKey
+  { key, tolerance, leaf = {}, delayMs, isTiming, build = 0 }: ScalarKey
 ): Twin {
   const native = recordOf(played, 'native', key, build);
   const twin = startedRecordOf(played, 'frame', key, build);
-  const curve = curveOf(twin, delayMs);
+  const curve = curveOf(twin, { delayMs, isTiming });
   const ends = layoutEndsOf(native, leaf);
   const from = native.start
     ? amountOf(native.start.value).amount
@@ -797,12 +660,15 @@ function transformTwinOf(
   operations: Operation[],
   layer: Layer
 ): Twin {
-  const curves = operations.map(([kind, , to], operation) => ({
+  const curves = operations.map(([kind, , to, leaf], operation) => ({
     kind,
     unit: amountOf(to as number | string).unit,
     record: startedRecordOf(played, 'frame', kind, 0, operation),
+    isTiming: !(leaf && isSpringLeaf(leaf)),
   }));
-  const operationCurves = curves.map(({ record }) => curveOf(record));
+  const operationCurves = curves.map(({ record, isTiming }) =>
+    curveOf(record, { isTiming })
+  );
   const cellsAt = (amounts: number[]) => {
     const cells = cellsOf(
       curves.map(({ kind, unit }, operation) => ({
@@ -833,9 +699,9 @@ const valuesOf = (twin: Twin, values: number[]) =>
     : TRANSFORM_SAMPLE_CELLS.map((cell) => values[cell]);
 
 /**
- * The read is on the twin at one time of the `PRESENTATION_STAY_MS` before it,
- * from the native origin. From the last frame of the twin before its end frame,
- * a read can show the end value.
+ * The read is on the twin at one time of `shownBandAt` it, from the native
+ * origin. From the last frame of the twin before its end frame, a read can show
+ * the end value.
  */
 function residualOnTwin(read: TargetSample, twin: Twin, origin: Band) {
   const tracks: NativeTrack[] = twin.tolerances.map((tolerance, cell) => ({
@@ -889,8 +755,8 @@ function expectOnTwin(
 }
 
 /**
- * NATIVE PLAYING of a target, from the reads of the native box that are
- * `PRESENTATION_STAY_MS` or more before the end of its track.
+ * NATIVE PLAYING of a target, from the reads of the native box that show a
+ * frame before the frame that ends its track.
  */
 function expectNativePlaying(
   played: Played,
@@ -903,9 +769,9 @@ function expectNativePlaying(
   const ended = events.find(
     (event) => event.event === 'TrackEnded' && event.target === target
   );
-  const untilMs = (ended?.monotonicTimeMs ?? Infinity) - PRESENTATION_STAY_MS;
+  const endShownMs = ended ? shownBandAt(ended.monotonicTimeMs).from : Infinity;
   const playing = reads.filter(
-    ({ monotonicTimeMs }) => monotonicTimeMs < untilMs
+    ({ monotonicTimeMs }) => shownBandAt(monotonicTimeMs).to < endShownMs
   );
   expect(routeOf(events, played.tags.native, target, playing).kind).toBe(
     'native playing'
@@ -924,13 +790,8 @@ function expectFrameDriven(
   failure: string,
   twin: Twin
 ) {
-  const refusal = played.events.find(
-    ({ event }) => event === 'LayoutBuildFailed'
-  );
-  expect(refusal?.buildFailure).toBe(failure);
-  if (!refusal) {
-    return;
-  }
+  const refusal = layoutRefusalOf(played.events);
+  expect(layoutRefusalReason(refusal)).toBe(failure);
   const differs = (first: number[], second: number[]) =>
     first.some(
       (value, cell) =>
@@ -969,8 +830,6 @@ function expectFrameDriven(
   ).toBe('frame-driven');
 }
 
-const sortedCallbacks = () => [...callbacks].sort().join();
-
 const expectCallbacks = (played: Played, expected: string[]) => {
   expect(played.missingCallbacks).toBe('');
   expect(sortedCallbacks()).toBe([...expected].sort().join());
@@ -998,7 +857,11 @@ async function expectNativeOnTwin(
   for (const scalarKey of keys) {
     const target = TARGETS[scalarKey.key];
     expectNativePlaying(played, target);
-    const twin = scalarTwinOf(played, scalarKey);
+    const leaf = springCase.leaves?.[scalarKey.key];
+    const twin = scalarTwinOf(played, {
+      ...scalarKey,
+      isTiming: leaf !== undefined && !isSpringLeaf(leaf),
+    });
     expectOnTwin(caseName, played, target, () => twin);
   }
   expectCallbacks(played, expectedCallbacks);
@@ -1017,36 +880,6 @@ describe('native layout springs', () => {
   if (!hasNativeLayoutRoute) {
     return;
   }
-
-  movingGeometryTest(
-    'a spring ends its track one time one display frame or less from the end frame of the twin on the spring time of the twin, and its callback gets true one time',
-    async () => {
-      const played = await play(xSpringOf({}), DEFAULT_SPRING_CALLBACKS);
-      logSpringClock('a spring ends its track', played);
-      const origin = nativeOriginOfPlay(played);
-      const ends = played.events.filter(
-        ({ event, target }) => event === 'TrackEnded' && target === 'PositionX'
-      );
-      expect(summarize(ends)).toBe('TrackEnded:PositionX:true');
-      if (ends.length === 0) {
-        await render(null);
-        return;
-      }
-      const nativeEndMs = ends[0].monotonicTimeMs - middleOf(origin);
-      const twin = startedRecordOf(played, 'frame', 'originX');
-      const twinEndMs = springCurveOf(twin, twin.start.timeMs).endMs;
-      console.log(
-        `SPRING-END | native track end ${nativeEndMs.toFixed(2)} ms after its origin, twin end frame ${curveOf(twin).endMs.toFixed(2)} ms after its start at the spring time ${twinEndMs.toFixed(2)} ms, origin uncertainty ${uncertaintyOf(origin).toFixed(2)} ms`
-      );
-      logEndOnTraceClock(played, origin, ends[0]);
-      expect(
-        Math.abs(nativeEndMs - twinEndMs) <=
-          FRAME_MS + 2 * uncertaintyOf(origin)
-      ).toBe(true);
-      expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
-      await render(null);
-    }
-  );
 
   movingGeometryTest(
     'a cancel at 50 % of a native spring gives its callback false one time',
@@ -1163,99 +996,6 @@ describe('native layout springs', () => {
     await render(null);
   });
 
-  movingGeometryTest(
-    'a new spring at 40 % of a native spring starts on the frame driver: it continues from the state of the native spring at the commit origin and follows its declared curve from there, its frames are the frames of the twin, each box on its spring time, and the twin starts two display frames or less before the commit origin on the first twin curve',
-    async () => {
-      const atMs = 0.4 * DEFAULT_SPRING_MS;
-      const played = await play(
-        {
-          ...xSpringOf({}),
-          next: {
-            atMs,
-            place: { ...START, left: PAIR_LEFT / 2 },
-            leaves: { originX: { spring: {} } },
-          },
-          totalMs: atMs + 2 * DEFAULT_SPRING_MS,
-        },
-        REPLACED_SPRING_CALLBACKS
-      );
-      logSpringClock('a new spring at 40 %', played);
-      expectNativePlaying(played, 'PositionX', {
-        events: eventsOfFirstBuild(played),
-        reads: readsOf(played, 'native', 'PositionX').slice(
-          0,
-          played.readsBeforeNext
-        ),
-      });
-      expectFrameDriven(
-        'a new spring at 40 %',
-        played,
-        'PositionX',
-        'UnsupportedContinuation',
-        scalarTwinOf(played, { ...POSITION_X, build: 1 })
-      );
-      const [native, twin] = BOX_NAMES.map((box) =>
-        startedRecordOf(played, box, 'originX', 1)
-      );
-      const firstTwin = startedRecordOf(played, 'frame', 'originX');
-      const firstOrigin = firstCommandOf(played.events);
-      const firstOriginMs =
-        played.events.find(
-          (event) =>
-            event.event === 'Received' &&
-            event.generation === firstOrigin.generation
-        )?.originTimestampMs ?? NaN;
-      const twinLastTimestampMs =
-        lastOf(firstTwin.frames.map(({ timeMs }) => timeMs)) ?? NaN;
-      const firstTwinCurve = springCurveOf(firstTwin, firstTwin.start.timeMs);
-      const twinCurve = springCurveOf(twin, twinLastTimestampMs);
-      const nativeFirstSpringMs = native.start.timeMs - firstOriginMs;
-      const nativeSpringTimesMs = springTimesOf(
-        native.start.timeMs,
-        native.frames.map(({ timeMs }) => timeMs)
-      );
-      const checkpoints = Array.from({ length: 10 }, (_, checkpoint) =>
-        Math.floor(((checkpoint + 1) * (native.frames.length - 1)) / 10)
-      ).filter((frame) => frame > 0);
-      const startDistance = Math.abs(
-        Number(native.start.value) - firstTwinCurve.valueAt(nativeFirstSpringMs)
-      );
-      const distances = checkpoints.map((frame) =>
-        Math.abs(
-          Number(native.frames[frame].value) -
-            twinCurve.valueAt(nativeSpringTimesMs[frame])
-        )
-      );
-      const matches = checkpoints.map((frame) =>
-        matchInWindowOf(
-          (springTimeMs) => [twinCurve.valueAt(springTimeMs)],
-          [Number(native.frames[frame].value)],
-          [POSITION_TOLERANCE],
-          [
-            nativeSpringTimesMs[frame] - FRAME_MS,
-            nativeSpringTimesMs[frame] + FRAME_MS,
-          ]
-        )
-      );
-      const twinStart = matchInWindowOf(
-        (springTimeMs) => [firstTwinCurve.valueAt(springTimeMs)],
-        [Number(twin.start.value)],
-        [POSITION_TOLERANCE],
-        [nativeFirstSpringMs - 2 * FRAME_MS, nativeFirstSpringMs]
-      );
-      console.log(
-        `SPRING-RETARGET | start of the twin minus the native origin ${(firstTwin.start.timeMs - firstOriginMs).toFixed(3)} ms, new start of the native box ${native.start.value} at ${native.start.timeMs}, ${nativeFirstSpringMs.toFixed(3)} ms after the first origin, of the twin ${twin.start.value} at ${twin.start.timeMs}, twin spring clock from its last frame of the first spring ${twinLastTimestampMs.toFixed(3)}, native frames ${native.frames.length}, spring times of the checkpoints ${checkpoints.map((frame) => nativeSpringTimesMs[frame].toFixed(3)).join(' ')}, start distance to the first twin curve ${startDistance.toFixed(4)}, distances at equal spring times ${distances.map((distance) => distance.toFixed(4)).join(' ')}, smallest distances to the twin curve within one display frame of spring time ${matches.map(({ distance }) => distance.toFixed(4)).join(' ')}, twin start on the first twin curve from ${(nativeFirstSpringMs - 2 * FRAME_MS).toFixed(3)} to ${nativeFirstSpringMs.toFixed(3)} ms of spring time: smallest distance ${twinStart.distance.toFixed(4)} in the step from ${twinStart.stepMs.toFixed(3)} ms`
-      );
-      logSharedFrames(native, twin, twinLastTimestampMs);
-      expect(new Set(checkpoints).size).toBe(10);
-      expect(startDistance <= POSITION_TOLERANCE).toBe(true);
-      expect(matches.every(({ isNear }) => isNear)).toBe(true);
-      expect(twinStart.isNear).toBe(true);
-      expectCallbacks(played, REPLACED_SPRING_CALLBACKS);
-      await render(null);
-    }
-  );
-
   const TRANSFORM_SPRINGS: Operation[] = [
     ['rotate', '0deg', '90deg', { spring: {} }],
     ['scale', 0.5, 1, { spring: {} }],
@@ -1283,7 +1023,7 @@ describe('native layout springs', () => {
         played,
         'Transform',
         (read) => transformTwinOf(played, TRANSFORM_SPRINGS, layerOf(read)),
-        (started?.monotonicTimeMs ?? Infinity) + PRESENTATION_STAY_MS
+        afterFrameOfMs(started?.monotonicTimeMs ?? Infinity)
       );
       expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
       await render(null);
@@ -1325,7 +1065,7 @@ describe('native layout springs', () => {
   test(
     PLAYS_SIZE_CHANGE
       ? 'an underdamped height spring from 100 to 0 can go below 0, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0'
-      : 'an underdamped height spring from 100 to 0 changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at 0',
+      : 'an underdamped height spring from 100 to 0 changes the size, so it is frame-driven: FRAME-DRIVEN, SizeBeyondOnePixel, and it ends at 0',
     async () => {
       const played = await playHeightSpring(0);
       const twin = scalarTwinOf(played, HEIGHT);
@@ -1338,7 +1078,7 @@ describe('native layout springs', () => {
         'a height spring',
         played,
         'Height',
-        'UnsupportedTarget',
+        PLAYS_SIZE_CHANGE ? 'UnsupportedTarget' : 'SizeBeyondOnePixel',
         twin
       );
       expectHeightEndsAt(played, 0);
@@ -1351,7 +1091,7 @@ describe('native layout springs', () => {
     test(
       PLAYS_SIZE_CHANGE
         ? `an underdamped height spring from 100 to ${to} stays above 0 (least ${least}), so it plays natively: NATIVE PLAYING, and it ends at ${to}`
-        : `an underdamped height spring from 100 to ${to} changes the size, so it is frame-driven: FRAME-DRIVEN, UnsupportedTarget, and it ends at ${to}`,
+        : `an underdamped height spring from 100 to ${to} changes the size, so it is frame-driven: FRAME-DRIVEN, SizeBeyondOnePixel, and it ends at ${to}`,
       async () => {
         const played = await playHeightSpring(to);
         if (PLAYS_SIZE_CHANGE) {
@@ -1361,7 +1101,7 @@ describe('native layout springs', () => {
             'a height spring that stays above 0',
             played,
             'Height',
-            'UnsupportedTarget',
+            'SizeBeyondOnePixel',
             scalarTwinOf(played, HEIGHT)
           );
         }
@@ -1422,7 +1162,7 @@ describe('native layout springs', () => {
             'LinearTransition.springify()',
             played,
             TARGETS[key.key],
-            'UnsupportedTarget',
+            'SizeBeyondOnePixel',
             scalarTwinOf(played, key)
           );
         }

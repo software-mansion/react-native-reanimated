@@ -15,6 +15,8 @@ internal class NativeAnimationPlatformCallbacks(
         generation: Long,
         target: Int,
         finished: Boolean,
+        /** The animation clock of the frame of the last update of the track, in ms. */
+        animationTimeMs: Double,
     )
 
     external fun drainPostedOperations()

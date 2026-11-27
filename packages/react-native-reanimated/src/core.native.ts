@@ -25,6 +25,8 @@ export {
   isConfigured,
   isReanimated3,
   isSensorAvailable,
+  layoutAnimationViewDidMountAgain,
+  layoutAnimationViewDidUnmount,
   makeMutable,
   setShouldAnimateExitingForTag,
   startMapper,

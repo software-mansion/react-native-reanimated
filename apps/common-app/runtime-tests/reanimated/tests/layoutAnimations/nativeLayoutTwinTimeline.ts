@@ -37,6 +37,7 @@ import {
   POSITION_TOLERANCE,
   readFrameRecords,
   sample,
+  shownFrameAt,
 } from './nativeLayoutTestKit';
 
 const ASSERTS_TWIN_TIMELINE = Platform.OS === 'ios';
@@ -69,6 +70,44 @@ export function twinTimelineOf(
         : []
     )
     .sort((first, second) => first.timeMs - second.timeMs);
+}
+
+/**
+ * The change of the frame-driven value of `key` of `box` over the clock
+ * difference of the frame that a read shows: the frame driver shows the value
+ * of the frame time, a native track the value of the animation clock. Linear
+ * between two frames. Apple: 0.
+ */
+export function twinShiftAt(
+  records: FrameRecord[],
+  box: string,
+  key: string,
+  readTimeMs: number
+): number {
+  if (Platform.OS === 'ios') {
+    return 0;
+  }
+  const knots = twinTimelineOf(records, box, key).filter(
+    (knot): knot is TwinKnot & { value: number } =>
+      typeof knot.value === 'number'
+  );
+  const valueAt = (timeMs: number) => {
+    const next = knots.findIndex((knot) => knot.timeMs >= timeMs);
+    if (next < 0) {
+      return knots[knots.length - 1]?.value ?? 0;
+    }
+    if (next === 0) {
+      return knots[0].value;
+    }
+    const [from, to] = [knots[next - 1], knots[next]];
+    return (
+      from.value +
+      ((to.value - from.value) * (timeMs - from.timeMs)) /
+        (to.timeMs - from.timeMs)
+    );
+  };
+  const { frameTimeMs, animationTimeMs } = shownFrameAt(readTimeMs);
+  return valueAt(animationTimeMs) - valueAt(frameTimeMs);
 }
 
 /** A leaf of a quantity: its frames, or the value at rest when it has none. */

@@ -8,6 +8,7 @@ import type {
   SensorConfig,
   SensorType,
   SensorValueMap,
+  ShadowNodeWrapper,
   SharedValue,
 } from './commonTypes';
 import { ReanimatedModule } from './ReanimatedModule';
@@ -142,6 +143,20 @@ export function configureLayoutAnimationBatch(
   layoutAnimationsBatch: LayoutAnimationBatchItem[]
 ): void {
   ReanimatedModule.configureLayoutAnimationBatch(layoutAnimationsBatch);
+}
+
+export function layoutAnimationViewDidUnmount(
+  shadowNodeWrapper: ShadowNodeWrapper,
+  reanimatedID: number
+): void {
+  ReanimatedModule.layoutAnimationViewDidUnmount(
+    shadowNodeWrapper,
+    reanimatedID
+  );
+}
+
+export function layoutAnimationViewDidMountAgain(viewTag: number): void {
+  ReanimatedModule.layoutAnimationViewDidMountAgain(viewTag);
 }
 
 export function setShouldAnimateExitingForTag(
