@@ -29,12 +29,23 @@ function getWorklet(
     } catch (e) {
       return (() => {
         throw new Error(
-          `[Worklets] Unable to resolve worklet from module ${moduleId}. Try reloading the app. Original error: ${e instanceof Error ? e.message : String(e)}`
+          `[Worklets] Unable to resolve worklet from module ${moduleId}. Try reloading the app. Original error: ${describeThrownValue(e)}`
         );
       }) as unknown as WorkletFunction;
     }
   } else {
     return getWorkletFromMetroRequire(moduleId, closureVariables);
+  }
+}
+
+function describeThrownValue(value: unknown): string {
+  if (value instanceof Error) {
+    return value.message;
+  }
+  try {
+    return String(value);
+  } catch {
+    return 'a value that cannot be converted to a string';
   }
 }
 
