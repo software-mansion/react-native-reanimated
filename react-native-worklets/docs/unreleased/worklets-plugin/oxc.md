@@ -84,6 +84,12 @@ Defaults to `false`.
 
 Hides the warning that the plugin prints when an `importForwarding.relativePaths` entry has only common folder names, such as `src`. It works the same way as [`silenceDangerousPathsWarning`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#silencedangerouspathswarning) of the Babel plugin.
 
+### disableSourceMaps
+
+Defaults to `false`.
+
+Stops the plugin from adding a source map to each generated worklet file. It works the same way as [`disableSourceMaps`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#disablesourcemaps) of the Babel plugin.
+
 ### extraPlugins
 
 Accepted but ignored. The Oxc plugin cannot run other Babel plugins on worklet functions, so it prints a warning when this list is not empty. Add these plugins next to the Oxc plugin in your `babel.config.js` instead. See [`extraPlugins`](https://docs.swmansion.com/react-native-worklets/docs/unreleased/worklets-plugin/plugin-options#extraplugins) of the Babel plugin.
