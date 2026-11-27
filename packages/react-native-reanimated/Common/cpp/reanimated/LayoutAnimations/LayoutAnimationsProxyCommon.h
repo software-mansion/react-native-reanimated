@@ -95,11 +95,6 @@ enum class LayoutAnimationPhase : std::uint8_t {
   ENDED,
 };
 
-struct CompletedLayoutAnimation {
-  LayoutAnimation animation;
-  bool shouldRemove;
-};
-
 struct ManagedLayoutAnimationStart {
   Tag tag;
   LayoutAnimationType type;
@@ -279,7 +274,6 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   void cleanupCompletedAnimations(
       ShadowViewMutationList &mutations,
       const PropsParserContext &propsParserContext,
-      bool preserveRemovals = false,
       const std::unordered_set<Tag> &preservedTags = {}) const;
   const ShadowView &currentViewOf(LayoutAnimation &animation) const;
   ShadowViewMutation frameUpdate(LayoutAnimation &animation, const UpdateValues &frame, bool sendsOnlyChangedProps)
@@ -306,9 +300,9 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   mutable std::unordered_map<Tag, UpdateValues> updateMap_;
   mutable Rect window_{0, 0};
   mutable std::unordered_map<Tag, LayoutAnimation> layoutAnimations_;
-  // endLayoutAnimation runs outside pullTransaction on both platforms, so its
-  // animation state must survive until a pull emits the final update or removal.
-  mutable std::unordered_map<Tag, CompletedLayoutAnimation> completedAnimations_;
+  // endLayoutAnimation runs outside pullTransaction on both platforms, so the state of an
+  // animation that keeps its view must survive until a pull emits the final update.
+  mutable std::unordered_map<Tag, LayoutAnimation> completedAnimations_;
   std::shared_ptr<LayoutAnimationsManager> layoutAnimationsManager_;
   std::shared_ptr<const ContextContainer> contextContainer_;
   SharedComponentDescriptorRegistry componentDescriptorRegistry_;

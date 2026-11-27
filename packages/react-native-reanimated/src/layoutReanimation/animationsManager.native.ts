@@ -194,6 +194,7 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           exceedsLimit,
           hasInitialOnlyKeys: false,
           needsFrameDriver: false,
+          replacesLiveLeaf: false,
           leaves: [],
         };
       }
@@ -214,6 +215,9 @@ function createLayoutAnimationManager(): LayoutAnimationsManager {
           (key) => !(key in animations)
         ),
         needsFrameDriver: Object.values(relations).includes('frameDriver'),
+        replacesLiveLeaf: liveLeaves.some(
+          ({ key }) => key in animations && relations[key] !== 'continues'
+        ),
         leaves: keys.map((key) => ({
           key,
           ...summarizeNativeLeaf(initialValues[key], animations[key]),

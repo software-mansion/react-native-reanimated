@@ -130,6 +130,8 @@ struct IndexCursors {
   bool invariantChecked = false;
 };
 
+struct LayoutAnimation;
+
 struct LightNode {
   ShadowView current;
 #ifdef ANDROID
@@ -149,6 +151,8 @@ struct LightNode {
   }
 #endif
   ExitingState state = ExitingState::LIVE;
+  /// The frame-driven animation of the exit that completed the node.
+  std::shared_ptr<LayoutAnimation> exitedAnimation;
   std::weak_ptr<LightNode> parent;
   std::vector<std::shared_ptr<LightNode>> children;
   int exitingChildrenCount = 0;
