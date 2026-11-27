@@ -41,6 +41,7 @@ void ReanimatedMountHook::shadowTreeDidMount(
       auto lock = updatesRegistryManager_->lock();
       mountedRootsRegistry_->set(rootShadowNode);
       removedTags = updatesRegistryManager_->handleNodeRemovals(rootShadowNode->getSurfaceId());
+      updatesRegistryManager_->handleMount(rootShadowNode->getSurfaceId());
     }
     releaseSharedTransitionConfigs(removedTags);
     return;
@@ -64,6 +65,8 @@ void ReanimatedMountHook::shadowTreeDidMount(
     // would skip removals for the whole animation and leak unmounted nodes if the
     // tree is torn down mid-animation.
     removedTags = updatesRegistryManager_->handleNodeRemovals(rootShadowNode->getSurfaceId());
+    // Runs on Reanimated's own mounts too, since an animated `display` can hide or show views.
+    updatesRegistryManager_->handleMount(rootShadowNode->getSurfaceId());
 
     if (!isReanimatedMount) {
       // When a commit from React Native has finished, we reset the skip commit

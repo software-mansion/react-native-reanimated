@@ -25,11 +25,13 @@ CSSAnimationsRegistry::CSSAnimationsRegistry(
     const std::shared_ptr<OperationsLoop> &loop,
     const std::shared_ptr<CSSKeyframesRegistry> &keyframesRegistry,
     const std::shared_ptr<CSSPlatformAnimationFactory> &platformAnimationFactory,
-    const std::shared_ptr<CSSEventsEmitter> &eventsEmitter)
+    const std::shared_ptr<CSSEventsEmitter> &eventsEmitter,
+    const std::shared_ptr<MountedRootsRegistry> &mountedRootsRegistry)
     : loop_(loop),
       keyframesRegistry_(keyframesRegistry),
       platformAnimationFactory_(platformAnimationFactory),
-      eventsEmitter_(eventsEmitter) {}
+      eventsEmitter_(eventsEmitter),
+      mountedRootsRegistry_(mountedRootsRegistry) {}
 
 bool CSSAnimationsRegistry::needsFlush() const {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
@@ -56,7 +58,8 @@ void CSSAnimationsRegistry::apply(
       return;
     }
 
-    groups_.insert_or_assign(viewTag, std::move(*newGroup));
+    const auto &group = groups_.insert_or_assign(viewTag, std::move(*newGroup)).first->second;
+    updateVisibility(viewTag, group);
   }
 
   auto it = groups_.find(viewTag);
@@ -81,7 +84,7 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatch &updatesBatch) {
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
-    if (it == groups_.end()) {
+    if (it == groups_.end() || shouldDeferUpdates(viewTag, it->second)) {
       continue;
     }
 
@@ -100,7 +103,7 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch
   const auto tags = std::exchange(updatedTags_, {});
   for (const auto viewTag : tags) {
     const auto it = groups_.find(viewTag);
-    if (it == groups_.end()) {
+    if (it == groups_.end() || shouldDeferUpdates(viewTag, it->second)) {
       continue;
     }
 
@@ -115,6 +118,50 @@ void CSSAnimationsRegistry::flushUpdates(UpdatesBatchAnimatedProps &updatesBatch
 
   flush(updatesBatch);
   updateRegistryForRevertedAnimations();
+}
+
+void CSSAnimationsRegistry::handleMount(const SurfaceId surfaceId) {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  for (const auto &[viewTag, group] : groups_) {
+    if (group.getShadowNodeFamily()->getSurfaceId() == surfaceId) {
+      updateVisibility(viewTag, group);
+    }
+  }
+}
+
+void CSSAnimationsRegistry::syncDeferredUpdates() {
+  react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
+  // A commit that shows a hidden view applies the registry, so it must carry the current style.
+  // Reset styles are included, as in the regular flushes, because the reset of an animation that
+  // finished while the view was hidden has not been committed yet.
+  const auto tags = std::exchange(deferredTags_, {});
+  for (const auto viewTag : tags) {
+    const auto it = groups_.find(viewTag);
+    if (it != groups_.end()) {
+      setInUpdatesRegistry(it->second.getShadowNodeFamily(), it->second.computeStyle(true));
+    }
+  }
+}
+
+void CSSAnimationsRegistry::updateVisibility(const Tag viewTag, const CSSAnimationsGroup &group) {
+  // An animation of `display` must keep running on a view that it hides itself, or it could never show it again.
+  const bool includeSelf = !group.animatesProperty("display");
+  if (mountedRootsRegistry_->isHidden(*group.getShadowNodeFamily(), includeSelf)) {
+    hiddenTags_.insert(viewTag);
+  } else {
+    hiddenTags_.erase(viewTag);
+  }
+}
+
+bool CSSAnimationsRegistry::shouldDeferUpdates(const Tag viewTag, const CSSAnimationsGroup &group) {
+  // Only a running group is ticked again, so the update of a group that just finished or
+  // paused is never deferred. The first tick after the view is shown commits its style.
+  if (hiddenTags_.contains(viewTag) && group.hasRunningAnimation()) {
+    deferredTags_.insert(viewTag);
+    return true;
+  }
+  deferredTags_.erase(viewTag);
+  return false;
 }
 
 CSSAnimationsRegistry::AnimationObserver::AnimationObserver(CSSAnimationsRegistry &owner) : owner_(owner) {}
@@ -146,6 +193,8 @@ void CSSAnimationsRegistry::removeTag(const Tag viewTag) {
     reportCancellations(it->second.getAnimations(), loop_->resolveTimestamp());
     groups_.erase(it);
   }
+  hiddenTags_.erase(viewTag);
+  deferredTags_.erase(viewTag);
   removeFromUpdatesRegistry(viewTag);
 }
 

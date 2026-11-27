@@ -221,7 +221,8 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
           operationsLoop_,
           cssAnimationKeyframesRegistry_,
           platformDepMethodsHolder.platformAnimationFactory,
-          cssEventsEmitter_)),
+          cssEventsEmitter_,
+          mountedRootsRegistry_)),
       cssTransitionsRegistry_(std::make_shared<CSSTransitionsRegistry>(
           viewStylesRepository_,
           operationsLoop_,

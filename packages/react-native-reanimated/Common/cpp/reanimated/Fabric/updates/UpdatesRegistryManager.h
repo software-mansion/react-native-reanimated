@@ -51,6 +51,7 @@ class UpdatesRegistryManager {
   void markNodeAsRemovable(const std::shared_ptr<const ShadowNode> &shadowNode);
   void unmarkNodeAsRemovable(Tag viewTag);
   std::vector<Tag> handleNodeRemovals(SurfaceId surfaceId);
+  void handleMount(SurfaceId surfaceId);
   PropsMap collectProps();
   void mergeRegistryProps(Tag viewTag, folly::dynamic &target);
   std::optional<folly::dynamic> getRegistryProp(Tag viewTag, const char *propName) const;

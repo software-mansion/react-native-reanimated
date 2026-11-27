@@ -7,6 +7,7 @@
 #include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 namespace reanimated::css {
@@ -19,6 +20,9 @@ class CSSAnimationsGroup {
 
   const CSSAnimationsVector &getAnimations() const;
   ShadowNodeFamily::Shared getShadowNodeFamily() const;
+  // True if at least one animation is running, so the loop ticks the group again on the next frame.
+  bool hasRunningAnimation() const;
+  bool animatesProperty(const std::string &propName) const;
 
   void schedule(OperationsLoop &loop);
   void unschedule(OperationsLoop &loop) const;
