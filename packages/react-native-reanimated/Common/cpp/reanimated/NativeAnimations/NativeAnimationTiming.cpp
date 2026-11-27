@@ -34,6 +34,10 @@ struct ValidVisitor {
     return stops.pointsX.size() >= 2 && hasValidPoints(stops.pointsX, stops.pointsY, std::less_equal<>{}) &&
         stops.pointsX.front() == 0 && stops.pointsX.back() == 1;
   }
+  bool operator()(const SpringTiming &spring) const {
+    return std::isfinite(spring.decay) && std::isfinite(spring.frequency) && std::isfinite(spring.initialVelocity) &&
+        spring.decay > 0 && spring.frequency >= 0;
+  }
 };
 
 struct KindVisitor {
@@ -48,6 +52,9 @@ struct KindVisitor {
   }
   AnimationTimingKind operator()(const LinearStopsTiming &) const {
     return AnimationTimingKind::LinearStops;
+  }
+  AnimationTimingKind operator()(const SpringTiming &) const {
+    return AnimationTimingKind::Spring;
   }
 };
 

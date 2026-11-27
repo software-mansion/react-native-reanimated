@@ -263,6 +263,18 @@ const SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout writers',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutWriters.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout springs',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutSprings.test');
+    },
+  },
+  {
     testSuiteName: 'shared element transitions',
     importTest: () => {
       require('./tests/layoutAnimations/sharedTransition.test');
