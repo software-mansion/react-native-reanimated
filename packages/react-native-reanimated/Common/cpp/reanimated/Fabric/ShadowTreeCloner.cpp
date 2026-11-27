@@ -9,11 +9,11 @@
 
 namespace reanimated {
 
-namespace {
-
 bool isTextComponent(const ShadowNode &shadowNode) {
   return !strcmp(shadowNode.getComponentName(), "Paragraph") || !strcmp(shadowNode.getComponentName(), "Text");
 }
+
+namespace {
 
 std::shared_ptr<const ShadowNode> cloneRawTextWithNewText(const ShadowNode &rawTextNode, const std::string &text) {
   PropsParserContext propsParserContext{rawTextNode.getSurfaceId(), *rawTextNode.getContextContainer()};
