@@ -106,12 +106,12 @@ const DECIMALS = 1e4;
 const MODULE_NAME = 'RuntimeTestsViewSampler';
 
 /**
- * A frame of the UI thread, each time in ms of the monotonic clock of the
- * samples: the frame time that a frame callback gets, the animation clock of
- * the animators, and the run of the frame callback of the sampler. The two
- * clocks differ in the buffer stuffing recovery of Android 16. iOS: the frame
- * time is the time of the display refresh of the frame, and the animation clock
- * is the frame time.
+ * A frame of the UI thread, in ms: the frame time that a frame callback gets,
+ * the animation clock of the animators, and the run of the frame callback of
+ * the sampler. Android: each on the monotonic clock of the samples; the frame
+ * time and the animation clock differ in the buffer stuffing recovery of
+ * Android 16. iOS: the frame time and the run are on the clock of the samples,
+ * and the animation clock time is the frame time that the frame callbacks get.
  */
 export type ClockFrame = {
   frameTimeMs: number;
@@ -157,7 +157,7 @@ function startUIFrameClock() {
   const onFrame = (timestampMs: number) => {
     const ranMs = performance.now();
     const frameTimeMs = ranMs + timestampMs - global._getAnimationTimestamp();
-    rows.push({ frameTimeMs, animationTimeMs: frameTimeMs, ranMs });
+    rows.push({ frameTimeMs, animationTimeMs: timestampMs, ranMs });
     if (rows.length > FRAME_CLOCK_ROWS) {
       rows.shift();
     }

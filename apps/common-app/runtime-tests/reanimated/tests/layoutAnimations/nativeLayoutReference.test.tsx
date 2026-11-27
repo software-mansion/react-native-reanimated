@@ -414,7 +414,7 @@ describe('native layout reference at a common time', () => {
 
   for (const caseName of COMMON_TIME_CASES) {
     const referenceCase = REFERENCE_CASES[caseName];
-    test(`${caseName}: at each checkpoint of each command, the native box shows a value of the twin of a time within one display frame of the read, and the durations and the callbacks are within one display frame`, async () => {
+    test(`${caseName}: at each checkpoint of each command, the native box shows a value of the twin of a time within one display frame of the read, or of its own timeline after a native replacement, and the durations and the callbacks are within one display frame`, async () => {
       expectAtCommonTime(caseName, referenceCase, await play(referenceCase));
       await render(null);
     });

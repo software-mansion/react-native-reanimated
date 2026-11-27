@@ -155,6 +155,9 @@ import {
   nativeCasesOf,
   testOfTracks,
   movingGeometryTest,
+  declaredDurationOf,
+  shownBandAt,
+  firstFrameTimeAtOrAfter,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -761,9 +764,10 @@ function readWhileMounted(tag: number, targets: string[]) {
 }
 
 /**
- * Each read of a target from the end report of its track to the time at which
- * the view leaves shows the end value of the track. The existence gate: each
- * target has such a read.
+ * Each read of a target from the end report of its track to the removal of the
+ * view shows a declared value of a time in its read band. The declared value
+ * after the end is the end value. The existence gate: each target has such a
+ * read.
  */
 function expectEndHeld(
   name: string,
@@ -773,23 +777,33 @@ function expectEndHeld(
 ) {
   const heldOf = tracks.map((track) => {
     const { traceTarget } = track;
-    const endedMs = Math.max(
-      ...playedTracks
-        .filter(({ target }) => target === traceTarget)
-        .map(({ played }) => played.to)
+    const played = playedTracks.filter(({ target }) => target === traceTarget);
+    const endedMs = Math.max(...played.map(({ played }) => played.to));
+    const startBand = {
+      from: Math.min(...played.map(({ origin }) => origin.from)),
+      to: Math.max(...played.map(({ origin }) => origin.to)),
+    };
+    const durationMs = Math.max(
+      ...played.map(({ timeline }) => declaredDurationOf(timeline))
     );
+    const progressAt = (timeMs: number, startMs: number) =>
+      Math.min(1, (timeMs - startMs) / durationMs);
+    const tolerance = heldProgressToleranceOf(track);
     const held = reads
       .map(({ samples }) => samples[traceTarget])
       .filter(({ monotonicTimeMs }) => monotonicTimeMs >= endedMs);
     const off = held
-      .filter(
-        ({ presentation }) =>
-          !isNear(
-            progressOf(track, presentation[0]),
-            1,
-            heldProgressToleranceOf(track)
-          )
-      )
+      .filter(({ presentation, monotonicTimeMs }) => {
+        const part = (presentation[0] - track.from) / (track.to - track.from);
+        const progress = progressOf(track, presentation[0]);
+        const band = shownBandAt(monotonicTimeMs);
+        return (
+          !Number.isFinite(part) ||
+          part > 1 + tolerance ||
+          progress < progressAt(band.from, startBand.to) - tolerance ||
+          progress > progressAt(band.to, startBand.from) + tolerance
+        );
+      })
       .map(
         ({ presentation, monotonicTimeMs }) =>
           `${presentation[0]} at ${monotonicTimeMs - endedMs} ms after the end report`
@@ -3189,6 +3203,25 @@ const SHARED: SharedPair = {
   transition: SharedTransition.duration(600),
 };
 
+function endFrameCallbackFaultsOf(box: string, durationMs: number) {
+  const record = readFrameRecords().find(
+    (each) => each.box === box && each.start !== undefined
+  );
+  if (record?.start === undefined) {
+    return `no frame record of ${box}`;
+  }
+  const startMs = Math.min(
+    record.start.timeMs,
+    ...record.frames.map(({ timeMs }) => timeMs)
+  );
+  const endTimeMs = startMs + durationMs;
+  const endFrameTimeMs = firstFrameTimeAtOrAfter(endTimeMs);
+  const { frameTimeMs } = callbackTimeOf(box);
+  return frameTimeMs === endFrameTimeMs
+    ? ''
+    : `the callback of ${box} ran in the frame at ${(frameTimeMs - endFrameTimeMs).toFixed(2)} ms from the first UI frame at ${durationMs} ms from its start`;
+}
+
 /** The commit that shows the target removes the source. */
 function SharedExitScreens({
   exiting,
@@ -3235,6 +3268,7 @@ describe('native layout exiting of a view that a shared transition hides', () =>
         const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
         await takeTrace();
         callbacks.length = 0;
+        resetFrameRecords();
         const startMs = performance.now();
         await render(<SharedExitScreens exiting={exiting} showsTarget />);
 
@@ -3252,7 +3286,7 @@ describe('native layout exiting of a view that a shared transition hides', () =>
         expect(await waitForCallbacks([`${route}:true`])).toBe('');
         expect(await leaves(tag)).toBe(true);
         expect(callbacks.join()).toBe(`${route}:true`);
-        expect(callbackTimes[route] - startMs > EXIT_DURATION).toBe(true);
+        expect(endFrameCallbackFaultsOf(route, EXIT_DURATION)).toBe('');
         await render(null);
         await wait(100);
       }

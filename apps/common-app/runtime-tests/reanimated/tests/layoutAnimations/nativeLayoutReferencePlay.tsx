@@ -79,6 +79,7 @@ import {
   declaredDurationOf,
   declaredEndOf,
   declaredOf,
+  frameLeadMs,
   declaredSidesOf,
   declaredTimelineOf,
   declaredValueOf,
@@ -1130,6 +1131,9 @@ type Stage = {
    * not play the commit to its end.
    */
   playedMs: Partial<Record<BoxName, number>>;
+  /** The native tracks of the command that replaced a native track. */
+  replacingTracks: PlayedTrack[];
+  twinChecks: LeafCheck[];
 };
 
 /** The native samples of one read of the common-time check. */
@@ -1157,11 +1161,16 @@ type CommonRow = {
  * next command only up to the origin of that command), the first row from its
  * origin, and the end samples. A native command reads from the end of its first
  * frames. Each value of these rows has its time error on the twin timeline
- * (`expectTwinReads`). The duration of each command and the emission time of
- * the last callback of each box are compared to one display frame. Apple
- * asserts; Android prints. Each read and each time is a `COMMON-TIME` row. A
- * case that the frame driver plays on the two boxes from its first commit
- * compares the frame driver with itself: its rows are a control.
+ * (`expectTwinReads`), but a target that a native command replaced, from its
+ * origin to its end report: it is on its own timeline (`replacedSamplesOf`).
+ * The duration of each command and the emission time of the last callback of
+ * each box are compared to one display frame. Apple asserts them when the
+ * frames of the play run at their frame time (`frameLeadMs`), and prints them
+ * when the frames run ahead of it: the native end can then come more than one
+ * frame from the twin callback. Android prints them. Each read and each time is
+ * a `COMMON-TIME` row. A case that the frame driver plays on the two boxes from
+ * its first commit compares the frame driver with itself: its rows are a
+ * control.
  */
 export function expectAtCommonTime(
   caseName: string,
@@ -1171,10 +1180,32 @@ export function expectAtCommonTime(
   const referenceCase = routedCaseOf(declaredCase);
   const stages = stagesOf(caseName, referenceCase, played);
   const reads = commonReadsOf(stages, played, targetsOf(referenceCase)[0]);
+  const ownClockReads = reads.map(({ stage, checkpoint, samples }) =>
+    checkpoint === 'end' ? {} : replacedSamplesOf(stage, samples)
+  );
+  expectNativeReadRows(
+    played.rows
+      .map(({ row }) =>
+        Object.fromEntries(
+          stages.flatMap((stage) =>
+            Object.entries(replacedSamplesOf(stage, row.native, -Infinity))
+          )
+        )
+      )
+      .filter((samples) => Object.keys(samples).length > 0),
+    played.tracks,
+    matrixToleranceOf(referenceCase)
+  );
+  for (const stage of stages) {
+    expectReplacementStarts(caseName, stage, played);
+  }
   const rows = [
     ...expectValuesAtCommonTime(
       caseName,
-      reads,
+      reads.map((read, index) => ({
+        ...read,
+        samples: withoutTargets(read.samples, ownClockReads[index]),
+      })),
       matrixToleranceOf(referenceCase),
       played
     ),
@@ -1188,6 +1219,71 @@ export function expectAtCommonTime(
         referenceCase.isFrameDriven ? 'control' : row.result
       )
     );
+  }
+}
+
+/**
+ * The samples of the targets of the tracks that replaced a native track in a
+ * stage, from `fromMs` to the end report of each track: the native box and its
+ * twin start that command from values of different times, so each is on its own
+ * timeline. The own timeline check takes these targets from the first row, so
+ * each row has its read before.
+ */
+const replacedSamplesOf = (
+  { origin, replacingTracks }: Stage,
+  samples: Record<string, TargetSample>,
+  fromMs = middleOf(origin)
+) =>
+  Object.fromEntries(
+    Object.entries(samples).filter(([target, { monotonicTimeMs }]) =>
+      replacingTracks.some(
+        (track) =>
+          track.target === target &&
+          monotonicTimeMs >= fromMs &&
+          monotonicTimeMs < track.played.to
+      )
+    )
+  );
+
+const withoutTargets = (
+  samples: Record<string, TargetSample>,
+  removed: Record<string, TargetSample>
+) =>
+  Object.fromEntries(
+    Object.entries(samples).filter(([target]) => !(target in removed))
+  );
+
+/**
+ * A replacing native command starts from its capture, and its twin from the
+ * value of its last frame on its own timeline. The `I58` row is the time of
+ * that frame from the native origin.
+ */
+function expectReplacementStarts(
+  caseName: string,
+  { command, origin, replacingTracks, twinChecks }: Stage,
+  { frameChecks, tracks, clockOffset }: Played
+) {
+  for (const { declaration, captured } of replacingTracks) {
+    if (captured === undefined) {
+      throw new Error(
+        `${caseName} has no capture of ${describeLeaf(declaration)}.`
+      );
+    }
+    expectCapturedStart(captured);
+    const twin = twinChecks.find((check) => check.declared === declaration);
+    if (twin?.replaced === undefined) {
+      throw new Error(
+        `${caseName} has no replaced twin record of ${describeLeaf(declaration)}.`
+      );
+    }
+    const modelFrame = startFrameOf(twin, twin.replaced, tracks);
+    console.log(
+      `I58 | ${caseName} | command ${command} | ${describeLeaf(declaration)} | twin start ${twin.record.start?.value} from its frame at ${((modelFrame?.timeMs ?? NaN) + middleOf(clockOffset) - middleOf(origin)).toFixed(3)} ms from the native origin`
+    );
+    expect(
+      describeStartOffItsFrame(twin, twin.replaced, frameChecks, tracks)
+    ).toBe('');
+    expectFrameTimeline(twin, FRAME_TOLERANCE);
   }
 }
 
@@ -1210,6 +1306,7 @@ function stagesOf(
     const common = {
       command: commit + 1,
       rest: twinRestFrom((rests[commit + 1] ?? rests[commit])!),
+      twinChecks: checksOf('frame'),
     };
     if (commandKeys.length > 0) {
       const commandTracks = tracks.filter(({ declaration }) =>
@@ -1219,6 +1316,9 @@ function stagesOf(
       return {
         ...common,
         route: 'native command',
+        replacingTracks: commandTracks.filter(
+          ({ replaced }) => replaced !== undefined
+        ),
         origin,
         durationMs: longestDurationOf(commandTracks),
         playedMs: {
@@ -1240,6 +1340,7 @@ function stagesOf(
     return {
       ...common,
       route: 'frame driver',
+      replacingTracks: [],
       origin: { from: startMs, to: startMs },
       durationMs: longestDurationOf(nativeChecks),
       playedMs: {
@@ -1452,6 +1553,8 @@ export const endsNativelyIn = (
 function expectTimesAtCommonTime(stages: Stage[]): CommonRow[] {
   const native = callbackTimeOf('native');
   const frame = callbackTimeOf('frame');
+  const assertsTimes =
+    ASSERTS_COMMON_TIME && frameLeadMs(stages[0].origin.from) < FRAME_MS / 2;
   const times = [
     ...stages.map((stage) => ({
       stage,
@@ -1485,7 +1588,7 @@ function expectTimesAtCommonTime(stages: Stage[]): CommonRow[] {
       native: ofNative.toFixed(3),
       twin: twin.toFixed(3),
       errorsMs: { difference: errorMs },
-      result: !ASSERTS_COMMON_TIME
+      result: !assertsTimes
         ? 'not asserted'
         : errorMs <= FRAME_MS
           ? 'inside one display frame'

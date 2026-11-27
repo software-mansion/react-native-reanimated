@@ -296,6 +296,62 @@ function clockFramesFor(isEnough: (frames: ClockFrame[]) => boolean) {
   return clockFrames;
 }
 
+const LEAD_FRAMES = 10;
+
+/**
+ * The median time from the run of a frame of the frame clock to its frame time,
+ * of the frames that ran from `fromMs` on the sample clock (at least
+ * `LEAD_FRAMES` of them when the clock has them).
+ */
+export function frameLeadMs(fromMs: number) {
+  const framesFrom = (frames: ClockFrame[]) =>
+    frames.filter(({ ranMs }) => ranMs >= fromMs);
+  const leads = framesFrom(
+    clockFramesFor((all) => framesFrom(all).length >= LEAD_FRAMES)
+  )
+    .map(({ frameTimeMs, ranMs }) => frameTimeMs - ranMs)
+    .sort((first, second) => first - second);
+  return leads[Math.floor(leads.length / 2)] ?? 0;
+}
+
+const callbackFrameTimeOf = ({ frameTimeMs, animationTimeMs }: ClockFrame) =>
+  IS_APPLE ? animationTimeMs : frameTimeMs;
+
+/**
+ * The first frame time of the frame clock at or after a time of the frame times
+ * that the frame callbacks get.
+ */
+export function firstFrameTimeAtOrAfter(timeMs: number) {
+  const frames = clockFramesFor((all) =>
+    all.some((frame) => callbackFrameTimeOf(frame) >= timeMs)
+  );
+  return Math.min(
+    ...frames
+      .map(callbackFrameTimeOf)
+      .filter((frameTimeMs) => frameTimeMs >= timeMs)
+  );
+}
+
+/**
+ * The frame of the frame clock in which a call at `ranMs` (sample clock) ran:
+ * the time that its frame callbacks got, and whether the next frame of the
+ * clock is the next display refresh of 60 Hz (no missed frame of the clock
+ * around the call). 120 Hz is not tested (Objective 17).
+ */
+export function callbackFrameAt(ranMs: number) {
+  const frames = clockFramesFor((all) =>
+    all.some((frame) => frame.ranMs > ranMs)
+  );
+  const index = frames.filter((frame) => frame.ranMs <= ranMs).length - 1;
+  const [frameTimeMs, nextFrameTimeMs] = frames
+    .slice(index, index + 2)
+    .map(callbackFrameTimeOf);
+  return {
+    frameTimeMs,
+    isNextFrameNextRefresh: nextFrameTimeMs - frameTimeMs < 1.5 * FRAME_MS,
+  };
+}
+
 /**
  * The frame of the frame clock that a read at a time of the sample clock shows,
  * the last frame that ran before the read. A read runs between two frames on
@@ -3207,6 +3263,8 @@ export const callbackTimes: Record<string, number> = {};
 export const callbackEmissionTimes: Record<string, number> = {};
 /** When the UI runtime gave it, on the sample clock, or NaN. */
 const callbackRunTimes: Record<string, number> = {};
+/** `__frameTimestamp` when the UI runtime gave it, or NaN. */
+const callbackFrameTimes: Record<string, number> = {};
 
 export function resetCallbacks() {
   callbacks.length = 0;
@@ -3214,6 +3272,7 @@ export function resetCallbacks() {
     callbackTimes,
     callbackEmissionTimes,
     callbackRunTimes,
+    callbackFrameTimes,
   ]) {
     for (const name of Object.keys(times)) {
       delete times[name];
@@ -3230,18 +3289,21 @@ export function callbackTimeOf(name: string) {
     receivedMs: callbackTimes[name],
     emittedMs: callbackEmissionTimes[name],
     ranMs: callbackRunTimes[name],
+    frameTimeMs: callbackFrameTimes[name],
   };
 }
 export function recordCallback(
   name: string,
   finished: boolean,
   emittedAtMs: number,
-  ranAtMs?: number
+  ranAtMs?: number,
+  frameTimeMs?: number
 ) {
   callbacks.push(`${name}:${finished}`);
   callbackTimes[name] = performance.now();
   callbackEmissionTimes[name] = emittedAtMs;
   callbackRunTimes[name] = ranAtMs ?? NaN;
+  callbackFrameTimes[name] = frameTimeMs ?? NaN;
 }
 
 /** A callback of a layout animation that records its result under `name`. */
@@ -3252,7 +3314,8 @@ export const callbackOf = (name: string) => (finished: boolean) => {
     name,
     finished,
     global._getAnimationTimestamp(),
-    performance.now()
+    performance.now(),
+    global.__frameTimestamp
   );
 };
 
@@ -3650,7 +3713,13 @@ export type FrameRecord = {
    * Each frame that the leaf got, with the value that it wrote and the time of
    * the animation clock when its frame function ran.
    */
-  frames: { timeMs: number; value: number | string; ranMs: number }[];
+  frames: {
+    timeMs: number;
+    value: number | string;
+    ranMs: number;
+    /** The step has the time of the last start call (`START_CALL_TIME`). */
+    isStartCall: boolean;
+  }[];
   /**
    * The numbers of the values that the builder got: the laid-out values of the
    * view, on the pixel grid of the device.
@@ -3705,6 +3774,13 @@ export function readFrameRecords() {
 }
 
 /**
+ * The time of the last start call of a recorded leaf. A step at that time can
+ * be the step of that start call: of its leaf, or of a leaf that the new leaf
+ * replaced.
+ */
+const START_CALL_TIME = '__nativeLayoutStartCallTimeMs';
+
+/**
  * The animation of a builder or of a function, with a `FrameRecord` of each
  * leaf of each build under the name `box`.
  */
@@ -3743,6 +3819,7 @@ export function frameRecordedOf(box: string, animation: AnimationSource) {
         value,
         replacedFrames: replaced?.frames.length ?? 0,
       };
+      (globalThis as Record<string, unknown>)[START_CALL_TIME] = now;
       if (self.startTime !== undefined && self.startTime !== now) {
         record.adoptedStart = {
           timeMs: self.startTime,
@@ -3758,6 +3835,9 @@ export function frameRecordedOf(box: string, animation: AnimationSource) {
             timeMs: frameTimeMs,
             value: animation.current,
             ranMs: global._getAnimationTimestamp(),
+            isStartCall:
+              frameTimeMs ===
+              (globalThis as Record<string, unknown>)[START_CALL_TIME],
           });
           return finished;
         };

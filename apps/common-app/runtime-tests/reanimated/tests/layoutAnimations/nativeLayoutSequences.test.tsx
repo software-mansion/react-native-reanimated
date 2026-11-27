@@ -71,6 +71,7 @@ import {
   FIRST_FRAMES_MS,
   FRAME_BOX_REF,
   FRAME_MS,
+  frameLeadMs,
   frameDrivenOf,
   frameDriverFrameTime,
   frameTimedOf,
@@ -1321,10 +1322,13 @@ describe('native layout sequences and a clip of their view', () => {
     ],
   };
   const TRANSFER_TIMEOUT_MS = 500;
+  const LEAD_READ_BEFORE_CLIP_MS = 100;
   // The time of a clip is the time of the tracks in the first row that has it. The frame driver has its first
-  // frame two display frames after that row (measured: 32.4 to 32.6 ms), so the clip at 960 ms gives that frame
-  // from 7 ms before to 10 ms after the end of the second part of HAND_OVER at 1000 ms. The clip of the exit is
-  // at 40 % of its time. Each sequence has a part that starts 200 ms or more after its clip.
+  // frame two display frames after that row (measured on a simulator: 32.4 to 32.6 ms), so the clip at 960 ms
+  // gives that frame from 7 ms before to 10 ms after the end of the second part of HAND_OVER at 1000 ms. On an
+  // iPhone the boundary check uses the target time of the first frame, one frame lead (`frameLeadMs`) after the
+  // run of the frame. The clip of the exit is at 40 % of its time. Each sequence has a part that starts 200 ms or
+  // more after its clip.
   const clips: [string, Sequence, EntryExit, number, number?][] = [
     ['inside the second part', HAND_OVER, 'entering', 600],
     [
@@ -1346,12 +1350,22 @@ describe('native layout sequences and a clip of their view', () => {
       const totalMs = totalOf(sequence);
       const declaredStarts = declaredStartsOf(sequence);
       const startLevel = START_LEVEL[flow];
+      let clipAtMs = clipMs;
+      let needsLead = Platform.OS === 'ios' && boundaryMs !== undefined;
       const beforeClip = await takeRows(
         played,
         played.startMs + totalMs,
-        (row) =>
-          playingOf(played, [row]).length > 0 &&
-          trackTimeOf(played, row) >= clipMs
+        (row) => {
+          if (playingOf(played, [row]).length === 0) {
+            return false;
+          }
+          const trackTimeMs = trackTimeOf(played, row);
+          if (needsLead && trackTimeMs >= clipMs - LEAD_READ_BEFORE_CLIP_MS) {
+            clipAtMs = clipMs - frameLeadMs(played.startMs);
+            needsLead = false;
+          }
+          return trackTimeMs >= clipAtMs;
+        }
       );
       const before = beforeClip[beforeClip.length - 1];
       const clipTimeMs = trackTimeOf(played, before);
@@ -1487,7 +1501,7 @@ describe('native layout sequences and a clip of their view', () => {
         [
           'SEQUENCE-HAND-OVER',
           caseName,
-          `clip at ${clipTimeMs.toFixed(1)} ms of the track`,
+          `clip at ${clipTimeMs.toFixed(1)} ms of the track, limit ${clipAtMs.toFixed(1)} ms`,
           `start ${summarize(start.filter(isHostEvent))}`,
           `transfer ${summarize(transfer.filter(isHostEvent))}`,
           `first value of the frame driver ${(mountedAtMs - removedAtMs).toFixed(1)} ms after the removal of the tracks, rows between them ${betweenLevels.length} with the model at the levels ${Math.min(...betweenLevels.flat()).toFixed(4)} to ${Math.max(...betweenLevels.flat()).toFixed(4)}`,

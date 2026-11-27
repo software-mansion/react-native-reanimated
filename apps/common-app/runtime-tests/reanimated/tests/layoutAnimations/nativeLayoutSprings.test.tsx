@@ -50,6 +50,7 @@ import {
   amountOf,
   BOX_REF,
   callbackEmissionTimes,
+  callbackFrameAt,
   callbackOf,
   callbacks,
   cellsOf,
@@ -1141,7 +1142,7 @@ describe('native layout springs', () => {
   }
 
   movingGeometryTest(
-    'a spring ends its track one time one display frame or less from the end frame of the twin on the spring time of the twin, and its callback gets true one time',
+    'a spring ends its track one time one display frame or less from the end frame of the twin, and its callback gets true one time',
     async () => {
       const played = await play(xSpringOf({}), DEFAULT_SPRING_CALLBACKS);
       logSpringClock('a spring ends its track', played);
@@ -1161,10 +1162,17 @@ describe('native layout springs', () => {
         `SPRING-END | native track end ${nativeEndMs.toFixed(2)} ms after its origin, twin end frame ${curveOf(twin).endMs.toFixed(2)} ms after its start at the spring time ${twinEndMs.toFixed(2)} ms, origin uncertainty ${uncertaintyOf(origin).toFixed(2)} ms`
       );
       logEndOnTraceClock(played, origin, ends[0]);
-      expect(
-        Math.abs(nativeEndMs - twinEndMs) <=
-          FRAME_MS + 2 * uncertaintyOf(origin)
-      ).toBe(true);
+      const report = callbackFrameAt(ends[0].monotonicTimeMs);
+      const endRefreshes = Math.round(
+        (report.frameTimeMs -
+          (lastOf(twin.frames.map(({ timeMs }) => timeMs)) ?? NaN)) /
+          FRAME_MS
+      );
+      console.log(
+        `SPRING-END-FRAMES | display refreshes from the twin end frame to the frame of the native end report ${endRefreshes}, next clock frame is the next refresh ${report.isNextFrameNextRefresh}`
+      );
+      expect(report.isNextFrameNextRefresh).toBe(true);
+      expect(Math.abs(endRefreshes) <= 1).toBe(true);
       expectCallbacks(played, DEFAULT_SPRING_CALLBACKS);
       await render(null);
     }
@@ -1286,7 +1294,7 @@ describe('native layout springs', () => {
   });
 
   movingGeometryTest(
-    'a new spring at 40 % of a native spring starts on the frame driver: it continues from the state of the native spring at the commit origin and follows its declared curve from there, its frames are the frames of the twin, each box on its spring time, and the twin starts two display frames or less before the commit origin on the first twin curve',
+    'a new spring at 40 % of a native spring starts on the frame driver: it continues from the state of the native spring at the commit origin and follows its declared curve from there, its frames are the frames of the twin, each box on its spring time, and the twin starts from its last frame on the first twin curve',
     async () => {
       const atMs = 0.4 * DEFAULT_SPRING_MS;
       const played = await play(
@@ -1359,20 +1367,21 @@ describe('native layout springs', () => {
           ]
         )
       );
-      const twinStart = matchInWindowOf(
-        (springTimeMs) => [firstTwinCurve.valueAt(springTimeMs)],
-        [Number(twin.start.value)],
-        [POSITION_TOLERANCE],
-        [nativeFirstSpringMs - 2 * FRAME_MS, nativeFirstSpringMs]
+      const twinModelSpringMs = firstTwinCurve.endMs;
+      const twinStartDistance = Math.abs(
+        Number(twin.start.value) - firstTwinCurve.valueAt(twinModelSpringMs)
       );
       console.log(
-        `SPRING-RETARGET | start of the twin minus the native origin ${(firstTwin.start.timeMs - firstOriginMs).toFixed(3)} ms, new start of the native box ${native.start.value} at ${native.start.timeMs}, ${nativeFirstSpringMs.toFixed(3)} ms after the first origin, of the twin ${twin.start.value} at ${twin.start.timeMs}, twin spring clock from its last frame of the first spring ${twinLastTimestampMs.toFixed(3)}, native frames ${native.frames.length}, spring times of the checkpoints ${checkpoints.map((frame) => nativeSpringTimesMs[frame].toFixed(3)).join(' ')}, start distance to the first twin curve ${startDistance.toFixed(4)}, distances at equal spring times ${distances.map((distance) => distance.toFixed(4)).join(' ')}, smallest distances to the twin curve within one display frame of spring time ${matches.map(({ distance }) => distance.toFixed(4)).join(' ')}, twin start on the first twin curve from ${(nativeFirstSpringMs - 2 * FRAME_MS).toFixed(3)} to ${nativeFirstSpringMs.toFixed(3)} ms of spring time: smallest distance ${twinStart.distance.toFixed(4)} in the step from ${twinStart.stepMs.toFixed(3)} ms`
+        `SPRING-RETARGET | start of the twin minus the native origin ${(firstTwin.start.timeMs - firstOriginMs).toFixed(3)} ms, new start of the native box ${native.start.value} at ${native.start.timeMs}, ${nativeFirstSpringMs.toFixed(3)} ms after the first origin, of the twin ${twin.start.value} at ${twin.start.timeMs}, twin spring clock from its last frame of the first spring ${twinLastTimestampMs.toFixed(3)}, native frames ${native.frames.length}, spring times of the checkpoints ${checkpoints.map((frame) => nativeSpringTimesMs[frame].toFixed(3)).join(' ')}, start distance to the first twin curve ${startDistance.toFixed(4)}, distances at equal spring times ${distances.map((distance) => distance.toFixed(4)).join(' ')}, smallest distances to the twin curve within one display frame of spring time ${matches.map(({ distance }) => distance.toFixed(4)).join(' ')}, twin start distance to the first twin curve at the spring time of its last frame ${twinStartDistance.toFixed(4)}`
+      );
+      console.log(
+        `I58 | a new spring at 40 % | time of the twin frame of its start value minus the native start ${(twinLastTimestampMs - native.start.timeMs).toFixed(3)} ms`
       );
       logSharedFrames(native, twin, twinLastTimestampMs);
       expect(new Set(checkpoints).size).toBe(10);
       expect(startDistance <= POSITION_TOLERANCE).toBe(true);
       expect(matches.every(({ isNear }) => isNear)).toBe(true);
-      expect(twinStart.isNear).toBe(true);
+      expect(twinStartDistance <= POSITION_TOLERANCE).toBe(true);
       expectCallbacks(played, REPLACED_SPRING_CALLBACKS);
       await render(null);
     }

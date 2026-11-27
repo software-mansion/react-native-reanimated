@@ -62,10 +62,11 @@
  * results apart.
  *
  * The end callback of the native box comes from n + 1 display frames before the callback of a twin of n phases
- * to two display frames after it, on the UI runtime and on the React Native runtime: the sum of the bound of
- * an end report and of the start rule of the twin. On Apple, when the native box ends natively, both are later
- * by the time from the run of the last frame of the twin to its target frame time (one display frame on an
- * iPhone: the twin callback runs before its end shows). A track that plays to its end reports the end from one
+ * to two display frames after it, on the UI runtime: the sum of the bound of an end report and of the start
+ * rule of the twin. On Apple, when the native box ends natively, it is later by the time from the run of the
+ * last frame of the twin to its target frame time (one display frame on an iPhone: the twin callback runs
+ * before its end shows). The times from the emission of each callback to its delivery to the React Native
+ * runtime differ by one display frame or less. A track that plays to its end reports the end from one
  * display frame before to two after its declared end. The first row of a replacement comes in its first three
  * display frames. The frame driver has frames before the end report of a track that it took, measured 0.833 to
  * 3.216 ms before it, and its next frame comes (on Apple: runs) two display frames or less after the end
@@ -77,7 +78,7 @@
  *
  * The twin has a frame in each display frame: on Android it gets each frame of the frame clock of the sampler
  * that runs 2 ms or more after its start, on Apple no frame comes more than one display frame and a half after
- * the step before it (`stepGapOf`). This statement and the pair statement assert on each row in each
+ * the frame or the start call before it (`largestStepGapOf`). This statement and the pair statement assert on each row in each
  * condition: no row is skipped.
  *
  * The rows cover the timelines: each phase of 100 ms or more of each track that plays to the end of the
@@ -165,6 +166,7 @@ import {
   endedFromMsOf,
   endFrameLeadOf,
   FRAME_MS,
+  firstFrameTimeAtOrAfter,
   framesMissedBy,
   has3D,
   hasNativeLayoutRoute,
@@ -413,18 +415,16 @@ describe('native layout live clock', () => {
         callbackGap
       );
       expectIn(
-        'native end callback after the callback of the twin on the React Native runtime, ms',
-        nativeCallback.receivedMs - twinCallback.receivedMs,
-        callbackGap
+        'callback delivery time to the React Native runtime (receipt minus emission), native minus twin, ms',
+        nativeCallback.receivedMs -
+          nativeCallback.emittedMs -
+          (twinCallback.receivedMs - twinCallback.emittedMs),
+        { from: -FRAME_MS, to: FRAME_MS }
       );
       for (const check of twinChecks) {
         const { record, timeline } = check;
         const leaf = describeLeaf(record);
-        const largestFrameGapMs = Math.max(
-          ...record.frames
-            .slice(1)
-            .map((step, index) => stepGapOf(record.frames[index], step))
-        );
+        const largestFrameGapMs = largestStepGapOf(record.frames);
         const largestGapRow = `largest time from a frame of ${leaf} of the twin to the next, ms`;
         if (Platform.OS === 'android') {
           console.log(
@@ -570,22 +570,31 @@ const lagAfterStartCallOf = ({ frames: [, next] }: FrameRecord) =>
   next ? Math.max(0, next.ranMs - next.timeMs) : 0;
 
 /**
- * Apple: a gap to or from a step with no frame time after its run is by run
- * time. Such a step is a call out of a frame (a start, a replacement), or a
- * frame that ran after its target time.
+ * The largest gap between two steps of a record. Apple: by frame time between
+ * the frame times that the record got, and by run time to and from a step of a
+ * start call out of a frame flush (a time that is not a frame time).
  */
-const stepGapOf = (
-  before: FrameRecord['frames'][number],
-  after: FrameRecord['frames'][number]
-) =>
-  Platform.OS === 'ios' && [before, after].some(ranAtOrAfterItsTime)
-    ? after.ranMs - before.ranMs
-    : after.timeMs - before.timeMs;
-
-const ranAtOrAfterItsTime = ({
-  timeMs,
-  ranMs,
-}: FrameRecord['frames'][number]) => ranMs >= timeMs;
+function largestStepGapOf(steps: FrameRecord['frames']) {
+  const gapsOf = (times: number[]) =>
+    times.slice(1).map((time, index) => time - times[index]);
+  if (Platform.OS !== 'ios') {
+    return Math.max(...gapsOf(steps.map(({ timeMs }) => timeMs)));
+  }
+  const isCallOutOfFrame = ({ isStartCall, timeMs }: (typeof steps)[number]) =>
+    isStartCall && firstFrameTimeAtOrAfter(timeMs) !== timeMs;
+  const frameTimes = [
+    ...new Set(
+      steps
+        .filter((step) => !isCallOutOfFrame(step))
+        .map(({ timeMs }) => timeMs)
+    ),
+  ].sort((first, second) => first - second);
+  const callGaps = gapsOf(steps.map(({ ranMs }) => ranMs)).filter(
+    (_, index) =>
+      isCallOutOfFrame(steps[index]) || isCallOutOfFrame(steps[index + 1])
+  );
+  return Math.max(...gapsOf(frameTimes), ...callGaps);
+}
 
 const isIn = ({ from, to }: Band, timeMs: number) =>
   timeMs >= from && timeMs <= to;
