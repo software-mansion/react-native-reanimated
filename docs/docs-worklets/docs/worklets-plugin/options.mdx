@@ -9,7 +9,7 @@ sidebar_label: 'Babel plugin options'
 
 import CodeBlock from '@theme/CodeBlock';
 
-Our plugin offers several optional functionalities that you may need to employ advanced APIs:
+The plugin needs no options to work. The ones it offers let you run third party code inside worklet functions:
 
 <details>
   <summary>Type definitions</summary>
@@ -31,13 +31,10 @@ Using this is straightforward for Babel plugins; you just need to pass an object
 
 Here's an example:
 
-```js {13-16}
+```js {10-13}
 /** @type {import('react-native-worklets/plugin').PluginOptions} */
 const workletsPluginOptions = {
-  bundleMode: true,
-  disableInlineStylesWarning: true,
-  globals: ['myObjectOnUI'],
-  substituteWebPlatformChecks: true,
+  importForwarding: { moduleNames: ['my-library'] },
 }
 
 module.exports = {
@@ -283,7 +280,7 @@ Use a sequence of segments that only your code has, for example
 the sequence does not also occur in the paths of your dependencies. For example,
 `my-library` also matches `node_modules/other-lib/my-library/index.js`.
 
-In Bundle Mode, the plugin prints a warning when a path has only common folder names. You can
+The plugin prints a warning when a path has only common folder names. You can
 hide it with [`silenceDangerousPathsWarning`](#silencedangerouspathswarning).
 :::
 

@@ -22,7 +22,7 @@ The `importForwarding` API is temporary and will be replaced with a more robust 
 
 ## Running network requests in Worklets
 
-In Bundle Mode, Worklet Runtimes come with a standalone networking module, no longer needing a feature flag. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](../threading/createWorkletRuntime.mdx#enablenetworking).
+Worklet Runtimes come with a standalone networking module. It's installed on every Worklet Runtime unless you opt out with [`enableNetworking: false`](../threading/createWorkletRuntime.mdx#enablenetworking).
 
 ```tsx
 const runtime = createWorkletRuntime({ name: 'worker' });
@@ -49,6 +49,18 @@ Requests share the app's cookie storage and TLS configuration. On Android, `WebS
 <Badges version="0.14.0">
   `WebSocket` follows the [WHATWG interface](https://websockets.spec.whatwg.org/) and supports text, binary data, event listeners and subprotocols. Host names must be plain ASCII: internationalized host names, in Unicode or in their `xn--` form, throw a `SyntaxError`.
 </Badges>
+
+## Loading lazy chunks in Worklets
+
+In development, Metro splits code behind `import()` into lazy chunks. A worklet function can `import()` such a module too: the Worklet Runtime fetches the chunk from Metro and evaluates it, like the RN Runtime does. The chunk is fetched with the runtime's own `fetch`, so the Worklet Runtime needs the [networking API](#running-network-requests-in-worklets) enabled. It is on by default. On a runtime created with `enableNetworking: false`, the `import()` rejects unless an initializer installs a `fetch` of its own on that runtime.
+
+```tsx
+scheduleOnUI(async () => {
+  'worklet';
+  const { heavyComputation } = await import('./heavyComputation');
+  console.log(heavyComputation());
+});
+```
 
 ## Reference
 
