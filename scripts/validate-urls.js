@@ -75,18 +75,25 @@ async function getFileAndUrls(dir) {
   return Array.prototype.concat(...files);
 }
 
-/** @param {{ file: string; url: string }[]} data */
-async function validUrls(data) {
+/**
+ * @param {{ file: string; url: string }[]} data
+ * @returns {Map<string, Set<string>>}
+ */
+function groupFilesByUrl(data) {
+  const filesByUrl = new Map();
+  for (const { file, url } of data) {
+    filesByUrl.set(url, (filesByUrl.get(url) ?? new Set()).add(file));
+  }
+  return filesByUrl;
+}
+
+/** @param {Map<string, Set<string>>} filesByUrl */
+async function validUrls(filesByUrl) {
   let isBrokenUrlDetected = false;
-  for (const currentData of data) {
-    if (
-      skippedExactUrls.includes(currentData.url) ||
-      skippedUrls.some((skippedUrl) => currentData.url.includes(skippedUrl))
-    ) {
-      continue;
-    }
+  for (const [url, files] of filesByUrl) {
+    const fileList = [...files].join('\n  ');
     try {
-      const response = await fetch(currentData.url, {
+      const response = await fetch(url, {
         headers: {
           'User-Agent':
             'react-native-reanimated-url-validator (https://github.com/software-mansion/react-native-reanimated)',
@@ -95,18 +102,18 @@ async function validUrls(data) {
       const status = response.status;
       const extraStatuses =
         Object.entries(extraValidStatuses).find(([host]) =>
-          currentData.url.includes(host)
+          url.includes(host)
         )?.[1] ?? [];
       if (![200, 301, 302, 307, 503, ...extraStatuses].includes(status)) {
         console.error(
-          `🔴 Invalid link: ${response.url} status: ${status} in file: ${currentData.file}\n`
+          `🔴 Invalid link: ${response.url} status: ${status} in files:\n  ${fileList}\n`
         );
         isBrokenUrlDetected = true;
       }
     } catch (error) {
       isBrokenUrlDetected = true;
       console.error(
-        `🔴 Request failed: ${currentData.url} in file: ${currentData.file}\n`,
+        `🔴 Request failed: ${url} in files:\n  ${fileList}\n`,
         error
       );
     }
@@ -120,7 +127,13 @@ async function validUrls(data) {
 async function scanLinks() {
   const currentDir = process.cwd();
   const data = await getFileAndUrls(currentDir);
-  await validUrls(data);
+  const linksToCheck = data
+    .filter(({ url }) => !skippedExactUrls.includes(url))
+    .map(({ file, url }) => ({ file, url: url.split('#')[0] }))
+    .filter(
+      ({ url }) => !skippedUrls.some((skippedUrl) => url.includes(skippedUrl))
+    );
+  await validUrls(groupFilesByUrl(linksToCheck));
 }
 
 const skippedUrls = [
@@ -146,6 +159,7 @@ const skippedUrls = [
   '127.0.0.1',
   '//x.com',
   'youtube.com',
+  '//youtu.be/',
   'cppreference.com',
 ];
 
