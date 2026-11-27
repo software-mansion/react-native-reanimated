@@ -1,0 +1,25 @@
+{
+  "info": {
+    "commandType": "devicectl.device.info.processes",
+    "jsonVersion": 5,
+    "outcome": "success",
+    "version": "651.32"
+  },
+  "result": {
+    "deviceIdentifier": "11111111-2222-3333-4444-555555555555",
+    "runningProcesses": [
+      {
+        "executable": "file:///sbin/launchd",
+        "processIdentifier": 1
+      },
+      {
+        "executable": "file:///private/var/containers/Bundle/Application/214A1B52-854C-4742-A541-337C0D38A8F0/ReanimatedBenchmark.app/ReanimatedBenchmark",
+        "processIdentifier": 8939
+      },
+      {
+        "executable": "file:///private/var/containers/Bundle/Application/F8B67A0B-B020-412B-8727-DFC80E8C7BA7/ReanimatedBenchmark.app/ReanimatedBenchmark",
+        "processIdentifier": 8941
+      }
+    ]
+  }
+}

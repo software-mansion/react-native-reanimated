@@ -1,0 +1,46 @@
+{
+  "info": {
+    "arguments": [
+      "devicectl",
+      "device",
+      "info",
+      "apps",
+      "--bundle-id",
+      "com.reanimatedbenchmark.a",
+      "--quiet",
+      "--json-output",
+      "-",
+      "--device",
+      "00008110-000A1B2C3D4E801E"
+    ],
+    "commandType": "devicectl.device.info.apps",
+    "environment": {},
+    "jsonVersion": 5,
+    "outcome": "success",
+    "version": "651.32"
+  },
+  "result": {
+    "apps": [
+      {
+        "appClip": false,
+        "builtByDeveloper": true,
+        "bundleIdentifier": "com.reanimatedbenchmark.a",
+        "bundleVersion": "1",
+        "containerAccessible": true,
+        "defaultApp": false,
+        "hidden": false,
+        "internalApp": false,
+        "name": "ReanimatedBenchmark.a",
+        "removable": true,
+        "url": "file:///private/var/containers/Bundle/Application/F8B67A0B-B020-412B-8727-DFC80E8C7BA7/ReanimatedBenchmark.app/",
+        "version": "1.0"
+      }
+    ],
+    "defaultAppsIncluded": false,
+    "deviceIdentifier": "11111111-2222-3333-4444-555555555555",
+    "hiddenAppsIncluded": false,
+    "internalAppsIncluded": false,
+    "matchingBundleIdentifier": "com.reanimatedbenchmark.a",
+    "removableAppsIncluded": true
+  }
+}

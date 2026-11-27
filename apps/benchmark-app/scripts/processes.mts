@@ -1,0 +1,226 @@
+import { spawn } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import { ToolError } from './errors.mts';
+
+export interface ProcessOptions {
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  input?: string;
+  logFile?: string;
+  timeoutMs?: number;
+  onLine?: (line: string) => void;
+}
+
+export interface ProcessOutput {
+  stdout: string;
+  stderr: string;
+}
+
+export interface LineStream {
+  stop: () => void;
+  failure: () => ToolError | null;
+}
+
+const PROCESS_TIMEOUT_MS = 60_000;
+
+const STREAM_ERROR_LINES = 20;
+
+export class Processes {
+  readonly #running = new Set<ChildProcess>();
+
+  run(
+    command: string,
+    args: string[],
+    options: ProcessOptions = {}
+  ): Promise<ProcessOutput> {
+    const timeoutMs = options.timeoutMs ?? PROCESS_TIMEOUT_MS;
+    return new Promise((resolve, reject) => {
+      const child = this.#spawn(command, args, options);
+      const log = options.logFile
+        ? fs.createWriteStream(options.logFile, { flags: 'a' })
+        : null;
+      let failure: ToolError | null = null;
+      let inputError: Error | null = null;
+      const closeOutput = () => {
+        child.stdout?.destroy();
+        child.stderr?.destroy();
+      };
+      const fail = (error: ToolError) => {
+        failure ??= error;
+        signalGroup(child, 'SIGKILL');
+        if (hasExited(child)) {
+          closeOutput();
+        }
+      };
+      const timer = setTimeout(
+        () =>
+          fail(
+            new ToolError(
+              `${commandLine(command, args)} did not finish in ${timeoutMs / 1000} s`
+            )
+          ),
+        timeoutMs
+      );
+      let stdout = '';
+      let stderr = '';
+      const lines = options.onLine && lineSplitter(options.onLine);
+      log?.on('error', (error) =>
+        fail(
+          new ToolError(
+            `Cannot write the log ${options.logFile} of ${commandLine(command, args)}: ${error.message}`
+          )
+        )
+      );
+      child.stdin?.on('error', (error) => {
+        inputError = error;
+      });
+      child.stdout?.on('data', (chunk: Buffer) => {
+        stdout += chunk.toString();
+        lines?.(chunk.toString());
+        log?.write(chunk);
+      });
+      child.stderr?.on('data', (chunk: Buffer) => {
+        stderr += chunk.toString();
+        log?.write(chunk);
+      });
+      child.on('error', (error) => {
+        clearTimeout(timer);
+        log?.end();
+        reject(missingTool(command, error));
+      });
+      child.on('exit', () => {
+        if (failure !== null) {
+          closeOutput();
+        }
+      });
+      child.on('close', (code, signal) => {
+        clearTimeout(timer);
+        log?.end();
+        if (failure !== null) {
+          reject(failure);
+        } else if (code !== 0) {
+          reject(
+            new ToolError(
+              `${commandLine(command, args)} failed (${signal ?? `exit ${code}`}):\n${tail(stderr || stdout, 20)}`
+            )
+          );
+        } else if (
+          options.input !== undefined &&
+          child.stdin?.writableFinished !== true
+        ) {
+          reject(
+            new ToolError(
+              `${commandLine(command, args)} ended before it read all its input${inputError ? `: ${inputError.message}` : ''}`
+            )
+          );
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+      if (options.input !== undefined) {
+        child.stdin?.end(options.input);
+      }
+    });
+  }
+
+  streamLines(
+    command: string,
+    args: string[],
+    onLine: (line: string) => void
+  ): LineStream {
+    const child = this.#spawn(command, args, {});
+    let stopped = false;
+    let failure: ToolError | null = null;
+    let stderr = '';
+    const lines = lineSplitter(onLine);
+    child.stdout?.on('data', (chunk: Buffer) => lines(chunk.toString()));
+    child.stderr?.on('data', (chunk: Buffer) => {
+      stderr = tail(stderr + chunk.toString(), STREAM_ERROR_LINES);
+    });
+    child.on('error', (error) => {
+      failure ??= new ToolError(
+        `Cannot start ${commandLine(command, args)}: ${missingTool(command, error).message}`
+      );
+    });
+    child.on('close', (code, signal) => {
+      if (!stopped) {
+        failure ??= new ToolError(
+          `${commandLine(command, args)} stopped (${signal ?? `exit ${code}`}) before the driver stopped it${stderr.trim() ? `:\n${stderr.trim()}` : ''}`
+        );
+      }
+    });
+    return {
+      stop: () => {
+        stopped = true;
+        signalGroup(child, 'SIGTERM');
+      },
+      failure: () => failure,
+    };
+  }
+
+  stopAll() {
+    for (const child of this.#running) {
+      signalGroup(child, 'SIGTERM');
+    }
+  }
+
+  #spawn(
+    command: string,
+    args: string[],
+    options: ProcessOptions
+  ): ChildProcess {
+    const child = spawn(command, args, {
+      cwd: options.cwd,
+      env: options.env ?? process.env,
+      stdio: [options.input === undefined ? 'ignore' : 'pipe', 'pipe', 'pipe'],
+      detached: true,
+    });
+    this.#running.add(child);
+    child.on('close', () => this.#running.delete(child));
+    return child;
+  }
+}
+
+function signalGroup(child: ChildProcess, signal: NodeJS.Signals) {
+  if (child.pid === undefined) {
+    return;
+  }
+  try {
+    process.kill(-child.pid, signal);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ESRCH') {
+      throw error;
+    }
+  }
+}
+
+function hasExited(child: ChildProcess): boolean {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+function lineSplitter(onLine: (line: string) => void): (text: string) => void {
+  let buffered = '';
+  return (text) => {
+    buffered += text;
+    const lines = buffered.split(/\r?\n/);
+    buffered = lines.pop() ?? '';
+    lines.forEach(onLine);
+  };
+}
+
+function missingTool(command: string, error: NodeJS.ErrnoException): Error {
+  return error.code === 'ENOENT'
+    ? new ToolError(`${command} is not found`)
+    : error;
+}
+
+function commandLine(command: string, args: string[]): string {
+  return [path.basename(command), ...args].join(' ');
+}
+
+function tail(text: string, lines: number): string {
+  return text.trimEnd().split('\n').slice(-lines).join('\n');
+}

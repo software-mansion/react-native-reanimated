@@ -1,0 +1,533 @@
+import path from 'node:path';
+
+import type { BatteryInfo } from './android-device.mts';
+import { androidPlatform } from './android-platform.mts';
+import type { AndroidSampling } from './android-platform.mts';
+import {
+  measureRunningApp,
+  processEnd,
+  runLaunchedApp,
+} from './android-protocol.mts';
+import type {
+  Collector,
+  RunningApp,
+  SampleDevice,
+  SampleRequest,
+} from './android-protocol.mts';
+import type { MemoryOptions, MemoryResumeOptions } from './arguments.mts';
+import type { Clock } from './clock.mts';
+import type { CommandContext } from './command-context.mts';
+import {
+  VARIANT_KEYS,
+  readConfigFile,
+  validateVariantsConfig,
+} from './config.mts';
+import type { VariantKey } from './config.mts';
+import { resumeMeasurement, startMeasurement } from './measurement.mts';
+import type {
+  MeasurementDependencies,
+  MeasurementJob,
+} from './measurement.mts';
+import { renderMemoryReport } from './memory-report.mts';
+import {
+  checkedFrameCounter,
+  drawingFloor,
+  exitCodeOfVerdicts,
+  launchCount,
+  leakVerdict,
+  memoryLaunchOrder,
+  parseGfxinfo,
+  parseMeminfo,
+  readingProblem,
+  readingTimes,
+  tailLevel,
+  tailSlope,
+} from './memory-series.mts';
+import type {
+  CountedFrames,
+  LeakVerdict,
+  MemoryReading,
+  MemorySchedule,
+} from './memory-series.mts';
+import { RECORDED_SAMPLE, readMeasurementResult } from './results.mts';
+import type { MeasurementResult } from './results.mts';
+import type {
+  InvalidCause,
+  SampleResult,
+  SampleSteps,
+  ValidSample,
+} from './samples.mts';
+import { SCENARIOS } from './scenarios.mts';
+import type { Scenario } from './scenarios.mts';
+import { median } from './statistics.mts';
+import { countBy } from './summary.mts';
+import type { MeasurementOutcome } from './summary.mts';
+import {
+  aBoolean,
+  aNumber,
+  anInteger,
+  anObject,
+  both,
+  listOf,
+  nullable,
+  oneOf,
+  shape,
+  whenValidSoFar,
+} from './validation.mts';
+import type { Check } from './validation.mts';
+
+export type ValidMemoryLaunch = LaunchObservations & {
+  valid: true;
+  work: ValidSample;
+};
+
+export type InvalidMemoryLaunch = LaunchObservations & {
+  valid: false;
+  cause: InvalidCause;
+  detail: string;
+};
+
+export type MemoryLaunch = ValidMemoryLaunch | InvalidMemoryLaunch;
+
+export interface LaunchTail {
+  launch: number;
+  segment: number;
+  tailLevel: number;
+  tailSlope: number;
+}
+
+export interface VariantMemorySummary {
+  variant: VariantKey;
+  launches: LaunchTail[];
+  tailLevelMedian: number | null;
+  tailSlopeMedian: number | null;
+  verdict: LeakVerdict;
+}
+
+export type MemoryTestOptions = MemorySchedule & {
+  scenario: Scenario;
+  launches: number;
+  slopeLimit: number;
+  keepTraces: boolean;
+};
+
+export interface MemoryResult extends MeasurementResult<MemoryLaunch> {
+  command: 'memory';
+  options: MemoryTestOptions;
+  summary: VariantMemorySummary[];
+}
+
+interface MemoryDevice extends SampleDevice {
+  readMeminfo: (applicationId: string) => Promise<string>;
+  readGfxinfo: (applicationId: string) => Promise<string>;
+  readBattery: () => Promise<BatteryInfo>;
+}
+
+type LaunchProblem = Pick<InvalidMemoryLaunch, 'cause' | 'detail'>;
+
+interface MemorySeries {
+  readings: MemoryReading[];
+  minimumFrameRate: number;
+  problem: LaunchProblem | null;
+}
+
+interface LaunchObservations {
+  readings: MemoryReading[];
+  minimumFrameRate?: number;
+  work?: SampleResult;
+  refreshRate?: number;
+  timings: SampleSteps['timings'];
+}
+
+const MILLISECONDS_PER_SECOND = 1000;
+
+const MEMORY_FIELDS = shape({
+  options: shape({
+    scenario: oneOf(SCENARIOS),
+    launches: anInteger,
+    intervalSeconds: anInteger,
+    durationSeconds: anInteger,
+    slopeLimit: aNumber,
+    keepTraces: aBoolean,
+  }),
+  summary: listOf(anObject),
+});
+
+const MEMORY_RESULT = both(
+  MEMORY_FIELDS,
+  whenValidSoFar(checkValidLaunchReadings)
+);
+
+const MEMORY_READING: Record<keyof MemoryReading, Check> = {
+  plannedSeconds: aNumber,
+  seconds: aNumber,
+  meminfoMs: aNumber,
+  frameSeconds: aNumber,
+  frameCount: aNumber,
+  statsSinceNs: aNumber,
+  batteryLevel: aNumber,
+  batteryTemperature: aNumber,
+  totalPss: aNumber,
+  nativeHeap: aNumber,
+  dalvikHeap: aNumber,
+  graphics: aNumber,
+  privateOther: aNumber,
+  totalSwapPss: nullable(aNumber),
+};
+
+const MEMORY_LAUNCH = both(
+  RECORDED_SAMPLE,
+  shape({ readings: listOf(shape(MEMORY_READING)) })
+);
+
+const ANDROID_DEPENDENCIES: MeasurementDependencies<AndroidSampling> = {
+  platform: androidPlatform(),
+};
+
+export async function memoryCommand(
+  options: MemoryOptions,
+  context: CommandContext,
+  dependencies: MeasurementDependencies<AndroidSampling> = ANDROID_DEPENDENCIES
+): Promise<number> {
+  const config = readConfigFile(options.config, (raw, configDir, fileSystem) =>
+    validateVariantsConfig(raw, configDir, fileSystem, [options.scenario])
+  );
+  return startMeasurement(
+    {
+      config,
+      device: options.device,
+      platformOptions: { traceProcessor: options.traceProcessor },
+      outputDir: options.outputDir,
+      folderName: `${config.name}-memory-${options.scenario}`,
+    },
+    (fields) => ({
+      ...fields,
+      command: 'memory',
+      options: {
+        scenario: options.scenario,
+        launches: options.launches,
+        intervalSeconds: options.intervalSeconds,
+        durationSeconds: options.durationSeconds,
+        slopeLimit: options.slopeLimit,
+        keepTraces: options.keepTraces,
+      },
+      summary: [],
+    }),
+    memoryJob,
+    context,
+    dependencies
+  );
+}
+
+export async function memoryResumeCommand(
+  options: MemoryResumeOptions,
+  context: CommandContext,
+  dependencies: MeasurementDependencies<AndroidSampling> = ANDROID_DEPENDENCIES
+): Promise<number> {
+  const folder = path.resolve(options.folder);
+  return resumeMeasurement(
+    folder,
+    readMemoryResult(folder),
+    {
+      device: options.device,
+      platformOptions: { traceProcessor: options.traceProcessor },
+    },
+    memoryJob,
+    context,
+    dependencies
+  );
+}
+
+function memoryJob(
+  result: MemoryResult
+): MeasurementJob<MemoryLaunch, MemoryResult, AndroidSampling> {
+  const { options } = result;
+  return {
+    scenarios: [options.scenario],
+    comparesBatteryLevel: false,
+    unitName: 'launch',
+    roundsOf: () => launchCount(options.launches),
+    orderOf: memoryLaunchOrder,
+    measure: (order, sampling) =>
+      takeMemoryLaunch(
+        sampling.request(order),
+        options,
+        sampling.device,
+        sampling.collector,
+        sampling.clock
+      ),
+    clearSummary: (stopped) => {
+      stopped.summary = [];
+    },
+    summarize: (measured) => {
+      measured.summary = summarizeMemory(measured);
+    },
+    renderReport: renderMemoryReport,
+    outcome: memoryOutcome,
+  };
+}
+
+async function takeMemoryLaunch(
+  request: SampleRequest,
+  schedule: MemorySchedule,
+  device: MemoryDevice,
+  collector: Collector,
+  clock: Clock
+): Promise<MemoryLaunch> {
+  const launch = await runLaunchedApp(request, device, clock, (app) =>
+    measureMemory(app, schedule, device, collector)
+  );
+  return 'readings' in launch ? launch : { ...launch, readings: [] };
+}
+
+async function measureMemory(
+  app: RunningApp,
+  schedule: MemorySchedule,
+  device: MemoryDevice,
+  collector: Collector
+): Promise<MemoryLaunch> {
+  const { timings } = app.steps;
+  const { readings, minimumFrameRate, problem } = await readMemorySeries(
+    app,
+    schedule,
+    device
+  );
+  if (problem !== null) {
+    return { valid: false, ...problem, readings, minimumFrameRate, timings };
+  }
+  const work = await measureRunningApp(app, collector);
+  const observed = {
+    readings,
+    minimumFrameRate,
+    refreshRate: work.refreshRate,
+    timings,
+  };
+  return work.valid
+    ? { valid: true, ...observed, work }
+    : {
+        valid: false,
+        cause: work.cause,
+        detail: work.detail,
+        ...observed,
+        work,
+      };
+}
+
+async function readMemorySeries(
+  app: RunningApp,
+  schedule: MemorySchedule,
+  device: MemoryDevice
+): Promise<MemorySeries> {
+  const { applicationId, guard } = app.request;
+  const { clock } = app;
+  const minimumFrameRate = drawingFloor(
+    guard.checkInApp(await device.readState(), 'before the readings')
+  );
+  const startedAt = clock.now();
+  const secondsSinceStart = () =>
+    (clock.now() - startedAt) / MILLISECONDS_PER_SECOND;
+  const readings: MemoryReading[] = [];
+  const series = (problem: LaunchProblem | null) => ({
+    readings,
+    minimumFrameRate,
+    problem,
+  });
+  const baseline = await readFrames(app, device, secondsSinceStart);
+  if (typeof baseline === 'string') {
+    return series({ cause: 'crash', detail: baseline });
+  }
+  let previous: CountedFrames = baseline;
+  for (const plannedSeconds of readingTimes(schedule)) {
+    await clock.sleep(
+      Math.max(
+        0,
+        startedAt + plannedSeconds * MILLISECONDS_PER_SECOND - clock.now()
+      )
+    );
+    const requestedAt = clock.now();
+    const meminfo = await device.readMeminfo(applicationId);
+    const returnedAt = clock.now();
+    const seconds = secondsSinceStart();
+    const frames = await readFrames(app, device, secondsSinceStart);
+    const battery = await device.readBattery();
+    const ended = await launchEnd(app, device, 'the memory readings');
+    if (ended !== null) {
+      return series({ cause: 'crash', detail: ended });
+    }
+    if (typeof frames === 'string') {
+      return series({ cause: 'crash', detail: frames });
+    }
+    const values = parseMeminfo(meminfo);
+    if (values === null) {
+      return series({
+        cause: 'crash',
+        detail: 'dumpsys meminfo found no process of the app',
+      });
+    }
+    const reading: MemoryReading = {
+      plannedSeconds,
+      seconds,
+      meminfoMs: returnedAt - requestedAt,
+      ...frames,
+      batteryLevel: battery.level,
+      batteryTemperature: battery.temperature,
+      ...values,
+    };
+    readings.push(reading);
+    const problem = readingProblem(
+      reading,
+      previous,
+      schedule,
+      minimumFrameRate
+    );
+    if (problem !== null) {
+      return series(problem);
+    }
+    previous = reading;
+  }
+  return series(null);
+}
+
+async function readFrames(
+  app: RunningApp,
+  device: MemoryDevice,
+  secondsSinceStart: () => number
+): Promise<CountedFrames | string> {
+  const output = await device.readGfxinfo(app.request.applicationId);
+  const frameSeconds = secondsSinceStart();
+  const parsed = await parsedUnlessEnded(
+    () => parseGfxinfo(output),
+    app,
+    device,
+    'dumpsys gfxinfo'
+  );
+  if (typeof parsed === 'string') {
+    return parsed;
+  }
+  const counter = checkedFrameCounter(parsed, app.pid);
+  return typeof counter === 'string'
+    ? counter
+    : {
+        frameSeconds,
+        frameCount: counter.frameCount,
+        statsSinceNs: counter.statsSinceNs,
+      };
+}
+
+async function parsedUnlessEnded<T extends object | null>(
+  parse: () => T,
+  app: RunningApp,
+  device: MemoryDevice,
+  period: string
+): Promise<T | string> {
+  try {
+    return parse();
+  } catch (error) {
+    const ended = await launchEnd(app, device, period);
+    if (ended !== null) {
+      return ended;
+    }
+    throw error;
+  }
+}
+
+async function launchEnd(
+  app: RunningApp,
+  device: MemoryDevice,
+  period: string
+): Promise<string | null> {
+  return (
+    app.watch.checkedFailure() ??
+    (await processEnd(device, app.request.applicationId, app.pid, period))
+  );
+}
+
+function summarizeMemory(result: MemoryResult): VariantMemorySummary[] {
+  const { options } = result;
+  const launches = [
+    ...result.scenarios,
+    ...(result.incompleteScenario ? [result.incompleteScenario] : []),
+  ].flatMap((outcome) =>
+    outcome.samples.filter((sample) => sample.valid && sample.accepted)
+  );
+  return VARIANT_KEYS.map((variant) => {
+    const tails = launches
+      .filter((launch) => launch.variant === variant)
+      .map((launch) => ({
+        launch: launch.round,
+        segment: launch.segment,
+        tailLevel: tailLevel(launch.readings, options.durationSeconds),
+        tailSlope: tailSlope(launch.readings, options.durationSeconds),
+      }));
+    const slopes = tails.map((tail) => tail.tailSlope);
+    return {
+      variant,
+      launches: tails,
+      tailLevelMedian: medianOrNull(tails.map((tail) => tail.tailLevel)),
+      tailSlopeMedian: medianOrNull(slopes),
+      verdict: leakVerdict(
+        slopes,
+        options.launches,
+        options.slopeLimit,
+        options.durationSeconds
+      ),
+    };
+  });
+}
+
+function medianOrNull(values: number[]): number | null {
+  return values.length > 0 ? median(values) : null;
+}
+
+function memoryOutcome(result: MemoryResult): MeasurementOutcome {
+  const verdicts = result.summary.map((variant) => variant.verdict);
+  const exitCode = exitCodeOfVerdicts(verdicts);
+  return {
+    exitCode,
+    reason:
+      exitCode === 0
+        ? 'Each variant has a verdict.'
+        : 'A variant is mixed or not decided.',
+    failedExpectations: [],
+    verdictCounts: countBy(verdicts, (verdict) => verdict),
+  };
+}
+
+function readMemoryResult(folder: string): MemoryResult {
+  return readMeasurementResult<MemoryResult>(
+    folder,
+    'memory',
+    () => MEMORY_RESULT,
+    () => MEMORY_LAUNCH
+  );
+}
+
+function checkValidLaunchReadings(
+  value: unknown,
+  label: string,
+  problems: string[]
+) {
+  const result = value as MemoryResult;
+  const expected = readingTimes(result.options).length;
+  const outcomes = [
+    ['scenarios', result.scenarios],
+    ['abandonedScenarios', result.abandonedScenarios],
+    [
+      'incompleteScenario',
+      result.incompleteScenario ? [result.incompleteScenario] : [],
+    ],
+  ] as const;
+  for (const [field, list] of outcomes) {
+    list.forEach((outcome, i) =>
+      outcome.samples.forEach((launch, j) => {
+        if (launch.valid && launch.readings.length !== expected) {
+          const place =
+            field === 'incompleteScenario' ? field : `${field}[${i}]`;
+          problems.push(
+            `${label}.${place}.samples[${j}] is a valid launch with ${launch.readings.length} readings, expected ${expected} for the stored duration and interval`
+          );
+        }
+      })
+    );
+  }
+}

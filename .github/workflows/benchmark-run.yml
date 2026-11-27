@@ -1,0 +1,213 @@
+name: Benchmark run
+env:
+  YARN_ENABLE_HARDENED_MODE: 0
+on:
+  workflow_call:
+    inputs:
+      platform:
+        description: android or ios
+        required: true
+        type: string
+      phone:
+        description: The runner label that names the cabled phone model, for example pixel-8 or iphone-13-mini
+        required: true
+        type: string
+      a-reanimated:
+        description: An exact Reanimated version for A, or checkout (the commit that the workflow checked out)
+        required: true
+        type: string
+      a-worklets:
+        description: An exact Worklets version for A, or checkout. Empty takes the version from compatibility.json, or checkout when A is checkout.
+        required: false
+        type: string
+        default: ''
+      b-reanimated:
+        description: An exact Reanimated version for B, or checkout (the commit that the workflow checked out)
+        required: true
+        type: string
+      b-worklets:
+        description: An exact Worklets version for B, or checkout. Empty takes the version from compatibility.json, or checkout when B is checkout.
+        required: false
+        type: string
+        default: ''
+      scenarios:
+        description: Scenario names separated by commas, or all (all scenarios that need no static flag that the config does not set)
+        required: false
+        type: string
+        default: all
+      shared-element-transitions:
+        description: Set ENABLE_SHARED_ELEMENT_TRANSITIONS to true in A and B. Then all includes shared-elements.
+        required: false
+        type: boolean
+        default: false
+      blocks:
+        description: The number of blocks for each scenario, from 1 to 50
+        required: false
+        type: number
+        default: 5
+      noise-limits:
+        description: The name of a noise limits record in the records folder of the runner. Empty gives an uncalibrated run.
+        required: false
+        type: string
+        default: ''
+      without-validation-record:
+        description: iOS only. Run without the validation record of the runner, for the first A/A calibration of a phone. The run then gives no verdict on processInstructionRate.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark:
+    if: github.repository == 'software-mansion/react-native-reanimated'
+    name: Benchmark ${{ inputs.platform }} on ${{ inputs.phone }}${{ inputs.shared-element-transitions && ' with shared element transitions' || '' }}
+    runs-on: [self-hosted, macOS, '${{ inputs.phone }}']
+    environment: benchmark-${{ inputs.phone }}
+    timeout-minutes: 720
+    concurrency:
+      group: benchmark-${{ inputs.phone }}
+      cancel-in-progress: false
+    env:
+      PLATFORM: ${{ inputs.platform }}
+      A_REANIMATED: ${{ inputs.a-reanimated }}
+      A_WORKLETS: ${{ inputs.a-worklets }}
+      B_REANIMATED: ${{ inputs.b-reanimated }}
+      B_WORKLETS: ${{ inputs.b-worklets }}
+      SCENARIOS: ${{ inputs.scenarios }}
+      SHARED_ELEMENT_TRANSITIONS: ${{ inputs.shared-element-transitions }}
+      BLOCKS: ${{ inputs.blocks }}
+      NOISE_LIMITS: ${{ inputs.noise-limits }}
+      WITHOUT_VALIDATION_RECORD: ${{ inputs.without-validation-record }}
+      DEVICE_ID: ${{ vars.BENCHMARK_DEVICE_ID }}
+      SIGN_COMMAND: ${{ vars.BENCHMARK_SIGN_COMMAND }}
+      NOISE_LIMITS_DIR: ${{ vars.BENCHMARK_NOISE_LIMITS_DIR }}
+      VALIDATION_RECORD: ${{ vars.BENCHMARK_VALIDATION_RECORD }}
+    steps:
+      - name: Name the work folders of this run attempt
+        run: |
+          WORK_DIR="$RUNNER_TEMP/benchmark-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          rm -rf "$WORK_DIR"
+          mkdir -p "$WORK_DIR"
+          {
+            echo "TARBALLS_DIR=$WORK_DIR/tarballs"
+            echo "CONFIG_FILE=$WORK_DIR/config.json"
+            echo "OUTPUT_DIR=$WORK_DIR/output"
+          } >> "$GITHUB_ENV"
+
+      - name: Check the inputs and the runner configuration
+        run: |
+          case "$PLATFORM" in
+            android | ios) ;;
+            *)
+              echo "::error::The platform must be android or ios, not '$PLATFORM'."
+              exit 1
+              ;;
+          esac
+          if [ -z "$DEVICE_ID" ]; then
+            echo "::error::The environment variable BENCHMARK_DEVICE_ID is empty."
+            exit 1
+          fi
+          if [ "$PLATFORM" = ios ] && [ -z "$SIGN_COMMAND" ]; then
+            echo "::error::The environment variable BENCHMARK_SIGN_COMMAND is empty."
+            exit 1
+          fi
+          if [ "$PLATFORM" != ios ] && [ "$WITHOUT_VALIDATION_RECORD" = true ]; then
+            echo "::error::without-validation-record is for iOS only."
+            exit 1
+          fi
+          if [ "$PLATFORM" = ios ] && [ "$WITHOUT_VALIDATION_RECORD" != true ]; then
+            if [ -z "$VALIDATION_RECORD" ]; then
+              echo "::error::The environment variable BENCHMARK_VALIDATION_RECORD is empty. Set it, or set without-validation-record for the first A/A calibration."
+              exit 1
+            fi
+            if [ ! -f "$VALIDATION_RECORD" ]; then
+              echo "::error::There is no validation record at BENCHMARK_VALIDATION_RECORD."
+              exit 1
+            fi
+          fi
+          if [ -n "$NOISE_LIMITS" ]; then
+            if ! [[ "$NOISE_LIMITS" =~ ^[A-Za-z0-9._-]+$ ]]; then
+              echo "::error::The noise limits name can have only letters, digits, '.', '_' and '-'."
+              exit 1
+            fi
+            if [ ! -f "$NOISE_LIMITS_DIR/$NOISE_LIMITS.json" ]; then
+              echo "::error::There is no noise limits record $NOISE_LIMITS.json in BENCHMARK_NOISE_LIMITS_DIR."
+              exit 1
+            fi
+          fi
+
+      - name: Check out Git repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          persist-credentials: false
+
+      - name: Read the commit of the checkout
+        run: echo "CHECKOUT_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Use Node.js
+        id: setup-node
+        uses: $/.github/actions/setup-node-yarn
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Install monorepo node dependencies
+        run: yarn install --immutable
+
+      - name: Pack Reanimated and Worklets from the checkout
+        if: inputs.a-reanimated == 'checkout' || inputs.a-worklets == 'checkout' || inputs.b-reanimated == 'checkout' || inputs.b-worklets == 'checkout'
+        run: |
+          mkdir -p "$TARBALLS_DIR"
+          (cd packages/react-native-worklets && npm pack --pack-destination "$TARBALLS_DIR")
+          (cd packages/react-native-reanimated && npm pack --pack-destination "$TARBALLS_DIR")
+          mv "$TARBALLS_DIR"/react-native-worklets-*.tgz "$TARBALLS_DIR/react-native-worklets.tgz"
+          mv "$TARBALLS_DIR"/react-native-reanimated-*.tgz "$TARBALLS_DIR/react-native-reanimated.tgz"
+
+      - name: Write the benchmark config
+        run: node --experimental-strip-types .github/workflows/helper/benchmark-config.ts
+
+      - name: Run the benchmark
+        id: run
+        run: |
+          if [ "$PLATFORM" = ios ]; then
+            DEVICE_OPTIONS=(--udid "$DEVICE_ID" --sign-command "$SIGN_COMMAND")
+          else
+            DEVICE_OPTIONS=(--serial "$DEVICE_ID")
+          fi
+          NOISE_LIMITS_OPTIONS=()
+          if [ -n "$NOISE_LIMITS" ]; then
+            NOISE_LIMITS_OPTIONS=(--noise-limits "$NOISE_LIMITS_DIR/$NOISE_LIMITS.json")
+          fi
+          VALIDATION_OPTIONS=()
+          if [ "$PLATFORM" = ios ] && [ "$WITHOUT_VALIDATION_RECORD" != true ]; then
+            VALIDATION_OPTIONS=(--validation "$VALIDATION_RECORD")
+          fi
+          set +e
+          node --experimental-strip-types apps/benchmark-app/scripts/benchmark.mts run \
+            --config "$CONFIG_FILE" "${DEVICE_OPTIONS[@]}" --blocks "$BLOCKS" \
+            --output-dir "$OUTPUT_DIR" "${NOISE_LIMITS_OPTIONS[@]}" "${VALIDATION_OPTIONS[@]}"
+          echo "exit-code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Upload the run folder
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: benchmark-${{ inputs.platform }}-${{ inputs.phone }}${{ inputs.shared-element-transitions && '-shared-element-transitions' || '' }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ env.OUTPUT_DIR }}
+          if-no-files-found: warn
+
+      - name: Write the report to the job summary
+        if: always()
+        run: |
+          for report in "$OUTPUT_DIR"/*/report.md; do
+            if [ -f "$report" ]; then
+              cat "$report" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+      - name: End with the exit code of the driver
+        if: always()
+        env:
+          EXIT_CODE: ${{ steps.run.outputs.exit-code || '2' }}
+        run: exit "$EXIT_CODE"

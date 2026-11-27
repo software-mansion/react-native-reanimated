@@ -1,0 +1,50 @@
+DISPLAY MANAGER (dumpsys display)
+  mSafeMode=false
+
+Display States: size=1
+---------------------
+  Display Id=0
+  Display State=ON
+  Display Brightness=0.0039215684
+  Display SdrBrightness=0.0039215684
+
+Display Devices: size=1
+-----------------------
+  DisplayDeviceInfo{"Built-in Screen": uniqueId="local:0000000000000000000", 1080 x 2340, modeId 2, renderFrameRate 60.0, hasArrSupport false, frameRateCategoryRate FrameRateCategoryRate {normal=60.0, high=90.0}, supportedRefreshRates [90.0, 60.0], defaultModeId 1, userPreferredModeId -1, supportedModes [{id=1, parentModeId=-1, flags=, width=1080, height=2340, fps=90.0, vsync=90.0, alternativeRefreshRates=[60.0], supportedHdrTypes=[]}, {id=2, parentModeId=-1, flags=, width=1080, height=2340, fps=60.0, vsync=60.0, alternativeRefreshRates=[90.0], supportedHdrTypes=[]}], colorMode 0, supportedColorModes [0], hdrCapabilities HdrCapabilities{mSupportedHdrTypes=[], mMaxLuminance=500.0, mMaxAverageLuminance=500.0, mMinLuminance=0.0}, isForceSdr false, allmSupported false, gameContentTypeSupported false, density 450, 386.36618 x 385.94806 dpi, appVsyncOff 0, presDeadline 17666667, cutout DisplayCutout{insets=Rect(0, 100 - 0, 0) waterfall=Insets{left=0, top=0, right=0, bottom=0} boundingRect={Bounds=[Rect(0, 0 - 0, 0), Rect(470, 0 - 610, 100), Rect(0, 0 - 0, 0), Rect(0, 0 - 0, 0)]} cutoutPathParserInfo={CutoutPathParserInfo{displayWidth=1080 displayHeight=2340 physicalDisplayWidth=1080 physicalDisplayHeight=2340 density={2.8125} cutoutSpec={M 0,0 H -24.88888888888889 V 35.55555555555556 H 24.88888888888889 V 0 H 0 Z @dp} rotation={0} scale={1.0} physicalPixelDisplaySizeRatio={1.0}}} sideOverrides={}}, touch INTERNAL, rotation 0, type INTERNAL, address {port=0, model=0x0000000000000}, deviceProductInfo DeviceProductInfo{name=MTKDEV, manufacturerPnpId=MTK, productId=35638, modelYear=null, manufactureDate=ManufactureDate{week=42, year=2021}, connectionToSinkType=1, edidStructureMetadata=EdidStructureMetadata{version=0, revision=0}, videoInputType=0}, state ON, committedState ON, frameRateOverride , brightnessMinimum 0.0, brightnessMaximum 1.8039216, brightnessDefault 0.5019608, brightnessDim 0.047058824, hdrSdrRatio NaN, roundedCorners RoundedCorners{[RoundedCorner{position=TopLeft, radius=118, center=Point(118, 118)}, RoundedCorner{position=TopRight, radius=118, center=Point(962, 118)}, RoundedCorner{position=BottomRight, radius=118, center=Point(962, 2222)}, RoundedCorner{position=BottomLeft, radius=118, center=Point(118, 2222)}]}, FLAG_ALLOWED_TO_BE_DEFAULT_DISPLAY, FLAG_ROTATES_WITH_CONTENT, FLAG_SECURE, FLAG_SUPPORTS_PROTECTED_BUFFERS, FLAG_TRUSTED, installOrientation 0, displayShape DisplayShape{ spec=-311912193 displayWidth=1080 displayHeight=2340 physicalPixelDisplaySizeRatio=1.0 rotation=0 offsetX=0 offsetY=0 scale=1.0}}
+    mAdapter=LocalDisplayAdapter
+    mUniqueId=local:0000000000000000000
+    mDisplayToken=android.os.BinderProxy@0000000
+    mCurrentLayerStack=0
+    mCurrentFlags=1
+    mCurrentOrientation=0
+    mCurrentLayerStackRect=Rect(0, 0 - 1080, 2340)
+    mCurrentDisplayRect=Rect(0, 0 - 1080, 2340)
+    mCurrentSurface=null
+    mPhysicalDisplayId=0000000000000000000
+    mDisplayModeSpecs={baseModeId=2 allowGroupSwitching=false primary=physical: (60.0 60.0) render:  (60.0 60.0) appRequest=physical: (60.0 60.0) render:  (60.0 60.0) idleScreenRefreshRateConfig=null}
+    mDisplayModeSpecsInvalid=false
+    mActiveModeId=2
+    mActiveColorMode=0
+    mDefaultModeId=1
+    mUserPreferredModeId=-1
+    mHasArrSupport=false
+    mSupportedRefreshRates=[90.0, 60.0]
+    mState=ON
+    mCommittedState=ON
+    mBrightnessState=0.0039215684
+    mBacklightAdapter=BacklightAdapter [useSurfaceControl=false (force_anyway? false), backlight=com.android.server.lights.LightsService$LightImpl@0000000]
+    mAllmSupported=false
+    mAllmRequested=false
+    mGameContentTypeSupported=false
+    mGameContentTypeRequested=false
+    mStaticDisplayInfo=StaticDisplayInfo{isInternal=true, port=0, density=2.8125, secure=true, deviceProductInfo=DeviceProductInfo{name=MTKDEV, manufacturerPnpId=MTK, productId=35638, modelYear=null, manufactureDate=ManufactureDate{week=42, year=2021}, connectionToSinkType=1, edidStructureMetadata=EdidStructureMetadata{version=0, revision=0}, videoInputType=0}, installOrientation=0, screenPartStatus=0}
+    mSfDisplayModes=
+      DisplayMode{id=0, width=1080, height=2340, xDpi=386.36618, yDpi=385.94806, peakRefreshRate=90.0, vsyncRate=90.0, appVsyncOffsetNanos=11111111, presentationDeadlineNanos=12111111, supportedHdrTypes=[], group=0}
+      DisplayMode{id=1, width=1080, height=2340, xDpi=386.36618, yDpi=385.94806, peakRefreshRate=60.0, vsyncRate=60.0, appVsyncOffsetNanos=16666667, presentationDeadlineNanos=17666667, supportedHdrTypes=[], group=0}
+    mActiveSfDisplayMode=DisplayMode{id=1, width=1080, height=2340, xDpi=386.36618, yDpi=385.94806, peakRefreshRate=60.0, vsyncRate=60.0, appVsyncOffsetNanos=16666667, presentationDeadlineNanos=17666667, supportedHdrTypes=[], group=0}
+    mActiveRenderFrameRate=60.0
+    mAppVsyncOffsetNanos=0
+    mPresentationDeadlineNanos=17666667
+    mSupportedModes=
+      DisplayModeRecord{mMode={id=1, parentModeId=-1, flags=, width=1080, height=2340, fps=90.0, vsync=90.0, alternativeRefreshRates=[60.0], supportedHdrTypes=[]}}
+      DisplayModeRecord{mMode={id=2, parentModeId=-1, flags=, width=1080, height=2340, fps=60.0, vsync=60.0, alternativeRefreshRates=[90.0], supportedHdrTypes=[]}}

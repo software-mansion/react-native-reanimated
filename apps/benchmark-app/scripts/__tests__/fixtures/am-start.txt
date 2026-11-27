@@ -1,0 +1,8 @@
+Stopping: com.benchprobe
+Starting: Intent { cmp=com.benchprobe/.MainActivity (has extras) }
+Status: ok
+LaunchState: COLD
+Activity: com.benchprobe/.MainActivity
+TotalTime: 112
+WaitTime: 114
+Complete
