@@ -29,7 +29,7 @@ describe('native timing description', () => {
     expect(describe_(animation)).toEqual({
       toValue: 10,
       durationMs: 200,
-      delayMs: 0,
+      delaysMs: [],
     });
   });
 
@@ -42,7 +42,7 @@ describe('native timing description', () => {
     expect(describe_(animation)).toEqual({
       toValue: 10,
       durationMs: 300,
-      delayMs: 0,
+      delaysMs: [],
       cubicBezier,
     });
   });
@@ -93,12 +93,12 @@ describe('native timing description', () => {
       withTiming(10, { duration: 200, easing: Easing.linear });
     expect(
       describe_(onUIRuntime(() => withDelay(-300, withDelay(200, timing()))))
-        ?.delayMs
-    ).toBe(200);
+        ?.delaysMs
+    ).toEqual([0, 200]);
     expect(
       describe_(onUIRuntime(() => withDelay(100, withDelay(200, timing()))))
-        ?.delayMs
-    ).toBe(300);
+        ?.delaysMs
+    ).toEqual([100, 200]);
   });
 
   test('the system reduced motion setting gives no description', () => {
