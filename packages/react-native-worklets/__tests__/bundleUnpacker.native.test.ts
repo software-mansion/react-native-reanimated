@@ -14,6 +14,9 @@ describe('bundleValueUnpacker', () => {
       if (id === 3) {
         throw null;
       }
+      if (id === 4) {
+        throw Object.create(null);
+      }
       throw new Error(`Requiring unknown module "${id}".`);
     };
     try {
@@ -27,6 +30,10 @@ describe('bundleValueUnpacker', () => {
         expect(unresolved).toThrow('Unable to resolve worklet with hash 2');
         const thrownNull = unpack({ __workletHash: 3 } as never) as () => void;
         expect(thrownNull).toThrow('Original error: null');
+        const thrownBareObject = unpack({
+          __workletHash: 4,
+        } as never) as () => void;
+        expect(thrownBareObject).toThrow(TypeError);
       });
     } finally {
       globals.__r = previousRequire;
