@@ -43,6 +43,42 @@
       "rules": {
         "eslint-core/strict": ["error", "global"]
       }
+    },
+    {
+      "files": ["src/**/*.ts", "src/**/*.tsx"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "react-native-worklets",
+                "message": "The web implementation must not import react-native-worklets at runtime. Use a type-only import, or move the code to a .native file.",
+                "allowTypeImports": true
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["react-native-worklets/*"],
+                "message": "The web implementation must not import react-native-worklets at runtime. Use a type-only import, or move the code to a .native file.",
+                "allowTypeImports": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": [
+        "src/**/*.native.ts",
+        "src/**/*.native.tsx",
+        "src/**/__tests__/**",
+        "src/mock.ts",
+        "src/ReanimatedModule/NativeReanimated.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
     }
   ]
 }

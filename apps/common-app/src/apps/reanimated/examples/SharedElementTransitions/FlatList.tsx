@@ -1,18 +1,9 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
-import type {
-  ListRenderItemInfo,
-  TouchableWithoutFeedbackProps,
-} from 'react-native';
-import {
-  Button,
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import type { ListRenderItemInfo } from 'react-native';
+import { Button, FlatList, StyleSheet, Text, View } from 'react-native';
+import { Touchable } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 
 import photo from './assets/image.jpg';
@@ -50,11 +41,11 @@ const DATA: Item[] = [
 ];
 
 interface ItemProps extends ListItemWithParent<Item> {
-  onPress: TouchableWithoutFeedbackProps['onPress'];
+  onPress: () => void;
 }
 
 const Item = ({ item, parentItem, onPress }: ItemProps) => (
-  <TouchableOpacity onPress={onPress}>
+  <Touchable activeOpacity={0.2} onPress={onPress}>
     <Text style={styles.title}>{item.title}</Text>
     <Animated.View
       style={styles.item}
@@ -65,7 +56,7 @@ const Item = ({ item, parentItem, onPress }: ItemProps) => (
         style={styles.itemImage}
       />
     </Animated.View>
-  </TouchableOpacity>
+  </Touchable>
 );
 
 function Screen1Content({

@@ -1,6 +1,7 @@
 import type { Synchronizable } from 'react-native-worklets';
 import {
   createSynchronizable,
+  isBundleModeEnabled,
   runOnRuntimeAsync,
   runOnRuntimeAsyncWithId,
   runOnRuntimeSync,
@@ -25,23 +26,24 @@ import {
   waitForNotifications,
 } from '../../../ReJest/RuntimeTestsApi';
 
-const DONE_NOTIFICATION = 'DONE';
-
 type OrderSetter = ReturnType<typeof createOrderConstraint>[1];
+
+const MICROTASK_NOT_RUN = 0;
+const MICROTASK_RAN_IN_SAME_CALL = 1;
+const MICROTASK_RAN_IN_LATER_CALL = 2;
+const NESTED_CALL_RESULT = 42;
+
+type RootTaskIdGlobal = typeof globalThis & {
+  __getRootTaskId: () => number;
+};
+
+function getRootTaskId() {
+  'worklet';
+  return (globalThis as RootTaskIdGlobal).__getRootTaskId();
+}
 
 describe('microtask draining', () => {
   const [workletRuntime] = getWorkletRuntimesFromPool(1);
-
-  const notifyDone = () => {
-    notify(DONE_NOTIFICATION);
-  };
-
-  const flushProbe = () => {
-    'worklet';
-    queueMicrotask(() => {
-      scheduleOnRN(notifyDone);
-    });
-  };
 
   const checkpointProbe = (order: OrderSetter) => {
     'worklet';
@@ -51,10 +53,15 @@ describe('microtask draining', () => {
     order(1, 'task');
   };
 
-  const pendingMicrotaskProbe = (flag: Synchronizable<boolean>) => {
+  const pendingMicrotaskProbe = (state: Synchronizable<number>) => {
     'worklet';
+    const rootTaskId = getRootTaskId();
     queueMicrotask(() => {
-      flag.setBlocking(true);
+      state.setBlocking(
+        getRootTaskId() === rootTaskId
+          ? MICROTASK_RAN_IN_SAME_CALL
+          : MICROTASK_RAN_IN_LATER_CALL
+      );
     });
   };
 
@@ -123,31 +130,26 @@ describe('microtask draining', () => {
     });
   });
 
-  const noCheckpointCases: {
+  const syncCases: {
     name: string;
-    runtimeId: number;
-    invoke: (flag: Synchronizable<boolean>) => void;
+    invoke: (state: Synchronizable<number>) => void;
   }[] = [
     {
       name: 'runOnUISync',
-      runtimeId: UIRuntimeId,
       invoke: (flag) => runOnUISync(pendingMicrotaskProbe, flag),
     },
     {
       name: 'runOnRuntimeSync',
-      runtimeId: workletRuntime.runtimeId,
       invoke: (flag) =>
         runOnRuntimeSync(workletRuntime, pendingMicrotaskProbe, flag),
     },
     {
       name: 'runOnRuntimeSyncWithId, UI Runtime',
-      runtimeId: UIRuntimeId,
       invoke: (flag) =>
         runOnRuntimeSyncWithId(UIRuntimeId, pendingMicrotaskProbe, flag),
     },
     {
       name: 'runOnRuntimeSyncWithId, Worker Runtime',
-      runtimeId: workletRuntime.runtimeId,
       invoke: (flag) =>
         runOnRuntimeSyncWithId(
           workletRuntime.runtimeId,
@@ -157,20 +159,136 @@ describe('microtask draining', () => {
     },
   ];
 
-  noCheckpointCases.forEach(({ name, runtimeId, invoke }) => {
+  syncCases.forEach(({ name, invoke }) => {
     describe(name, () => {
-      test('defers queued microtasks past the synchronous call', async () => {
-        const flag = createSynchronizable(false);
+      test('runs queued microtasks at the end of the synchronous call', () => {
+        const state = createSynchronizable(MICROTASK_NOT_RUN);
 
-        invoke(flag);
+        invoke(state);
 
-        expect(flag.getBlocking()).toBe(false);
-
-        scheduleOnRuntimeWithId(runtimeId, flushProbe);
-        await waitForNotification(DONE_NOTIFICATION);
-
-        expect(flag.getBlocking()).toBe(true);
+        expect(state.getBlocking()).toBe(MICROTASK_RAN_IN_SAME_CALL);
       });
+    });
+  });
+
+  const NESTED_NOTIFICATION = 'NESTED_SYNC_CALL';
+  const NESTED_MICROTASK_NOTIFICATION = 'NESTED_SYNC_CALL_MICROTASK';
+  const nestedResults = new Map<number, boolean>();
+
+  const nestedCallsExecuted = new Map<number, boolean>();
+
+  const onNestedResult = (
+    token: number,
+    ranDuringTask: boolean,
+    nestedCallExecuted: boolean
+  ) => {
+    nestedResults.set(token, ranDuringTask);
+    nestedCallsExecuted.set(token, nestedCallExecuted);
+    notify(`${NESTED_NOTIFICATION}_${token}`);
+  };
+
+  const nestedMicrotaskRanInOuterTask = new Map<number, boolean>();
+
+  const onNestedMicrotask = (token: number, ranInOuterTask: boolean) => {
+    nestedMicrotaskRanInOuterTask.set(token, ranInOuterTask);
+    notify(`${NESTED_MICROTASK_NOTIFICATION}_${token}`);
+  };
+
+  const nestedSyncCallProbe = (runtimeId: number, token: number) => {
+    'worklet';
+    const rootTaskId = getRootTaskId();
+    let microtaskRan = false;
+    queueMicrotask(() => {
+      microtaskRan = true;
+      scheduleOnRN(onNestedMicrotask, token, getRootTaskId() === rootTaskId);
+    });
+    const nestedCallResult = runOnRuntimeSyncWithId(runtimeId, () => {
+      'worklet';
+      return NESTED_CALL_RESULT;
+    });
+    scheduleOnRN(
+      onNestedResult,
+      token,
+      microtaskRan,
+      nestedCallResult === NESTED_CALL_RESULT
+    );
+  };
+
+  const nestedSyncCallInTimeoutProbe = (runtimeId: number, token: number) => {
+    'worklet';
+    setTimeout(() => {
+      nestedSyncCallProbe(runtimeId, token);
+    }, 0);
+  };
+
+  const nestedCases: {
+    name: string;
+    invoke: (token: number) => void;
+  }[] = [
+    {
+      name: 'in a scheduled worklet, UI Runtime',
+      invoke: (token) =>
+        scheduleOnRuntimeWithId(
+          UIRuntimeId,
+          nestedSyncCallProbe,
+          UIRuntimeId,
+          token
+        ),
+    },
+    {
+      name: 'in a scheduled worklet, Worker Runtime',
+      invoke: (token) =>
+        scheduleOnRuntimeWithId(
+          workletRuntime.runtimeId,
+          nestedSyncCallProbe,
+          workletRuntime.runtimeId,
+          token
+        ),
+    },
+    {
+      name: 'in a setTimeout callback, UI Runtime',
+      invoke: (token) =>
+        scheduleOnRuntimeWithId(
+          UIRuntimeId,
+          nestedSyncCallInTimeoutProbe,
+          UIRuntimeId,
+          token
+        ),
+    },
+    {
+      name: 'in a setTimeout callback, Worker Runtime',
+      invoke: (token) =>
+        scheduleOnRuntimeWithId(
+          workletRuntime.runtimeId,
+          nestedSyncCallInTimeoutProbe,
+          workletRuntime.runtimeId,
+          token
+        ),
+    },
+  ];
+
+  const nestedTest = isBundleModeEnabled() ? test : test.skip;
+
+  nestedCases.forEach(({ name, invoke }, token) => {
+    describe(`synchronous call into the same runtime ${name}`, () => {
+      nestedTest(
+        'runs queued microtasks only after the outer task ends',
+        async () => {
+          nestedResults.delete(token);
+          nestedCallsExecuted.delete(token);
+          nestedMicrotaskRanInOuterTask.delete(token);
+
+          invoke(token);
+          await waitForNotification(`${NESTED_NOTIFICATION}_${token}`);
+
+          expect(nestedCallsExecuted.get(token)).toBe(true);
+          expect(nestedResults.get(token)).toBe(false);
+          await waitForNotification(
+            `${NESTED_MICROTASK_NOTIFICATION}_${token}`
+          );
+          expect(nestedMicrotaskRanInOuterTask.get(token)).toBe(true);
+        }
+      );
     });
   });
 });

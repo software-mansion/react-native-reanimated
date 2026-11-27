@@ -1,7 +1,7 @@
 #pragma once
-#include <react/renderer/components/view/ViewProps.h>
-#include <react/renderer/core/graphicsConversions.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
+#include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 #include <jsi/jsi.h>
@@ -75,7 +75,8 @@ class SharedTransitionValuesFactory {
 
  public:
   // True when create animates a style prop between these props.
-  static bool hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps);
+  static bool
+  hasAnimatedChanges(const ViewProps &sourceProps, const ViewProps &targetProps, bool includeTransform = true);
 
   explicit SharedTransitionValuesFactory(jsi::Runtime &rt) : rt_(rt) {}
 

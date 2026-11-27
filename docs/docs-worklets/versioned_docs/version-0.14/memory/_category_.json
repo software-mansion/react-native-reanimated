@@ -1,0 +1,8 @@
+{
+  "label": "Memory",
+  "position": 50,
+  "link": {
+    "type": "doc",
+    "id": "api/memory"
+  }
+}

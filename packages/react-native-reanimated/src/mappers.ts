@@ -86,6 +86,7 @@ function createMapperRegistry() {
     if (processingMappers) {
       return;
     }
+    let wasInterrupted = false;
     try {
       processingMappers = true;
       if (mappers.size !== sortedMappers.length) {
@@ -93,12 +94,14 @@ function createMapperRegistry() {
       }
       if (isAnyMapperDirty) {
         isAnyMapperDirty = false;
+        wasInterrupted = true;
         for (const mapper of sortedMappers) {
           if (mapper.dirty) {
             mapper.dirty = false;
             mapper.worklet();
           }
         }
+        wasInterrupted = false;
       }
     } finally {
       processingMappers = false;
@@ -107,6 +110,19 @@ function createMapperRegistry() {
       for (const finalizer of finalizers) {
         finalizer();
       }
+      if (wasInterrupted && sortedMappers.some((mapper) => mapper.dirty)) {
+        isAnyMapperDirty = true;
+        requestRunAfterInterruption();
+      }
+    }
+  }
+
+  function requestRunAfterInterruption() {
+    if (IS_JEST) {
+      mapperRun();
+    } else if (!runRequested) {
+      schedulingFunction(scheduledMapperRun);
+      runRequested = true;
     }
   }
 

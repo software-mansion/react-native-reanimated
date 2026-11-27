@@ -120,7 +120,7 @@ fun validateConflictingFeatureFlags(featureFlags: HashMap<String, String>) {
 
     if (legacyLayoutAnimationsProxy && sharedElementTransitions) {
         throw GradleException(
-            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. Please disable one of them in your package.json."
+            "[Reanimated] The feature flags `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY` and `ENABLE_SHARED_ELEMENT_TRANSITIONS` cannot be enabled simultaneously. The legacy layout animations proxy does not support shared element transitions. If you want to use the legacy layout animations proxy, you need to explicitly disable `ENABLE_SHARED_ELEMENT_TRANSITIONS` feature flag (enabled by default) in your package.json."
         )
     }
 
@@ -150,6 +150,7 @@ val REANIMATED_FEATURE_FLAGS: String = getReanimatedStaticFeatureFlags()
 version = REANIMATED_VERSION
 
 val reanimatedPrefabHeadersDir: File = project.file("${layout.buildDirectory.get().asFile.absolutePath}/prefab-headers/reanimated")
+val reanimatedCodegenDir: File = project.file("${layout.buildDirectory.get().asFile.absolutePath}/generated/source/codegen/jni")
 
 fun reactNativeArchitectures(): List<String> {
     val value = project.findProperty("reactNativeArchitectures") as String?
@@ -218,6 +219,7 @@ extensions.configure<LibraryExtension> {
                     "-DREANIMATED_PROFILING=$REANIMATED_PROFILING",
                     "-DREANIMATED_VERSION=$REANIMATED_VERSION",
                     "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON",
+                    "-DREANIMATED_CODEGEN_DIR=${toPlatformFileString(reanimatedCodegenDir.path)}",
                     "-DREANIMATED_FEATURE_FLAGS=$REANIMATED_FEATURE_FLAGS"
                 )
                 abiFilters.addAll(reactNativeArchitectures())

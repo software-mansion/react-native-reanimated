@@ -1,10 +1,16 @@
 import type { WorkletRuntime } from 'react-native-worklets';
 import { createWorkletRuntime, runOnRuntimeSync } from 'react-native-worklets';
 
-import { describe, expect, test } from '../../../ReJest/RuntimeTestsApi';
+import {
+  describe,
+  expect,
+  isFullRun,
+  test,
+} from '../../../ReJest/RuntimeTestsApi';
 
-const ITERATIONS = 50;
-const MAX_COLLECTION_ATTEMPTS = 20;
+const ITERATIONS = isFullRun() ? 50 : 10;
+const DESTRUCTION_TIMEOUT_MS = 5000;
+const COLLECTION_RETRY_DELAY_MS = 20;
 const REMOTE_FUNCTION_ERROR = 'Tried to synchronously call a Remote Function';
 
 describe('Remote Function hosted on a destroyed Worker Runtime', () => {
@@ -15,9 +21,9 @@ describe('Remote Function hosted on a destroyed Worker Runtime', () => {
       const remoteFunctions = [host.remoteFunction];
       if (!(await waitUntilRuntimeIsDestroyed(host.runtimeId))) {
         unexpected.push(
-          `${i}: the host Worker Runtime ${host.runtimeId} is still alive`
+          `${i}: the host Worker Runtime ${host.runtimeId} is still alive after ${DESTRUCTION_TIMEOUT_MS} ms`
         );
-        continue;
+        break;
       }
 
       const successors = [
@@ -98,13 +104,19 @@ function callOnSuccessor(
 }
 
 async function waitUntilRuntimeIsDestroyed(runtimeId: number) {
-  for (let attempt = 0; attempt < MAX_COLLECTION_ATTEMPTS; attempt++) {
+  const deadline = Date.now() + DESTRUCTION_TIMEOUT_MS;
+  for (;;) {
     await collectGarbage();
     if (!isRuntimeAlive(runtimeId)) {
       return true;
     }
+    if (Date.now() >= deadline) {
+      return false;
+    }
+    await new Promise((resolve) =>
+      setTimeout(resolve, COLLECTION_RETRY_DELAY_MS)
+    );
   }
-  return false;
 }
 
 function isRuntimeAlive(runtimeId: number) {

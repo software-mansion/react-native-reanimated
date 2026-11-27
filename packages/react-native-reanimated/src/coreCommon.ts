@@ -82,18 +82,7 @@ export function createEventHandlerWorklet<TEvent>(
     'worklet';
     eventHandler(event);
     // We call mappers here to make sure view updates can be applied in the same frame after an event.
-    if (globalThis.__mapperRun) {
-      globalThis.__mapperRun();
-    } else {
-      function runMappers() {
-        if (globalThis.__mapperRun) {
-          globalThis.__mapperRun();
-        } else {
-          requestAnimationFrame(runMappers);
-        }
-      }
-      requestAnimationFrame(runMappers);
-    }
+    globalThis.__mapperRun?.();
   };
 }
 
@@ -110,18 +99,7 @@ export function createKeyboardEventHandlerWorklet(
     'worklet';
     eventHandler(state, height);
     // We call mappers here to make sure view updates can be applied in the same frame after an event.
-    if (globalThis.__mapperRun) {
-      globalThis.__mapperRun();
-    } else {
-      function runMappers() {
-        if (globalThis.__mapperRun) {
-          globalThis.__mapperRun();
-        } else {
-          requestAnimationFrame(runMappers);
-        }
-      }
-      requestAnimationFrame(runMappers);
-    }
+    globalThis.__mapperRun?.();
   };
 }
 

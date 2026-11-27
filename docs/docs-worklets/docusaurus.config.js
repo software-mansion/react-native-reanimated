@@ -121,7 +121,7 @@ const config = {
           sidebarCollapsed: false,
           editUrl:
             'https://github.com/software-mansion/react-native-reanimated/edit/main/docs/docs-worklets',
-          lastVersion: '0.13',
+          lastVersion: '0.14',
           versions: {
             current: {
               label: 'Unreleased',
@@ -129,6 +129,7 @@ const config = {
               banner: 'unreleased',
               noIndex: true,
             },
+            0.14: { label: '0.14', banner: 'none' },
             0.13: { label: '0.13', banner: 'none' },
             '0.10-0.12': { label: '0.10-0.12', banner: 'none' },
             0.9: { label: '0.9', banner: 'none' },
@@ -212,6 +213,42 @@ const config = {
       /** @type {import('@docusaurus/plugin-client-redirects').Options} */
       ({
         redirects: [
+          {
+            from: '/docs/category/fundamentals',
+            to: '/docs/category/concepts',
+          },
+          {
+            from: '/docs/category/worklets-plugin',
+            to: '/docs/worklets-plugin/about',
+          },
+          {
+            from: '/docs/fundamentals/closures',
+            to: '/docs/concepts/closures',
+          },
+          {
+            from: '/docs/fundamentals/getting-started',
+            to: '/docs/',
+          },
+          {
+            from: '/docs/fundamentals/glossary',
+            to: '/docs/category/concepts',
+          },
+          {
+            from: '/docs/fundamentals/runtimeKinds',
+            to: '/docs/concepts/runtimeKinds',
+          },
+          {
+            from: '/docs/fundamentals/sharing-memory',
+            to: '/docs/concepts/sharing-memory',
+          },
+          {
+            from: '/docs/getting-started',
+            to: '/docs/',
+          },
+          {
+            from: '/docs/unreleased/getting-started',
+            to: '/docs/unreleased/',
+          },
           {
             from: '/docs/worklets-babel-plugin/about',
             to: '/docs/worklets-plugin/about',

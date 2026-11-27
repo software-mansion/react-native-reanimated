@@ -265,7 +265,7 @@ describe('Test setTimeout', () => {
 
         setTimeout(() => {
           order(3, notification3);
-        }, 100);
+        }, 1000);
       }, runtimeKind);
 
       // Assert

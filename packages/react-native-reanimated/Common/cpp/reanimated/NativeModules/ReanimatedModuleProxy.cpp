@@ -1,14 +1,13 @@
 #include <jsi/JSIDynamic.h>
 #include <jsi/jsi.h>
-#include <react/debug/react_native_assert.h>
-#include <react/featureflags/ReactNativeFeatureFlags.h>
-#include <react/renderer/core/RawProps.h>
 #include <react/renderer/scheduler/Scheduler.h>
 #include <react/renderer/uimanager/UIManagerBinding.h>
 #include <react/renderer/uimanager/primitives.h>
 #include <reanimated/CSS/configs/CSSTransitionConfig.h>
 #include <reanimated/CSS/easing/EasingFunctions.h>
-#include <reanimated/Compat/ReactNativeVersionCompat.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 #include <reanimated/Compat/WorkletsApi.h>
 #include <reanimated/Events/UIEventHandler.h>
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
@@ -203,6 +202,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
       readMountedViewProps_(platformDepMethodsHolder.readMountedViewPropsFunction),
       setSharedTransitionOverlay_(platformDepMethodsHolder.setSharedTransitionOverlayFunction),
       nativeViewPlacement_(platformDepMethodsHolder.nativeViewPlacementFunction),
+      isMovedByContainerTransition_(platformDepMethodsHolder.isMovedByContainerTransitionFunction),
 #endif
       staticPropsRegistry_(std::make_shared<StaticPropsRegistry>()),
       mountedRootsRegistry_(std::make_shared<MountedRootsRegistry>()),
@@ -259,6 +259,7 @@ ReanimatedModuleProxy::ReanimatedModuleProxy(
 }
 
 void ReanimatedModuleProxy::init(const PlatformDepMethodsHolder &platformDepMethodsHolder) {
+  requestNativeRender_ = platformDepMethodsHolder.requestRender;
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
     // Backend path: callbacks are drained later inside runGrandCallback under
     // the manager lock; no wrap needed here.
@@ -530,6 +531,14 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
       batchItem.config = extractSerializable(
           rt, config, "[Reanimated] Layout animation config must be an object.", Serializable::ValueType::ObjectType);
     }
+    const auto sharedCallback = item.getProperty(rt, "sharedTransitionCallback");
+    if (!sharedCallback.isUndefined()) {
+      batchItem.sharedTransitionCallback = extractSerializable(
+          rt,
+          sharedCallback,
+          "[Reanimated] Shared transition callback must be serializable.",
+          Serializable::ValueType::ObjectType);
+    }
     auto sharedTag = item.getProperty(rt, "sharedTransitionTag");
     if (!sharedTag.isUndefined()) {
       if (!sharedTag.isString()) {
@@ -548,6 +557,8 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
           .fadeOutEnd = fadeOutEnd(rt, contentFadeObject),
       };
     }
+    const auto followsTarget = item.getProperty(rt, "sharedTransitionFollowsTarget");
+    batchItem.sharedTransitionFollowsTarget = followsTarget.isBool() && followsTarget.getBool();
   }
   layoutAnimationsManager_->configureAnimationBatch(batch);
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
@@ -718,7 +729,7 @@ void ReanimatedModuleProxy::unregisterPseudoStyles(jsi::Runtime &, const jsi::Va
   pseudoStylesRegistry_->remove(viewTag.asNumber());
 }
 
-jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &registeredViewTags) {
+jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
   react_native_assert(
       StaticFeatureFlags::getFlag("FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS") &&
       "getSettledUpdates requires FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS static feature flag to be enabled");
@@ -728,15 +739,22 @@ jsi::Value ReanimatedModuleProxy::getSettledUpdates(jsi::Runtime &rt, const jsi:
   // TODO(future): use unified timestamp
   const auto currentTimestamp = getAnimationTimestamp_();
 
-  const auto viewTagsArray = registeredViewTags.asObject(rt).asArray(rt);
-  std::unordered_set<Tag> viewTags;
-  for (size_t i = 0, length = viewTagsArray.size(rt); i < length; ++i) {
-    viewTags.insert(static_cast<Tag>(viewTagsArray.getValueAtIndex(rt, i).asNumber()));
-  }
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
 
   // TODO(future): flush updates from CSS animations and CSS transitions registries
   auto lock = updatesRegistryManager_->lock();
-  return animatedPropsRegistry_->collectSettledUpdates(rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, viewTags);
+  return animatedPropsRegistry_->collectSettledUpdates(
+      rt, currentTimestamp - SETTLED_ANIMATION_THRESHOLD_MS, [&](const Tag viewTag) {
+        return isViewRegisteredFunction.call(rt, viewTag).asBool();
+      });
+}
+
+bool ReanimatedModuleProxy::hasPendingSettledUpdates(jsi::Runtime &rt, const jsi::Value &isViewRegistered) {
+  const auto isViewRegisteredFunction = isViewRegistered.asObject(rt).asFunction(rt);
+
+  auto lock = updatesRegistryManager_->lock();
+  return animatedPropsRegistry_->hasPendingSettledUpdates(
+      [&](const Tag viewTag) { return isViewRegisteredFunction.call(rt, viewTag).asBool(); });
 }
 
 bool ReanimatedModuleProxy::handleEvent(
@@ -766,18 +784,7 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
     return false;
   }
 
-#if REACT_NATIVE_VERSION_MINOR >= 87
   const auto tag = eventTarget->getTag();
-#else
-  // A stale event dispatched during unmount may carry an EventTarget with a null
-  // InstanceHandle which getTag() would dereference (see #9925).
-  // Fixed in React Native 0.87 by https://github.com/facebook/react-native/pull/56763.
-  const auto shadowNodeFamily = rawEvent.shadowNodeFamily.lock();
-  if (shadowNodeFamily == nullptr) {
-    return false;
-  }
-  const auto tag = shadowNodeFamily->getTag();
-#endif
 
   auto eventType = rawEvent.type;
   if (eventType.rfind("top", 0) == 0) {
@@ -785,35 +792,21 @@ bool ReanimatedModuleProxy::handleRawEvent(const RawEvent &rawEvent, double curr
   }
 
   if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
-    if (eventType == "onTransitionProgress") {
+    std::optional<SurfaceId> surfaceId;
+    if (layoutAnimationsProxyRegistry_ && eventType == "onTransitionProgress") {
       jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
       const auto &eventPayload = rawEvent.eventPayload;
       jsi::Object payload = eventPayload->asJSIValue(uiRuntime).asObject(uiRuntime);
       auto progress = payload.getProperty(uiRuntime, "progress").asNumber();
       auto closing = static_cast<bool>(payload.getProperty(uiRuntime, "closing").asNumber());
       auto goingForward = static_cast<bool>(payload.getProperty(uiRuntime, "goingForward").asNumber());
-
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
-      if (!surfaceId) {
-        return false;
-      }
+      surfaceId = layoutAnimationsProxyRegistry_->onTransitionProgress(tag, progress, closing, goingForward);
+    } else if (layoutAnimationsProxyRegistry_ && eventType == "onGestureCancel") {
+      surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
+    }
+    if (surfaceId) {
       uiManager_->getShadowTreeRegistry().visit(
           *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
-    } else if (eventType == "onGestureCancel") {
-      if (!layoutAnimationsProxyRegistry_) {
-        return false;
-      }
-      auto surfaceId = layoutAnimationsProxyRegistry_->onGestureCancel(tag);
-      if (!surfaceId) {
-        return false;
-      }
-      uiManager_->getShadowTreeRegistry().visit(
-          *surfaceId, [](const ShadowTree &shadowTree) { shadowTree.notifyDelegatesOfUpdates(); });
-      return false;
     }
   }
 
@@ -1390,9 +1383,19 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       componentDescriptorRegistry,
       scheduler->getContextContainer(),
       getJSIRuntimeFromWorkletRuntime(uiRuntime_),
+      uiRuntime_,
       uiScheduler_,
       uiManager_,
       requestLayoutAnimationFlush,
+      [weakThis = weak_from_this()](std::function<void()> callback) {
+        if (const auto strongThis = weakThis.lock()) {
+          scheduleOnUI(strongThis->uiScheduler_, [weakThis, callback = std::move(callback)]() mutable {
+            if (const auto strongThis = weakThis.lock()) {
+              strongThis->requestNativeRender_([callback = std::move(callback)](const double) { callback(); });
+            }
+          });
+        }
+      },
       // A proxy calls this with the proxy mutex held.
       [weakThis = weak_from_this()](const Tag tag) -> std::optional<double> {
         const auto strongThis = weakThis.lock();
@@ -1417,6 +1420,7 @@ void ReanimatedModuleProxy::initializeLayoutAnimationsProxyRegistry() {
       keepsSynchronousPropsInReinserts ? readMountedViewProps_ : nullptr,
       setSharedTransitionOverlay_,
       nativeViewPlacement_,
+      isMovedByContainerTransition_,
 #endif
   };
 
@@ -1673,6 +1677,11 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
       });
 
   addMethod<1>(
+      rt, obj, "createDetachedShadowNodeWrapper", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        return Bridging<std::shared_ptr<const ShadowNode>>::toJs(rt, shadowNodeFromValue(rt, at<0>(args)));
+      });
+
+  addMethod<1>(
       rt,
       obj,
       "markNodeAsRemovable",
@@ -1790,6 +1799,18 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return jsi::Value::undefined();
         }
         return strongThis->getSettledUpdates(rt, at<0>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "hasPendingSettledUpdates",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[1]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return jsi::Value(false);
+        }
+        return jsi::Value(strongThis->hasPendingSettledUpdates(rt, at<0>(args)));
       });
 
   addMethod<2>(
