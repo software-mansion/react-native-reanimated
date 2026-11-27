@@ -189,6 +189,34 @@ describe('errors thrown by timer callbacks', () => {
     );
 
     debugTest(
+      `reports the errors of a frame when a callback throws a value without a string conversion on the ${runtimeName} Runtime`,
+      async () => {
+        const messages = await captureReportedErrors(2, () => {
+          runOnTarget(() => {
+            'worklet';
+            requestAnimationFrame(() => {
+              throw new Error(FIRST_FRAME_ERROR);
+            });
+            requestAnimationFrame(() => {
+              throw Object.create(null);
+            });
+            requestAnimationFrame(() => {
+              scheduleOnRN(onAlive);
+            });
+          });
+        });
+
+        await waitForNotification(ALIVE_NOTIFICATION);
+        expect(
+          messages.some((message) => message.includes(FIRST_FRAME_ERROR))
+        ).toBe(true);
+        expect(
+          messages.some((message) => message.includes('[object Object]'))
+        ).toBe(true);
+      }
+    );
+
+    debugTest(
       `reports a second error of a frame while another callback keeps throwing on the ${runtimeName} Runtime`,
       async () => {
         const messages = await captureReportedErrors(

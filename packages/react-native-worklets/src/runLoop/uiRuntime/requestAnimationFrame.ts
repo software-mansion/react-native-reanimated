@@ -83,13 +83,27 @@ export function setupRequestAnimationFrame() {
   }
 
   function reportError(error: unknown) {
-    const reportedError =
-      error instanceof Error ? error : new Error(String(error));
-    globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
-      reportedError.message,
-      reportedError.stack ?? '',
-      reportedError.name
-    );
+    if (error instanceof Error) {
+      globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
+        error.message,
+        error.stack ?? '',
+        error.name
+      );
+    } else {
+      globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
+        describeThrownValue(error),
+        '',
+        'Error'
+      );
+    }
+  }
+
+  function describeThrownValue(value: unknown): string {
+    try {
+      return String(value);
+    } catch {
+      return Object.prototype.toString.call(value);
+    }
   }
 
   function requestAnimationFrame(
