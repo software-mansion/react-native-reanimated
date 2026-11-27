@@ -415,10 +415,6 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
     return this.#workletsModuleProxy.reportFatalErrorOnJS(message, stack, name);
   }
 
-  propagateModuleUpdate(code: string, sourceURL: string) {
-    this.#workletsModuleProxy.propagateModuleUpdate(code, sourceURL);
-  }
-
   getStaticFeatureFlag(name: string): boolean {
     return this.#workletsModuleProxy.getStaticFeatureFlag(name);
   }

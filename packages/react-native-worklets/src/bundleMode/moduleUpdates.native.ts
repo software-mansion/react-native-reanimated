@@ -1,14 +1,9 @@
 'use strict';
 
-import { WorkletsModule } from '../WorkletsModule/NativeWorklets';
-
-type HmrModule = {
-  module: [number, string];
-  sourceURL: string;
-};
-
 type MetroHMRClient = {
-  addModuleUpdateListener?: (listener: (hmrModule: HmrModule) => void) => {
+  addModuleUpdateListener?: (
+    listener: (code: string, sourceURL: string) => void
+  ) => {
     remove: () => void;
   };
 };
@@ -16,10 +11,14 @@ type MetroHMRClient = {
 export function forwardModuleUpdatesToWorkletRuntimes(
   HMRClient: MetroHMRClient
 ) {
-  if (typeof HMRClient.addModuleUpdateListener !== 'function') {
+  const proxy = globalThis.__workletsModuleProxy;
+  if (
+    typeof HMRClient.addModuleUpdateListener !== 'function' ||
+    typeof proxy.propagateModuleUpdate !== 'function'
+  ) {
     return;
   }
-  HMRClient.addModuleUpdateListener(({ module: [, code], sourceURL }) => {
-    WorkletsModule.propagateModuleUpdate(code, sourceURL);
+  HMRClient.addModuleUpdateListener((code, sourceURL) => {
+    proxy.propagateModuleUpdate?.(code, sourceURL);
   });
 }

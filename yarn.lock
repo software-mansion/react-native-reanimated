@@ -22676,11 +22676,11 @@ __metadata:
 
 "metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-hmr-module-update-listener.patch":
   version: 0.88.0
-  resolution: "metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-hmr-module-update-listener.patch::version=0.88.0&hash=9d809b"
+  resolution: "metro-runtime@patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-hmr-module-update-listener.patch::version=0.88.0&hash=2a9e3a"
   dependencies:
     "@babel/runtime": "npm:^7.25.0"
     flow-enums-runtime: "npm:^0.0.6"
-  checksum: 10/ea623eaf765d3d37ab5043b644df60d936d30b4f01a0530954d0667e0ea51584a97d1cb29bda0b41e0f44e10ce7f0b70efe724785bc14197c982ae0e2dfa8802
+  checksum: 10/52e3b846ea0975853bdfb995a3a456b2ef1d0776e41d3cf48be622d4d2f2fb0683422fa04ad3c95d788b79b75fd14741282b54c44ff813eecd3f934ad8761451
   languageName: node
   linkType: hard
 
