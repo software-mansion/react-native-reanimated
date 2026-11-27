@@ -23,7 +23,7 @@ function getWorklet(
     try {
       return getWorkletFromMetroRequire(workletHash, closureVariables);
     } catch (e) {
-      const originalMessage = (e as Error).message;
+      const originalMessage = e instanceof Error ? e.message : String(e);
       return (() => {
         throw new Error(
           `[Worklets] Unable to resolve worklet with hash ${workletHash}. Try reloading the app. Original error: ${originalMessage}`
