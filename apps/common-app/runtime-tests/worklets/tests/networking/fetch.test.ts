@@ -1,4 +1,4 @@
-import { isBundleModeEnabled, RuntimeKind } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
 import {
   createTestValue,
@@ -19,9 +19,7 @@ const EXPECTED_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
 
 const BASE_URL = deriveEchoServerUrl();
 
-const describeFn = isBundleModeEnabled() ? describe : describe.skip;
-
-describeFn('networking (live)', () => {
+describe('networking (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'fetches JSON, runtime: **%s**',
     async (runtimeKind) => {
