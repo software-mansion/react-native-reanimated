@@ -27325,8 +27325,8 @@ __metadata:
     typescript: "npm:5.9.3"
   peerDependencies:
     react: "*"
-    react-native: 0.87 - 0.89
-    react-native-worklets: 0.15.0-main
+    react-native: 0.89
+    react-native-worklets: 1.0.0-main
   languageName: unknown
   linkType: soft
 
@@ -27481,7 +27481,7 @@ __metadata:
     "@babel/core": "*"
     "@react-native/metro-config": "*"
     react: "*"
-    react-native: 0.87 - 0.89
+    react-native: 0.89
   languageName: unknown
   linkType: soft
 
