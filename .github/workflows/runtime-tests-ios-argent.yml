@@ -92,7 +92,8 @@ jobs:
         uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
         with:
           path: apps/fabric-example/dist/FabricExample.app.zip
-          key: runtime-tests-app-zip-${{ env.CONFIGURATION }}-xcode-${{ steps.xcode.outputs.version }}-${{ hashFiles(
+          key:
+            runtime-tests-app-zip-${{ env.CONFIGURATION }}-xcode-${{ steps.xcode.outputs.version }}-${{ hashFiles(
             'yarn.lock',
             '.nvmrc',
             '.ruby-version',
