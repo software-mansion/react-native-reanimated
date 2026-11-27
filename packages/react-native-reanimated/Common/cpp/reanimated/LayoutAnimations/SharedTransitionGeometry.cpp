@@ -21,6 +21,10 @@ TransformMatrix3D interpolateMatrix(
     double progress);
 std::array<double, 3> transformOriginInPoints(const ShadowView &view);
 double interpolate(double from, double to, double progress);
+bool isText(const ShadowView &view);
+const ParagraphState &paragraphDataOf(const ShadowView &text);
+Float fontSizeOf(const TextAttributes &attributes);
+Float drawnFontSize(const ShadowView &text);
 } // namespace
 
 SharedTransitionGeometry interpolateSharedTransitionGeometry(
@@ -46,36 +50,49 @@ SharedTransitionGeometry interpolateSharedTransitionGeometry(
   return {.frame = interpolateFrame(start, target, progress), .props = std::move(props)};
 }
 
-State::Shared textStateAt(const ShadowView &start, const ShadowView &target, const double progress) {
+std::optional<Float> textFontSizeAt(const ShadowView &start, const ShadowView &target, const double progress) {
+  if (!isText(target)) {
+    return std::nullopt;
+  }
+  const auto startFontSize = drawnFontSize(isText(start) ? start : target);
+  const auto targetFontSize = fontSizeOf(std::static_pointer_cast<const ParagraphProps>(target.props)->textAttributes);
+  return interpolate(startFontSize, targetFontSize, progress);
+}
+
+std::optional<double> sizeProgress(const ShadowView &start, const ShadowView &target, const Frame &frame) {
+  const auto &from = start.layoutMetrics.frame.size;
+  const auto &to = target.layoutMetrics.frame.size;
+  const bool byWidth =
+      frame.width && (!frame.height || std::abs(to.width - from.width) >= std::abs(to.height - from.height));
+  const auto current = byWidth ? frame.width : frame.height;
+  const auto startSize = byWidth ? from.width : from.height;
+  const auto change = (byWidth ? to.width : to.height) - startSize;
+  if (!current || std::abs(change) < 0.5 / target.layoutMetrics.pointScaleFactor) {
+    return std::nullopt;
+  }
+  return (*current - startSize) / change;
+}
+
+State::Shared textStateWithFontSize(const ShadowView &text, const Float fontSize) {
 #if REACT_NATIVE_VERSION_MINOR < 89
   // Before React Native 0.89, the paragraph state has no layout size on iOS and its prepared layout has no point
   // scale factor on Android.
   return nullptr;
 #else
-  if (target.componentHandle != ParagraphShadowNode::Handle() || !target.state) {
+  if (!isText(text)) {
     return nullptr;
   }
-  const auto fontSizeOf = [](const TextAttributes &attributes) {
-    return std::isnan(attributes.fontSize) ? TextAttributes::defaultTextAttributes().fontSize : attributes.fontSize;
-  };
-  const auto baseFontSizeOf = [&fontSizeOf](const State::Shared &state) {
-    return fontSizeOf(static_cast<const ParagraphShadowNode::ConcreteState &>(*state)
-                          .getData()
-                          .attributedString.getBaseTextAttributes());
-  };
-  const auto ownFontSize = baseFontSizeOf(target.state);
-  const auto startFontSize = start.state ? baseFontSizeOf(start.state) : ownFontSize;
-  const auto targetFontSize = fontSizeOf(std::static_pointer_cast<const ParagraphProps>(target.props)->textAttributes);
-  if (ownFontSize <= 0 || (startFontSize == ownFontSize && targetFontSize == ownFontSize)) {
+  const auto ownFontSize = drawnFontSize(text);
+  if (ownFontSize <= 0 || !std::isfinite(fontSize) || fontSize <= 0 || fontSize == ownFontSize) {
     return nullptr;
   }
-  const auto scale = interpolate(startFontSize, targetFontSize, progress) / ownFontSize;
+  const auto scale = fontSize / ownFontSize;
   const auto scaleSizes = [scale](TextAttributes &attributes) {
     attributes.fontSize *= scale;
     attributes.lineHeight *= scale;
     attributes.letterSpacing *= scale;
   };
-  const auto &state = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
+  const auto &state = static_cast<const ParagraphShadowNode::ConcreteState &>(*text.state);
   auto data = state.getData();
   auto baseAttributes = data.attributedString.getBaseTextAttributes();
   scaleSizes(baseAttributes);
@@ -93,7 +110,7 @@ State::Shared textStateAt(const ShadowView &start, const ShadowView &target, con
     constraints.maximumSize.width *= scale;
     constraints.maximumSize.height *= scale;
     const TextLayoutContext context{
-        .pointScaleFactor = data.measuredLayout.pointScaleFactor, .surfaceId = target.surfaceId};
+        .pointScaleFactor = data.measuredLayout.pointScaleFactor, .surfaceId = text.surfaceId};
     data.measuredLayout.preparedTextLayout =
         TextLayoutManagerExtended(*textLayoutManager)
             .prepareLayout(data.attributedString, data.paragraphAttributes, context, constraints);
@@ -105,6 +122,82 @@ State::Shared textStateAt(const ShadowView &start, const ShadowView &target, con
 #endif
   return std::make_shared<const ParagraphShadowNode::ConcreteState>(
       std::make_shared<const ParagraphState>(std::move(data)), state);
+#endif
+}
+
+bool haveSameRuns(const ShadowView &start, const ShadowView &target) {
+  if (!isText(start) || !isText(target)) {
+    return false;
+  }
+  const auto &startFragments = paragraphDataOf(start).attributedString.getFragments();
+  const auto &targetFragments = paragraphDataOf(target).attributedString.getFragments();
+  return std::ranges::equal(
+      startFragments, targetFragments, {}, &AttributedString::Fragment::string, &AttributedString::Fragment::string);
+}
+
+std::optional<double> fontSizeProgress(const ShadowView &start, const ShadowView &target, const Float fontSize) {
+  const auto startFontSize = drawnFontSize(start);
+  const auto change = drawnFontSize(target) - startFontSize;
+  if (change == 0) {
+    return std::nullopt;
+  }
+  return (fontSize - startFontSize) / change;
+}
+
+State::Shared textStateBetween(const ShadowView &start, const ShadowView &target, const double progress) {
+#if REACT_NATIVE_VERSION_MINOR < 89
+  return nullptr;
+#else
+  const auto &startData = paragraphDataOf(start);
+  const auto &targetState = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
+  auto data = targetState.getData();
+  // A size that one of the states does not set or bound keeps the one of the target.
+  const auto interpolateIfFinite = [progress](const Float from, Float &to) {
+    if (std::isfinite(from) && std::isfinite(to)) {
+      to = interpolate(from, to, progress);
+    }
+  };
+  bool fontSizesArePositive = true;
+  const auto interpolateSizes = [&](TextAttributes &attributes, const TextAttributes &from) {
+    attributes.fontSize = interpolate(fontSizeOf(from), fontSizeOf(attributes), progress);
+    fontSizesArePositive = fontSizesArePositive && std::isfinite(attributes.fontSize) && attributes.fontSize > 0;
+    interpolateIfFinite(from.lineHeight, attributes.lineHeight);
+    interpolateIfFinite(from.letterSpacing, attributes.letterSpacing);
+  };
+  const auto interpolateSize = [&interpolateIfFinite](const facebook::react::Size &from, facebook::react::Size &to) {
+    interpolateIfFinite(from.width, to.width);
+    interpolateIfFinite(from.height, to.height);
+  };
+  auto baseAttributes = data.attributedString.getBaseTextAttributes();
+  interpolateSizes(baseAttributes, startData.attributedString.getBaseTextAttributes());
+  data.attributedString.setBaseTextAttributes(baseAttributes);
+  auto &fragments = data.attributedString.getFragments();
+  const auto &startFragments = startData.attributedString.getFragments();
+  for (size_t i = 0; i < fragments.size(); ++i) {
+    interpolateSizes(fragments[i].textAttributes, startFragments[i].textAttributes);
+  }
+  if (!fontSizesArePositive || data.attributedString == targetState.getData().attributedString) {
+    return nullptr;
+  }
+#ifdef ANDROID
+  // With prepared text layouts, Android draws the prepared layout of the state, not its attributed string.
+  if (const auto textLayoutManager = data.layoutManager.lock();
+      textLayoutManager && data.measuredLayout.preparedTextLayout) {
+    const auto &from = startData.measuredLayout.layoutConstraints;
+    auto constraints = data.measuredLayout.layoutConstraints;
+    interpolateSize(from.minimumSize, constraints.minimumSize);
+    interpolateSize(from.maximumSize, constraints.maximumSize);
+    const TextLayoutContext context{
+        .pointScaleFactor = data.measuredLayout.pointScaleFactor, .surfaceId = target.surfaceId};
+    data.measuredLayout.preparedTextLayout =
+        TextLayoutManagerExtended(*textLayoutManager)
+            .prepareLayout(data.attributedString, data.paragraphAttributes, context, constraints);
+  }
+#else
+  interpolateSize(startData.layoutSize, data.layoutSize);
+#endif
+  return std::make_shared<const ParagraphShadowNode::ConcreteState>(
+      std::make_shared<const ParagraphState>(std::move(data)), targetState);
 #endif
 }
 
@@ -171,6 +264,22 @@ std::array<double, 3> transformOriginInPoints(const ShadowView &view) {
 
 double interpolate(const double from, const double to, const double progress) {
   return from + progress * (to - from);
+}
+
+bool isText(const ShadowView &view) {
+  return view.componentHandle == ParagraphShadowNode::Handle() && view.state;
+}
+
+Float fontSizeOf(const TextAttributes &attributes) {
+  return std::isnan(attributes.fontSize) ? TextAttributes::defaultTextAttributes().fontSize : attributes.fontSize;
+}
+
+const ParagraphState &paragraphDataOf(const ShadowView &text) {
+  return static_cast<const ParagraphShadowNode::ConcreteState &>(*text.state).getData();
+}
+
+Float drawnFontSize(const ShadowView &text) {
+  return fontSizeOf(paragraphDataOf(text).attributedString.getBaseTextAttributes());
 }
 } // namespace
 
