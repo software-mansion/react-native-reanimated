@@ -17,7 +17,7 @@ class NativeAnimationPlatformCallbacks : public HybridClass<NativeAnimationPlatf
   static auto constexpr kJavaDescriptor =
       "Lcom/swmansion/reanimated/nativeAnimations/NativeAnimationPlatformCallbacks;";
 
-  using TrackEndedFunction = std::function<void(const TrackKey &track, bool finished)>;
+  using TrackEndedFunction = std::function<void(const TrackKey &track, bool finished, double animationTimeMs)>;
   using DrainFunction = std::function<void()>;
 
   void onTrackEnded(
@@ -26,9 +26,10 @@ class NativeAnimationPlatformCallbacks : public HybridClass<NativeAnimationPlatf
       const jint owner,
       const jlong generation,
       const jint target,
-      const jboolean finished) {
+      const jboolean finished,
+      const jdouble animationTimeMs) {
     const AnimationHandle handle{surfaceId, tag, static_cast<AnimationOwner>(owner), static_cast<uint64_t>(generation)};
-    onTrackEnded_({handle, static_cast<AnimationTarget>(target)}, finished != JNI_FALSE);
+    onTrackEnded_({handle, static_cast<AnimationTarget>(target)}, finished != JNI_FALSE, animationTimeMs);
   }
 
   void drainPostedOperations() {
