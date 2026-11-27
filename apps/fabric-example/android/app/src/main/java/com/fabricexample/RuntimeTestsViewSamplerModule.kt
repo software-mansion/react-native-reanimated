@@ -6,8 +6,10 @@ import android.graphics.Rect
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.Choreographer
 import android.view.View
 import android.view.ViewTreeObserver
+import android.view.animation.AnimationUtils
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
@@ -15,6 +17,7 @@ import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.bridge.WritableArray
 import com.facebook.react.fabric.FabricUIManager
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.BackgroundStyleApplicator
@@ -39,6 +42,8 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   companion object {
     const val NAME = "RuntimeTestsViewSampler"
     private const val AFFINE_CELL_COUNT = 6
+    private const val NANOS_PER_MS = 1e6
+    private const val FRAME_CLOCK_ROWS = 1800
   }
 
   private class Recording(
@@ -47,6 +52,44 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
     val rows: MutableList<DoubleArray>,
   )
 
+  /**
+   * The two clocks of each frame, in ms: the frame time that a frame callback gets, and the animation clock that
+   * the animators use. They differ in the buffer stuffing recovery of Android 16. A frame callback runs before the
+   * draw of its frame.
+   */
+  private class FrameClock : Choreographer.FrameCallback {
+    var animationTimeMs = Double.NaN
+      private set
+
+    /** The last `FRAME_CLOCK_ROWS` frames: the frame time, the animation clock, and the uptime of the run. */
+    private val rows = ArrayDeque<DoubleArray>()
+    private var isRunning = false
+
+    override fun doFrame(frameTimeNanos: Long) {
+      val frameTimeMs = frameTimeNanos / NANOS_PER_MS
+      animationTimeMs = AnimationUtils.currentAnimationTimeMillis().toDouble()
+      synchronized(rows) {
+        rows.addLast(doubleArrayOf(frameTimeMs, animationTimeMs, System.nanoTime() / NANOS_PER_MS))
+        if (rows.size > FRAME_CLOCK_ROWS) rows.removeFirst()
+      }
+      Choreographer.getInstance().postFrameCallback(this)
+    }
+
+    fun start() {
+      if (isRunning) return
+      isRunning = true
+      Choreographer.getInstance().postFrameCallback(this)
+    }
+
+    fun stop() {
+      isRunning = false
+      Choreographer.getInstance().removeFrameCallback(this)
+    }
+
+    fun rows(): List<DoubleArray> = synchronized(rows) { rows.toList() }
+  }
+
+  private val frameClock = FrameClock()
   private var recording: Recording? = null
 
   override fun getName() = NAME
@@ -86,6 +129,17 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
       promise.resolve(rows)
     }
   }
+
+  /** Starts the frame clock. It runs until the module ends; a draw row reads it for `animationTime`. */
+  @ReactMethod
+  fun startFrameClock() {
+    UiThreadUtil.runOnUiThread { frameClock.start() }
+  }
+
+  /** The rows of the frame clock, oldest first. */
+  @ReactMethod(isBlockingSynchronousMethod = true)
+  fun frameClockRows(): WritableArray =
+    Arguments.createArray().apply { frameClock.rows().forEach { pushArray(Arguments.fromArray(it)) } }
 
   /** The uptime in ms, the clock of the rows and of the Reanimated animation clock with no slow animations. */
   @ReactMethod
@@ -147,7 +201,10 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   }
 
   override fun invalidate() {
-    UiThreadUtil.runOnUiThread { recording?.let(::detach) }
+    UiThreadUtil.runOnUiThread {
+      recording?.let(::detach)
+      frameClock.stop()
+    }
     super.invalidate()
   }
 
@@ -182,6 +239,7 @@ class RuntimeTestsViewSamplerModule(context: ReactApplicationContext) : ReactCon
   private fun valuesOf(view: View, property: String): List<Double> =
     when (property) {
       "opacity" -> listOf(view.alpha.toDouble())
+      "animationTime" -> listOf(frameClock.animationTimeMs)
       "backgroundColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBackgroundColor(view)))
       "borderColor" -> listOf(colorValueOf(BackgroundStyleApplicator.getBorderColor(view, LogicalEdge.ALL)))
       "borderRadius" -> listOf(borderRadiusOf(view))

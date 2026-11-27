@@ -15,11 +15,13 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
+#include <cmath>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <unordered_set>
 #include <utility>
@@ -575,6 +577,13 @@ LayoutAnimationsProxyCommon::takeNextLayoutAnimationOperation(std::deque<LayoutA
     const auto replacedIt = layoutAnimations_.find(managedStart->tag);
     const bool stopsReplacedAnimation =
         replacedIt != layoutAnimations_.end() && replacedIt->second.pathOffset != react::Point{};
+    const auto animatedKeys = animatedLayoutKeysOf(managedStart->tag);
+    managedStart->animatedKeys = {
+        .originX = managedStart->animatedKeys.originX || animatedKeys.originX,
+        .originY = managedStart->animatedKeys.originY || animatedKeys.originY,
+        .width = managedStart->animatedKeys.width || animatedKeys.width,
+        .height = managedStart->animatedKeys.height || animatedKeys.height,
+    };
     managedStart->before = materializeLayoutAnimation(
         managedStart->tag,
         managedStart->before,
@@ -724,6 +733,26 @@ void LayoutAnimationsProxyCommon::requeueLayoutAnimationStarts(std::deque<Layout
   }
 }
 
+constexpr double LAID_OUT_NOISE = 1e-4;
+
+AnimatedLayoutKeys LayoutAnimationsProxyCommon::animatedLayoutKeysOf(const Tag tag) const {
+  auto it = layoutAnimations_.find(tag);
+  if (it == layoutAnimations_.end()) {
+    it = completedAnimations_.find(tag);
+    if (it == completedAnimations_.end()) {
+      return {};
+    }
+  }
+  const auto &current = it->second.currentView.layoutMetrics.frame;
+  const auto &final = it->second.finalView.layoutMetrics.frame;
+  return {
+      .originX = current.origin.x != final.origin.x,
+      .originY = current.origin.y != final.origin.y,
+      .width = current.size.width != final.size.width,
+      .height = current.size.height != final.size.height,
+  };
+}
+
 jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
     const ManagedLayoutAnimationStart &start,
     const ShadowView &currentView,
@@ -741,24 +770,38 @@ jsi::Object LayoutAnimationsProxyCommon::layoutAnimationValues(
   } else {
     const Snapshot current(currentView, window);
     const Snapshot target(start.after, window);
+    // Yoga gives one laid-out length float32 noise at two places (measured: 49.904762 and 49.904755 for 131 px).
+    const auto scale = start.after.layoutMetrics.pointScaleFactor;
+    const auto laidOut = [scale](const double value) {
+      const auto onGrid = scale > 0 ? std::round(value * scale) / scale : value;
+      return std::abs(onGrid - value) < LAID_OUT_NOISE ? onGrid : value;
+    };
+    const auto isLeaf = [&start](const std::string_view key) {
+      return std::ranges::any_of(start.liveLeaves, [key](const LiveLayoutLeaf &leaf) { return leaf.key == key; });
+    };
+    const auto currentOf = [&](const std::string_view key, const bool isAnimated, const double value) {
+      return isAnimated || isLeaf(key) ? value : laidOut(value);
+    };
     if (start.type != LayoutAnimationType::ENTERING) {
-      values.setProperty(uiRuntime_, "currentOriginX", current.x);
-      values.setProperty(uiRuntime_, "currentGlobalOriginX", current.x);
-      values.setProperty(uiRuntime_, "currentOriginY", current.y);
-      values.setProperty(uiRuntime_, "currentGlobalOriginY", current.y);
-      values.setProperty(uiRuntime_, "currentWidth", current.width);
-      values.setProperty(uiRuntime_, "currentHeight", current.height);
+      values.setProperty(uiRuntime_, "currentOriginX", currentOf("originX", start.animatedKeys.originX, current.x));
+      values.setProperty(
+          uiRuntime_, "currentGlobalOriginX", currentOf("originX", start.animatedKeys.originX, current.x));
+      values.setProperty(uiRuntime_, "currentOriginY", currentOf("originY", start.animatedKeys.originY, current.y));
+      values.setProperty(
+          uiRuntime_, "currentGlobalOriginY", currentOf("originY", start.animatedKeys.originY, current.y));
+      values.setProperty(uiRuntime_, "currentWidth", currentOf("width", start.animatedKeys.width, current.width));
+      values.setProperty(uiRuntime_, "currentHeight", currentOf("height", start.animatedKeys.height, current.height));
     }
     if (start.isContentFadeIn && start.opacity) {
       values.setProperty(uiRuntime_, "targetOpacity", *start.opacity);
     }
     if (start.type != LayoutAnimationType::EXITING) {
-      values.setProperty(uiRuntime_, "targetOriginX", target.x);
-      values.setProperty(uiRuntime_, "targetGlobalOriginX", target.x);
-      values.setProperty(uiRuntime_, "targetOriginY", target.y);
-      values.setProperty(uiRuntime_, "targetGlobalOriginY", target.y);
-      values.setProperty(uiRuntime_, "targetWidth", target.width);
-      values.setProperty(uiRuntime_, "targetHeight", target.height);
+      values.setProperty(uiRuntime_, "targetOriginX", laidOut(target.x));
+      values.setProperty(uiRuntime_, "targetGlobalOriginX", laidOut(target.x));
+      values.setProperty(uiRuntime_, "targetOriginY", laidOut(target.y));
+      values.setProperty(uiRuntime_, "targetGlobalOriginY", laidOut(target.y));
+      values.setProperty(uiRuntime_, "targetWidth", laidOut(target.width));
+      values.setProperty(uiRuntime_, "targetHeight", laidOut(target.height));
     }
   }
   values.setProperty(uiRuntime_, "windowWidth", window.width);

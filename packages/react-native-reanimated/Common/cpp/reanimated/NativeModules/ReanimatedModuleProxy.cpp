@@ -562,6 +562,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   object.setProperty(rt, "event", toJSIString(rt, event.event));
   setHandle(rt, object, event.handle);
   object.setProperty(rt, "objective", static_cast<int>(event.objective));
+  if (event.animationTimeMs) {
+    object.setProperty(rt, "animationTimeMs", *event.animationTimeMs);
+  }
   if (event.target) {
     object.setProperty(rt, "target", toJSIString(rt, *event.target));
   }
@@ -578,11 +581,25 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.buildFailure) {
     object.setProperty(rt, "buildFailure", toJSIString(rt, *event.buildFailure));
   }
+  if (event.targetCause) {
+    object.setProperty(rt, "buildFailureCause", toJSIString(rt, *event.targetCause));
+  }
+  if (event.resourceLimit) {
+    object.setProperty(rt, "buildFailureCause", jsi::String::createFromUtf8(rt, std::string(*event.resourceLimit)));
+  }
+  if (event.conflictHandle) {
+    jsi::Object conflictHandle(rt);
+    setHandle(rt, conflictHandle, *event.conflictHandle);
+    object.setProperty(rt, "conflictHandle", conflictHandle);
+  }
   if (event.transactionNumber) {
     object.setProperty(rt, "transactionNumber", static_cast<double>(*event.transactionNumber));
   }
   if (event.originTimestampMs) {
     object.setProperty(rt, "originTimestampMs", *event.originTimestampMs);
+  }
+  if (event.passTimestampMs) {
+    object.setProperty(rt, "passTimestampMs", *event.passTimestampMs);
   }
   if (event.leafValue) {
     object.setProperty(rt, "leafValue", *event.leafValue);
@@ -590,6 +607,9 @@ jsi::Object traceEventToJSI(jsi::Runtime &rt, const native_animation::TraceEvent
   if (event.layoutAnimationType) {
     object.setProperty(
         rt, "layoutAnimationType", jsi::String::createFromUtf8(rt, std::string(*event.layoutAnimationType)));
+  }
+  if (event.layoutStartRefusal) {
+    object.setProperty(rt, "startRefusal", jsi::String::createFromUtf8(rt, std::string(*event.layoutStartRefusal)));
   }
   return object;
 }
@@ -667,7 +687,7 @@ void ReanimatedModuleProxy::nativeAnimationContainerSizes(jsi::Runtime &rt, cons
     jsInvoker_->invokeAsync([function](jsi::Runtime &rt) { function->call(rt, jsi::Value::undefined()); });
     return;
   }
-  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](ContainerSizes hostSizes) {
+  nativeAnimationHost_->containerSizes([weakThis = weak_from_this(), function](const ContainerSizes &hostSizes) {
     const auto strongThis = weakThis.lock();
     if (!strongThis) {
       return;
@@ -782,6 +802,22 @@ jsi::Value ReanimatedModuleProxy::configureLayoutAnimationBatch(
     }
   }
   return jsi::Value::undefined();
+}
+
+void ReanimatedModuleProxy::layoutAnimationViewDidUnmount(
+    jsi::Runtime &rt,
+    const jsi::Value &shadowNodeWrapper,
+    const jsi::Value &reanimatedId) {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->viewDidUnmount(
+        *shadowNodeFromValue(rt, shadowNodeWrapper), static_cast<int>(reanimatedId.asNumber()));
+  }
+}
+
+void ReanimatedModuleProxy::layoutAnimationViewDidMountAgain(const jsi::Value &viewTag) {
+  if (layoutAnimationsProxyRegistry_) {
+    layoutAnimationsProxyRegistry_->viewDidMountAgain(static_cast<Tag>(viewTag.asNumber()));
+  }
 }
 
 void ReanimatedModuleProxy::setShouldAnimateExiting(
@@ -1872,6 +1908,28 @@ jsi::Object ReanimatedModuleProxy::toOptimizedObject(jsi::Runtime &rt) {
           return;
         }
         strongThis->unsubscribeFromKeyboardEvents(rt, at<0>(args));
+      });
+
+  addMethod<2>(
+      rt,
+      obj,
+      "layoutAnimationViewDidUnmount",
+      [weakThis = weak_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+        auto strongThis = weakThis.lock();
+        if (!strongThis) {
+          return;
+        }
+        strongThis->layoutAnimationViewDidUnmount(rt, at<0>(args), at<1>(args));
+      });
+
+  addMethod<1>(
+      rt,
+      obj,
+      "layoutAnimationViewDidMountAgain",
+      [weakThis = weak_from_this()](jsi::Runtime &, const jsi::Value &, const jsi::Value(&args)[1]) {
+        if (auto strongThis = weakThis.lock()) {
+          strongThis->layoutAnimationViewDidMountAgain(at<0>(args));
+        }
       });
 
   addMethod<1>(

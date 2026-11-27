@@ -17,7 +17,6 @@
  * of `native layout exiting and the stop of its tracks` in which the platform removes the tracks of the
  * pair (a Modal that goes hidden, a clip with a track of a layout animation).
  */
-
 import React from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { Dimensions, View } from 'react-native';
@@ -58,6 +57,7 @@ import {
   sampleTargets,
 } from './nativeLayoutReferencePlay';
 import type {
+  PairEvents,
   AnimationSource,
   Band,
   Leaf,
@@ -66,6 +66,10 @@ import type {
   Track,
 } from './nativeLayoutTestKit';
 import {
+  takeTraceOfPair,
+  progressOf,
+  isNear,
+  sortedCallbacks,
   BOX_REF,
   callbackOf,
   callbacks,
@@ -92,9 +96,10 @@ import {
   summarize,
   summarizeEnd,
   takeRows,
-  takeTrace,
   waitForCallbacks,
   nativeCasesOf,
+  declaredDurationOf,
+  shownBandAt,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -117,7 +122,6 @@ const BOX_LEFT = 20;
 const WINDOW_WIDTH = Dimensions.get('window').width;
 const CUSTOM_OPACITY = 0.2;
 const CUSTOM_OFFSET = 80;
-const VALUE_TOLERANCE = 0.01;
 const NO_VIEW_POLL_MS = 4;
 
 const OPACITY: Track = {
@@ -357,7 +361,6 @@ function ExitingPair({
 }
 
 type Scene = Parameters<typeof render>[0];
-type PairEvents = { native: TraceEvent[]; frame: TraceEvent[] };
 
 type Exited = {
   nativeTag: number;
@@ -408,8 +411,6 @@ const exit = (pair: PairProps) =>
 const readIfMounted = (tag: number, track: Track) =>
   readTrack(tag, track).catch(() => undefined);
 
-type ExitedTags = Pick<Exited, 'nativeTag' | 'frameTag'>;
-
 const hasView = async (tag: number) =>
   (await readIfMounted(tag, OPACITY)) !== undefined;
 
@@ -423,18 +424,6 @@ async function leaves(tag: number, timeoutMs = 1000) {
     await wait(NO_VIEW_POLL_MS);
   }
   return true;
-}
-
-async function takeTraceOfPair({
-  nativeTag,
-  frameTag,
-}: ExitedTags): Promise<PairEvents> {
-  const events = await takeTrace();
-  const eventsOf = (tag: number) =>
-    events.filter(
-      (event) => event.tag === tag && event.event !== 'FrameUpdateMounted'
-    );
-  return { native: eventsOf(nativeTag), frame: eventsOf(frameTag) };
 }
 
 /**
@@ -572,15 +561,6 @@ const playedAndRemoved = (tracks: Track[]) =>
     'Ended:Cancelled:None',
   ].join(' > ');
 
-/** The part of the duration at which the track has the value. */
-const progressOf = ({ from, to, easing }: Track, value: number) => {
-  const progress = (value - from) / (to - from);
-  return easing ? easing.timeOf(progress) : progress;
-};
-
-const isNear = (value: number, expected: number, tolerance = VALUE_TOLERANCE) =>
-  Math.abs(value - expected) < tolerance;
-
 type TargetReads = Pick<PlannedRead, 'samples'>[];
 
 /**
@@ -611,9 +591,10 @@ function readWhileMounted(tag: number, targets: string[]) {
 }
 
 /**
- * Each read of a target from the end report of its track to the time at which
- * the view leaves shows the end value of the track. The existence gate: each
- * target has such a read.
+ * Each read of a target from the end report of its track to the removal of the
+ * view shows a declared value of a time in its read band. The declared value
+ * after the end is the end value. The existence gate: each target has such a
+ * read.
  */
 function expectEndHeld(
   name: string,
@@ -623,23 +604,33 @@ function expectEndHeld(
 ) {
   const heldOf = tracks.map((track) => {
     const { traceTarget } = track;
-    const endedMs = Math.max(
-      ...playedTracks
-        .filter(({ target }) => target === traceTarget)
-        .map(({ played }) => played.to)
+    const played = playedTracks.filter(({ target }) => target === traceTarget);
+    const endedMs = Math.max(...played.map(({ played }) => played.to));
+    const startBand = {
+      from: Math.min(...played.map(({ origin }) => origin.from)),
+      to: Math.max(...played.map(({ origin }) => origin.to)),
+    };
+    const durationMs = Math.max(
+      ...played.map(({ timeline }) => declaredDurationOf(timeline))
     );
+    const progressAt = (timeMs: number, startMs: number) =>
+      Math.min(1, (timeMs - startMs) / durationMs);
+    const tolerance = heldProgressToleranceOf(track);
     const held = reads
       .map(({ samples }) => samples[traceTarget])
       .filter(({ monotonicTimeMs }) => monotonicTimeMs >= endedMs);
     const off = held
-      .filter(
-        ({ presentation }) =>
-          !isNear(
-            progressOf(track, presentation[0]),
-            1,
-            heldProgressToleranceOf(track)
-          )
-      )
+      .filter(({ presentation, monotonicTimeMs }) => {
+        const part = (presentation[0] - track.from) / (track.to - track.from);
+        const progress = progressOf(track, presentation[0]);
+        const band = shownBandAt(monotonicTimeMs);
+        return (
+          !Number.isFinite(part) ||
+          part > 1 + tolerance ||
+          progress < progressAt(band.from, startBand.to) - tolerance ||
+          progress > progressAt(band.to, startBand.from) + tolerance
+        );
+      })
       .map(
         ({ presentation, monotonicTimeMs }) =>
           `${presentation[0]} at ${monotonicTimeMs - endedMs} ms after the end report`
@@ -697,8 +688,6 @@ const heldProgressToleranceOf = (track: Track) =>
       ? endToleranceOf(track) / Math.abs(track.to - track.from)
       : 0
   );
-
-const sortedCallbacks = () => callbacks.slice().sort().join();
 
 const EXIT_CALLBACKS = ['native:true', 'frame:true'];
 

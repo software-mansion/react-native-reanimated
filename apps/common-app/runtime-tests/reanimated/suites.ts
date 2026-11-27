@@ -233,6 +233,12 @@ const SUITES: RuntimeTestSuite[] = [
     },
   },
   {
+    testSuiteName: 'native layout diagnostics',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutDiagnostics.test');
+    },
+  },
+  {
     testSuiteName: 'native layout mount window',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutMountWindow.test');
@@ -272,6 +278,12 @@ const SUITES: RuntimeTestSuite[] = [
     testSuiteName: 'native layout springs',
     importTest: () => {
       require('./tests/layoutAnimations/nativeLayoutSprings.test');
+    },
+  },
+  {
+    testSuiteName: 'native layout lifecycle',
+    importTest: () => {
+      require('./tests/layoutAnimations/nativeLayoutLifecycle.test');
     },
   },
   {

@@ -61,6 +61,13 @@ export interface ReanimatedModuleProxy {
     layoutAnimationsBatch: LayoutAnimationBatchItem[]
   ): void;
 
+  layoutAnimationViewDidUnmount(
+    shadowNodeWrapper: ShadowNodeWrapper,
+    reanimatedID: number
+  ): void;
+
+  layoutAnimationViewDidMountAgain(viewTag: number): void;
+
   setShouldAnimateExitingForTag(viewTag: number, shouldAnimate: boolean): void;
 
   setViewStyle(viewTag: number, style: StyleProps): void;

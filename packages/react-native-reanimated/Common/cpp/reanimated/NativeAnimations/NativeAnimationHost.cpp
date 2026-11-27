@@ -28,19 +28,27 @@ bool overlapsAny(const AnimationTarget target, const std::vector<AnimationTrack>
       tracks, [target](const AnimationTrack &track) { return targetsOverlap(track.target, target); });
 }
 
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+std::optional<AnimationHandle> optionalOf(const AnimationHandle *handle) {
+  return handle == nullptr ? std::nullopt : std::optional(*handle);
+}
+#endif
+
 } // namespace
 
 std::shared_ptr<NativeAnimationHost> NativeAnimationHost::create(std::shared_ptr<NativeAnimationPlatform> platform) {
   auto host = std::shared_ptr<NativeAnimationHost>(new NativeAnimationHost(std::move(platform)));
-  host->platform_->setTrackEndListener([weakHost = host->weak_from_this()](const TrackKey &key, const bool finished) {
-    if (const auto strongHost = weakHost.lock()) {
-      strongHost->enqueue([weakHost, key, finished] {
+  host->platform_->setTrackEndListener(
+      [weakHost = host->weak_from_this()](
+          const TrackKey &key, const bool finished, const std::optional<double> animationTimeMs) {
         if (const auto strongHost = weakHost.lock()) {
-          strongHost->onPlatformTrackEnded(key, finished);
+          strongHost->enqueue([weakHost, key, finished, animationTimeMs] {
+            if (const auto strongHost = weakHost.lock()) {
+              strongHost->onPlatformTrackEnded(key, finished, animationTimeMs);
+            }
+          });
         }
       });
-    }
-  });
   return host;
 }
 
@@ -115,8 +123,20 @@ void NativeAnimationHost::closeSurface(const SurfaceId surfaceId) {
   });
 }
 
-bool NativeAnimationHost::canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) const {
-  return platform_->canRealize(track, view);
+std::optional<UnsupportedTargetCause> NativeAnimationHost::unsupportedTargetCause(
+    const AnimationTrack &track,
+    const facebook::react::ShadowView &view) const {
+  return platform_->unsupportedTargetCause(track, view);
+}
+
+bool NativeAnimationHost::movesOnlyPlanarTransforms() const {
+  return platform_->movesOnlyPlanarTransforms();
+}
+
+bool NativeAnimationHost::playsSizeChange(
+    const facebook::react::ShadowView &before,
+    const facebook::react::ShadowView &after) const {
+  return platform_->playsSizeChange(before, after);
 }
 
 bool NativeAnimationHost::isMountedInWindow(const SurfaceId surfaceId, const Tag tag) const {
@@ -261,9 +281,13 @@ void NativeAnimationHost::admit(
   const auto losesToActiveOwner = [&handle](const TrackKey &active) {
     return !hasPriorityOver(handle.owner, active.handle.owner);
   };
-  if (std::ranges::any_of(replacedTracks, losesToActiveOwner)) {
+  if (const auto winner = std::ranges::find_if(replacedTracks, losesToActiveOwner); winner != replacedTracks.end()) {
     endWithoutAdmission(
-        handle, client, {AnimationOutcome::Rejected, AnimationResultReason::OwnershipDenied}, deliveries);
+        handle,
+        client,
+        {AnimationOutcome::Rejected, AnimationResultReason::OwnershipDenied},
+        deliveries,
+        &winner->handle);
     return;
   }
 
@@ -281,7 +305,7 @@ void NativeAnimationHost::admit(
     return;
   }
 
-  releaseReplacedTracks(replacedTracks, deliveries);
+  releaseReplacedTracks(replacedTracks, handle, deliveries);
 
   Command command{client, {}};
   command.tracks.reserve(request.tracks.size());
@@ -291,7 +315,8 @@ void NativeAnimationHost::admit(
             .event = TraceEventType::TrackStarted,
             .handle = handle,
             .target = track.target,
-            .endpointPolicy = track.endpointPolicy);
+            .endpointPolicy = track.endpointPolicy,
+            .passTimestampMs = mountedAnimation->passTimestampMs());
   }
   commands_.emplace(handle, std::move(command));
   mountedAnimation->start(replacedTracks);
@@ -338,28 +363,34 @@ void NativeAnimationHost::runCloseSurface(const SurfaceId surfaceId) {
   }
 }
 
-void NativeAnimationHost::onPlatformTrackEnded(const TrackKey &key, const bool finished) {
+void NativeAnimationHost::onPlatformTrackEnded(
+    const TrackKey &key,
+    const bool finished,
+    const std::optional<double> animationTimeMs) {
   ReanimatedSystraceSection section("NativeAnimationHost::onPlatformTrackEnded");
   Deliveries deliveries;
-  endTrack(key, finished ? TrackEnd::Finished : TrackEnd::PlatformRemoved, deliveries);
+  endTrack(key, finished ? TrackEnd::Finished : TrackEnd::PlatformRemoved, deliveries, animationTimeMs);
   for (const auto &delivery : deliveries) {
     delivery();
   }
 }
 
-void NativeAnimationHost::endTrack(const TrackKey &key, const TrackEnd end, Deliveries &deliveries) {
-  const auto commandIt = commands_.find(key.handle);
-  if (commandIt == commands_.end()) {
-    return;
-  }
-  auto &command = commandIt->second;
-  const auto trackIt = std::ranges::find(command.tracks, key.target, &Track::target);
-  if (trackIt == command.tracks.end()) {
-    return;
-  }
-
+void NativeAnimationHost::endTrack(
+    const TrackKey &key,
+    const TrackEnd end,
+    Deliveries &deliveries,
+    const std::optional<double> animationTimeMs) {
   const bool finished = end == TrackEnd::Finished;
-  reportTrackEnd(command.client, *trackIt, key, end, deliveries);
+  const auto found = findTrack(key);
+  if (!found) {
+    RECORD_TRACE(
+            .event = TraceEventType::TrackEndIgnored, .handle = key.handle, .target = key.target, .finished = finished);
+    return;
+  }
+  const auto [commandIt, trackIt] = *found;
+  auto &command = commandIt->second;
+
+  reportTrackEnd(command.client, *trackIt, key, end, deliveries, nullptr, animationTimeMs);
   const bool isHeld = finished && trackIt->endpointPolicy == EndpointPolicy::HoldWithoutCommit;
   if (isHeld) {
     return;
@@ -375,6 +406,17 @@ void NativeAnimationHost::endTrack(const TrackKey &key, const TrackEnd end, Deli
     endCommand(key.handle, command, result, deliveries);
   }
   commands_.erase(commandIt);
+}
+
+std::optional<std::pair<NativeAnimationHost::CommandMap::iterator, std::vector<NativeAnimationHost::Track>::iterator>>
+NativeAnimationHost::findTrack(const TrackKey &key) {
+  const auto commandIt = commands_.find(key.handle);
+  if (commandIt == commands_.end()) {
+    return std::nullopt;
+  }
+  auto &tracks = commandIt->second.tracks;
+  const auto trackIt = std::ranges::find(tracks, key.target, &Track::target);
+  return trackIt == tracks.end() ? std::nullopt : std::optional(std::pair(commandIt, trackIt));
 }
 
 std::optional<AnimationResultReason> NativeAnimationHost::validate(const AnimationRequest &request) const {
@@ -411,8 +453,13 @@ void NativeAnimationHost::endWithoutAdmission(
     const AnimationHandle &handle,
     const std::weak_ptr<NativeAnimationClient> &client,
     const AnimationResult result,
-    Deliveries &deliveries) {
-  RECORD_TRACE(.event = TraceEventType::Ended, .handle = handle, .result = result);
+    Deliveries &deliveries,
+    [[maybe_unused]] const AnimationHandle *conflictHandle) {
+  RECORD_TRACE(
+          .event = TraceEventType::Ended,
+          .handle = handle,
+          .result = result,
+          .conflictHandle = optionalOf(conflictHandle));
   deliveries.emplace_back([client, handle, result] {
     if (const auto strongClient = client.lock()) {
       strongClient->onAnimationEnded(handle, result);
@@ -420,15 +467,17 @@ void NativeAnimationHost::endWithoutAdmission(
   });
 }
 
-void NativeAnimationHost::releaseReplacedTracks(const std::vector<TrackKey> &replacedTracks, Deliveries &deliveries) {
+void NativeAnimationHost::releaseReplacedTracks(
+    const std::vector<TrackKey> &replacedTracks,
+    const AnimationHandle &replacement,
+    Deliveries &deliveries) {
   for (const auto &key : replacedTracks) {
-    const auto commandIt = commands_.find(key.handle);
+    const auto [commandIt, trackIt] = *findTrack(key);
     auto &command = commandIt->second;
-    const auto trackIt = std::ranges::find(command.tracks, key.target, &Track::target);
-    reportTrackEnd(command.client, *trackIt, key, TrackEnd::Stopped, deliveries);
+    reportTrackEnd(command.client, *trackIt, key, TrackEnd::Stopped, deliveries, &replacement);
     command.tracks.erase(trackIt);
     if (!command.hasResult) {
-      endCommand(key.handle, command, {AnimationOutcome::Interrupted}, deliveries);
+      endCommand(key.handle, command, {AnimationOutcome::Interrupted}, deliveries, &replacement);
     }
     if (command.tracks.empty()) {
       commands_.erase(commandIt);
@@ -459,9 +508,14 @@ void NativeAnimationHost::endCommand(
     const AnimationHandle &handle,
     Command &command,
     const AnimationResult result,
-    Deliveries &deliveries) {
+    Deliveries &deliveries,
+    [[maybe_unused]] const AnimationHandle *conflictHandle) {
   command.hasResult = true;
-  RECORD_TRACE(.event = TraceEventType::Ended, .handle = handle, .result = result);
+  RECORD_TRACE(
+          .event = TraceEventType::Ended,
+          .handle = handle,
+          .result = result,
+          .conflictHandle = optionalOf(conflictHandle));
   deliveries.emplace_back([client = command.client, handle, result] {
     if (const auto strongClient = client.lock()) {
       strongClient->onAnimationEnded(handle, result);
@@ -474,7 +528,9 @@ void NativeAnimationHost::reportTrackEnd(
     Track &track,
     const TrackKey &key,
     const TrackEnd end,
-    Deliveries &deliveries) {
+    Deliveries &deliveries,
+    [[maybe_unused]] const AnimationHandle *conflictHandle,
+    [[maybe_unused]] const std::optional<double> animationTimeMs) {
   if (std::exchange(track.hasReportedEnd, true)) {
     return;
   }
@@ -482,7 +538,9 @@ void NativeAnimationHost::reportTrackEnd(
           .event = TraceEventType::TrackEnded,
           .handle = key.handle,
           .target = key.target,
-          .finished = end == TrackEnd::Finished);
+          .finished = end == TrackEnd::Finished,
+          .animationTimeMs = animationTimeMs,
+          .conflictHandle = optionalOf(conflictHandle));
   deliveries.emplace_back([client, key, end] {
     if (const auto strongClient = client.lock()) {
       strongClient->onTrackEnded(key, end);
