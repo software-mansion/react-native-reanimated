@@ -1,0 +1,1 @@
+Add the `enableVSync` option to `createWorkletRuntime`, which runs the `requestAnimationFrame`, `setTimeout` and `setInterval` callbacks of a Worker Runtime on the display v-sync signal instead of on a timer.

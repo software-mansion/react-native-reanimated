@@ -3,6 +3,10 @@
 #include <jsi/jsi.h>
 #include <worklets/Networking/NetworkingBackend.h>
 
+#ifdef __APPLE__
+#include <worklets/RunLoop/VSyncAsyncQueue.h>
+#endif // __APPLE__
+
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -20,6 +24,9 @@ namespace worklets {
 
 struct RuntimeBindings {
   using RequestAnimationFrame = std::function<void(std::function<void(const double)>)>;
+#ifdef __APPLE__
+  using CreateVSyncQueue = std::function<std::shared_ptr<VSyncAsyncQueue>(const std::string &name)>;
+#endif // __APPLE__
   // Host function extracted from RN runtime's `global.nativeLoggingHook`, used
   // to forward logs from Worklet runtimes to the native console in Bundle Mode.
   // Signature:
@@ -30,6 +37,13 @@ struct RuntimeBindings {
   using NativeLoggingHook = jsi::HostFunctionType;
 
   const RequestAnimationFrame requestAnimationFrame;
+#ifdef __APPLE__
+  /**
+   * Creates the queue of a Worker Runtime with `enableVSync`. The queue's
+   * thread both runs the runtime's jobs and receives the v-sync callbacks.
+   */
+  const CreateVSyncQueue createVSyncQueue;
+#endif // __APPLE__
   const NativeLoggingHook nativeLoggingHook;
   const std::shared_ptr<NetworkingBackend> networkingBackend;
 };

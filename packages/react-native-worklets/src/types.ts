@@ -115,11 +115,6 @@ type WorkletRuntimeConfigBase = {
    */
   initializer?: () => void;
   /**
-   * Time interval in milliseconds between polling of frame callbacks scheduled
-   * by requestAnimationFrame. If not specified, it defaults to 16 ms.
-   */
-  animationQueuePollingRate?: number;
-  /**
    * Determines whether the networking API (`fetch`, `XMLHttpRequest` and
    * their supporting globals) is installed on the runtime. Effective only in
    * Bundle Mode. If not specified, it defaults to `true`.
@@ -176,6 +171,42 @@ export type WorkletRuntimeConfig = WorkletRuntimeConfigBase &
          * Disable only when you can guarantee thread safety of all access to the runtime.
          */
         enableLocking: false;
+      }
+  ) &
+  (
+    | {
+        /**
+         * Time interval in milliseconds between polling of frame callbacks
+         * scheduled by requestAnimationFrame. If not specified, it defaults
+         * to 16 ms. Cannot be set when {@link enableVSync} is set to `true`.
+         */
+        animationQueuePollingRate?: number;
+        /**
+         * Determines whether frame callbacks scheduled by
+         * requestAnimationFrame are flushed on the display v-sync signal
+         * instead of on a timer. If not specified, it defaults to `false`.
+         */
+        enableVSync?: false;
+      }
+    | {
+        /**
+         * The polling rate cannot be set on a runtime with
+         * {@link enableVSync} set to `true`.
+         */
+        animationQueuePollingRate?: never;
+        /**
+         * Determines whether frame callbacks scheduled by
+         * requestAnimationFrame are flushed on the display v-sync signal
+         * instead of on a timer. If not specified, it defaults to `false`.
+         * Available only on a runtime with the default queue and the Event
+         * Loop.
+         */
+        enableVSync: true;
+        enableEventLoop?: true;
+        enableLocking?: true;
+        queue?: 'default';
+        useDefaultQueue?: true;
+        customQueue?: never;
       }
   ) &
   (

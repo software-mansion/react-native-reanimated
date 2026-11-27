@@ -55,15 +55,15 @@ void EventLoop::run() {
       }
 
       const auto currentTime = getCurrentTimeInMs();
-      std::vector<std::function<void(jsi::Runtime & rt)>> jobs;
+      std::vector<Timeout> dueTimeouts;
       auto &timeouts = state->queue;
       timeouts.erase(
           std::remove_if(
               timeouts.begin(),
               timeouts.end(),
-              [currentTime, &jobs](const Timeout &timeout) {
+              [currentTime, &dueTimeouts](const Timeout &timeout) {
                 if (currentTime >= timeout.targetTime) {
-                  jobs.emplace_back(timeout.callback);
+                  dueTimeouts.push_back(timeout);
                   return true;
                 }
                 return false;
@@ -71,10 +71,8 @@ void EventLoop::run() {
           timeouts.end());
       lock.unlock();
 
-      if (auto strongThis = weakThis.lock()) {
-        for (auto &job : jobs) {
-          strongThis->pushTask(std::move(job));
-        }
+      if (auto strongThis = weakThis.lock(); strongThis && !dueTimeouts.empty()) {
+        strongThis->releaseDueTimeouts(std::move(dueTimeouts));
       }
     }
   });
@@ -92,19 +90,38 @@ void EventLoop::pushTask(std::function<void(jsi::Runtime &rt)> &&job) {
        state = timeoutsQueueState_,
        job = std::move(job)] {
         if (auto runtime = weakRuntime.lock()) {
-          std::unique_lock lock(*runtimeMutex);
-          if (!state->running) [[unlikely]] {
-            return;
-          }
-          taskState->rootTaskRunning = true;
-          taskState->rootTaskId++;
-          job(*runtime);
-          runtime->drainMicrotasks();
-          taskState->microtaskCheckpointRequested = false;
-          taskState->rootTaskRunning = false;
+          runRootTask(*runtime, *runtimeMutex, *taskState, *state, job);
         }
       },
       abortToken_);
+}
+
+void EventLoop::runTask(const std::function<void(jsi::Runtime &rt)> &job) {
+  runRootTask(*runtime_, *runtimeMutex_, *taskState_, *timeoutsQueueState_, job);
+}
+
+void EventLoop::releaseDueTimeouts(std::vector<Timeout> &&dueTimeouts) {
+  for (auto &timeout : dueTimeouts) {
+    pushTask(std::move(timeout.callback));
+  }
+}
+
+void EventLoop::runRootTask(
+    jsi::Runtime &runtime,
+    std::recursive_mutex &runtimeMutex,
+    RuntimeTaskState &taskState,
+    const TimeoutsQueueState &state,
+    const std::function<void(jsi::Runtime &rt)> &job) {
+  std::unique_lock lock(runtimeMutex);
+  if (!state.running) [[unlikely]] {
+    return;
+  }
+  taskState.rootTaskRunning = true;
+  taskState.rootTaskId++;
+  job(runtime);
+  runtime.drainMicrotasks();
+  taskState.microtaskCheckpointRequested = false;
+  taskState.rootTaskRunning = false;
 }
 
 void EventLoop::abortPending() {

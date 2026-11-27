@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <worklets/RunLoop/VSyncEventLoop.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableBigInt.h>
@@ -263,6 +264,18 @@ void WorkletRuntimeDecorator::decorate(
         }
         return jsi::Value::undefined();
       });
+
+  if (const auto vsyncEventLoop = std::dynamic_pointer_cast<VSyncEventLoop>(eventLoop)) {
+    jsi_utils::installJsiFunction(
+        rt, "__scheduleVSyncCallback", [weakEventLoop = std::weak_ptr<VSyncEventLoop>(vsyncEventLoop)](jsi::Runtime &) {
+          if (const auto strongEventLoop = weakEventLoop.lock()) {
+            strongEventLoop->runOnNextFrame([](jsi::Runtime &rt, const double timestampMs) {
+              rt.global().getPropertyAsFunction(rt, "__runVSyncCallback").call(rt, timestampMs);
+            });
+          }
+          return jsi::Value::undefined();
+        });
+  }
 }
 
 } // namespace worklets

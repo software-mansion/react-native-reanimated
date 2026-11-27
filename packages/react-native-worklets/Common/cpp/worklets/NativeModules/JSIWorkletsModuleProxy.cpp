@@ -3,6 +3,7 @@
 #include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/Compat/StableApi.h>
 #include <worklets/NativeModules/JSIWorkletsModuleProxy.h>
+#include <worklets/RunLoop/VSyncEventLoop.h>
 #include <worklets/SharedItems/Serializable/CustomSerializable.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
@@ -234,9 +235,18 @@ inline jsi::Value createWorkletRuntime(
     bool enableEventLoop,
     bool enableLocking,
     bool enableNetworking,
-    bool abortable) {
+    bool abortable,
+    VSyncEventLoop::FrameRequester &&requestFrame) {
   const auto workletRuntime = runtimeManager->createWorkletRuntime(
-      sourceProxy, name, initializer, queue, enableEventLoop, enableLocking, enableNetworking, abortable);
+      sourceProxy,
+      name,
+      initializer,
+      queue,
+      enableEventLoop,
+      enableLocking,
+      enableNetworking,
+      abortable,
+      std::move(requestFrame));
   return jsi::Object::createFromHostObject(originRuntime, workletRuntime);
 }
 
@@ -693,19 +703,35 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         return serializedResult->toJSValue(rt);
       });
 
-  jsi_utils::addMethod<8>(
+  jsi_utils::addMethod<9>(
       rt,
       obj,
       "createWorkletRuntime",
-      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[8]) {
+      [sourceProxy = shared_from_this()](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[9]) {
         const auto name = at<0>(args).getString(rt).utf8(rt);
         auto serializableInitializer = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Initializer must be a worklet.");
         const auto useDefaultQueue = at<2>(args).getBool();
+        const auto enableVSync = at<8>(args).getBool();
 
         std::shared_ptr<AsyncQueue> asyncQueue;
+        VSyncEventLoop::FrameRequester requestFrame;
         if (useDefaultQueue) {
-          asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+#ifdef __APPLE__
+          if (enableVSync) {
+            const auto vsyncQueue = sourceProxy->getRuntimeBindings()->createVSyncQueue(name + "_queue");
+            requestFrame = [weakQueue =
+                                std::weak_ptr<VSyncAsyncQueue>(vsyncQueue)](std::function<void(double)> &&onFrame) {
+              if (const auto strongQueue = weakQueue.lock()) {
+                strongQueue->requestVSync(std::move(onFrame));
+              }
+            };
+            asyncQueue = vsyncQueue;
+          }
+#endif // __APPLE__
+          if (!asyncQueue) {
+            asyncQueue = std::make_shared<AsyncQueueImpl>(name + "_queue");
+          }
         } else {
           asyncQueue = extractAsyncQueue(rt, at<3>(args));
         }
@@ -726,7 +752,8 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             enableEventLoop,
             enableLocking,
             enableNetworking,
-            abortable);
+            abortable,
+            std::move(requestFrame));
       });
 
   jsi_utils::addMethod<5>(

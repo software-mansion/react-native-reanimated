@@ -184,7 +184,8 @@ export interface WorkletsModuleProxy {
     enableEventLoop: boolean,
     enableLocking: boolean,
     enableNetworking: boolean,
-    abortable: boolean
+    abortable: boolean,
+    enableVSync: boolean
   ): WorkletRuntime;
 
   scheduleOnRuntime<TValue>(

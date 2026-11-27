@@ -85,7 +85,8 @@ WorkletRuntime::WorkletRuntime(
     bool enableEventLoop,
     bool enableLocking,
     bool enableNetworking,
-    bool abortable)
+    bool abortable,
+    VSyncEventLoop::FrameRequester &&requestFrame)
     : runtimeId_(runtimeId),
       enableLocking_(enableLocking),
       enableNetworking_(enableNetworking),
@@ -105,7 +106,12 @@ WorkletRuntime::WorkletRuntime(
       "[Worklets] The Event Loop cannot be enabled on a Worklet Runtime with "
       "locking disabled.");
   if (enableEventLoop) {
-    eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
+    if (requestFrame) {
+      eventLoop_ = std::make_shared<VSyncEventLoop>(
+          name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_, std::move(requestFrame));
+    } else {
+      eventLoop_ = std::make_shared<EventLoop>(name_, abortToken(), runtime_, queue_, runtimeMutex_, taskState_);
+    }
     eventLoop_->run();
   }
 }
