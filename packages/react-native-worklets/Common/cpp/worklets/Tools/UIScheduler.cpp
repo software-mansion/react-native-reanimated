@@ -34,6 +34,7 @@ void UIScheduler::invokeSync(const std::function<void()> &job, const std::functi
 
 void UIScheduler::triggerUI() {
   if (drainingUI_) {
+    scheduledOnUI_ = false;
     return;
   }
   drainingUI_ = true;
