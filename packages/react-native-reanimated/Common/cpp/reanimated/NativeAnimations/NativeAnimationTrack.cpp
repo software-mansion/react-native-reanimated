@@ -30,6 +30,27 @@ bool isValidDuration(const double durationMs) {
   return std::isfinite(durationMs) && durationMs >= 0;
 }
 
+std::optional<TrackBuildFailure> validateTransformTrack(const AnimationTrack &track) {
+  const auto *startValue = std::get_if<AnimationValue>(&track.start);
+  const auto *start = startValue == nullptr ? nullptr : std::get_if<AnimationTransform>(startValue);
+  if (start == nullptr) {
+    return TrackBuildFailure::UnsupportedTrackForm;
+  }
+  for (const auto &segment : track.segments) {
+    const auto &end = std::get<AnimationTransform>(segment.endValue);
+    if (!hasSameOperationKinds(*start, end)) {
+      return TrackBuildFailure::UnsupportedTrackForm;
+    }
+    for (size_t index = 0; index < end.operations.size(); ++index) {
+      const auto &operation = end.operations[index];
+      if (operation.kind == TransformOperationKind::Perspective && operation.value != start->operations[index].value) {
+        return TrackBuildFailure::UnsupportedValue;
+      }
+    }
+  }
+  return std::nullopt;
+}
+
 } // namespace
 
 std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track) {
@@ -49,7 +70,10 @@ std::optional<TrackBuildFailure> validateTrack(const AnimationTrack &track) {
     }
     previousOffset = segment.endOffset;
   }
-  return previousOffset == 1 ? std::nullopt : std::optional(TrackBuildFailure::InvalidValue);
+  if (previousOffset != 1) {
+    return TrackBuildFailure::InvalidValue;
+  }
+  return track.target == AnimationTarget::Transform ? validateTransformTrack(track) : std::nullopt;
 }
 
 TrackPlayback playbackOf(const AnimationTrack &track) {

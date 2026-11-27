@@ -38,12 +38,23 @@ class MountedAnimation {
 using MountedAnimationResolution = std::variant<std::unique_ptr<MountedAnimation>, AnimationResultReason>;
 
 #ifndef NDEBUG
-/// The components of the model value and of the value on screen.
+/// One physical animation of the playback of a target.
+struct PlaybackMember {
+  /// The platform name of what the member animates.
+  std::string property;
+  std::vector<double> from;
+  std::vector<double> to;
+};
+
+/// The components of the model value and of the value on screen. For a transform they are the 16 cells of
+/// the matrix, and the value on screen is valid only for a playback of one operation.
 struct TargetSample {
   std::vector<double> model;
   std::vector<double> presentation;
   /// The platform keys of each physical playback that the platform put on the view, for all targets.
   std::vector<std::string> playbackKeys;
+  /// The members of the playback of the target, in the order in which the platform applies them.
+  std::vector<PlaybackMember> members;
   /// On the clock of the trace events. The host sets it.
   double monotonicTimeMs{0};
 };

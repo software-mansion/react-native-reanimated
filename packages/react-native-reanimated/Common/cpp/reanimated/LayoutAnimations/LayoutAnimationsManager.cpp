@@ -169,7 +169,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
     const uint64_t buildId,
     const jsi::Object &values,
     const std::shared_ptr<Serializable> &config,
-    const size_t maxLeaves,
+    const NativeLayoutLimits &limits,
     const LiveLayoutLeaves &liveLeaves) {
   ReanimatedSystraceSection section("LayoutAnimationsManager::buildLayoutAnimation");
   const auto configValue = config->toJSValue(rt);
@@ -180,7 +180,7 @@ jsi::Value LayoutAnimationsManager::buildLayoutAnimation(
         jsi::Value(static_cast<double>(buildId)),
         values,
         configValue,
-        jsi::Value(static_cast<double>(maxLeaves)),
+        toJSValue(runtime, limits),
         toJSValue(runtime, liveLeaves));
   });
   return summary;
@@ -220,6 +220,13 @@ void LayoutAnimationsManager::releaseBuiltLayoutAnimation(jsi::Runtime &rt, cons
 void LayoutAnimationsManager::cancelLayoutAnimation(jsi::Runtime &rt, const int tag) const {
   callLayoutAnimationsManager(
       rt, "stop", [&](jsi::Runtime &runtime, const jsi::Function &stop) { stop.call(runtime, jsi::Value(tag)); });
+}
+
+jsi::Object LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const NativeLayoutLimits &limits) {
+  jsi::Object object(rt);
+  object.setProperty(rt, "leaves", static_cast<double>(limits.leaves));
+  object.setProperty(rt, "transformOperations", static_cast<double>(limits.transformOperations));
+  return object;
 }
 
 jsi::Array LayoutAnimationsManager::toJSValue(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves) {

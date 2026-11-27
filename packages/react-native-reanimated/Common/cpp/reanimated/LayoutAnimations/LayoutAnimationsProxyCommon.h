@@ -288,6 +288,10 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
       const ShadowView &shadowView,
       double opacity,
       const PropsParserContext &propsParserContext) const;
+  ShadowView cloneViewWithProps(
+      const ShadowView &shadowView,
+      folly::dynamic props,
+      const PropsParserContext &propsParserContext) const;
   ShadowViewMutation createPropsUpdate(
       const ShadowView &oldView,
       const ShadowView &newView,
