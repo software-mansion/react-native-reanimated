@@ -2,21 +2,27 @@ package com.swmansion.worklets.runloop
 
 import android.os.SystemClock
 import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.modules.core.ReactChoreographer
 import com.facebook.react.uimanager.GuardedFrameCallback
 import java.util.concurrent.atomic.AtomicBoolean
 
 class AnimationFrameQueue(
     reactApplicationContext: ReactApplicationContext,
+    private val mFrameSource: FrameSource = ReactChoreographerFrameSource(),
 ) {
-    private var mFirstUptime = SystemClock.uptimeMillis()
-    private var mSlowAnimationsEnabled = false
-    private var lastFrameTimeMs = 0.0
-    private var mAnimationsDragFactor = 1
+    private class SlowAnimationsConfig(
+        val enabled: Boolean,
+        val dragFactor: Int,
+        val firstUptime: Long,
+    )
 
-    // ReactChoreographer is
-    // [thread safe](https://github.com/facebook/react-native/blob/main/packages/react-native/ReactAndroid/src/main/java/com/facebook/react/modules/core/ReactChoreographer.kt#L21).
-    private val mReactChoreographer: ReactChoreographer = ReactChoreographer.getInstance()
+    /**
+     * Written by the thread that toggles slow animations and read by the frame thread, so it is
+     * replaced as a whole.
+     */
+    @Volatile
+    private var mSlowAnimationsConfig = SlowAnimationsConfig(false, 1, SystemClock.uptimeMillis())
+    private var lastFrameTimeMs = 0.0
+
     private val mChoreographerCallback: GuardedFrameCallback =
         object : GuardedFrameCallback(reactApplicationContext) {
             override fun doFrameGuarded(frameTimeNanos: Long) {
@@ -30,7 +36,7 @@ class AnimationFrameQueue(
     private val mDispatchLock = Any()
 
     fun resume() {
-        if (mPaused.getAndSet(false)) {
+        if (mPaused.getAndSet(false) && hasFrameCallbacks()) {
             scheduleQueueExecution()
         }
     }
@@ -38,10 +44,7 @@ class AnimationFrameQueue(
     fun pause() {
         synchronized(mPaused) {
             if (!mPaused.getAndSet(true) && mCallbackPosted.getAndSet(false)) {
-                mReactChoreographer.removeFrameCallback(
-                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
-                    mChoreographerCallback,
-                )
+                mFrameSource.removeFrameCallback(mChoreographerCallback)
             }
         }
     }
@@ -54,6 +57,7 @@ class AnimationFrameQueue(
                 mFrameCallbacks.clear()
             }
         }
+        mFrameSource.invalidate()
     }
 
     fun requestAnimationFrame(animationFrameCallback: AnimationFrameCallback) {
@@ -69,12 +73,14 @@ class AnimationFrameQueue(
     fun enableSlowAnimations(
         slowAnimationsEnabled: Boolean,
         animationsDragFactor: Int,
+        firstUptime: Long = SystemClock.uptimeMillis(),
     ) {
-        mSlowAnimationsEnabled = slowAnimationsEnabled
-        mAnimationsDragFactor = animationsDragFactor
-        if (slowAnimationsEnabled) {
-            mFirstUptime = SystemClock.uptimeMillis()
-        }
+        mSlowAnimationsConfig =
+            SlowAnimationsConfig(
+                slowAnimationsEnabled,
+                animationsDragFactor,
+                if (slowAnimationsEnabled) firstUptime else mSlowAnimationsConfig.firstUptime,
+            )
     }
 
     private fun scheduleQueueExecution() {
@@ -83,20 +89,14 @@ class AnimationFrameQueue(
                 return
             }
             if (!mPaused.get() && !mCallbackPosted.getAndSet(true)) {
-                mReactChoreographer.postFrameCallback(
-                    ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
-                    mChoreographerCallback,
-                )
+                mFrameSource.postFrameCallback(mChoreographerCallback)
             }
         }
     }
 
     private fun removePostedFrameCallback() {
         if (mCallbackPosted.getAndSet(false)) {
-            mReactChoreographer.removeFrameCallback(
-                ReactChoreographer.CallbackType.NATIVE_ANIMATED_MODULE,
-                mChoreographerCallback,
-            )
+            mFrameSource.removeFrameCallback(mChoreographerCallback)
         }
     }
 
@@ -126,6 +126,12 @@ class AnimationFrameQueue(
         }
     }
 
+    private fun hasFrameCallbacks(): Boolean {
+        synchronized(mFrameCallbacks) {
+            return mFrameCallbacks.isNotEmpty()
+        }
+    }
+
     private fun pullCallbacks(): List<AnimationFrameCallback> {
         synchronized(mFrameCallbacks) {
             val frameCallbacks = mFrameCallbacks.toList()
@@ -138,9 +144,10 @@ class AnimationFrameQueue(
     private fun calculateTimestamp(frameTimeNanos: Long): Double {
         val nanosecondsInMilliseconds = 1000000.0
         var currentFrameTimeMs = frameTimeNanos / nanosecondsInMilliseconds
-        if (mSlowAnimationsEnabled) {
+        val config = mSlowAnimationsConfig
+        if (config.enabled) {
             currentFrameTimeMs =
-                mFirstUptime + (currentFrameTimeMs - mFirstUptime) / mAnimationsDragFactor
+                config.firstUptime + (currentFrameTimeMs - config.firstUptime) / config.dragFactor
         }
         return currentFrameTimeMs
     }
