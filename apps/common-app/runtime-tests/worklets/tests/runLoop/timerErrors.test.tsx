@@ -24,6 +24,7 @@ const FRAME_CANCEL_ERROR =
   'error thrown by a requestAnimationFrame callback that cancels another one';
 const FIRST_FRAME_ERROR = 'first error thrown in a frame';
 const SECOND_FRAME_ERROR = 'second error thrown in a frame';
+const NUMERIC_NAME_ERROR = 'error with a numeric name';
 const REPEATED_FRAME_ERROR = 'error thrown by a callback in every frame';
 const SINGLE_FRAME_ERROR = 'error thrown once next to a repeating error';
 const REPEATED_FRAMES = 10;
@@ -189,9 +190,9 @@ describe('errors thrown by timer callbacks', () => {
     );
 
     debugTest(
-      `reports the errors of a frame when a callback throws a value without a string conversion on the ${runtimeName} Runtime`,
+      `reports every error of a frame when callbacks throw values that are hard to report on the ${runtimeName} Runtime`,
       async () => {
-        const messages = await captureReportedErrors(2, () => {
+        const messages = await captureReportedErrors(4, () => {
           runOnTarget(() => {
             'worklet';
             requestAnimationFrame(() => {
@@ -199,6 +200,20 @@ describe('errors thrown by timer callbacks', () => {
             });
             requestAnimationFrame(() => {
               throw Object.create(null);
+            });
+            requestAnimationFrame(() => {
+              const value = Object.create(null);
+              Object.defineProperty(value, Symbol.toStringTag, {
+                get() {
+                  throw new Error('tag getter failed');
+                },
+              });
+              throw value;
+            });
+            requestAnimationFrame(() => {
+              throw Object.assign(new Error(NUMERIC_NAME_ERROR), {
+                name: 123,
+              });
             });
             requestAnimationFrame(() => {
               scheduleOnRN(onAlive);
@@ -212,6 +227,12 @@ describe('errors thrown by timer callbacks', () => {
         ).toBe(true);
         expect(
           messages.some((message) => message.includes('[object Object]'))
+        ).toBe(true);
+        expect(
+          messages.some((message) => message.includes('cannot be reported'))
+        ).toBe(true);
+        expect(
+          messages.some((message) => message.includes(NUMERIC_NAME_ERROR))
         ).toBe(true);
       }
     );

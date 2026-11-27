@@ -2,6 +2,8 @@
 
 export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
   'worklet';
+  const UNREPORTABLE_ERROR_MESSAGE =
+    '[Worklets] A requestAnimationFrame callback threw a value that cannot be reported.';
   const timeoutInterval = animationQueuePollingRate;
 
   let queuedCallbacks: ((timestamp: number) => void)[] = [];
@@ -63,19 +65,31 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
   }
 
   function reportError(error: unknown) {
-    if (error instanceof Error) {
+    try {
+      const { message, stack, name } = describeError(error);
       globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
-        error.message,
-        error.stack ?? '',
-        error.name
+        message,
+        stack,
+        name
       );
-    } else {
+    } catch {
       globalThis.__workletsModuleProxy.reportFatalErrorOnJS(
-        describeThrownValue(error),
+        UNREPORTABLE_ERROR_MESSAGE,
         '',
         'Error'
       );
     }
+  }
+
+  function describeError(error: unknown) {
+    if (error instanceof Error) {
+      return {
+        message: typeof error.message === 'string' ? error.message : '',
+        stack: typeof error.stack === 'string' ? error.stack : '',
+        name: typeof error.name === 'string' ? error.name : 'Error',
+      };
+    }
+    return { message: describeThrownValue(error), stack: '', name: 'Error' };
   }
 
   function describeThrownValue(value: unknown): string {
