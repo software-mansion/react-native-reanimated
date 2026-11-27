@@ -17,6 +17,15 @@ describe('bundleValueUnpacker', () => {
       if (id === 4) {
         throw Object.create(null);
       }
+      if (id === 5) {
+        const error = new Error();
+        Object.defineProperty(error, 'message', {
+          get() {
+            throw new Error('message getter');
+          },
+        });
+        throw error;
+      }
       throw new Error(`Requiring unknown module "${id}".`);
     };
     try {
@@ -34,6 +43,12 @@ describe('bundleValueUnpacker', () => {
           __workletHash: 4,
         } as never) as () => void;
         expect(thrownBareObject).toThrow(
+          'Original error: a value that cannot be converted to a string'
+        );
+        const thrownBrokenError = unpack({
+          __workletHash: 5,
+        } as never) as () => void;
+        expect(thrownBrokenError).toThrow(
           'Original error: a value that cannot be converted to a string'
         );
       });
