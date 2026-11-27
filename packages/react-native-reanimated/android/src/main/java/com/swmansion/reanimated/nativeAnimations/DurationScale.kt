@@ -1,4 +1,4 @@
-package com.swmansion.reanimated.css
+package com.swmansion.reanimated.nativeAnimations
 
 import android.animation.ValueAnimator
 import android.content.Context
