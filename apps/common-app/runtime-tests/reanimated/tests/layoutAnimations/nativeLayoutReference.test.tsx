@@ -28,8 +28,8 @@
  * hold from a native segment that keeps its start value through eased progress 0.001 or shows its end value
  * from eased progress 0.999. The frame-driven twin keeps its exact curve check without a hold allowance.
  * Each read that is on the timeline only by the hold is an `EDGE-HOLD` row. A read can also show the state
- * after the natural end of a track up to 1.78 ms before that end (the platform removes the animation in
- * that time, measured), of a `Transform` track too: a `REMOVAL-WINDOW` row. The two are not summed. Not
+ * after the natural end of a track up to `removalLeadMs` before that end (the platform removes the animation
+ * in that time: 1.78 ms measured on a simulator, 5.7 ms allowed on an iPhone), of a `Transform` track too: a `REMOVAL-WINDOW` row. The two are not summed. Not
  * tested for the hold: a track with a curve and more than one segment, a `Transform` track with a curve, a
  * live layer with a curve, a device, an operation whose one move has no duration beside operations that
  * move. A limit: the check takes the member of a track by its place in the sample, for one playback of the
@@ -101,7 +101,7 @@
  * common times. For each command, the check reads the row nearest to each checkpoint of its declared
  * duration from its origin, the first row from its origin, and the end samples. Each value of the native
  * box has its time error on the recorded frames of the twin (`nativeLayoutTwinTimeline.ts`): Apple asserts
- * one display frame, Android prints. The duration of each command and the emission time of the last
+ * its `e_lo` to one display frame, and also the `e_hi` of the rows of `PROVEN_ROWS`; Android prints. The duration of each command and the emission time of the last
  * callback of each box on the animation clock are also compared to one display frame. The origin of a
  * command that the frame driver plays on the native box is the start call of its first record (first
  * commit) or of the record that replaced a native track (later commit). On Android, the two size cases are

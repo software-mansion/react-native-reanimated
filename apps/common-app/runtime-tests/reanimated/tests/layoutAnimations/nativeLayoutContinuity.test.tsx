@@ -157,6 +157,9 @@ import {
   movingGeometryTest,
   MOUNTS_IN_DISPATCHES,
   readFrameRecords,
+  recordStartOf,
+  frameRecordedOf,
+  callbackFrameFaultOf,
   resetFrameRecords,
 } from './nativeLayoutTestKit';
 import type { PairRead, TwinPair, TwinRest } from './nativeLayoutTwinTimeline';
@@ -1434,9 +1437,12 @@ describe('native layout continuity', () => {
    * and of `extraLeaves`.
    */
   async function mountSharedSource(hasCallback: boolean, extraLeaves: Leaves) {
-    const layout = layoutOf(
-      { originX: { duration: PAIR_DURATION, hasCallback }, ...extraLeaves },
-      { name: 'hidden' }
+    const layout = frameRecordedOf(
+      'hidden',
+      layoutOf(
+        { originX: { duration: PAIR_DURATION, hasCallback }, ...extraLeaves },
+        { name: 'hidden' }
+      )
     );
     const screens = (left: number, opacity: number, showTarget: boolean) => (
       <SharedLayoutScreens
@@ -1451,6 +1457,7 @@ describe('native layout continuity', () => {
     const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
     await takeTrace();
     callbacks.length = 0;
+    resetFrameRecords();
     return { tag, screens };
   }
 
@@ -1465,13 +1472,25 @@ describe('native layout continuity', () => {
     return (await sample(tag, 'Position')).presentation[0];
   }
 
-  type HiddenRoute = { shownX: number[]; callbackMs: number };
+  type HiddenRoute = {
+    shownX: number[];
+    callbackMs: number;
+    endFrameFault: string;
+  };
+
+  const endFrameFaultOf = (startMs: number) =>
+    callbackFrameFaultOf('hidden', startMs + PAIR_DURATION);
+  const commandOriginOf = (events: TraceEvent[]) =>
+    events.find(({ event }) => event === 'Received')?.originTimestampMs ??
+    recordStartOf('hidden');
 
   // The native route and the frame driver show the same X, and the callback comes at the end of the animation.
   function expectHiddenRoutesAgree(
     caseName: string,
-    [native, frame]: HiddenRoute[]
+    routes: HiddenRoute[],
+    hasWallClockBound = false
   ) {
+    const [native, frame] = routes;
     const xBound = 2 * oneFrame() + 0.5;
     native.shownX.forEach((x, index) => {
       const error = Math.abs(x - frame.shownX[index]);
@@ -1493,17 +1512,21 @@ describe('native layout continuity', () => {
       '4 display frames'
     );
     expect(callbackError < 4 * FRAME_MS).toBe(true);
-    logModelBound(
-      caseName,
-      `callback time after ${PAIR_DURATION} ms, ms`,
-      native.callbackMs - PAIR_DURATION,
-      6 * FRAME_MS,
-      'more than 0 and less than 6 display frames'
-    );
-    expect(
-      native.callbackMs > PAIR_DURATION &&
-        native.callbackMs < PAIR_DURATION + 6 * FRAME_MS
-    ).toBe(true);
+    if (hasWallClockBound) {
+      logModelBound(
+        caseName,
+        `callback time after ${PAIR_DURATION} ms, ms`,
+        native.callbackMs - PAIR_DURATION,
+        6 * FRAME_MS,
+        'more than 0 and less than 6 display frames'
+      );
+      expect(
+        native.callbackMs > PAIR_DURATION &&
+          native.callbackMs < PAIR_DURATION + 6 * FRAME_MS
+      ).toBe(true);
+    } else {
+      expect(routes.map(({ endFrameFault }) => endFrameFault).join()).toBe(',');
+    }
   }
 
   const hiddenSourceCases: [string, Leaves, number][] = [
@@ -1553,14 +1576,22 @@ describe('native layout continuity', () => {
           await waitUntil(PAIR_DURATION + 150);
           expect(callbacks.join()).toBe('hidden:true');
           await sampleHiddenX(tag);
-          routes.push({ shownX, callbackMs: callbackTimes.hidden - startMs });
+          routes.push({
+            shownX,
+            callbackMs: callbackTimes.hidden - startMs,
+            endFrameFault:
+              caseName === 'X track only'
+                ? ''
+                : endFrameFaultOf(commandOriginOf(await takeTraceOf(tag))),
+          });
           await render(null);
           await wait(100);
         }
 
         expectHiddenRoutesAgree(
           `a shared transition hides a source view, ${caseName}`,
-          routes
+          routes,
+          caseName === 'X track only'
         );
         const [native] = routes;
         expect(
@@ -1625,7 +1656,11 @@ describe('native layout continuity', () => {
           Math.abs((await sampleHiddenX(tag)) - centerOf(PAIR_LEFT / 2)) <=
             LAID_OUT_TOLERANCE
         ).toBe(true);
-        routes.push({ shownX, callbackMs: callbackTimes.hidden - hideMs });
+        routes.push({
+          shownX,
+          callbackMs: callbackTimes.hidden - hideMs,
+          endFrameFault: endFrameFaultOf(recordStartOf('hidden')),
+        });
         await render(null);
         await wait(100);
       }
@@ -1672,7 +1707,11 @@ describe('native layout continuity', () => {
         const events = await takeTraceOf(tag);
         expect(summarize(events)).toBe('LayoutStartRefused');
         expect(startRefusalsOf(events)).toBe('HiddenBySharedTransition');
-        routes.push({ shownX, callbackMs: callbackTimes.hidden - startMs });
+        routes.push({
+          shownX,
+          callbackMs: callbackTimes.hidden - startMs,
+          endFrameFault: endFrameFaultOf(recordStartOf('hidden')),
+        });
         await render(null);
         await wait(100);
       }

@@ -458,8 +458,25 @@ export const ORDER_B_WRITE_DRAW_DELAY_MS =
   NATIVE_ANIMATION_ROUTES.synchronousProps ? 0 : FRAME_MS;
 // Measured gaps of the reads of a key: 47.05 ms at most, 150.15 ms at least after a block.
 export const READ_GAP_MS = 100;
-// 2.146 - 0.460 + 0.091 ms, the measured edges of the removing tick.
-export const REMOVAL_LEAD_MS = 1.78;
+// 2.146 - 0.460 + 0.091 ms, the measured edges of the removing tick on a simulator.
+const RUN_AT_FRAME_TIME_REMOVAL_LEAD_MS = 1.78;
+// A test allowance for an iPhone 14: an end report came up to 5.42 ms before its
+// declared end, and a read showed no keys up to 0.25 ms before the end report and
+// up to 5.31 ms before the declared end (measured).
+const RUN_AHEAD_REMOVAL_LEAD_MS = 5.7;
+let runsAheadOfFrameTime: boolean | undefined;
+
+/**
+ * How long before its declared end the platform can take an animation off its
+ * layer: longer where the frames run ahead of their frame time
+ * (`frameLeadMs`).
+ */
+export function removalLeadMs() {
+  runsAheadOfFrameTime ??= frameLeadMs(-Infinity) > FRAME_MS / 2;
+  return runsAheadOfFrameTime
+    ? RUN_AHEAD_REMOVAL_LEAD_MS
+    : RUN_AT_FRAME_TIME_REMOVAL_LEAD_MS;
+}
 // Paused layer: a keyframe segment shows its start value while its eased progress is under 0.001 and its end value while it is over 0.999.
 export const KEYFRAME_EDGE_HOLD = 0.001;
 export const LAYOUT_DURATION = 4 * DURATION;
@@ -1568,8 +1585,8 @@ const withReplacedOf = (track: TimedTrack): TimedTrack[] => [
 
 type PresentationBand = Band & {
   /**
-   * An end of `ownEndsMs` at most `REMOVAL_LEAD_MS` after the band: the read
-   * can show the declared values of each side of it.
+   * An end of `ownEndsMs` at most `removalLeadMs` after the band: the read can
+   * show the declared values of each side of it.
    */
   removalEndMs?: number;
 };
@@ -1587,7 +1604,7 @@ function presentationBandOf(
     .flatMap(({ origin, ownEndsMs = [] }) =>
       ownEndsMs.map((endMs) => middleOf(origin) + endMs)
     )
-    .filter((endMs) => endMs > band.to && endMs - REMOVAL_LEAD_MS <= band.to);
+    .filter((endMs) => endMs > band.to && endMs - removalLeadMs() <= band.to);
   return {
     ...band,
     removalEndMs: removalEnds.length > 0 ? Math.max(...removalEnds) : undefined,
@@ -2270,7 +2287,7 @@ export function endedFromMsOf(tracks: TimedTrack[]) {
   return ends.length > 0
     ? middleOf(origin) +
         Math.max(...ends) -
-        REMOVAL_LEAD_MS -
+        removalLeadMs() -
         uncertaintyOf(origin)
     : Infinity;
 }
@@ -3278,6 +3295,38 @@ export function resetCallbacks() {
       delete times[name];
     }
   }
+}
+
+/**
+ * Nothing when the callback `name` ran in the first frame of the frame clock at
+ * or after `endTimeMs` (animation clock), else what it did.
+ */
+export function callbackFrameFaultOf(name: string, endTimeMs: number) {
+  if (!Number.isFinite(endTimeMs)) {
+    return `no start of the animation of ${name}`;
+  }
+  const endFrameTimeMs = firstFrameTimeAtOrAfter(endTimeMs);
+  const { frameTimeMs } = callbackTimeOf(name);
+  return frameTimeMs === endFrameTimeMs
+    ? ''
+    : `the callback of ${name} ran in the frame at ${(frameTimeMs - endFrameTimeMs).toFixed(2)} ms from the first frame at its end`;
+}
+
+/**
+ * The start of the leaf of the last record of `box` that started, on the
+ * animation clock: a timing moves its start to a first frame time before its
+ * start call.
+ */
+export function recordStartOf(box: string) {
+  const record = [...readFrameRecords()]
+    .reverse()
+    .find((each) => each.box === box && each.start !== undefined);
+  return record?.start === undefined
+    ? NaN
+    : Math.min(
+        record.start.timeMs,
+        ...record.frames.map(({ timeMs }) => timeMs)
+      );
 }
 
 /** The times of the last callback of a name since `resetCallbacks`. */

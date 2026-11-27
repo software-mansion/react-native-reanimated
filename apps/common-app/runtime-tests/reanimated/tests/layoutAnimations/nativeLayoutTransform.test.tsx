@@ -23,7 +23,7 @@
  * that the two starts are in one display frame, when a callback comes, that a row comes in each part of a
  * timeline, a native value in the first display frame after its origin to better than one display frame, a
  * read in the first 18 ms of a track (its operations start at the initial values of the builder, which the
- * view did not show). After a commit of another style transform, a read from 1.78 ms before the declared
+ * view did not show). After a commit of another style transform, a read from `removalLeadMs` before the declared
  * end of the track is not checked: it can show the committed style. The pixels on screen, the order in
  * which the screen shows the operations, a device, and 120 Hz are not tested.
  *

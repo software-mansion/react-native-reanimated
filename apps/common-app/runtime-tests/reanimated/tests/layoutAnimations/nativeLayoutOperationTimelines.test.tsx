@@ -8,8 +8,8 @@
  * A check of a playback key count or of a held value in such a test is for each row, by the time of the row
  * against the times of the trace and the declared times. The end report of a track and the callback of the
  * native box have the lower bound of their time from the origin, one display frame before the declared end:
- * the platform can remove an animation up to 1.78 ms before its declared end (`REMOVAL_LEAD_MS`, measured),
- * so the bound has a margin of 14.89 ms. The physical animations of a track are the ones of its middle read.
+ * the platform can remove an animation up to 1.78 ms (simulator, measured) or 5.7 ms (iPhone 14, an allowance
+ * from measurements) before its declared end (`removalLeadMs`), so the bound has a margin of 14.89 ms or 10.97 ms. The physical animations of a track are the ones of its middle read.
  * The tolerance of a cell is 0.005, and of a translation 0.25. The test of the live size track and the test
  * of the keyframe animation have state checks and trace checks at planned times. The test in which the
  * frame driver takes the `Transform` track has statement M of the suite `native layout transform`, with its

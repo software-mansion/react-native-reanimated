@@ -131,7 +131,7 @@ import {
   LAYOUT_KEYS,
   LAYOUT_PROPS,
   readFrameRecords,
-  REMOVAL_LEAD_MS,
+  removalLeadMs,
   REMOVES_TRACKS_OUT_OF_WINDOW,
   resetCallbacks,
   resetFrameRecords,
@@ -1103,6 +1103,19 @@ const CHECKPOINTS = [0, 0.1, 0.25, 0.5, 0.75, 0.9, 1];
 const ASSERTS_COMMON_TIME = !KEEPS_PAIR_COMPARISON;
 
 /**
+ * Rows that must be `proven` (`e_hi` too): a two-frame delay of the native
+ * start makes this one `not resolved` (measured on an iPhone 14).
+ */
+const PROVEN_ROWS = [
+  {
+    caseName: 'an entering animation',
+    command: 1,
+    checkpoint: '0.5',
+    quantity: 'Position x',
+  },
+];
+
+/**
  * The cell of each box is its mounted parent: the player compares the native
  * position samples with no offset (`shownTrackOf`).
  */
@@ -1211,6 +1224,22 @@ export function expectAtCommonTime(
     ),
     ...expectTimesAtCommonTime(stages),
   ];
+  const provenRows = rows.filter(({ stage, checkpoint, quantity }) =>
+    PROVEN_ROWS.some(
+      (proven) =>
+        proven.caseName === caseName &&
+        proven.command === stage.command &&
+        proven.checkpoint === checkpoint &&
+        proven.quantity === quantity
+    )
+  );
+  if (ASSERTS_COMMON_TIME) {
+    expect(
+      provenRows.length ===
+        PROVEN_ROWS.filter((proven) => proven.caseName === caseName).length &&
+        provenRows.every(({ result }) => result === 'proven')
+    ).toBe(true);
+  }
   for (const row of rows) {
     console.log(
       describeCommonRow(
@@ -2525,7 +2554,7 @@ const describeReadsAfterGap = (reads: RowRead[]) =>
       : [];
   });
 
-/** Each checked read that is on the timeline only by `REMOVAL_LEAD_MS`. */
+/** Each checked read that is on the timeline only by `removalLeadMs`. */
 const describeRemovalWindowReads = (reads: RowRead[]) =>
   reads.flatMap((read) => {
     const { isChecked, residual, checked, timeMs, values } = read;
@@ -3789,8 +3818,8 @@ const commandKeysOf = (
 /**
  * After a restyle or a write of a target, the model of a box is not the end
  * value of its declaration: a read of the target that can show the model is not
- * checked. The platform takes an animation off its layer up to
- * `REMOVAL_LEAD_MS` before its declared end.
+ * checked. The platform takes an animation off its layer up to `removalLeadMs`
+ * before its declared end.
  */
 export function checkedToRemovalOf(
   tracks: PlayedTrack[],
@@ -3804,7 +3833,7 @@ export function checkedToRemovalOf(
   );
   return tracks.map((track) =>
     written.includes(track)
-      ? { ...track, checkedToMs: declaredEndMs - REMOVAL_LEAD_MS }
+      ? { ...track, checkedToMs: declaredEndMs - removalLeadMs() }
       : track
   );
 }

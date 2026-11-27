@@ -157,7 +157,8 @@ import {
   movingGeometryTest,
   declaredDurationOf,
   shownBandAt,
-  firstFrameTimeAtOrAfter,
+  callbackFrameFaultOf,
+  recordStartOf,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -3203,25 +3204,6 @@ const SHARED: SharedPair = {
   transition: SharedTransition.duration(600),
 };
 
-function endFrameCallbackFaultsOf(box: string, durationMs: number) {
-  const record = readFrameRecords().find(
-    (each) => each.box === box && each.start !== undefined
-  );
-  if (record?.start === undefined) {
-    return `no frame record of ${box}`;
-  }
-  const startMs = Math.min(
-    record.start.timeMs,
-    ...record.frames.map(({ timeMs }) => timeMs)
-  );
-  const endTimeMs = startMs + durationMs;
-  const endFrameTimeMs = firstFrameTimeAtOrAfter(endTimeMs);
-  const { frameTimeMs } = callbackTimeOf(box);
-  return frameTimeMs === endFrameTimeMs
-    ? ''
-    : `the callback of ${box} ran in the frame at ${(frameTimeMs - endFrameTimeMs).toFixed(2)} ms from the first UI frame at ${durationMs} ms from its start`;
-}
-
 /** The commit that shows the target removes the source. */
 function SharedExitScreens({
   exiting,
@@ -3286,7 +3268,9 @@ describe('native layout exiting of a view that a shared transition hides', () =>
         expect(await waitForCallbacks([`${route}:true`])).toBe('');
         expect(await leaves(tag)).toBe(true);
         expect(callbacks.join()).toBe(`${route}:true`);
-        expect(endFrameCallbackFaultsOf(route, EXIT_DURATION)).toBe('');
+        expect(
+          callbackFrameFaultOf(route, recordStartOf(route) + EXIT_DURATION)
+        ).toBe('');
         await render(null);
         await wait(100);
       }
