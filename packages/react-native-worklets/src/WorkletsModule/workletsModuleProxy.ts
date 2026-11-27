@@ -173,7 +173,8 @@ export interface WorkletsModuleProxy {
 
   runOnUISync<TValue, TReturn>(
     serializable: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStack?: string
   ): TReturn;
 
   createWorkletRuntime(
@@ -190,16 +191,18 @@ export interface WorkletsModuleProxy {
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string,
-    resolve?: SerializableRef,
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStackOrResolve?: string | SerializableRef,
+    resolveOrReject?: SerializableRef,
     reject?: SerializableRef
   ): void;
 
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack?: string,
-    resolve?: SerializableRef,
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStackOrResolve?: string | SerializableRef,
+    resolveOrReject?: SerializableRef,
     reject?: SerializableRef
   ): void;
 
@@ -208,12 +211,14 @@ export interface WorkletsModuleProxy {
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
     scheduleStack?: string
   ): TReturn;
 
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
     scheduleStack?: string
   ): TReturn;
 

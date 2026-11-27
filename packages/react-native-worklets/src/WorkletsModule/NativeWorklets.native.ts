@@ -270,9 +270,14 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
 
   runOnUISync<TValue, TReturn>(
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStack?: string
   ): TReturn {
-    return this.#workletsModuleProxy.runOnUISync(worklet, scheduleStack);
+    return this.#workletsModuleProxy.runOnUISync(
+      worklet,
+      argumentsRefOrScheduleStack,
+      scheduleStack
+    );
   }
 
   createWorkletRuntime(
@@ -300,15 +305,17 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   scheduleOnRuntime<TValue>(
     workletRuntime: WorkletRuntime,
     serializableWorklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined,
-    resolve?: SerializableRef,
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStackOrResolve?: string | SerializableRef,
+    resolveOrReject?: SerializableRef,
     reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntime(
       workletRuntime,
       serializableWorklet,
-      scheduleStack,
-      resolve,
+      argumentsRefOrScheduleStack,
+      scheduleStackOrResolve,
+      resolveOrReject,
       reject
     );
   }
@@ -316,15 +323,17 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   scheduleOnRuntimeWithId<TValue>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined,
-    resolve?: SerializableRef,
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStackOrResolve?: string | SerializableRef,
+    resolveOrReject?: SerializableRef,
     reject?: SerializableRef
   ) {
     return this.#workletsModuleProxy.scheduleOnRuntimeWithId(
       runtimeId,
       worklet,
-      scheduleStack,
-      resolve,
+      argumentsRefOrScheduleStack,
+      scheduleStackOrResolve,
+      resolveOrReject,
       reject
     );
   }
@@ -336,11 +345,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   runOnRuntimeSync<TValue, TReturn>(
     workletRuntime: WorkletRuntime,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStack?: string
   ): TReturn {
     return this.#workletsModuleProxy.runOnRuntimeSync(
       workletRuntime,
       worklet,
+      argumentsRefOrScheduleStack,
       scheduleStack
     );
   }
@@ -348,11 +359,13 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   runOnRuntimeSyncWithId<TValue, TReturn>(
     runtimeId: number,
     worklet: SerializableRef<TValue>,
-    scheduleStack: string | undefined
+    argumentsRefOrScheduleStack?: SerializableRef<unknown[]> | string,
+    scheduleStack?: string
   ): TReturn {
     return this.#workletsModuleProxy.runOnRuntimeSyncWithId(
       runtimeId,
       worklet,
+      argumentsRefOrScheduleStack,
       scheduleStack
     );
   }

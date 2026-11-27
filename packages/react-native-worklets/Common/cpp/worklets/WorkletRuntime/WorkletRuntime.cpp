@@ -225,6 +225,20 @@ void WorkletRuntime::schedule(std::shared_ptr<SerializableWorklet> worklet, std:
 }
 
 void WorkletRuntime::schedule(
+    std::shared_ptr<SerializableWorklet> worklet,
+    std::shared_ptr<SerializableArray> arguments,
+    std::shared_ptr<void> dropGuard) const {
+  scheduleImpl([worklet = std::move(worklet), arguments = std::move(arguments), dropGuard = std::move(dropGuard)](
+                   const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+      const auto scope = jsi::Scope(rt);
+      const auto args = arguments->getJSIValueArr(rt);
+      workletRuntime.runSyncImpl(worklet, args.data(), args.size());
+    });
+  });
+}
+
+void WorkletRuntime::schedule(
     std::shared_ptr<SerializableArray> serializableArrayOfWorklets,
     std::shared_ptr<SerializableArray> serializableArrayOfArguments) const {
   scheduleImpl(
@@ -254,6 +268,24 @@ void WorkletRuntime::scheduleWithStack(
                 scheduleStack = std::move(scheduleStack),
                 dropGuard = std::move(dropGuard)](const WorkletRuntime &workletRuntime) {
     workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run, jsi::Value, ScheduleStack::Requested>(worklet, scheduleStack);
+  });
+}
+
+void WorkletRuntime::scheduleWithStack(
+    std::shared_ptr<SerializableWorklet> worklet,
+    std::shared_ptr<SerializableArray> arguments,
+    std::optional<std::string> scheduleStack,
+    std::shared_ptr<void> dropGuard) const {
+  scheduleImpl([worklet = std::move(worklet),
+                arguments = std::move(arguments),
+                scheduleStack = std::move(scheduleStack),
+                dropGuard = std::move(dropGuard)](const WorkletRuntime &workletRuntime) {
+    workletRuntime.runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &rt) {
+      const auto scope = jsi::Scope(rt);
+      const auto args = arguments->getJSIValueArr(rt);
+      workletRuntime.runSyncImpl<MicrotaskCheckpoint::Skip, jsi::Value, ScheduleStack::Requested>(
+          worklet, scheduleStack, args.data(), args.size());
+    });
   });
 }
 
@@ -317,6 +349,34 @@ void WorkletRuntime::scheduleImpl(ScheduledJob job) const {
       },
       abortToken());
 }
+
+auto WorkletRuntime::runSyncAndDrainMicrotasksSerializedWithArguments(
+    const std::shared_ptr<SerializableWorklet> &worklet,
+    const std::shared_ptr<SerializableArray> &arguments) const -> std::shared_ptr<Serializable> {
+  auto lock = acquireRuntimeLock();
+  auto &rt = getJSIRuntime();
+  const auto scope = jsi::Scope(rt);
+  return runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &innerRt) {
+    const auto args = arguments->getJSIValueArr(innerRt);
+    return runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>>(worklet, args.data(), args.size());
+  });
+}
+
+#ifndef NDEBUG
+auto WorkletRuntime::runSyncWithStackAndDrainMicrotasksSerializedWithArguments(
+    const std::shared_ptr<SerializableWorklet> &worklet,
+    const std::shared_ptr<SerializableArray> &arguments,
+    const std::optional<std::string> &scheduleStack) const -> std::shared_ptr<Serializable> {
+  auto lock = acquireRuntimeLock();
+  auto &rt = getJSIRuntime();
+  const auto scope = jsi::Scope(rt);
+  return runSyncImpl<MicrotaskCheckpoint::Run>([&](jsi::Runtime &innerRt) {
+    const auto args = arguments->getJSIValueArr(innerRt);
+    return runSyncImpl<MicrotaskCheckpoint::Skip, std::shared_ptr<Serializable>, ScheduleStack::Requested>(
+        worklet, scheduleStack, args.data(), args.size());
+  });
+}
+#endif // NDEBUG
 
 /* #endregion */
 

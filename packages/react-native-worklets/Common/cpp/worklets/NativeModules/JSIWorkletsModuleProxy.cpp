@@ -97,7 +97,8 @@ inline void scheduleOnUI(
 inline jsi::Value runOnUISync(
     const std::weak_ptr<WorkletRuntime> &weakUIWorkletRuntime,
     jsi::Runtime &rt,
-    const jsi::Value &worklet
+    const jsi::Value &worklet,
+    const jsi::Value &argumentsValue
 #ifndef NDEBUG
     ,
     const std::optional<std::string> &scheduleStack
@@ -106,11 +107,23 @@ inline jsi::Value runOnUISync(
   if (auto uiWorkletRuntime = weakUIWorkletRuntime.lock()) {
     auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
         rt, worklet, "[Worklets] Only worklets can be executed on UI runtime.");
+    const bool hasSeparateArguments = argumentsValue.isObject();
 #ifndef NDEBUG
-    auto serializedResult = uiWorkletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
-        serializableWorklet, scheduleStack);
+    auto serializedResult = hasSeparateArguments
+        ? uiWorkletRuntime->runSyncWithStackAndDrainMicrotasksSerializedWithArguments(
+              serializableWorklet,
+              extractSerializableOrThrow<SerializableArray>(
+                  rt, argumentsValue, "[Worklets] Arguments passed to UI runtime must be a serializable array."),
+              scheduleStack)
+        : uiWorkletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
+              serializableWorklet, scheduleStack);
 #else
-    auto serializedResult = uiWorkletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
+    auto serializedResult = hasSeparateArguments
+        ? uiWorkletRuntime->runSyncAndDrainMicrotasksSerializedWithArguments(
+              serializableWorklet,
+              extractSerializableOrThrow<SerializableArray>(
+                  rt, argumentsValue, "[Worklets] Arguments passed to UI runtime must be a serializable array."))
+        : uiWorkletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
 #endif // NDEBUG
     return serializedResult->toJSValue(rt);
   }
@@ -120,7 +133,8 @@ inline jsi::Value runOnUISync(
 jsi::Value runOnRuntimeSync(
     jsi::Runtime &rt,
     const jsi::Value &workletRuntimeValue,
-    const jsi::Value &serializableWorkletValue
+    const jsi::Value &serializableWorkletValue,
+    const jsi::Value &argumentsValue
 #ifndef NDEBUG
     ,
     const std::optional<std::string> &scheduleStack
@@ -129,14 +143,25 @@ jsi::Value runOnRuntimeSync(
   auto workletRuntime = workletRuntimeValue.getObject(rt).getHostObject<WorkletRuntime>(rt);
   auto worklet = extractSerializableOrThrow<SerializableWorklet>(
       rt, serializableWorkletValue, "[Worklets] Only worklets can be executed on a worklet runtime.");
+  const bool hasSeparateArguments = argumentsValue.isObject();
   if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
     throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
   }
 #ifndef NDEBUG
-  auto serializedResult =
-      workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet, scheduleStack);
+  auto serializedResult = hasSeparateArguments
+      ? workletRuntime->runSyncWithStackAndDrainMicrotasksSerializedWithArguments(
+            worklet,
+            extractSerializableOrThrow<SerializableArray>(
+                rt, argumentsValue, "[Worklets] Arguments passed to a worklet runtime must be a serializable array."),
+            scheduleStack)
+      : workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(worklet, scheduleStack);
 #else
-  auto serializedResult = workletRuntime->runSyncAndDrainMicrotasksSerialized(worklet);
+  auto serializedResult = hasSeparateArguments
+      ? workletRuntime->runSyncAndDrainMicrotasksSerializedWithArguments(
+            worklet,
+            extractSerializableOrThrow<SerializableArray>(
+                rt, argumentsValue, "[Worklets] Arguments passed to a worklet runtime must be a serializable array."))
+      : workletRuntime->runSyncAndDrainMicrotasksSerialized(worklet);
 #endif // NDEBUG
   return serializedResult->toJSValue(rt);
 }
@@ -635,40 +660,42 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<2>(
+  jsi_utils::addMethod<3>(
       rt,
       obj,
       "runOnUISync",
-      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[2]) {
+      [uiWorkletRuntime = uiWorkletRuntime_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
-        if (at<1>(args).isString()) {
-          scheduleStack = at<1>(args).asString(rt).utf8(rt);
+        const auto &scheduleStackValue = at<2>(args).isString() ? at<2>(args) : at<1>(args);
+        if (scheduleStackValue.isString()) {
+          scheduleStack = scheduleStackValue.asString(rt).utf8(rt);
         }
-        return runOnUISync(uiWorkletRuntime, rt, at<0>(args), scheduleStack);
+        return runOnUISync(uiWorkletRuntime, rt, at<0>(args), at<1>(args), scheduleStack);
 #else
-        return runOnUISync(uiWorkletRuntime, rt, at<0>(args));
+        return runOnUISync(uiWorkletRuntime, rt, at<0>(args), at<1>(args));
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<3>(
-      rt, obj, "runOnRuntimeSync", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+  jsi_utils::addMethod<4>(
+      rt, obj, "runOnRuntimeSync", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
-        if (at<2>(args).isString()) {
-          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        const auto &scheduleStackValue = at<2>(args).isObject() ? at<3>(args) : at<2>(args);
+        if (scheduleStackValue.isString()) {
+          scheduleStack = scheduleStackValue.asString(rt).utf8(rt);
         }
-        return runOnRuntimeSync(rt, at<0>(args), at<1>(args), scheduleStack);
+        return runOnRuntimeSync(rt, at<0>(args), at<1>(args), at<2>(args), scheduleStack);
 #else
-        return runOnRuntimeSync(rt, at<0>(args), at<1>(args));
+        return runOnRuntimeSync(rt, at<0>(args), at<1>(args), at<2>(args));
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<3>(
+  jsi_utils::addMethod<4>(
       rt,
       obj,
       "runOnRuntimeSyncWithId",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[3]) {
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[4]) {
         const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
@@ -677,18 +704,35 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         auto serializableWorklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be executed on a worklet runtime.");
+        const bool hasSeparateArguments = at<2>(args).isObject();
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
           throw jsi::JSError(rt, "[Worklets] Cannot run work on an aborted Worklet Runtime.");
         }
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
-        if (at<2>(args).isString()) {
-          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        const auto &scheduleStackValue = hasSeparateArguments ? at<3>(args) : at<2>(args);
+        if (scheduleStackValue.isString()) {
+          scheduleStack = scheduleStackValue.asString(rt).utf8(rt);
         }
-        auto serializedResult = workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
-            serializableWorklet, scheduleStack);
+        auto serializedResult = hasSeparateArguments
+            ? workletRuntime->runSyncWithStackAndDrainMicrotasksSerializedWithArguments(
+                  serializableWorklet,
+                  extractSerializableOrThrow<SerializableArray>(
+                      rt,
+                      at<2>(args),
+                      "[Worklets] Arguments passed to a worklet runtime must be a serializable array."),
+                  scheduleStack)
+            : workletRuntime->runSyncWithStackAndDrainMicrotasks<std::shared_ptr<Serializable>>(
+                  serializableWorklet, scheduleStack);
 #else
-        auto serializedResult = workletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
+        auto serializedResult = hasSeparateArguments
+            ? workletRuntime->runSyncAndDrainMicrotasksSerializedWithArguments(
+                  serializableWorklet,
+                  extractSerializableOrThrow<SerializableArray>(
+                      rt,
+                      at<2>(args),
+                      "[Worklets] Arguments passed to a worklet runtime must be a serializable array."))
+            : workletRuntime->runSyncAndDrainMicrotasksSerialized(serializableWorklet);
 #endif // NDEBUG
         return serializedResult->toJSValue(rt);
       });
@@ -729,11 +773,12 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
             abortable);
       });
 
-  jsi_utils::addMethod<5>(
-      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+  jsi_utils::addMethod<6>(
+      rt, obj, "scheduleOnRuntime", [](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
         const auto workletRuntime = extractWorkletRuntime(rt, at<0>(args));
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Function passed to `_scheduleOnRuntime` is not a serializable worklet.");
+        const bool hasSeparateArguments = at<2>(args).isObject();
 #ifndef NDEBUG
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
           rt.global()
@@ -745,23 +790,42 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                       workletRuntime->getRuntimeName() + "\".");
         }
 #endif // NDEBUG
-        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
+        auto dropGuard = hasSeparateArguments ? makePromiseDropGuard(rt, *workletRuntime, at<4>(args), at<5>(args))
+                                              : makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
-        if (at<2>(args).isString()) {
-          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        const auto &scheduleStackValue = hasSeparateArguments ? at<3>(args) : at<2>(args);
+        if (scheduleStackValue.isString()) {
+          scheduleStack = scheduleStackValue.asString(rt).utf8(rt);
         }
-        workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
+        if (hasSeparateArguments) {
+          workletRuntime->scheduleWithStack(
+              worklet,
+              extractSerializableOrThrow<SerializableArray>(
+                  rt, at<2>(args), "[Worklets] Arguments passed to a worklet runtime must be a serializable array."),
+              scheduleStack,
+              std::move(dropGuard));
+        } else {
+          workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
+        }
 #else
-        workletRuntime->schedule(worklet, std::move(dropGuard));
+        if (hasSeparateArguments) {
+          workletRuntime->schedule(
+              worklet,
+              extractSerializableOrThrow<SerializableArray>(
+                  rt, at<2>(args), "[Worklets] Arguments passed to a worklet runtime must be a serializable array."),
+              std::move(dropGuard));
+        } else {
+          workletRuntime->schedule(worklet, std::move(dropGuard));
+        }
 #endif // NDEBUG
       });
 
-  jsi_utils::addMethod<5>(
+  jsi_utils::addMethod<6>(
       rt,
       obj,
       "scheduleOnRuntimeWithId",
-      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[5]) {
+      [runtimeManager = runtimeManager_](jsi::Runtime &rt, const jsi::Value &, const jsi::Value(&args)[6]) {
         const auto runtimeId = runtimeIdFromJS(at<0>(args));
         const auto workletRuntime = runtimeManager->getRuntime(runtimeId);
         if (!workletRuntime) {
@@ -770,6 +834,7 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
         }
         const auto worklet = extractSerializableOrThrow<SerializableWorklet>(
             rt, at<1>(args), "[Worklets] Only worklets can be scheduled to run on a worklet runtime.");
+        const bool hasSeparateArguments = at<2>(args).isObject();
 #ifndef NDEBUG
         if (workletRuntime->isAborted() && &rt != &workletRuntime->getJSIRuntime()) [[unlikely]] {
           rt.global()
@@ -781,15 +846,34 @@ jsi::Object JSIWorkletsModuleProxy::toOptimizedObject(jsi::Runtime &rt) const {
                       workletRuntime->getRuntimeName() + "\".");
         }
 #endif // NDEBUG
-        auto dropGuard = makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
+        auto dropGuard = hasSeparateArguments ? makePromiseDropGuard(rt, *workletRuntime, at<4>(args), at<5>(args))
+                                              : makePromiseDropGuard(rt, *workletRuntime, at<3>(args), at<4>(args));
 #ifndef NDEBUG
         std::optional<std::string> scheduleStack;
-        if (at<2>(args).isString()) {
-          scheduleStack = at<2>(args).asString(rt).utf8(rt);
+        const auto &scheduleStackValue = hasSeparateArguments ? at<3>(args) : at<2>(args);
+        if (scheduleStackValue.isString()) {
+          scheduleStack = scheduleStackValue.asString(rt).utf8(rt);
         }
-        workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
+        if (hasSeparateArguments) {
+          workletRuntime->scheduleWithStack(
+              worklet,
+              extractSerializableOrThrow<SerializableArray>(
+                  rt, at<2>(args), "[Worklets] Arguments passed to a worklet runtime must be a serializable array."),
+              scheduleStack,
+              std::move(dropGuard));
+        } else {
+          workletRuntime->scheduleWithStack(worklet, scheduleStack, std::move(dropGuard));
+        }
 #else
-        workletRuntime->schedule(worklet, std::move(dropGuard));
+        if (hasSeparateArguments) {
+          workletRuntime->schedule(
+              worklet,
+              extractSerializableOrThrow<SerializableArray>(
+                  rt, at<2>(args), "[Worklets] Arguments passed to a worklet runtime must be a serializable array."),
+              std::move(dropGuard));
+        } else {
+          workletRuntime->schedule(worklet, std::move(dropGuard));
+        }
 #endif // NDEBUG
       });
 
