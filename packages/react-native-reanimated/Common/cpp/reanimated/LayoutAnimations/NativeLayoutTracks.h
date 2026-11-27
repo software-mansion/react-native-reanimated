@@ -1,6 +1,7 @@
 #pragma once
 
 #include <reanimated/LayoutAnimations/LiveLayoutLeaf.h>
+#include <reanimated/NativeAnimations/NativeAnimationHost.h>
 #include <reanimated/NativeAnimations/NativeAnimationTrack.h>
 
 #include <jsi/jsi.h>
@@ -13,13 +14,10 @@
 namespace reanimated {
 
 /// The number of layout animation leaves that the native route takes: one for each native target.
-inline constexpr size_t MAX_NATIVE_LAYOUT_LEAVES = 3;
+inline constexpr size_t MAX_NATIVE_LAYOUT_LEAVES = 5;
 
-/// The value that the host view model has for PositionX and PositionY after the mount of `view`.
-native_animation::AnimationPoint mountedPosition(const facebook::react::ShadowView &view);
-
-/// The value that the host view model has for Opacity after the mount of `view`.
-double mountedOpacity(const facebook::react::ShadowView &view);
+/// The value that `view` has for the layout animation key of `target`.
+double leafValue(native_animation::AnimationTarget target, const facebook::react::ShadowView &view);
 
 struct NativeLayoutTracks {
   double originTimestampMs;
@@ -33,6 +31,8 @@ LiveLayoutLeaves liveLayoutLeaves(const std::vector<native_animation::TrackKey> 
 struct LiveLeafValues {
   std::optional<double> originX;
   std::optional<double> originY;
+  std::optional<double> width;
+  std::optional<double> height;
   std::optional<double> opacity;
 };
 
@@ -40,12 +40,12 @@ struct LiveLeafValues {
 LiveLeafValues liveLeafValues(facebook::jsi::Runtime &rt, const facebook::jsi::Object &leafValues);
 
 /// The tracks that play the animation of `buildSummary` (the result of `LayoutAnimationsManager.build` on the
-/// UI runtime) on the view that changes from `before` to `after`, or the first reason why native playback
-/// cannot repeat that animation. A leaf that continues a live leaf has no track: the live track plays it.
+/// UI runtime) on the view that the commit leaves as `after`, or the first reason why `host` cannot repeat
+/// that animation. A leaf that continues a live leaf has no track: the live track plays it.
 std::variant<NativeLayoutTracks, native_animation::TrackBuildFailure> makeNativeLayoutTracks(
     facebook::jsi::Runtime &rt,
     const facebook::jsi::Object &buildSummary,
-    const facebook::react::ShadowView &before,
-    const facebook::react::ShadowView &after);
+    const facebook::react::ShadowView &after,
+    const native_animation::NativeAnimationHost &host);
 
 } // namespace reanimated
