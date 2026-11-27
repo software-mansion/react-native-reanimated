@@ -28,7 +28,6 @@ end
 
 project 'FabricExample.xcodeproj',
         'Debug' => :debug,
-        'DebugRuntimeTests' => :debug,
         'Release' => :release
 
 target 'FabricExample' do

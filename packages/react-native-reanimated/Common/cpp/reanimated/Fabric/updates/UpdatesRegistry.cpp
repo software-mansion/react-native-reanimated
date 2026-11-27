@@ -3,7 +3,7 @@
 #include <reanimated/Fabric/updates/PropsLayoutFilter.h>
 #include <reanimated/Fabric/updates/UpdatesRegistryManager.h>
 
-#include <react/debug/react_native_assert.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <jsi/jsi.h>
 #include <memory>
@@ -207,10 +207,18 @@ UpdatesBatch UpdatesRegistry::getPendingUpdates() {
   react_native_assert(UpdatesRegistryManager::isLockedByCurrentThread());
   flushUpdatesToRegistry(updatesBatch_);
 
+  // Only the views updated since the last flush, each once with its merged registry props.
   UpdatesBatch updatesBatch;
-  for (const auto &[tag, pair] : updatesRegistry_) {
-    const auto &[shadowNodeFamily, props] = pair;
-    updatesBatch.emplace_back(shadowNodeFamily, props);
+  std::unordered_set<Tag> collectedTags;
+  for (const auto &[shadowNodeFamily, _] : updatesBatch_) {
+    const auto tag = shadowNodeFamily->getTag();
+    if (!collectedTags.insert(tag).second) {
+      continue;
+    }
+    const auto it = updatesRegistry_.find(tag);
+    if (it != updatesRegistry_.end()) {
+      updatesBatch.emplace_back(it->second.first, it->second.second);
+    }
   }
   return updatesBatch;
 }

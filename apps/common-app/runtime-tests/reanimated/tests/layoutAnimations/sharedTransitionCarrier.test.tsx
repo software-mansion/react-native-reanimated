@@ -212,6 +212,33 @@ function ChildContainer({
   );
 }
 
+function HiddenClippedSourceScreens({
+  active,
+  transition,
+}: {
+  active: boolean;
+  transition: SharedTransition;
+}) {
+  const source = useTestRef('source');
+  return (
+    <View style={styles.container}>
+      <SharedTransitionBoundary isActive={!active}>
+        <View
+          collapsable={false}
+          style={[styles.clippingAncestor, active && { display: 'none' }]}>
+          <Animated.View
+            ref={source}
+            sharedTransitionTag="carrier"
+            sharedTransitionStyle={transition}
+            style={styles.source}
+          />
+        </View>
+      </SharedTransitionBoundary>
+      <Target active={active} transition={transition} opacity={1} mounted />
+    </View>
+  );
+}
+
 function observer() {
   if (!RuntimeTestObserver) {
     throw new Error('RuntimeTestObserver requires a runtime-test build');
@@ -343,7 +370,7 @@ describe('Shared transition moves a real native view', () => {
       await advanceAnimationTimer(500);
       expect(
         (await getTestComponent('source').getMountedViewProps())?.width
-      ).toBe(82.5, ComparisonMode.PIXEL);
+      ).toBe(71.25 + (150 - 71.25) / 8, ComparisonMode.PIXEL);
       if (containerTag !== null) {
         expect(await isViewMountedNatively(containerTag)).toBe(true);
       }
@@ -360,6 +387,35 @@ describe('Shared transition moves a real native view', () => {
         );
       }
       await expectAtHome('target', 150, 1);
+    }
+  );
+
+  recreateChildTest(
+    'tears down a clipped carrier when React recreates its tag',
+    async () => {
+      await mockAnimationTimer({ autoAdvance: false });
+      const transition = transitionWithNotification(4000);
+      await render(
+        <HiddenClippedSourceScreens active={false} transition={transition} />
+      );
+      await waitForFrames();
+      const sourceTag = getTestComponent('source').getTag();
+
+      await render(
+        <HiddenClippedSourceScreens active transition={transition} />
+      );
+      await waitForFrames(3);
+      await advanceAnimationTimer(500);
+      expect(await isViewMountedNatively(sourceTag)).toBe(true);
+
+      await render(
+        <HiddenClippedSourceScreens active={false} transition={transition} />
+      );
+      await waitForFrames(3);
+      expect(getTestComponent('source').getTag()).toBe(sourceTag);
+      await advanceAnimationTimer(4000);
+      await waitForNotification('carrier-finished');
+      await expectAtHome('source', 60, 1);
     }
   );
 
@@ -404,6 +460,21 @@ describe('Shared transition moves a real native view', () => {
     const source = await getTestComponent('source').getMountedViewProps();
     expect(source?.x).toBeWithinRange(home!.x - 0.5, home!.x + 0.5);
     expect(source?.y).toBeWithinRange(home!.y - 0.5, home!.y + 0.5);
+  });
+
+  test('moves the source into a carrier layer with a tag that React does not give', async () => {
+    await mockAnimationTimer({ autoAdvance: false });
+    const transition = transitionWithNotification();
+    await render(<Screens active={false} transition={transition} />);
+    await waitForFrames();
+    const sourceTag = getTestComponent('source').getTag();
+    await render(<Screens active transition={transition} />);
+    await waitForFrames(3);
+    await advanceAnimationTimer(500);
+    await expectMoving('source');
+    const layerTag = (await observer().observeParent(sourceTag))!;
+    expect(layerTag % 2).toBe(1);
+    expect(layerTag % 10 === 1).toBe(false);
   });
 
   test('ends the run when a screen without its tag covers the target', async () => {
@@ -866,4 +937,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#2277dd',
   },
   child: { width: 20, height: 15, backgroundColor: '#ffffff' },
+  clippingAncestor: { width: 40, height: 40, overflow: 'hidden' },
 });

@@ -5,9 +5,11 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import type { RuntimeTestSuite } from '../types';
 import type { TestConfiguration, TestProgress, TestRunSummary } from './types';
+import { setFullRun } from './utils/fullRun';
 import { applyIsolationCheck } from './utils/isolationCheck';
 import { runWithRemoteReporter } from './utils/remoteReporter';
 import { RenderLock } from './utils/RenderLock';
+import { declareSuites, selectSuitesToRun } from './utils/suiteSelection';
 
 // IMPORTANT: do not statically import `./RuntimeTestsApi` or anything else that pulls in
 // react-native-reanimated. The framework is loaded lazily once the host sends `start`, so
@@ -53,40 +55,18 @@ export default function AutoRunRuntimeTestsRunner({
   useEffect(() => {
     let cancelled = false;
 
-    const declaredSuites = tests.map((test) => ({
-      name: test.testSuiteName,
-      skipByDefault: !!test.skipByDefault,
-      disabled: !!test.disabled,
-    }));
-
     const teardown = runWithRemoteReporter({
       wsUrl: autoRun.wsUrl,
       library,
-      declaredSuites,
+      declaredSuites: declareSuites(tests),
       onStatus: (message) => {
         if (!cancelled) {
           setStatus(message);
         }
       },
-      onStart: async ({ only, reportSuiteFinished, requestReload }) => {
-        const filterSet = only ? new Set(only) : null;
-        const selected = tests.filter((test) => {
-          if (test.disabled) {
-            return false;
-          }
-          if (filterSet) {
-            return filterSet.has(test.testSuiteName);
-          }
-          return !test.skipByDefault;
-        });
-
-        const known = new Set(tests.map((test) => test.testSuiteName));
-        const unknown = [...(filterSet ?? [])].filter(
-          (name) => !known.has(name)
-        );
-        if (unknown.length > 0) {
-          throw new Error(`Unknown test suites: ${unknown.join(', ')}`);
-        }
+      onStart: async ({ only, full, reportSuiteFinished, requestReload }) => {
+        setFullRun(!!full);
+        const selected = selectSuitesToRun(tests, only, full);
 
         const { configure, importRuntimeTestSuite, runTests } =
           require('./RuntimeTestsApi') as {

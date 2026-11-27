@@ -3,7 +3,7 @@
 #include <reanimated/Fabric/updates/UpdatesRegistry.h>
 
 #include <react/renderer/components/root/RootShadowNode.h>
-#include <react/renderer/core/ShadowNodeFamily.h>
+#include <reanimated/Compat/ReactNativeRendererCore.h>
 
 #include <cstdint>
 #include <deque>

@@ -263,6 +263,36 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
   padding-left: 0;
 }
 
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_'] {
+  scrollbar-color: var(--ifm-link-color) transparent;
+  scrollbar-width: thin;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_']::-webkit-scrollbar {
+  width: 8px;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_']::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.docs-version-current
+  .theme-doc-sidebar-container
+  [class*='sidebarViewport']
+  > [class*='sidebar_']::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: var(--ifm-link-color);
+}
+
 .docs-version-current .theme-doc-sidebar-menu .menu__list {
   margin: 0;
   padding-left: 0;
@@ -283,13 +313,13 @@ html:not(.docs-version-current) button[class*='_collapseSidebarButton_'] {
   position: relative;
   width: 100%;
   margin: 0;
-  padding: 4px 12px;
+  padding: 6px 12px;
   border-radius: 4px;
   background: none;
   color: var(--ifm-color-content-secondary);
   font-size: 0.875rem;
   font-weight: 400;
-  line-height: 22px;
+  line-height: 18px;
   text-decoration: none;
   overflow-wrap: anywhere;
 }

@@ -12,7 +12,11 @@ typedef enum class LayoutAnimationType : std::uint8_t {
   SHARED_ELEMENT_TRANSITION_PROGRESS_NATIVE_ID = 7,
 } LayoutAnimationType;
 
+inline bool isSharedTransition(const LayoutAnimationType type) {
+  return type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION ||
+      type == LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
+}
+
 inline bool needsFinalFrameReconciliation(const LayoutAnimationType type) {
-  return type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION &&
-      type != LayoutAnimationType::SHARED_ELEMENT_TRANSITION_PROGRESS;
+  return !isSharedTransition(type);
 }

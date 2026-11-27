@@ -1,4 +1,5 @@
 import { withTiming } from '../src/animation';
+import { logger } from '../src/common';
 import { ReduceMotion } from '../src/commonTypes';
 import type {
   AnimationObject,
@@ -78,30 +79,53 @@ function rotationOf(style: StyleProps) {
 
 describe('SharedTransition', () => {
   describe('default animation', () => {
-    test('animates only the properties that differ', () => {
+    test('uses one geometry clock and keeps separate style animations', () => {
       const { initialValues, animations } = runLayoutAnimation(
         new SharedTransition()
       );
       const changed = [
         'backgroundColor',
         'borderRadius',
-        'originX',
-        'transform',
-        'transformOrigin',
-        'width',
+        'sharedTransitionGeometryProgress',
       ];
       expect(Object.keys(initialValues).sort()).toEqual(changed);
       expect(Object.keys(animations).sort()).toEqual(changed);
     });
 
-    test('passes the transform as an array of matrices', () => {
-      const { initialValues, animations } = runLayoutAnimation(
-        new SharedTransition()
-      );
-      expect(initialValues.transform).toEqual([{ matrix: IDENTITY }]);
-      expect(animations.transform).toHaveLength(1);
-      expect(animations.transform[0]).toHaveProperty('matrix');
+    test('uses the geometry clock when only the gesture callback is custom', () => {
+      const transition = SharedTransition.progressAnimation(() => ({
+        width: -1,
+      }));
+      const { animations } = runLayoutAnimation(transition);
+      expect(animations).toHaveProperty('sharedTransitionGeometryProgress');
+      expect(animations).not.toHaveProperty('width');
+      expect(transition.getProgressAnimation()(VALUES, 0.5).width).toBe(-1);
     });
+  });
+
+  describe('callback', () => {
+    test.each([
+      ['a built-in', new SharedTransition()],
+      [
+        'a custom',
+        SharedTransition.custom(() => {
+          'worklet';
+          return {};
+        }),
+      ],
+      [
+        'a timed progress',
+        SharedTransition.defaultTransitionType(
+          SharedTransitionType.PROGRESS_ANIMATION
+        ),
+      ],
+    ])(
+      'leaves the callback of %s animation to the native run',
+      (_, builder) => {
+        const animation = runLayoutAnimation(builder.withCallback(jest.fn()));
+        expect(animation).not.toHaveProperty('callback');
+      }
+    );
   });
 
   describe('transparent colors', () => {
@@ -292,6 +316,59 @@ describe('SharedTransition', () => {
       );
       expect(animations.width.reduceMotion).toBe(true);
     });
+
+    test('can come after other modifiers', () => {
+      const { animations } = runLayoutAnimation(
+        SharedTransition.duration(800).custom((values) => {
+          'worklet';
+          return { width: values.targetWidth };
+        })
+      );
+      expect(animations).toEqual({ width: 300 });
+    });
+  });
+
+  describe('unsupported modifiers', () => {
+    beforeEach(() => {
+      jest.spyOn(logger, 'warnOnce').mockImplementation();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test.each([
+      [
+        'withInitialValues',
+        () => SharedTransition.withInitialValues({ width: 0 } as never),
+        () => new SharedTransition().withInitialValues({ width: 0 } as never),
+      ],
+      [
+        'withTargetValues',
+        () => SharedTransition.withTargetValues({ width: 0 } as never),
+        () => new SharedTransition().withTargetValues({ width: 0 } as never),
+      ],
+      [
+        'rotate',
+        () => SharedTransition.rotate('45deg' as never),
+        () => new SharedTransition().rotate('45deg' as never),
+      ],
+    ])(
+      'warns about %s and keeps the default animation',
+      (name, fromStatic, fromInstance) => {
+        const expected = JSON.stringify(
+          runLayoutAnimation(new SharedTransition())
+        );
+        for (const builder of [fromStatic, fromInstance]) {
+          expect(JSON.stringify(runLayoutAnimation(builder()))).toBe(expected);
+        }
+        expect(logger.warnOnce).toHaveBeenCalledTimes(2);
+        expect(logger.warnOnce).toHaveBeenCalledWith(
+          expect.stringContaining(`${name}() is not supported`),
+          0
+        );
+      }
+    );
   });
 
   describe('default progress animation', () => {
@@ -426,6 +503,44 @@ describe('SharedTransition', () => {
   });
 });
 
+describe('SharedTransition followsTarget', () => {
+  const progressAnimation = () => {
+    'worklet';
+    return {};
+  };
+
+  test.each([
+    ['the default animation', new SharedTransition(), true],
+    [
+      'a spring with a delay',
+      SharedTransition.springify().delay(100).fadeContent(),
+      true,
+    ],
+    [
+      'a progress animation for the screen gesture',
+      SharedTransition.progressAnimation(progressAnimation),
+      true,
+    ],
+    [
+      'a custom animation',
+      SharedTransition.custom(() => {
+        'worklet';
+        return {};
+      }),
+      false,
+    ],
+    [
+      'a timed progress animation',
+      SharedTransition.progressAnimation(
+        progressAnimation
+      ).defaultTransitionType(SharedTransitionType.PROGRESS_ANIMATION),
+      false,
+    ],
+  ])('%s follows the target: %p', (_name, transition, followsTarget) => {
+    expect(transition.followsTarget()).toBe(followsTarget);
+  });
+});
+
 describe('SharedTransition with fadeContent', () => {
   const FADING_VALUES = {
     ...VALUES,
@@ -478,6 +593,58 @@ describe('SharedTransition with fadeContent', () => {
       'contentOpacity',
       'opacity',
     ]);
+  });
+});
+
+describe('SharedTransition with a clip', () => {
+  const CLIPPED_VALUES = {
+    ...VALUES,
+    currentClipOriginX: 0,
+    targetClipOriginX: 40,
+    currentClipWidth: 100,
+    targetClipWidth: 200,
+  } as unknown as SharedTransitionAnimationsValues;
+  const clippedLayoutValues =
+    CLIPPED_VALUES as unknown as LayoutAnimationsValues;
+
+  test.each([
+    [
+      'a custom animation that leaves it out',
+      SharedTransition.custom((values) => {
+        'worklet';
+        return { width: withTiming(values.targetWidth) };
+      }),
+    ],
+    [
+      'the default timed progress animation',
+      new SharedTransition().defaultTransitionType(
+        SharedTransitionType.PROGRESS_ANIMATION
+      ),
+    ],
+  ])('moves the clip with one progress in %s', (_, transition) => {
+    const { initialValues, animations } =
+      transition.build()(clippedLayoutValues);
+    expect(initialValues.sharedTransitionClipProgress).toBe(0);
+    expect(animations).toHaveProperty('sharedTransitionClipProgress');
+    expect(animations).not.toHaveProperty('clipOriginX');
+  });
+
+  test('keeps the clip animation of a custom animation', () => {
+    const clipWidth = withTiming(150);
+    const { animations } = SharedTransition.custom(() => {
+      'worklet';
+      return { clipOriginX: withTiming(40), clipWidth };
+    }).build()(clippedLayoutValues);
+    expect(animations.clipWidth.toValue).toBe(150);
+    expect(animations.sharedTransitionClipProgress).toBe(1);
+  });
+
+  test('leaves the clip progress of a gesture to the native side', () => {
+    const style = SharedTransition.progressAnimation(() => {
+      'worklet';
+      return { opacity: 0.5 };
+    }).getProgressAnimation()(CLIPPED_VALUES, 0.25);
+    expect(style).toEqual({ opacity: 0.5 });
   });
 });
 

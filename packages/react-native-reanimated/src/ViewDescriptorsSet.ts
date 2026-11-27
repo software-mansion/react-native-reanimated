@@ -2,6 +2,7 @@
 import type { SharedValue, StyleUpdaterContainer } from './commonTypes';
 import { makeMutable } from './core';
 import type { Descriptor } from './hook/commonTypes';
+import { ReanimatedModule } from './ReanimatedModule';
 
 export interface ViewDescriptorsSet {
   shareableViewDescriptors: SharedValue<Descriptor[]>;
@@ -16,8 +17,16 @@ export function makeViewDescriptorsSet(): ViewDescriptorsSet {
 
   const data: ViewDescriptorsSet = {
     shareableViewDescriptors,
-    add: (item: Descriptor, updaterContainer?: StyleUpdaterContainer) => {
-      viewTags.add(item.tag as number);
+    add: (input: Descriptor, updaterContainer?: StyleUpdaterContainer) => {
+      viewTags.add(input.tag as number);
+      const item: Descriptor = input.shadowNodeWrapper
+        ? {
+            ...input,
+            shadowNodeWrapper: ReanimatedModule.createDetachedShadowNodeWrapper(
+              input.shadowNodeWrapper
+            ),
+          }
+        : input;
       const updater = updaterContainer?.current;
       shareableViewDescriptors.modify((descriptors) => {
         'worklet';

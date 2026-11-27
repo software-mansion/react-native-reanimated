@@ -1,10 +1,11 @@
 #pragma once
 
 #include <jsi/jsi.h>
-#include <react/debug/react_native_assert.h>
+#include <worklets/Compat/ReactNativeDebug.h>
 #include <worklets/RunLoop/AsyncQueue.h>
 #include <worklets/RunLoop/AsyncQueueImpl.h>
 #include <worklets/RunLoop/EventLoop.h>
+#include <worklets/RunLoop/RuntimeTaskState.h>
 #include <worklets/SharedItems/Serializable/Serializable.h>
 #include <worklets/SharedItems/Serializable/SerializableArray.h>
 #include <worklets/SharedItems/Serializable/SerializableWorklet.h>
@@ -112,7 +113,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   /**
    * Runs a RuntimeJob synchronously and returns its result.
    *
-   * Does not run a microtask checkpoint.
+   * Does not request a microtask checkpoint.
    */
   template <RuntimeJob TJob>
   auto runSync(TJob &&job) const -> std::invoke_result_t<TJob, jsi::Runtime &> {
@@ -128,7 +129,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    * another runtime unless it is a primitive value. Use runSyncSerialized to
    * transfer the result to another runtime.
    *
-   * Does not run a microtask checkpoint.
+   * Does not request a microtask checkpoint.
    */
   template <RuntimeCallable TCallable, typename... TArgs>
   [[nodiscard]] auto runSync(const TCallable &callable, TArgs &&...args) const -> jsi::Value {
@@ -143,10 +144,22 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   }
 
   /**
+   * Runs a jsi::Function or SerializableWorklet synchronously and discards the
+   * result while the runtime lock is still held.
+   *
+   * Requests a microtask checkpoint.
+   */
+  template <RuntimeCallable TCallable, typename... TArgs>
+  void runSyncAndDiscardAndDrainMicrotasks(const TCallable &callable, TArgs &&...args) const {
+    auto lock = acquireRuntimeLock();
+    static_cast<void>(runSyncImpl<MicrotaskCheckpoint::Run>(callable, std::forward<TArgs>(args)...));
+  }
+
+  /**
    * Runs a jsi::Function or SerializableWorklet synchronously and returns its
    * serialized result.
    *
-   * Does not run a microtask checkpoint.
+   * Does not request a microtask checkpoint.
    */
   template <RuntimeCallable TCallable, typename... TArgs>
   auto runSyncSerialized(const TCallable &callable, TArgs &&...args) const -> std::shared_ptr<Serializable> {
@@ -205,7 +218,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
    *
    * TResult must be either jsi::Value or std::shared_ptr<Serializable>.
    *
-   * Does not run a microtask checkpoint.
+   * Does not request a microtask checkpoint.
    */
   template <SyncCallResult TResult, RuntimeCallable TCallable, typename... TArgs>
   auto runSyncWithStack(const TCallable &callable, const std::optional<std::string> &scheduleStack, TArgs &&...args)
@@ -349,8 +362,10 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   auto runSyncImpl(TCallable &&callable, TArgs &&...args) const -> decltype(auto) {
     jsi::Runtime &rt = getJSIRuntime();
     if constexpr (std::is_same_v<std::remove_cvref_t<TCallable>, std::shared_ptr<SerializableWorklet>>) {
-      auto function = callable->toJSValue(rt).getObject(rt).getFunction(rt);
-      return runSyncImpl<TCheckpoint, TResult, TScheduleStack>(function, std::forward<TArgs>(args)...);
+      return invokeWithMicrotaskCheckpointPolicyImpl<MicrotaskCheckpoint::Skip>([&]() -> decltype(auto) {
+        auto function = callable->toJSValue(rt).getObject(rt).getFunction(rt);
+        return runSyncImpl<TCheckpoint, TResult, TScheduleStack>(function, std::forward<TArgs>(args)...);
+      });
     } else {
       auto stackPolicyInvocation = [&]<typename TScheduleStackContext, typename... TCallArgs>(
                                        TScheduleStackContext &&scheduleStackContext,
@@ -411,18 +426,35 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   template <MicrotaskCheckpoint TCheckpoint, typename TInvoker>
   auto invokeWithMicrotaskCheckpointPolicyImpl(TInvoker &&invoke) const -> std::invoke_result_t<TInvoker> {
     using Result = std::invoke_result_t<TInvoker>;
-    const bool isRootTask = !rootTaskRunning_;
-    rootTaskRunning_ = true;
+    auto &taskState = *taskState_;
+    const bool isRootTask = !taskState.rootTaskRunning;
+    taskState.rootTaskRunning = true;
+    if (isRootTask) {
+      taskState.rootTaskId++;
+    }
+    if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
+      taskState.microtaskCheckpointRequested = true;
+    }
     const auto checkpoint = [&]() {
       if (!isRootTask) {
         return;
       }
-      if constexpr (TCheckpoint == MicrotaskCheckpoint::Run) {
+      if (taskState.microtaskCheckpointRequested) {
         if (microtaskQueueEnabled_) {
-          getJSIRuntime().drainMicrotasks();
+          jsi::Runtime &rt = getJSIRuntime();
+#ifndef NDEBUG
+          try {
+            rt.drainMicrotasks();
+          } catch (jsi::JSError &e) {
+            JSLogger::handleJSError(jsScheduler_, rt, name_, e, std::nullopt);
+          }
+#else
+          rt.drainMicrotasks();
+#endif // NDEBUG
         }
+        taskState.microtaskCheckpointRequested = false;
       }
-      rootTaskRunning_ = false;
+      taskState.rootTaskRunning = false;
     };
     try {
       if constexpr (std::is_void_v<Result>) {
@@ -435,7 +467,8 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
       }
     } catch (...) {
       if (isRootTask) {
-        rootTaskRunning_ = false;
+        taskState.microtaskCheckpointRequested = false;
+        taskState.rootTaskRunning = false;
       }
       throw;
     }
@@ -499,7 +532,7 @@ class WorkletRuntime : public jsi::HostObject, public std::enable_shared_from_th
   std::shared_ptr<AsyncQueue> queue_;
   std::shared_ptr<EventLoop> eventLoop_;
   std::atomic_bool aborted_{false};
-  mutable bool rootTaskRunning_{false};
+  const std::shared_ptr<RuntimeTaskState> taskState_{std::make_shared<RuntimeTaskState>()};
   std::weak_ptr<Networking> networking_;
 };
 

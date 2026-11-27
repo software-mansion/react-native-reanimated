@@ -27,6 +27,7 @@ using namespace worklets;
   __weak RCTSurfacePresenter *_surfacePresenter;
   std::shared_ptr<ReanimatedModuleProxy> _reanimatedModuleProxy;
   REASynchronousPropsRewriter *_synchronousPropsRewriter;
+  REAKeyboardEventObserver *_keyboardObserver;
 #ifndef NDEBUG
   reanimated::SingleInstanceChecker<ReanimatedModule> singleInstanceChecker_;
 #endif // NDEBUG
@@ -43,6 +44,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   REAAssertTurboModuleManagerQueue();
 
   [_nodesManager invalidate];
+  [_keyboardObserver invalidate];
   _synchronousPropsRewriter = nil;
   _reanimatedModuleProxy.reset();
   [super invalidate];
@@ -124,6 +126,7 @@ RCT_EXPORT_MODULE(ReanimatedModule);
   [super setBridge:bridge];
   _nodesManager = [[REANodesManager alloc] init];
   _nodesManager.surfacePresenter = _surfacePresenter;
+  _keyboardObserver = [[REAKeyboardEventObserver alloc] init];
   [[self.moduleRegistry moduleForName:"EventDispatcher"] addDispatchObserver:self];
 }
 
@@ -175,7 +178,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(installTurboModule)
   const auto uiScheduler = [self getUIScheduler:rnRuntime];
 
   _reanimatedModuleProxy = reanimated::createReanimatedModuleProxy(
-      _nodesManager, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
+      _nodesManager, _keyboardObserver, _moduleRegistry, rnRuntime, jsCallInvoker, uiWorkletRuntime, uiScheduler);
 
   auto &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiWorkletRuntime);
   RNRuntimeDecorator::decorate(rnRuntime, uiRuntime, _reanimatedModuleProxy);

@@ -21,6 +21,10 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        required: false
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       bundleMode:
@@ -38,6 +42,11 @@ on:
         required: false
         type: string
         default: ''
+      full:
+        description: Run the long variants and every suite, as the nightly does
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -64,7 +73,7 @@ jobs:
   build-app:
     needs: preflight
     name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
-    runs-on: macos-26
+    runs-on: namespace-profile-ios
     timeout-minutes: 90
     concurrency:
       group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
@@ -140,7 +149,7 @@ jobs:
       # fan-out saves. Bundle Mode, because the Legacy Eval legs run
       # `yarn toggle-bundle-mode` and no longer match the committed tree.
       - name: Save Pods cache
-        if: inputs.bundleMode && env.CONFIGURATION == 'DebugRuntimeTests'
+        if: inputs.bundleMode && env.CONFIGURATION == 'Debug'
         uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -289,13 +298,13 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
           node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
-          --library worklets --configuration "$CONFIGURATION"
+          --library worklets --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
 
       - name: Run Reanimated runtime tests on the remote simulator
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: >
           node --experimental-strip-types scripts/runtime-tests-remote.mts run --udid "${{ steps.sim.outputs.udid }}"
-          --library reanimated --configuration "$CONFIGURATION"
+          --library reanimated --configuration "$CONFIGURATION" ${{ inputs.full && '--full true' || '' }}
 
       - name: Upload crash reports
         if: failure()

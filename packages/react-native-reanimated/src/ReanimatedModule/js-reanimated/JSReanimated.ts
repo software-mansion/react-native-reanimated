@@ -274,6 +274,12 @@ class JSReanimated implements IReanimatedModule {
     );
   }
 
+  createDetachedShadowNodeWrapper(
+    shadowNodeWrapper: ShadowNodeWrapper
+  ): ShadowNodeWrapper {
+    return shadowNodeWrapper;
+  }
+
   markNodeAsRemovable(_shadowNodeWrapper: ShadowNodeWrapper): void {
     throw new Error(
       '[Reanimated] markNodeAsRemovable is not available in JSReanimated.'
@@ -340,6 +346,12 @@ class JSReanimated implements IReanimatedModule {
   getSettledUpdates(): SettledUpdate[] {
     throw new Error(
       '[Reanimated] `getSettledUpdates` is not available in JSReanimated.'
+    );
+  }
+
+  hasPendingSettledUpdates(): boolean {
+    throw new Error(
+      '[Reanimated] `hasPendingSettledUpdates` is not available in JSReanimated.'
     );
   }
 

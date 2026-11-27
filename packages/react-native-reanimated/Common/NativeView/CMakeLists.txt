@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.13)
 set(CMAKE_VERBOSE_MAKEFILE on)
 
 set(ANDROID_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../android)
-set(CODEGEN_JNI_DIR ${ANDROID_DIR}/build/generated/source/codegen/jni)
+if(DEFINED REANIMATED_CODEGEN_DIR)
+  set(CODEGEN_JNI_DIR ${REANIMATED_CODEGEN_DIR})
+else()
+  set(CODEGEN_JNI_DIR ${ANDROID_DIR}/build/generated/source/codegen/jni)
+endif()
 set(CODEGEN_COMPONENTS_DIR ${CODEGEN_JNI_DIR}/react/renderer/components/rnreanimated)
 file(
   GLOB CODEGEN_ORIGINAL_SRCS CONFIGURE_DEPENDS

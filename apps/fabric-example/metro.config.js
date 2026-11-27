@@ -24,6 +24,23 @@ const appsRoot = path.resolve(monorepoRoot, 'apps');
 let config = {
   projectRoot: __dirname,
   watchFolders: [monorepoRoot, appsRoot],
+  transformer: {
+    getTransformOptions: async () => ({
+      transform: {
+        experimentalImportSupport: false,
+        inlineRequires: true,
+        nonInlinedRequires: [
+          'React',
+          'react',
+          'react/jsx-dev-runtime',
+          'react/jsx-runtime',
+          'react-compiler-runtime',
+          'react-native',
+          '../../../apps/common-app/runtime-tests/worklets/tests/runtimes/reentrantModule',
+        ],
+      },
+    }),
+  },
   resolver: {
     blockList,
     extraNodeModules,

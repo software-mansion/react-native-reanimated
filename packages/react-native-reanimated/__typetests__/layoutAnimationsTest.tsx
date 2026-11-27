@@ -485,11 +485,10 @@ function LayoutAnimationsTest() {
     // @ts-expect-error `fadeOut.end` is a number.
     SharedTransition.fadeContent({ fadeOut: { end: '50%' } });
 
-    // `withInitialValues` / `withTargetValues` (defined on
-    // `ComplexAnimationBuilder`) must survive a static modifier chain.
-    const sharedTransitionWithOverrides = SharedTransition.springify(400)
-      .withInitialValues({ opacity: 0 })
-      .withTargetValues({ opacity: 1 });
+    // @ts-expect-error Shared transitions don't support custom initial values.
+    SharedTransition.springify(400).withInitialValues({ opacity: 0 });
+    // @ts-expect-error Shared transitions don't support custom target values.
+    SharedTransition.springify(400).withTargetValues({ opacity: 1 });
 
     // Entering/exiting subclasses keep their concrete value type after a static
     // modifier, so `withInitialValues` still rejects unknown props.
@@ -501,10 +500,6 @@ function LayoutAnimationsTest() {
         <Animated.View
           sharedTransitionTag="tag"
           sharedTransitionStyle={sharedTransition}
-        />
-        <Animated.View
-          sharedTransitionTag="tag"
-          sharedTransitionStyle={sharedTransitionWithOverrides}
         />
         <Animated.View
           sharedTransitionTag="tag"

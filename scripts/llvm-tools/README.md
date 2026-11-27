@@ -49,6 +49,11 @@ Scripts in this repository automatically pick the right clang-tidy binary
 based on the file being linted, so you don't have to worry about it as
 long as both LLVM and NDK clang-tidy binaries are available.
 
+CI lints with the LLVM major version in `scripts/llvm-tools/llvm-version`.
+Install the same version (`brew install llvm@22`) to get the same
+diagnostics locally. When it is installed, the lint script uses it even if
+another LLVM is on `$PATH`.
+
 ### xcode-build-server (only for iOS)
 
 xcode-build-server is a utility tool that parses Xcode's build logs into a

@@ -6,9 +6,9 @@
 #include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #endif // ANDROID
 
-#include <react/debug/react_native_assert.h>
 #include <react/renderer/mounting/ShadowTree.h>
 #include <react/renderer/mounting/ShadowViewMutation.h>
+#include <reanimated/Compat/ReactNativeDebug.h>
 
 #include <memory>
 #include <optional>
@@ -464,15 +464,10 @@ void LayoutAnimationsProxy_Legacy::addOngoingAnimations(ShadowViewMutationList &
 
     auto &layoutAnimation = layoutAnimationIt != layoutAnimations_.end() ? layoutAnimationIt->second
                                                                          : completedAnimationIt->second.animation;
-    auto newView = layoutAnimation.finalView;
-    newView.props = updateValues.newProps;
-    updateLayoutMetrics(newView.layoutMetrics, updateValues.frame);
-
-    mutations.push_back(
-        ShadowViewMutation::UpdateMutation(layoutAnimation.currentView, newView, layoutAnimation.parentTag));
-    layoutAnimation.currentView = newView;
+    mutations.push_back(frameUpdate(layoutAnimation, updateValues, false));
     if (layoutAnimation.opacity &&
-        (updateValues.animatesOpacity || getViewProps(newView).opacity == *layoutAnimation.opacity)) {
+        (updateValues.animatesOpacity ||
+         getViewProps(layoutAnimation.currentView).opacity == *layoutAnimation.opacity)) {
       layoutAnimation.opacity.reset();
     }
   }

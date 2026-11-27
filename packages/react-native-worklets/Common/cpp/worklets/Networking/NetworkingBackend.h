@@ -25,11 +25,45 @@ class NetworkRequestListener {
   virtual ~NetworkRequestListener() = default;
 };
 
+/**
+ * Implemented by the networking core. Backends may invoke the methods from any
+ * thread. `onClose` must be the last call for that socket, and must be invoked
+ * exactly once for a socket that `connect` accepted.
+ */
+class WebSocketListener {
+ public:
+  virtual void onOpen(std::string &&protocol, std::string &&extensions) = 0;
+  /** Reports bytes handed to the socket, so `bufferedAmount` can drain. */
+  virtual void onFlushed(int64_t bytes) = 0;
+  virtual void onTextMessage(std::string &&message) = 0;
+  virtual void onBinaryMessage(std::vector<uint8_t> &&message) = 0;
+  virtual void onError(std::string &&message) = 0;
+  virtual void onClose(uint16_t code, std::string &&reason, bool wasClean) = 0;
+  virtual ~WebSocketListener() = default;
+};
+
 class NetworkingBackend {
  public:
   virtual void
   sendRequest(uint64_t requestId, RequestConfig &&config, const std::shared_ptr<NetworkRequestListener> &listener) = 0;
   virtual void abortRequest(uint64_t requestId) = 0;
+
+  /**
+   * A backend that doesn't implement WebSockets reports the failure through the
+   * listener, so the JavaScript side sees an ordinary connection error.
+   */
+  virtual void connectWebSocket(
+      uint64_t /*socketId*/,
+      WebSocketConfig && /*config*/,
+      const std::shared_ptr<WebSocketListener> &listener) {
+    listener->onError("WebSocket is not supported on this platform.");
+    // NOLINTNEXTLINE(bugprone-branch-clone)
+    listener->onClose(static_cast<uint16_t>(WebSocketCloseCode::AbnormalClosure), "", false);
+  }
+
+  virtual void sendWebSocketText(uint64_t /*socketId*/, std::string && /*message*/) {}
+  virtual void sendWebSocketBinary(uint64_t /*socketId*/, std::vector<uint8_t> && /*message*/) {}
+  virtual void closeWebSocket(uint64_t /*socketId*/, uint16_t /*code*/, std::string && /*reason*/) {}
 
   /**
    * Decodes bytes with a legacy encoding the shared C++ decoders don't cover,

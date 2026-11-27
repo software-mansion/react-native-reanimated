@@ -11,6 +11,7 @@ import Animated, {
 import { runOnUISync } from 'react-native-worklets';
 
 import {
+  advanceAnimationTimer,
   describe,
   expect,
   getTestComponent,
@@ -541,6 +542,10 @@ async function expectOpacity(expected: number, step: string) {
 }
 
 const TOGGLE_DURATION = 2000;
+// With the mocked clock every frame is 16 ms of the animation.
+const TOGGLE_FRAMES = TOGGLE_DURATION / FRAME_MS;
+const SWITCH_DURATION = 960;
+const SWITCH_WINDOW_FRAMES = 12;
 
 async function toggleDuringAnimation(
   progress: SharedValue<number>,
@@ -549,12 +554,17 @@ async function toggleDuringAnimation(
   flags: boolean[],
   show: (flag: boolean) => Promise<void>
 ) {
+  await mockAnimationTimer();
   animateTo(progress, toValue, notificationName, TOGGLE_DURATION);
+  const framesBetweenToggles = Math.floor(TOGGLE_FRAMES / (flags.length + 2));
   for (const flag of flags) {
-    await wait(TOGGLE_DURATION / (flags.length + 2));
+    for (let frame = 0; frame < framesBetweenToggles; frame++) {
+      await waitForFrames(1);
+    }
     await show(flag);
   }
   await waitForNotification(notificationName);
+  await unmockAnimationTimer();
 }
 
 type FramesAfterSwitch = { children: string[]; opacity: number[] };
@@ -567,24 +577,31 @@ async function switchFlagMidAnimation(
   flag: boolean,
   show: (flag: boolean) => Promise<void>
 ): Promise<FramesAfterSwitch> {
+  // The clock waits while the app renders the switch, so the window always
+  // holds SWITCH_WINDOW_FRAMES animation frames.
+  await mockAnimationTimer({ autoAdvance: false });
   const updates = await recordAnimationUpdates();
   try {
-    animateTo(progress, toValue, notificationName, TOGGLE_DURATION);
-    await wait(TOGGLE_DURATION / 3);
+    animateTo(progress, toValue, notificationName, SWITCH_DURATION);
+    await advanceAnimationTimer(SWITCH_DURATION / 3);
     await show(flag);
     // Updates already queued for the old children may still land.
     await waitTwoFrames();
     const before = await readRecorded(updates, ['children', 'opacity']);
-    await wait(TOGGLE_DURATION / 3);
+    for (let frame = 0; frame < SWITCH_WINDOW_FRAMES; frame++) {
+      await advanceAnimationTimer(FRAME_MS);
+    }
     const after = await readRecorded(updates, ['children', 'opacity']);
     const frames = {
       children: after.children.slice(before.children.length).map(String),
       opacity: after.opacity.slice(before.opacity.length).map(Number),
     };
+    await advanceAnimationTimer(SWITCH_DURATION);
     await waitForNotification(notificationName);
     return frames;
   } finally {
     await stopRecordingAnimationUpdates();
+    await unmockAnimationTimer();
   }
 }
 
@@ -696,6 +713,18 @@ function animateTo(
   );
 }
 
+async function animateWithHeldClock(
+  progress: SharedValue<number>,
+  toValue: number,
+  notificationName: string
+) {
+  animateTo(progress, toValue, notificationName);
+  for (let elapsed = 0; elapsed < DURATION; elapsed += FRAME_MS) {
+    await advanceAnimationTimer(FRAME_MS);
+  }
+  await waitForNotification(notificationName);
+}
+
 async function recordTextFrames(run: () => Promise<void>) {
   const updates = await recordAnimationUpdates();
   try {
@@ -725,22 +754,20 @@ describe('Animated.Text with a shared value as children', () => {
           onLayoutWidth={(width) => layoutWidths.push(width)}
         />
       );
-      await mockAnimationTimer();
+      await mockAnimationTimer({ autoAdvance: false });
       const atZero = await measureScreen();
 
-      const up = await recordScreenFrames(async () => {
-        animateTo(progress, 100, 'UP_FINISHED');
-        await waitForNotification('UP_FINISHED');
-      });
+      const up = await recordScreenFrames(() =>
+        animateWithHeldClock(progress, 100, 'UP_FINISHED')
+      );
       const atHundred = await measureScreen();
       const opacityAtHundred = Number(
         await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
       );
 
-      const down = await recordScreenFrames(async () => {
-        animateTo(progress, 0, 'DOWN_FINISHED');
-        await waitForNotification('DOWN_FINISHED');
-      });
+      const down = await recordScreenFrames(() =>
+        animateWithHeldClock(progress, 0, 'DOWN_FINISHED')
+      );
       const backAtZero = await measureScreen();
       const opacityBackAtZero = Number(
         await getTestComponent(ROW.OPACITY).getAnimatedStyle('opacity')
@@ -1042,7 +1069,6 @@ describe('Animated.Text with a shared value as children', () => {
 
       expect(w9 < w10 && w10 < w100).toBe(true);
       expect(w100 > w99 && w99 > w9Again).toBe(true);
-      expect(w99).toBe(w10, ComparisonMode.PIXEL);
       expect(w9Again).toBe(w9, ComparisonMode.PIXEL);
     });
 

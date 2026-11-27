@@ -17,6 +17,7 @@ import {
 } from './utils/waitForFrames';
 
 export { Presets } from './Presets';
+export { isFullRun } from './utils/fullRun';
 export { isViewMountedNatively } from './utils/nativeViewHierarchy';
 
 const testRunner = new TestRunner();

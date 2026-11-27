@@ -24,7 +24,7 @@ Feature flags are available since Reanimated 4.
 | [`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS`](#experimental_css_animations_for_svg_components) | [static](#static-feature-flags) |  4.1.0   |  –   | `true` for 4.4.0+ <br/> `false` otherwise |
 | [`USE_SYNCHRONIZABLE_FOR_MUTABLES`](#use_synchronizable_for_mutables)                               | [static](#static-feature-flags) |  4.1.0   | 4.7.0 | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_COMMIT_HOOK_ONLY_FOR_REACT_COMMITS`](#use_commit_hook_only_for_react_commits)                 | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
-| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   |                  `false`                  |
+| [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions)                           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.8.0+ <br/> `false` otherwise |
 | [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_legacy_layout_animations_proxy)                         | [static](#static-feature-flags) |  4.7.0   |  –   |                  `false`                  |
 | [`FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`](#force_react_render_for_settled_animations)           | [static](#static-feature-flags) |  4.2.0   |  –   | `true` for 4.3.0+ <br/> `false` otherwise |
 | [`USE_ANIMATION_BACKEND`](#use_animation_backend)                                                   | [static](#static-feature-flags) |  4.4.0   |  –   |                  `false`                  |
@@ -124,7 +124,7 @@ This feature flag is supposed to fix performance regressions of animations while
 
 ### `ENABLE_SHARED_ELEMENT_TRANSITIONS`
 
-When enabled, Shared Element Transitions are available to use. The feature is not yet production ready, and may have some limitations or bugs. For more details, see [PR #7466](https://github.com/software-mansion/react-native-reanimated/pull/7466).
+When enabled, [Shared Element Transitions](../shared-element-transitions/overview.mdx) are available to use. The flag is enabled by default from Reanimated 4.8.0. To turn the feature off, set this flag to `false` in `reanimated.staticFeatureFlags` in your app's `package.json`.
 
 This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_legacy_layout_animations_proxy) and they cannot be enabled simultaneously, because the legacy layout animations proxy does not support Shared Element Transitions.
 
@@ -132,7 +132,7 @@ This feature flag conflicts with [`USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`](#use_leg
 
 When enabled, layout animations run on the legacy layout animations proxy instead of the current default implementation. This is a rollback flag: use it only when the default proxy causes a regression in your app. If it does, please report an issue. The legacy proxy has no light tree, so [`TRACK_SYNCHRONOUS_PROPS_IN_LAYOUT_ANIMATIONS`](#track_synchronous_props_in_layout_animations) has no effect with it.
 
-This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously.
+This feature flag conflicts with [`ENABLE_SHARED_ELEMENT_TRANSITIONS`](#enable_shared_element_transitions) and they cannot be enabled simultaneously. From Reanimated 4.8.0, `ENABLE_SHARED_ELEMENT_TRANSITIONS` is enabled by default, so you need to explicitly disable it in your app's `package.json` when enabling `USE_LEGACY_LAYOUT_ANIMATIONS_PROXY`.
 
 ### `FORCE_REACT_RENDER_FOR_SETTLED_ANIMATIONS`
 
@@ -208,7 +208,7 @@ Keep this flag off unless you see the warning described below.
 
 With `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` or `ANDROID_SYNCHRONOUSLY_UPDATE_UI_PROPS` enabled, some props that don't require layout recalculation go straight to the native views and skip the bookkeeping that Shared Element Transitions and Layout Animations start from. A running layout animation always receives those props. An animation that starts later starts with stale values if one of those props was animated before.
 
-A running shared element transition also keeps this bookkeeping current for the view it moves, even when this flag is off. This keeps synchronous prop values when the transition target changes or when the view returns to its parent. This exception does not track props written before the view starts moving, or props written to other views.
+A running shared element transition also keeps this bookkeeping current for the view it moves, even when this flag is off. This keeps synchronous prop values when the transition target changes or when the view returns to its parent. A running built-in timed transition does the same for its target and the parents of its target, so it follows their synchronous transforms. This exception does not track props written before the view starts moving, or props written to other views.
 
 When enabled, the synchronous path also updates that bookkeeping for other views. This costs one extra props clone per view in each synchronous update batch. Running layout animations also merge synchronous props into their animation records, so this flag does not control all props clone costs. Enable the flag only for the screens where a later animation starts with stale values, for example with `setDynamicFeatureFlag` in an effect of the screen, and restore the previous value in the cleanup of that effect.
 

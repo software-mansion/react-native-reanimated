@@ -82,12 +82,24 @@ interface SimctlDevice {
 
 const LIBRARIES = ['reanimated', 'worklets', 'self-tests'];
 const PLATFORMS = ['ios', 'android'];
-const BOOLEAN_FLAGS = new Set(['launch', 'skip-build', 'build-only', 'help']);
+const BOOLEAN_FLAGS = new Set([
+  'launch',
+  'skip-build',
+  'build-only',
+  'full',
+  'headless-task',
+  'help',
+]);
 const BUNDLE_ID = 'org.reactjs.native.example.FabricExample';
 const ANDROID_APP_ID = 'com.fabricexample';
+const ANDROID_HEADLESS_TASK_SERVICE = '.RuntimeTestsHeadlessTaskService';
+const ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS = 30_000;
+// As long as the timeout of the task in RuntimeTestsHeadlessTaskService.
+const ANDROID_HEADLESS_TASK_EXEMPTION_MS = 15 * 60 * 1000;
 
 const projectRoot = path.resolve(import.meta.dirname, '..');
 const iosDir = path.join(projectRoot, 'ios');
+const derivedDataDir = path.join(iosDir, 'build', 'DerivedData');
 const androidDir = path.join(projectRoot, 'android');
 const SANITIZER_REPORT_DIR = path.join(projectRoot, 'sanitizer-reports');
 const CRASH_REPORT_DIR = path.join(projectRoot, 'crash-reports');
@@ -98,7 +110,7 @@ const SANITIZERS: Record<string, Sanitizer> = {
   thread: {
     buildArgs: ['-enableThreadSanitizer', 'YES', 'ENABLE_THREAD_SANITIZER=YES'],
     launchEnv: {
-      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0`,
+      SIMCTL_CHILD_TSAN_OPTIONS: `log_path=${path.join(SANITIZER_REPORT_DIR, 'tsan')} halt_on_error=0 suppressions=${path.join(projectRoot, 'tsan-suppressions.txt')}`,
     },
     runtimePrefix: 'libclang_rt.tsan',
   },
@@ -130,9 +142,7 @@ const LIBRARY = String(args.library ?? '').toLowerCase();
 const PLATFORM = String(args.platform ?? 'ios').toLowerCase();
 const METRO_PORT = Number(args['metro-port'] ?? 8081);
 const CONFIGURATION =
-  typeof args.configuration === 'string'
-    ? args.configuration
-    : 'DebugRuntimeTests';
+  typeof args.configuration === 'string' ? args.configuration : 'Debug';
 const IS_RELEASE = CONFIGURATION.startsWith('Release');
 // Release builds have no Metro; the app then reports to port 8082.
 const PORT = Number(args.port ?? (IS_RELEASE ? 8082 : METRO_PORT + 1));
@@ -151,6 +161,9 @@ const AFTER_SUITE =
 const SHOULD_LAUNCH = args.launch === true || args.launch === '';
 const BUILD_ONLY = args['build-only'] === true || args['build-only'] === '';
 const SKIP_BUILD = args['skip-build'] === true || args['skip-build'] === '';
+const FULL = args.full === true || args.full === '';
+const HEADLESS_TASK =
+  args['headless-task'] === true || args['headless-task'] === '';
 const SIMULATOR =
   typeof args.simulator === 'string' ? args.simulator : 'iPhone 17';
 const UDID = typeof args.udid === 'string' ? args.udid : null;
@@ -162,7 +175,7 @@ const GITHUB_ACTIONS = CI_REPORT && process.env.GITHUB_ACTIONS === 'true';
 const GITHUB_STEP_SUMMARY = CI_REPORT
   ? (process.env.GITHUB_STEP_SUMMARY ?? '')
   : '';
-const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})`;
+const RUN_LABEL = `${LIBRARY} runtime tests on ${PLATFORM} (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''}${HEADLESS_TASK ? ', headless task' : ''})`;
 const MAX_ANNOTATIONS = 10;
 const STEP_SUMMARY_LIMIT_BYTES = 1024 * 1024;
 
@@ -197,6 +210,20 @@ if (BUILD_ONLY && PLATFORM !== 'ios') {
   process.exit(1);
 }
 
+if (HEADLESS_TASK && (PLATFORM !== 'android' || LIBRARY !== 'worklets')) {
+  console.error(
+    '[runtime-tests] --headless-task is only supported with --platform android --library worklets'
+  );
+  process.exit(1);
+}
+
+if (HEADLESS_TASK && !SHOULD_LAUNCH) {
+  console.error(
+    '[runtime-tests] --headless-task needs --launch, because only the driver starts the headless task service'
+  );
+  process.exit(1);
+}
+
 if (BUILD_ONLY && SHOULD_LAUNCH) {
   console.error(
     '[runtime-tests] --build-only cannot be combined with --launch'
@@ -213,6 +240,8 @@ let connectTimer: ReturnType<typeof setTimeout> | null = null;
 let idleTimer: ReturnType<typeof setTimeout> | null = null;
 let metroChild: ChildProcess | null = null;
 let androidSerial: string | null = null;
+let androidLaunchSerial: string | null = null;
+let androidHeadlessTaskStartup: Promise<void> | null = null;
 let iosUdid: string | null = null;
 let crashDiagnosticsPromise: Promise<void> | null = null;
 let afterSuiteChain: Promise<void> = Promise.resolve();
@@ -287,6 +316,19 @@ function routeEchoRequest(
     case '/echo/text': {
       res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end(ECHO_TEXT);
+      return;
+    }
+    case '/echo/ws-close': {
+      const record = wsCloseRecords.get(url.searchParams.get('key') ?? '');
+      if (record === undefined) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('no close recorded for this key');
+        return;
+      }
+      res.writeHead(200, {
+        'Content-Type': 'application/json; charset=utf-8',
+      });
+      res.end(JSON.stringify(record));
       return;
     }
     case '/echo/json': {
@@ -505,7 +547,114 @@ function clampInteger(
 const HOST = typeof args.host === 'string' ? args.host : '0.0.0.0';
 
 const httpServer = http.createServer(handleEchoRequest);
-const wss = new WebSocketServer({ server: httpServer });
+const wss = new WebSocketServer({ noServer: true });
+const RAW_FRAMES: Record<string, Buffer> = {
+  'non-minimal-16': Buffer.concat([
+    Buffer.from([0x81, 126, 0x00, 124]),
+    Buffer.alloc(124, 0x61),
+  ]),
+  'non-minimal-64': Buffer.concat([
+    Buffer.from([0x81, 127, 0, 0, 0, 0, 0, 0, 0xff, 0xff]),
+    Buffer.alloc(0xffff, 0x61),
+  ]),
+};
+const wsCloseRecords = new Map<string, { code: number; reason: string }>();
+/**
+ * `handleProtocols` cannot reject a client: `ws` only calls it when the client
+ * offered something, and a falsy return just omits the response header.
+ */
+const echoWss = new WebSocketServer({
+  noServer: true,
+  handleProtocols: (protocols) => (protocols.has('chat') ? 'chat' : false),
+});
+
+/**
+ * The reporter and the `/echo/ws` endpoint share one port, so the upgrade is
+ * routed by path. The reporter dials `/`, which is how the app has always
+ * connected. Any other path is dropped.
+ */
+httpServer.on('upgrade', (request, socket, head) => {
+  let pathname;
+  try {
+    pathname = new URL(request.url ?? '/', 'http://localhost').pathname;
+  } catch {
+    // `new URL` throws on targets such as `////`, which would otherwise reach
+    // the uncaughtException handler and take the whole run down.
+    socket.destroy();
+    return;
+  }
+  const target = pathname === '/echo/ws' ? echoWss : wss;
+  if (pathname !== '/echo/ws' && pathname !== '/') {
+    socket.destroy();
+    return;
+  }
+  const delay =
+    target === echoWss
+      ? clampInteger(
+          new URL(request.url ?? '/', 'http://localhost').searchParams.get(
+            'delayUpgrade'
+          ),
+          0,
+          0,
+          10000
+        )
+      : 0;
+  setTimeout(() => {
+    if (socket.destroyed) {
+      return;
+    }
+    target.handleUpgrade(request, socket, head, (client) => {
+      target.emit('connection', client, request);
+    });
+  }, delay);
+});
+
+/**
+ * Echoes every frame back, preserving whether it was text or binary. `ws` runs
+ * the closing handshake itself, echoing whatever code the client sent.
+ */
+echoWss.on('connection', (socket, request) => {
+  // Registered first: a socket error on any branch below would otherwise be an
+  // unhandled 'error' event, which exits the whole run.
+  socket.on('error', () => {});
+  const options = new URL(request.url ?? '/', 'http://localhost').searchParams;
+  const closeWith = options.get('close');
+  if (closeWith !== null) {
+    const code = Number(closeWith);
+    const reason = options.get('reason') ?? '';
+    const sendable =
+      Number.isInteger(code) &&
+      (code === 1000 || (code >= 3000 && code <= 4999));
+    if (!sendable || Buffer.byteLength(reason) > 123) {
+      socket.close(1000, '');
+      return;
+    }
+    socket.close(code, reason);
+    return;
+  }
+  const rawFrame = RAW_FRAMES[options.get('rawFrame') ?? ''];
+  if (rawFrame !== undefined) {
+    (socket as unknown as { _socket: NodeJS.WritableStream })._socket.write(
+      rawFrame
+    );
+  }
+  if (options.get('invalidUtf8') !== null) {
+    socket.send(Buffer.from([0x61, 0xff, 0x62]), { binary: false });
+  }
+  socket.on('message', (data, isBinary) => {
+    socket.send(data, { binary: isBinary });
+  });
+  const recordKey = options.get('record');
+  socket.on('close', (code, reason) => {
+    if (recordKey !== null) {
+      wsCloseRecords.set(recordKey, { code, reason: reason.toString() });
+    }
+  });
+});
+
+echoWss.on('error', (error) => {
+  console.error(`[runtime-tests] echo websocket error: ${error.message}`);
+});
 
 httpServer.on('error', (error) => {
   if ((error as NodeJS.ErrnoException).code === 'EADDRINUSE') {
@@ -693,7 +842,7 @@ function onHello(msg: Partial<HelloMessage>) {
     return;
   }
 
-  selectedSuites = selectSuites(suites, ONLY);
+  selectedSuites = selectSuites(suites, ONLY, FULL);
   let only = ONLY;
   if (resumeFromSuite !== null) {
     only = suitesToResume();
@@ -710,6 +859,7 @@ function onHello(msg: Partial<HelloMessage>) {
   send({
     type: 'start',
     ...(only ? { only } : {}),
+    ...(FULL ? { full: true } : {}),
   });
   console.log('[runtime-tests] start sent, running tests…');
 }
@@ -1676,6 +1826,23 @@ function shutdown(code: number) {
 
 async function exitAfterSuiteCommands(code: number) {
   await afterSuiteChain;
+  // The task left by the test launch would otherwise start the tests again
+  // when the app is reopened from the launcher.
+  await androidHeadlessTaskStartup?.catch(() => {});
+  if (androidLaunchSerial) {
+    await adb(
+      androidLaunchSerial,
+      ['shell', 'am', 'force-stop', ANDROID_APP_ID],
+      { timeout: 5000 }
+    ).catch(() => {});
+    if (HEADLESS_TASK) {
+      await adb(
+        androidLaunchSerial,
+        ['shell', 'cmd', 'deviceidle', 'tempwhitelist', '-r', ANDROID_APP_ID],
+        { timeout: 5000 }
+      ).catch(() => {});
+    }
+  }
   wss.close(() => {
     httpServer.close(() => {
       process.exit(code);
@@ -1859,44 +2026,40 @@ function sanitizerBuildArgs() {
   return SANITIZER ? SANITIZERS[SANITIZER].buildArgs : [];
 }
 
-async function buildApp() {
+// A simulator build compiles only its architecture. Without one (a CI artifact
+// built for another machine) it compiles every simulator architecture.
+function xcodebuildArgs(udid: string | null) {
+  return [
+    '-workspace',
+    'FabricExample.xcworkspace',
+    '-scheme',
+    'Debug FabricExample',
+    '-configuration',
+    CONFIGURATION,
+    '-derivedDataPath',
+    derivedDataDir,
+    ...(udid
+      ? [
+          '-destination',
+          `platform=iOS Simulator,id=${udid}`,
+          'ONLY_ACTIVE_ARCH=YES',
+        ]
+      : ['-destination', 'generic/platform=iOS Simulator']),
+    ...sanitizerBuildArgs(),
+  ];
+}
+
+async function buildApp(udid: string | null) {
   console.log(
     `[runtime-tests] building with xcodebuild (${CONFIGURATION}${SANITIZER ? `, ${SANITIZER} sanitizer` : ''})… this can take a few minutes`
   );
-  await run(
-    'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      'build',
-    ],
-    { cwd: iosDir }
-  );
+  await run('xcodebuild', [...xcodebuildArgs(udid), 'build'], { cwd: iosDir });
 }
 
-async function appPath() {
+async function appPath(udid: string | null) {
   const { stdout } = await run(
     'xcodebuild',
-    [
-      '-workspace',
-      'FabricExample.xcworkspace',
-      '-scheme',
-      'DebugRuntimeTests',
-      '-configuration',
-      CONFIGURATION,
-      '-destination',
-      'generic/platform=iOS Simulator',
-      ...sanitizerBuildArgs(),
-      '-showBuildSettings',
-      '-json',
-    ],
+    [...xcodebuildArgs(udid), '-showBuildSettings', '-json'],
     { cwd: iosDir }
   );
   const entries: { buildSettings?: Record<string, string> }[] = JSON.parse(
@@ -1917,7 +2080,10 @@ async function appPath() {
 }
 
 async function installAndLaunch(udid: string) {
-  const app = await appPath();
+  const app = await appPath(udid);
+  if (!fs.existsSync(app)) {
+    throw new Error(`App not found at ${app} — run once without --skip-build`);
+  }
   if (SANITIZER) {
     assertSanitizerRuntimeEmbedded(app);
   }
@@ -2098,6 +2264,12 @@ async function installAndLaunchAndroid(serial: string) {
     );
   }
 
+  androidLaunchSerial = serial;
+  if (HEADLESS_TASK) {
+    androidHeadlessTaskStartup = startAndroidHeadlessTask(serial);
+    await androidHeadlessTaskStartup;
+    return;
+  }
   console.log(
     `[runtime-tests] launching ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
   );
@@ -2123,6 +2295,68 @@ async function installAndLaunchAndroid(serial: string) {
   ]);
 }
 
+/**
+ * Starts the runtime tests in a headless JS task of a process that has no
+ * Activity. Android refuses a service start for an app in the background, so
+ * the app gets a temporary power-save exemption, which expires on its own.
+ */
+async function startAndroidHeadlessTask(serial: string) {
+  console.log(
+    `[runtime-tests] starting ${ANDROID_HEADLESS_TASK_SERVICE} of ${ANDROID_APP_ID} with RUNTIME_TESTS_LIBRARY=${LIBRARY} RUNTIME_TESTS_WS_URL=${WS_URL}`
+  );
+  const steps = [
+    () =>
+      adb(serial, ['shell', 'am', 'force-stop', ANDROID_APP_ID], {
+        timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS,
+      }),
+    () =>
+      adb(
+        serial,
+        [
+          'shell',
+          'cmd',
+          'deviceidle',
+          'tempwhitelist',
+          '-d',
+          String(ANDROID_HEADLESS_TASK_EXEMPTION_MS),
+          ANDROID_APP_ID,
+        ],
+        { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
+      ),
+    () => startAndroidHeadlessTaskService(serial),
+  ];
+  for (const step of steps) {
+    if (shutdownStarted) {
+      return;
+    }
+    await step();
+  }
+}
+
+async function startAndroidHeadlessTaskService(serial: string) {
+  const { stdout, stderr } = await adb(
+    serial,
+    [
+      'shell',
+      'am',
+      'startservice',
+      '-n',
+      `${ANDROID_APP_ID}/${ANDROID_HEADLESS_TASK_SERVICE}`,
+      '--es',
+      'RUNTIME_TESTS_LIBRARY',
+      LIBRARY,
+      '--es',
+      'RUNTIME_TESTS_WS_URL',
+      WS_URL,
+    ],
+    { timeout: ANDROID_HEADLESS_TASK_STEP_TIMEOUT_MS }
+  );
+  const output = `${stdout}${stderr}`;
+  if (/^Error/m.test(output)) {
+    throw new Error(`The headless task service did not start: ${output}`);
+  }
+}
+
 if (SHOULD_LAUNCH) {
   (async () => {
     if (!IS_RELEASE) {
@@ -2141,7 +2375,7 @@ if (SHOULD_LAUNCH) {
       iosUdid = device.udid;
       await ensureBooted(device);
       if (!SKIP_BUILD) {
-        await buildApp();
+        await buildApp(device.udid);
       }
       await installAndLaunch(device.udid);
     }
@@ -2187,9 +2421,9 @@ if (BUILD_ONLY) {
     if (SANITIZER) {
       fs.rmSync(SANITIZER_REPORT_DIR, { recursive: true, force: true });
     }
-    await buildApp();
+    await buildApp(UDID);
     if (SANITIZER) {
-      assertSanitizerRuntimeEmbedded(await appPath());
+      assertSanitizerRuntimeEmbedded(await appPath(UDID));
     }
     shutdown(0);
   })().catch((error) => {
@@ -2206,7 +2440,19 @@ function printUsage() {
 
 Builds the runtime tests app, installs it, runs the requested library's test
 suites and reports the results. \`yarn runtime-tests\` implies --launch;
-\`yarn runtime-tests:server\` waits for you to start the app yourself.
+\`yarn runtime-tests:server\` waits for you to start the app yourself, and does
+not start Metro (run \`yarn start\` first). The Debug build starts the test app
+only when launched with RUNTIME_TESTS_LIBRARY set. The app reports to the
+Metro port + 1. With another --port, also set
+RUNTIME_TESTS_WS_URL=ws://<host>:<port> (127.0.0.1 on a simulator).
+On iOS, run the RuntimeTests scheme in Xcode (it sets RUNTIME_TESTS_LIBRARY
+to reanimated; change it under Edit Scheme > Run > Environment Variables).
+On Android, start the app cold, because the library is fixed for the life of
+the process (\`adb devices\` lists the serials):
+  adb -s <serial> shell am start -S -n ${ANDROID_APP_ID}/.MainActivity \\
+    --es RUNTIME_TESTS_LIBRARY <library> [--es RUNTIME_TESTS_WS_URL <url>]
+If the app reaches Metro through localhost, forward the reporting port too:
+  adb -s <serial> reverse tcp:<port> tcp:<port>
 
 Required
   --library <name>          One of: ${LIBRARIES.join(', ')}.
@@ -2224,14 +2470,21 @@ Target
 
 Build and run
   --configuration <name>    Xcode configuration / Gradle build type.
-                            Default: DebugRuntimeTests. Release builds embed
-                            the bundle and run without Metro.
-  --skip-build              Reuse the installed app. Only safe when nothing
+                            Default: Debug. ReleaseRuntimeTests embeds the
+                            bundles and runs without Metro.
+  --skip-build              Reuse the last build (on iOS the one in
+                            ios/build/DerivedData). Only safe when nothing
                             native changed - JS is served by Metro.
   --launch                  Launch the app after installing it.
   --only <a,b>              Comma separated suite names to run. Suite names come
                             from the library's suites.ts, for example
                             "run loop" or "runtimes,memory".
+  --full                    Run the long variants (more iterations, complete
+                            matrices) and the suites a short run skips, as
+                            the nightly does.
+  --headless-task           Android, worklets only. Run the headless suites
+                            (headlessSuites.ts) in a headless JS task of a
+                            process that has no Activity.
   --after-suite <command>   Shell command to run each time the app finishes a
                             describe() suite, e.g. a cloud keepalive ping.
                             Overlapping runs are coalesced into one pending

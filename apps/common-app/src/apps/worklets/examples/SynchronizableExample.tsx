@@ -39,18 +39,18 @@ export default function SynchronizablePerformanceExample() {
   const [selectedVariant, setSelectedVariant] =
     React.useState<VariantKey>('dynamic');
   const [runningRuntimes, setRunningRuntimes] = React.useState(0);
-
-  const fixedSynchronizable: FixedSynchronizable<number> = createSynchronizable(
-    initialValue,
-    { fixedType: true }
-  );
-
-  const synchronizables: Record<VariantKey, Synchronizable<number>> = {
+  const runInProgress = React.useRef(false);
+  const [synchronizables] = React.useState<
+    Record<VariantKey, Synchronizable<number>>
+  >(() => ({
     dynamic: createSynchronizable(initialValue),
-    fixed: fixedSynchronizable,
-  };
-
-  const runtime = createWorkletRuntime({ name: 'SynchronizableExample' });
+    fixed: createSynchronizable(initialValue, { fixedType: true }),
+  }));
+  const fixedSynchronizable =
+    synchronizables.fixed as FixedSynchronizable<number>;
+  const [runtime] = React.useState(() =>
+    createWorkletRuntime({ name: 'SynchronizableExample' })
+  );
 
   function setResult(
     variant: VariantKey,
@@ -64,7 +64,14 @@ export default function SynchronizablePerformanceExample() {
     }));
   }
 
-  const decrementRuntimes = () => setRunningRuntimes((prev) => prev - 1);
+  const decrementRuntimes = () =>
+    setRunningRuntimes((prev) => {
+      const next = prev - 1;
+      if (next === 0) {
+        runInProgress.current = false;
+      }
+      return next;
+    });
 
   function setValueAndDuration(
     variant: VariantKey,
@@ -159,7 +166,12 @@ export default function SynchronizablePerformanceExample() {
   }
 
   function runBenchmark(benchmark: (variant: VariantKey) => void) {
+    if (runInProgress.current) {
+      return;
+    }
+    runInProgress.current = true;
     const variant = selectedVariant;
+    synchronizables[variant].setBlocking(initialValue);
     resetVariant(variant);
     setRunningRuntimes(3);
 
@@ -212,23 +224,27 @@ export default function SynchronizablePerformanceExample() {
         title={`Selected variant: ${selectedVariant}`}
       />
       <Button
+        disabled={runningRuntimes > 0}
         onPress={() => runBenchmark(getDirtySetBlocking)}
         title=".getDirty() & .setBlocking() on two threads"
       />
       <Button
+        disabled={runningRuntimes > 0}
         onPress={() => runBenchmark(getBlockingSetBlocking)}
         title=".getBlocking() & .setBlocking() on two threads"
       />
       <Button
+        disabled={runningRuntimes > 0}
         onPress={() => runBenchmark(setBlockingSetBlockingTransaction)}
         title=".setBlocking() with setter on two threads - transaction"
       />
       <Button
-        disabled={selectedVariant !== 'fixed'}
+        disabled={selectedVariant !== 'fixed' || runningRuntimes > 0}
         onPress={() => runBenchmark(getDirtySetDirty)}
         title=".getDirty() & .setDirty() on two threads - fixed only"
       />
       <Button
+        disabled={runningRuntimes > 0}
         onPress={() => runBenchmark(imperativeLocking)}
         title="Imperative locking"
       />
