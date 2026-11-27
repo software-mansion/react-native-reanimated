@@ -5,4 +5,9 @@ if ! which cmake-lint >/dev/null; then
   exit 1
 fi
 
-cmake-lint "$@" --line-width 120
+if ! which cmake-format >/dev/null; then
+  echo "error: cmake-format is not installed"
+  exit 1
+fi
+
+cmake-lint "$@" --line-width 120 && cmake-format --check "$@"

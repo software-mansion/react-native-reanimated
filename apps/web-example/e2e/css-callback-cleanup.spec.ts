@@ -1,7 +1,6 @@
+import { expect, type Page, test } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-
-import { expect, type Page, test } from '@playwright/test';
 import ts from 'typescript';
 
 type BrowserListenerConstructor = new <Payload>(

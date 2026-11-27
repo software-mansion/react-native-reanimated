@@ -111,3 +111,6 @@ jobs:
       - name: Build WebExample
         working-directory: apps/web-example
         run: yarn build
+      - name: Lint WebExample
+        working-directory: apps/web-example
+        run: yarn lint

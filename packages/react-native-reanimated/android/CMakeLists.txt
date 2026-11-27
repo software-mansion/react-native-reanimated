@@ -71,22 +71,23 @@ include("${REACT_NATIVE_DIR}/ReactCommon/cmake-utils/react-native-flags.cmake")
 target_compile_reactnative_options(reanimated PUBLIC)
 # Acknowledge framework-tier APIs when the app opts into RN_STRICT_API.
 target_compile_definitions(reanimated PRIVATE RN_ALLOW_FRAMEWORKS)
-target_compile_definitions(reanimated PRIVATE "WORKLETS_STABLE_API_TARGET=\"0.14.0\"")
+target_compile_definitions(reanimated
+                           PRIVATE "WORKLETS_STABLE_API_TARGET=\"0.14.0\"")
 
 target_include_directories(
   reanimated
-  PRIVATE "${COMMON_CPP_DIR}"
-          "${ANDROID_CPP_DIR}"
-          "${PACKAGE_ROOT_DIR}"
-          "${CODEGEN_OUTPUT_DIR}"
-          "${REACT_NATIVE_DIR}/ReactCommon"
-          "${REACT_NATIVE_DIR}/ReactCommon/yoga"
-          "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
-          "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
-          "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
-          "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/android"
-)
+  PRIVATE
+    "${COMMON_CPP_DIR}"
+    "${ANDROID_CPP_DIR}"
+    "${PACKAGE_ROOT_DIR}"
+    "${CODEGEN_OUTPUT_DIR}"
+    "${REACT_NATIVE_DIR}/ReactCommon"
+    "${REACT_NATIVE_DIR}/ReactCommon/yoga"
+    "${REACT_NATIVE_DIR}/ReactAndroid/src/main/jni/react/turbomodule"
+    "${REACT_NATIVE_DIR}/ReactCommon/callinvoker"
+    "${REACT_NATIVE_DIR}/ReactCommon/runtimeexecutor"
+    "${REACT_NATIVE_DIR}/ReactCommon/jsiexecutor"
+    "${REACT_NATIVE_DIR}/ReactCommon/react/renderer/graphics/platform/android")
 
 set_target_properties(reanimated PROPERTIES LINKER_LANGUAGE CXX)
 
