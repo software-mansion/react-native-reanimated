@@ -52,7 +52,7 @@ void mergeAnimatedProps(AnimatedProps &target, AnimatedProps &&source) {
   if (source.rawProps) {
     if (target.rawProps) {
       auto mergedRawProps = target.rawProps->toDynamic();
-      mergedRawProps.merge_patch(source.rawProps->toDynamic());
+      mergedRawProps.update(source.rawProps->toDynamic());
       target.rawProps = std::make_unique<RawProps>(std::move(mergedRawProps));
     } else {
       target.rawProps = std::move(source.rawProps);
@@ -954,15 +954,37 @@ void ReanimatedModuleProxy::performOperations() {
   commitUpdates(propsMapBySurface);
 }
 
-void ReanimatedModuleProxy::performNonLayoutOperations() {
+bool ReanimatedModuleProxy::performNonLayoutOperations() {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::performNonLayoutOperations");
+
+  if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
+    return hasPendingEventUpdates();
+  }
 
   UpdatesBatch updatesBatch;
   {
     auto lock = updatesRegistryManager_->lock();
     updatesBatch = animatedPropsRegistry_->getPendingUpdates();
   }
+  const bool hasPendingUpdates = !updatesBatch.empty();
   applySynchronousUpdates(partitionUpdates(std::move(updatesBatch), true).first);
+  return hasPendingUpdates;
+}
+
+void ReanimatedModuleProxy::flushDeferredEventUpdates() {
+  if (!hasPendingEventUpdates()) {
+    return;
+  }
+  getAnimationBackend()->pushAnimationMutations(
+      [this](AnimationTimestamp timestamp) { return runGrandCallback(timestamp, GrandCallbackSource::Event); });
+}
+
+bool ReanimatedModuleProxy::hasPendingEventUpdates() {
+  if (!layoutAnimationFlushRequests_.empty()) {
+    return true;
+  }
+  auto lock = updatesRegistryManager_->lock();
+  return animatedPropsRegistry_->hasPendingAnimatedPropsUpdates();
 }
 
 bool ReanimatedModuleProxy::hasSynchronousWritesTracker() const {
@@ -989,16 +1011,15 @@ void ReanimatedModuleProxy::rewriteSynchronousProps() {
   synchronousWritesTracker_->onRewrite();
 }
 
-AnimationMutations ReanimatedModuleProxy::collectNonLayoutAnimationUpdates() {
-  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectNonLayoutAnimationUpdates");
+AnimationMutations ReanimatedModuleProxy::collectUpdatesWithoutLayout() {
+  ReanimatedSystraceSection s("ReanimatedModuleProxy::collectUpdatesWithoutLayout");
 
-  AnimationMutations mutations;
-  jsi::Runtime &uiRuntime = getJSIRuntimeFromWorkletRuntime(uiRuntime_);
+  UpdatesBatchAnimatedProps batch;
   {
     auto lock = updatesRegistryManager_->lock();
-    animatedPropsRegistry_->flushNonLayoutUpdates(uiRuntime, mutations);
+    animatedPropsRegistry_->flushUpdatesWithoutLayout(batch);
   }
-  return mutations;
+  return mutationsFromAnimatedPropsBatch(std::move(batch));
 }
 
 std::shared_ptr<UIManagerAnimationBackend> ReanimatedModuleProxy::getAnimationBackend() {
@@ -1096,8 +1117,8 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
       return collectEventUpdates();
     }
 
-    case GrandCallbackSource::EventInAndroidDraw:
-      return collectNonLayoutAnimationUpdates();
+    case GrandCallbackSource::EventInAndroidDispatch:
+      return collectUpdatesWithoutLayout();
   }
 
   return AnimationMutations{};

@@ -34,7 +34,9 @@ class NodesManager(
     private val mEventQueue = ConcurrentLinkedQueue<CopiedEvent>()
     private var lastFrameTimeMs = 0.0
     private val mFabricUIManager = UIManagerHelper.getUIManager(context, UIManagerType.FABRIC) as FabricUIManager
-    private val mDrawPassDetector: DrawPassDetector
+    private val mDrawPassObserver: DrawPassObserver
+    private var mHasDeferredLayoutOperations = false
+    private var mIsInsideEventDispatch = false
 
     private var mNativeProxy: NativeProxy? = null
 
@@ -43,7 +45,7 @@ class NodesManager(
     init {
         context.assertOnJSQueueThread()
 
-        mDrawPassDetector = DrawPassDetector(context)
+        mDrawPassObserver = DrawPassObserver(context, ::performDeferredLayoutOperations)
 
         mReactChoreographer = ReactChoreographer.getInstance()
         mChoreographerCallback =
@@ -63,7 +65,7 @@ class NodesManager(
             mNativeProxy = null
         }
 
-        mDrawPassDetector.invalidate()
+        mDrawPassObserver.invalidate()
 
         mFabricUIManager.eventDispatcher.removeListener(this)
     }
@@ -103,36 +105,52 @@ class NodesManager(
 
     fun performOperations() {
         UiThreadUtil.assertOnUiThread()
-        mNativeProxy?.performOperations()
-    }
-
-    internal fun performNonLayoutOperations() {
-        UiThreadUtil.assertOnUiThread()
-        mNativeProxy?.performNonLayoutOperations()
+        val hasDeferredLayoutOperations = mHasDeferredLayoutOperations
+        mHasDeferredLayoutOperations = false
+        mNativeProxy?.performOperations(hasDeferredLayoutOperations)
     }
 
     internal fun performOperationsRespectingDrawPass() {
-        mDrawPassDetector.initialize()
-        if (isInDrawPass()) {
-            performNonLayoutOperations()
-            startUpdatingOnAnimationFrame()
+        if (mIsInsideEventDispatch) {
+            return
+        }
+
+        mDrawPassObserver.initialize()
+        if (mDrawPassObserver.isInDrawPass()) {
+            performNonLayoutOperationsAndDeferTheRest()
             return
         }
 
         performOperations()
     }
 
-    internal fun isInDrawPass(): Boolean = mDrawPassDetector.isInDrawPass()
+    private fun performNonLayoutOperationsAndDeferTheRest() {
+        UiThreadUtil.assertOnUiThread()
+        if (mNativeProxy?.performNonLayoutOperations() == true && !mHasDeferredLayoutOperations) {
+            mHasDeferredLayoutOperations = true
+            startUpdatingOnAnimationFrame()
+            mDrawPassObserver.requestDrawPass()
+        }
+    }
+
+    private fun performDeferredLayoutOperations() {
+        if (mHasDeferredLayoutOperations) {
+            performOperations()
+        }
+    }
 
     private fun onAnimationFrame(frameTimeNanos: Long) {
         UiThreadUtil.assertOnUiThread()
+        if (mNativeProxy == null) {
+            return
+        }
 
         try {
             if (BuildConfig.REANIMATED_PROFILING) {
                 Trace.beginSection("onAnimationFrame")
             }
 
-            mDrawPassDetector.initialize()
+            mDrawPassObserver.initialize()
 
             var currentFrameTimeMs = frameTimeNanos / 1000000.0
             if (mSlowAnimationsEnabled) {
@@ -162,7 +180,7 @@ class NodesManager(
             }
 
             mCallbackPosted.set(false)
-            if (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty()) {
+            if (mFrameCallbacks.isNotEmpty() || !mEventQueue.isEmpty() || mHasDeferredLayoutOperations) {
                 // enqueue next frame
                 startUpdatingOnAnimationFrame()
             }
@@ -188,11 +206,16 @@ class NodesManager(
             // Events can be dispatched from any thread so we have to make sure handleEvent is run from
             // the UI thread.
             if (UiThreadUtil.isOnUiThread()) {
-                // Ensure draw-pass tracking is attached before event handling; the backend reads
-                // isInDrawPass during receiveEvent.
-                mDrawPassDetector.initialize()
-                handleEvent(event)
-                performOperationsRespectingDrawPass()
+                mDrawPassObserver.initialize()
+                val wasInsideEventDispatch = mIsInsideEventDispatch
+                mIsInsideEventDispatch = true
+                try {
+                    handleEvent(event)
+                } finally {
+                    mIsInsideEventDispatch = wasInsideEventDispatch
+                }
+                // The sender can still be walking its view tree, so the layout operations wait.
+                performNonLayoutOperationsAndDeferTheRest()
             } else {
                 val eventName = resolveCustomEventName(event.eventName)
                 val viewTag = event.viewTag
@@ -214,7 +237,12 @@ class NodesManager(
     }
 
     private fun handleEvent(copiedEvent: CopiedEvent) {
-        mCustomEventHandler?.handle(copiedEvent.eventName, copiedEvent.targetTag, copiedEvent.payload)
+        mCustomEventHandler?.handle(
+            copiedEvent.eventName,
+            copiedEvent.targetTag,
+            copiedEvent.payload,
+            isInsideEventDispatch = false,
+        )
     }
 
     fun registerEventHandler(handler: EventHandler) {

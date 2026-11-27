@@ -131,17 +131,19 @@ bool NativeProxy::isAnyHandlerWaitingForEvent(const std::string &eventName, cons
   return reanimatedModuleProxy_->isAnyHandlerWaitingForEvent(eventName, emitterReactTag);
 }
 
-void NativeProxy::performOperations() {
+void NativeProxy::performOperations(jboolean hasDeferredLayoutOperations) {
   if constexpr (StaticFeatureFlags::getFlag("USE_ANIMATION_BACKEND")) {
-    // We don't use performOperations in the backend path,
-    // but we don't have access to the feature flags in Kotlin, so we gate it here
+    // The backend flushes in its own loop.
+    if (hasDeferredLayoutOperations) {
+      reanimatedModuleProxy_->flushDeferredEventUpdates();
+    }
   } else {
     reanimatedModuleProxy_->performOperations();
   }
 }
 
-void NativeProxy::performNonLayoutOperations() {
-  reanimatedModuleProxy_->performNonLayoutOperations();
+bool NativeProxy::performNonLayoutOperations() {
+  return reanimatedModuleProxy_->performNonLayoutOperations();
 }
 
 bool NativeProxy::hasSynchronousWritesTracker() {
@@ -353,7 +355,7 @@ void NativeProxy::handleEvent(
     jni::alias_ref<JString> eventName,
     jint emitterReactTag,
     jni::alias_ref<react::WritableMap> event,
-    jboolean isInDrawPass) {
+    jboolean isInsideEventDispatch) {
   // handles RCTEvents from RNGestureHandler
   if (event.get() == nullptr) {
     // Ignore events with null payload.
@@ -389,7 +391,7 @@ void NativeProxy::handleEvent(
         eventName->toString(),
         emitterReactTag,
         payload,
-        isInDrawPass ? GrandCallbackSource::EventInAndroidDraw : GrandCallbackSource::Event);
+        isInsideEventDispatch ? GrandCallbackSource::EventInAndroidDispatch : GrandCallbackSource::Event);
   } else {
     reanimatedModuleProxy_->handleEvent(eventName->toString(), emitterReactTag, payload, getAnimationTimestamp());
   }

@@ -63,8 +63,8 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
 
   double getAnimationTimestamp();
   bool isAnyHandlerWaitingForEvent(const std::string &eventName, const int emitterReactTag);
-  void performOperations();
-  void performNonLayoutOperations();
+  void performOperations(jboolean hasDeferredLayoutOperations);
+  bool performNonLayoutOperations();
   bool hasSynchronousWritesTracker();
   void rewriteSynchronousProps();
   bool getIsReducedMotion();
@@ -84,7 +84,7 @@ class NativeProxy : public jni::HybridClass<NativeProxy>, public std::enable_sha
       jni::alias_ref<JString> eventName,
       jint emitterReactTag,
       jni::alias_ref<react::WritableMap> event,
-      jboolean isInDrawPass);
+      jboolean isInsideEventDispatch);
   void attachPseudoSelector(Tag tag, PseudoSelector selector, std::function<void(bool)> callback);
   void detachPseudoSelector(Tag tag, PseudoSelector selector);
   bool cssAnimateTransition(

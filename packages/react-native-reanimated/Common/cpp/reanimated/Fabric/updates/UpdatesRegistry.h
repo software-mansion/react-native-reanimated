@@ -70,8 +70,8 @@ class UpdatesRegistry {
   // Drains pending typed animated props.
   void flushUpdates(UpdatesBatchAnimatedProps &updatesBatch);
 
-  // Get only non-layout updates (for android event handling) in the animation backend path.
-  void flushNonLayoutUpdates(jsi::Runtime &rt, facebook::react::AnimationMutations &mutations);
+  // Drains the pending typed animated props of the views that have no pending layout update.
+  void flushUpdatesWithoutLayout(UpdatesBatchAnimatedProps &updatesBatch);
   bool hasPendingAnimatedPropsUpdates() const;
   void addAnimatedPropsToBatch(
       const ShadowNodeFamily::Shared &shadowNodeFamily,

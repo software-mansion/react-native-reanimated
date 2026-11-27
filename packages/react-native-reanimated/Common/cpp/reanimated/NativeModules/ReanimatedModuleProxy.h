@@ -53,12 +53,10 @@ enum class GrandCallbackSource : std::uint8_t {
   // Used when a new vsync signal is triggered
   AnimationLoop,
 
-  // Used when handling an event (excluding the draw pass)
   Event,
 
-  // Used when handling an event originating from the Android draw pass,
-  // the info is used to avoid performing Tree Hierarchy updates when this could break the app
-  EventInAndroidDraw,
+  // The sender can still walk the view tree.
+  EventInAndroidDispatch,
 };
 
 class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModuleProxy> {
@@ -108,7 +106,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   bool handleRawEvent(const RawEvent &rawEvent, double currentTime);
 
   void performOperations();
-  void performNonLayoutOperations();
+  bool performNonLayoutOperations();
+  void flushDeferredEventUpdates();
   bool hasSynchronousWritesTracker() const;
   void rewriteSynchronousProps();
   void flushLayoutAnimationOperations();
@@ -222,7 +221,8 @@ class ReanimatedModuleProxy : public std::enable_shared_from_this<ReanimatedModu
   void executeWorkletsForFrame(AnimationTimestamp timestamp);
   AnimationMutations executeOperationsAndCollectUpdates(AnimationTimestamp timestamp);
   AnimationMutations collectEventUpdates();
-  AnimationMutations collectNonLayoutAnimationUpdates();
+  AnimationMutations collectUpdatesWithoutLayout();
+  bool hasPendingEventUpdates();
   AnimationMutations mutationsFromAnimatedPropsBatch(UpdatesBatchAnimatedProps &&animatedPropsBatch);
 
   const bool isReducedMotion_;

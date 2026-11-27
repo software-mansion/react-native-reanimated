@@ -175,9 +175,9 @@ open class NativeProxy {
         emitterReactTag: Int,
     ): Boolean
 
-    private external fun performOperationsCpp()
+    private external fun performOperationsCpp(hasDeferredLayoutOperations: Boolean)
 
-    private external fun performNonLayoutOperationsCpp()
+    private external fun performNonLayoutOperationsCpp(): Boolean
 
     private external fun hasSynchronousWritesTracker(): Boolean
 
@@ -215,9 +215,10 @@ open class NativeProxy {
         emitterReactTag: Int,
     ): Boolean = ifNotInvalidated(false) { isAnyHandlerWaitingForEventCpp(eventName, emitterReactTag) }
 
-    fun performOperations() = ifNotInvalidated(Unit) { performOperationsCpp() }
+    fun performOperations(hasDeferredLayoutOperations: Boolean) =
+        ifNotInvalidated(Unit) { performOperationsCpp(hasDeferredLayoutOperations) }
 
-    fun performNonLayoutOperations() = ifNotInvalidated(Unit) { performNonLayoutOperationsCpp() }
+    fun performNonLayoutOperations(): Boolean = ifNotInvalidated(false) { performNonLayoutOperationsCpp() }
 
     fun invalidate() {
         if (mInvalidated.getAndSet(true)) {
@@ -517,7 +518,6 @@ open class NativeProxy {
 
     @DoNotStrip
     fun registerEventHandler(handler: EventHandler) {
-        handler.isInDrawPassProvider = { mNodesManager!!.isInDrawPass() }
         handler.nativeCallGuard = { receive -> ifNotInvalidated(Unit, receive) }
         mNodesManager!!.registerEventHandler(handler)
     }
