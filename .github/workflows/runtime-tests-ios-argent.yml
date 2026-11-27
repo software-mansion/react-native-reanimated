@@ -83,15 +83,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Read the Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
       - name: Restore packaged app from cache
         id: appcache
         uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
         with:
           path: apps/fabric-example/dist/FabricExample.app.zip
-          key: runtime-tests-app-zip-${{ env.CONFIGURATION }}-${{ hashFiles(
+          key: runtime-tests-app-zip-${{ env.CONFIGURATION }}-xcode-${{ steps.xcode.outputs.version }}-${{ hashFiles(
             'yarn.lock',
+            '.nvmrc',
+            '.ruby-version',
+            'scripts/llvm-tools/**',
             'apps/fabric-example/**',
-            '!apps/fabric-example/scripts/**',
             'apps/common-app/**',
             'packages/react-native-reanimated/**',
             'packages/react-native-worklets/**'
@@ -306,7 +312,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14
