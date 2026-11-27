@@ -1,14 +1,13 @@
 diff --git a/package.json b/package.json
-index 22d196a55d..775eecb0a8 100644
+index 460b7d7bae..e1fb36be5a 100644
 --- a/package.json
 +++ b/package.json
-@@ -89,5 +89,9 @@
-     "spacer": {
-       "spacer": "thanks to this spacer changes to dependencies won't require update of bundle mode toggling script patches"
-     }
-+  },
-+  "resolutions": {
+@@ -94,6 +94,8 @@
+     "@expo/metro@npm:58.0.0/metro-runtime": "0.87.1",
+     "@react-native/community-cli-plugin@npm:0.88.1/metro": "0.87.1",
+     "react-native@npm:0.88.1/metro-runtime": "0.87.1",
 +    "metro": "patch:metro@npm%3A0.88.0#~/.yarn/patches/metro-npm-0.88.0-4800af9fce.patch",
-+    "metro-runtime": "patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch"
++    "metro-runtime": "patch:metro-runtime@npm%3A0.88.0#~/.yarn/patches/metro-runtime-npm-0.88.0-bd2143c917.patch",
+     "expo-modules-core@npm:~58.1.0": "patch:expo-modules-core@npm%3A58.1.0#~/.yarn/patches/expo-modules-core-npm-58.1.0-a93dd717b5.patch"
    }
  }
