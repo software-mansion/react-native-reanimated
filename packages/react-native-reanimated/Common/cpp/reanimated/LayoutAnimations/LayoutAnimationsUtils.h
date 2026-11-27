@@ -5,6 +5,7 @@
 #include <react/renderer/mounting/MountingOverrideDelegate.h>
 #include <react/renderer/mounting/ShadowView.h>
 #include <reanimated/Compat/ReactNativeDebug.h>
+#include <reanimated/Compat/ReactNativeFeatureFlagsCompat.h>
 #include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 
@@ -129,6 +130,16 @@ struct IndexCursors {
   IndexCursor insert;
   bool invariantChecked = false;
 };
+
+#ifdef RN_SERIALIZABLE_STATE
+// `cloneProps` merges the base raw props itself when `enableAccumulatedUpdatesInRawPropsAndroid` is on.
+inline folly::dynamic rawPropsForClone(const Props::Shared &base, folly::dynamic rawProps) {
+  if (ReactNativeFeatureFlags::enableAccumulatedUpdatesInRawPropsAndroid()) {
+    return rawProps;
+  }
+  return folly::dynamic::merge(base->rawProps, rawProps);
+}
+#endif
 
 struct LightNode {
   ShadowView current;
