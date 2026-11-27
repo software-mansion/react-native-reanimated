@@ -9,6 +9,7 @@ import {
 } from './npm-versions.ts';
 
 const HOW_MANY_MINORS = 2;
+const MIN_WORKLETS_MAJOR = 1;
 const OUTPUT_PATH = '/tmp/bundle-cost-matrix.json';
 const REANIMATED = 'react-native-reanimated';
 const WORKLETS = 'react-native-worklets';
@@ -27,8 +28,6 @@ type MatrixEntry = {
   reanimatedVersion: string;
   workletsVersion: string;
 };
-
-type MatrixJob = MatrixEntry & { bundleMode: boolean };
 
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const packagesDir = path.join(currentDir, '..', '..', '..', 'packages');
@@ -62,10 +61,14 @@ for (const reanimatedRange of reanimatedRanges) {
     break;
   }
   const details = compatibilityData.fabric[reanimatedRange];
-  const workletsRanges = details['react-native-worklets'] ?? [];
+  const workletsRanges = (details['react-native-worklets'] ?? []).filter(
+    (range) => Number.parseInt(range, 10) >= MIN_WORKLETS_MAJOR
+  );
 
   if (workletsRanges.length === 0) {
-    console.warn(`${reanimatedRange}: no compatible worklets range, skipping`);
+    console.warn(
+      `${reanimatedRange}: no compatible worklets ${MIN_WORKLETS_MAJOR}.x range, skipping`
+    );
     continue;
   }
 
@@ -97,7 +100,9 @@ for (const reanimatedRange of reanimatedRanges) {
 }
 
 if (matrix.length === 0) {
-  throw new Error('resolved an empty bundle-cost matrix');
+  console.warn(
+    `no released Reanimated works with worklets ${MIN_WORKLETS_MAJOR}.x yet, measuring main only`
+  );
 }
 
 const mainEntry: MatrixEntry = {
@@ -106,10 +111,7 @@ const mainEntry: MatrixEntry = {
   workletsVersion: MAIN,
 };
 
-const jobs: MatrixJob[] = [mainEntry, ...matrix].flatMap((entry) => [
-  { ...entry, bundleMode: true },
-  { ...entry, bundleMode: false },
-]);
+const jobs: MatrixEntry[] = [mainEntry, ...matrix];
 
 fs.writeFileSync(OUTPUT_PATH, JSON.stringify(jobs));
 console.log(JSON.stringify(jobs, null, 2));

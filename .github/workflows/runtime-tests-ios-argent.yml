@@ -9,10 +9,6 @@ on:
       SIM_ROUTER_API_KEY:
         required: true
     inputs:
-      bundleMode:
-        required: false
-        type: boolean
-        default: false
       configuration:
         required: false
         type: string
@@ -27,11 +23,6 @@ on:
         default: false
   workflow_dispatch:
     inputs:
-      bundleMode:
-        description: Run with Bundle Mode enabled (false = Legacy Eval)
-        required: false
-        type: boolean
-        default: false
       configuration:
         description: Build configuration (Debug* legs serve JS from Metro on the test runner)
         required: false
@@ -72,16 +63,15 @@ jobs:
   # Build on macos runner
   build-app:
     needs: preflight
-    name: Build app (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    name: Build app (${{ matrix.configuration }})
     runs-on: macos-26
     timeout-minutes: 90
     concurrency:
-      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.configuration }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
-        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode || false)) }}
         configuration: ${{ fromJSON(format('["{0}"]', inputs.configuration || 'ReleaseRuntimeTests')) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
@@ -93,42 +83,66 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Read the Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | shasum | cut -c1-12)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore packaged app from cache
+        id: appcache
+        uses: actions/cache@6f8efc29b200d32929f49075959781ed54ec270c
+        with:
+          path: apps/fabric-example/dist/FabricExample.app.zip
+          key:
+            runtime-tests-app-zip-${{ env.CONFIGURATION }}-xcode-${{ steps.xcode.outputs.version }}-${{ hashFiles(
+            'yarn.lock',
+            '.nvmrc',
+            '.ruby-version',
+            'scripts/llvm-tools/**',
+            'apps/fabric-example/**',
+            'apps/common-app/**',
+            'packages/react-native-reanimated/**',
+            'packages/react-native-worklets/**'
+            ) }}
+
       - name: Use Ruby version from `.ruby-version` file
+        if: steps.appcache.outputs.cache-hit != 'true'
         uses: ruby/setup-ruby@6aaa311d81eba98ae12eaffbcb63296ace0efcde
         with:
           bundler-cache: true
 
       - name: Use Node.js
+        if: steps.appcache.outputs.cache-hit != 'true'
         id: setup-node
         uses: $/.github/actions/setup-node-yarn
         with:
           node-version-file: '.nvmrc'
 
       - name: Install monorepo node dependencies
+        if: steps.appcache.outputs.cache-hit != 'true'
         run: yarn install --immutable
 
       - name: Save Yarn cache
+        if: steps.appcache.outputs.cache-hit != 'true'
         uses: $/.github/actions/save-yarn-cache
         with:
           cache-hit: ${{ steps.setup-node.outputs.cache-hit }}
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
           cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
-      - name: Toggle Bundle Mode off (Legacy Eval)
-        if: ${{ !matrix.bundleMode }}
-        run: yarn toggle-bundle-mode
-
       - name: Build Reanimated package
+        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: packages/react-native-reanimated
         run: yarn build
 
       - name: Setup ccache
+        if: steps.appcache.outputs.cache-hit != 'true'
         uses: $/.github/actions/setup-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
           needs-compile-database: 'false'
 
       - name: Install Pods
+        if: steps.appcache.outputs.cache-hit != 'true'
         id: install-pods
         uses: $/.github/actions/install-pods
         with:
@@ -136,20 +150,20 @@ jobs:
           pod-directory: ios
 
       - name: Build runtime-tests app
+        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: node --experimental-strip-types scripts/runtime-tests-server.mts --build-only --configuration "$CONFIGURATION"
 
       - name: Save ccache
-        if: inputs.bundleMode
+        if: steps.appcache.outputs.cache-hit != 'true'
         uses: $/.github/actions/save-ccache
         with:
           key-prefix: fabric-example-ios-${{ env.CONFIGURATION }}
 
       # Pods do not depend on the configuration; one leg of the nightly
-      # fan-out saves. Bundle Mode, because the Legacy Eval legs run
-      # `yarn toggle-bundle-mode` and no longer match the committed tree.
+      # fan-out saves.
       - name: Save Pods cache
-        if: inputs.bundleMode && env.CONFIGURATION == 'Debug'
+        if: steps.appcache.outputs.cache-hit != 'true' && env.CONFIGURATION == 'Debug'
         uses: $/.github/actions/save-pods
         with:
           working-directory: ${{ env.WORKING_DIRECTORY }}
@@ -158,6 +172,7 @@ jobs:
           cache-primary-key: ${{ steps.install-pods.outputs.cache-primary-key }}
 
       - name: Package app artifact
+        if: steps.appcache.outputs.cache-hit != 'true'
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: |
           # Debug apps are deliberately Metro-fed here (the test job runs
@@ -171,7 +186,7 @@ jobs:
       - name: Upload app artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}
+          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}
           path: apps/fabric-example/dist/FabricExample.app.zip
           if-no-files-found: error
           retention-days: 3
@@ -179,17 +194,16 @@ jobs:
   # Test on remote simulator running on Argent Cloud
   run-tests-remote:
     needs: build-app
-    name: Remote tests (${{ matrix.configuration }}, ${{ matrix.bundleMode && 'Bundle Mode' || 'Legacy Eval' }})
+    name: Remote tests (${{ matrix.configuration }})
     runs-on: ubuntu-latest # <- the whole point: no macOS, no local simulator
     timeout-minutes: 60
     concurrency:
-      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.bundleMode }}-${{ matrix.configuration }}
+      group: runtime-tests-ios-argent-${{ github.workflow }}-${{ github.ref }}-${{ matrix.configuration }}
       cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
         # Must mirror build-app's matrix exactly.
-        bundleMode: ${{ fromJSON(format('[{0}]', inputs.bundleMode || false)) }}
         configuration: ${{ fromJSON(format('["{0}"]', inputs.configuration || 'ReleaseRuntimeTests')) }}
     env:
       WORKING_DIRECTORY: apps/fabric-example
@@ -218,17 +232,6 @@ jobs:
           cache-primary-key: ${{ steps.setup-node.outputs.cache-primary-key }}
           cache-path: ${{ steps.setup-node.outputs.cache-path }}
 
-      # Debug legs serve JS from Metro running on this runner, so this
-      # checkout's js must match the native app's bundle mode.
-      #
-      # The build job toggled its own tree before compiling the Legacy binary,
-      # and Metro would otherwise serve Bundle Mode JS (the checked-in default) to it.
-      #
-      # Release legs never execute this checkout's JS, so toggle isn't needed.
-      - name: Toggle Bundle Mode off (Legacy Eval Metro parity)
-        if: ${{ !matrix.bundleMode && startsWith(matrix.configuration, 'Debug') }}
-        run: yarn toggle-bundle-mode
-
       - name: Install sim-remote CLI
         uses: $/.github/actions/install-sim-remote
 
@@ -245,7 +248,7 @@ jobs:
       - name: Download app artifact
         uses: actions/download-artifact@448e3f862ab3ef47aa50ff917776823c9946035b
         with:
-          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}-bundle-${{ matrix.bundleMode }}
+          name: runtime-tests-app-remote-${{ env.CONFIGURATION }}
           path: apps/fabric-example/dist
 
       - name: Unpack app artifact
@@ -310,7 +313,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14
