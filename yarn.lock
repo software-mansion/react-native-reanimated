@@ -17678,9 +17678,9 @@ __metadata:
   linkType: hard
 
 "fflate@npm:^0.7.3":
-  version: 0.7.4
-  resolution: "fflate@npm:0.7.4"
-  checksum: 10/27f61b3536c3a23b0ccdab4b616103be0e8e7241924cda063486822c50ae11930eb1ce6e34dedbfccb2705d04a66380d04e28c67387e1dd48159d41ea14bfda5
+  version: 0.7.5
+  resolution: "fflate@npm:0.7.5"
+  checksum: 10/a568faff2f031aa4461851a97889db19d092f0544c738046c44d56a001cbaf3d140cab73c773f24df6cd12406475ced7246d8f7ad4fc6284eb044d8163621b8c
   languageName: node
   linkType: hard
 
