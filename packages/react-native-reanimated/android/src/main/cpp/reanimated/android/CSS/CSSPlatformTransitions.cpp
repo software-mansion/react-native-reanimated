@@ -59,36 +59,36 @@ bool CSSPlatformTransitions::canRoute(const std::string &propertyName, const css
   return platformPropertyId(propertyName).has_value();
 }
 
-bool CSSPlatformTransitions::startTransition(
-    const Tag viewTag,
-    const std::string &propertyName,
-    const css::PlatformValue &fromValue,
-    const css::PlatformValue &toValue,
-    const double durationMs,
-    const double startTimestampMs,
-    const css::EasingConfig &easing,
-    const bool persistent) {
-  const auto from = toJniValue(fromValue);
-  const auto to = toJniValue(toValue);
+std::optional<css::CSSPlatformTransitionRunId> CSSPlatformTransitions::startTransition(
+    const css::CSSPlatformTransitionRun &run) {
+  const auto from = toJniValue(run.fromValue);
+  const auto to = toJniValue(run.toValue);
   if (!from.has_value() || !to.has_value()) {
-    return false;
+    return std::nullopt;
   }
 
   // has_value(), not a truthiness test: opacity's id is 0.
-  const auto propertyId = platformPropertyId(propertyName);
+  const auto propertyId = platformPropertyId(run.propertyName);
   if (!propertyId.has_value()) {
-    return false;
+    return std::nullopt;
   }
 
-  const int easingId = easings_->acquire(toPlatformEasing(easing));
+  const int easingId = easings_->acquire(toPlatformEasing(run.easing));
   if (!animate_(
-          static_cast<int>(viewTag), *propertyId, *from, *to, durationMs, startTimestampMs, easingId, persistent)) {
+          static_cast<int>(run.viewTag),
+          *propertyId,
+          *from,
+          *to,
+          run.durationMs,
+          run.startTimestampMs,
+          easingId,
+          run.holdsEndValue)) {
     easings_->release(easingId);
-    return false;
+    return std::nullopt;
   }
 
-  replaceEasingId(viewTag, propertyName, easingId);
-  return true;
+  replaceEasingId(run.viewTag, run.propertyName, easingId);
+  return nextRunId_++;
 }
 
 // Runs after the new id is acquired: releasing first would drop a reused curve to
@@ -104,7 +104,10 @@ void CSSPlatformTransitions::replaceEasingId(const Tag viewTag, const std::strin
   it->second = easingId;
 }
 
-void CSSPlatformTransitions::stopTransition(const Tag viewTag, const std::string &propertyName) {
+void CSSPlatformTransitions::stopTransition(
+    const SurfaceId /*surfaceId*/,
+    const Tag viewTag,
+    const std::string &propertyName) {
   const auto propertyIdsIt = easingIds_.find(viewTag);
   if (propertyIdsIt != easingIds_.end()) {
     const auto it = propertyIdsIt->second.find(propertyName);
