@@ -99,8 +99,8 @@ export type ValueUnpacker = WorkletFunction<
 
 export interface WorkletImport {
   __bundleData: {
-    /** Name of the module which is the source of the import. */
-    source: string;
+    /** Id of the module which is the source of the import. */
+    source: number;
     /** The name of the imported value. */
     imported: string;
   };

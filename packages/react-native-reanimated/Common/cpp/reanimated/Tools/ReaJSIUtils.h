@@ -17,7 +17,7 @@ namespace reanimated::jsi_utils {
 // `get` functions take a pointer to `jsi::Value` and
 // call an appropriate method to cast to the native type
 template <typename T>
-inline T get(jsi::Runtime &rt, const jsi::Value *value);
+T get(jsi::Runtime &rt, const jsi::Value *value) = delete;
 
 template <>
 inline double get<double>(jsi::Runtime &, const jsi::Value *value) {
@@ -30,9 +30,9 @@ inline int get<int>(jsi::Runtime &, const jsi::Value *value) {
 }
 
 template <>
-inline bool get<bool>(jsi::Runtime &, const jsi::Value *value) {
+inline bool get<bool>(jsi::Runtime &rt, const jsi::Value *value) {
   if (!value->isBool()) {
-    throw jsi::JSINativeException("[Reanimated] Expected a boolean.");
+    throw jsi::JSError(rt, "[Reanimated] Expected a boolean.");
   }
   return value->getBool();
 }
@@ -40,6 +40,21 @@ inline bool get<bool>(jsi::Runtime &, const jsi::Value *value) {
 template <>
 inline jsi::Object get<jsi::Object>(jsi::Runtime &rt, const jsi::Value *value) {
   return value->asObject(rt);
+}
+
+template <>
+inline std::string get<std::string>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asString(rt).utf8(rt);
+}
+
+template <>
+inline jsi::Array get<jsi::Array>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asObject(rt).asArray(rt);
+}
+
+template <>
+inline jsi::Function get<jsi::Function>(jsi::Runtime &rt, const jsi::Value *value) {
+  return value->asObject(rt).asFunction(rt);
 }
 
 template <>
@@ -171,57 +186,79 @@ jsi::Array convertStringToArray(jsi::Runtime &rt, const std::string &value, cons
 
 jsi::Object optimizedFromHostObject(jsi::Runtime &rt, std::shared_ptr<jsi::HostObject> &&hostObject);
 
-template <size_t TIndex, size_t TLength>
-  requires(TIndex < TLength)
-constexpr const jsi::Value &at(const jsi::Value (&args)[TLength]) noexcept {
-  return args[TIndex];
+template <typename T>
+using StoredParameter = std::conditional_t<std::is_same_v<T, const jsi::Value &>, T, std::remove_cvref_t<T>>;
+
+inline const jsi::Value &argumentOrUndefined(const jsi::Value *args, size_t count, size_t index) {
+  static const jsi::Value undefined;
+  return index < count ? args[index] : undefined;
 }
 
-template <size_t TLength, typename TFun>
-  requires(TLength > 0) &&
-    std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &, const jsi::Value (&)[TLength]>
-void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
+template <typename... TArgs>
+std::tuple<StoredParameter<TArgs>...> readArguments(jsi::Runtime &rt, const jsi::Value *args, size_t count) {
+  size_t index = 0;
+  return std::tuple<StoredParameter<TArgs>...>{
+      get<StoredParameter<TArgs>>(rt, &argumentOrUndefined(args, count, index++))...};
+}
+
+template <typename TResult, typename TFun, typename TArguments>
+jsi::Value callWithArguments(jsi::Runtime &rt, const TFun &func, TArguments &&arguments) {
+  const auto call = [&](auto &&...values) -> TResult {
+    return func(rt, std::forward<decltype(values)>(values)...);
+  };
+  if constexpr (std::is_void_v<TResult>) {
+    std::apply(call, std::forward<TArguments>(arguments));
+    return jsi::Value::undefined();
+  } else {
+    return jsi::Value(std::apply(call, std::forward<TArguments>(arguments)));
+  }
+}
+
+inline void
+setHostFunction(jsi::Runtime &rt, jsi::Object &obj, const char *name, unsigned int length, jsi::HostFunctionType body) {
   obj.setProperty(
       rt,
       name,
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, name),
-          TLength,
-          [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *args, size_t) mutable -> jsi::Value {
-            using TReturn =
-                std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &, const jsi::Value(&)[TLength]>;
-            auto &typed = *reinterpret_cast<const jsi::Value(*)[TLength]>(args);
-            if constexpr (std::is_void_v<TReturn>) {
-              func(rt, thisVal, typed);
-              return jsi::Value::undefined();
-            } else {
-              return func(rt, thisVal, typed);
-            }
-          }));
+      jsi::Function::createFromHostFunction(rt, jsi::PropNameID::forAscii(rt, name), length, std::move(body)));
 }
 
-template <size_t TLength, typename TFun>
-  requires(TLength == 0) && std::is_invocable_v<TFun &&, jsi::Runtime &, const jsi::Value &>
-void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, TFun &&func) {
-  obj.setProperty(
+template <typename TResult>
+jsi::Value resultForDeadModule() {
+  if constexpr (std::is_void_v<TResult>) {
+    return jsi::Value::undefined();
+  } else {
+    return jsi::Value(TResult{});
+  }
+}
+
+template <typename TModule, typename TFun, typename TClass, typename TResult, typename... TArgs>
+void addTypedModuleMethod(
+    jsi::Runtime &rt,
+    jsi::Object &obj,
+    const char *name,
+    std::weak_ptr<TModule> weakModule,
+    TFun &&func,
+    TResult (TClass::*)(jsi::Runtime &, TModule &, TArgs...) const) {
+  setHostFunction(
       rt,
+      obj,
       name,
-      jsi::Function::createFromHostFunction(
-          rt,
-          jsi::PropNameID::forAscii(rt, name),
-          0,
-          [func = std::forward<TFun>(func)](
-              jsi::Runtime &rt, const jsi::Value &thisVal, const jsi::Value *, size_t) mutable -> jsi::Value {
-            using TReturn = std::invoke_result_t<TFun &, jsi::Runtime &, const jsi::Value &>;
-            if constexpr (std::is_void_v<TReturn>) {
-              func(rt, thisVal);
-              return jsi::Value::undefined();
-            } else {
-              return func(rt, thisVal);
-            }
-          }));
+      sizeof...(TArgs),
+      [weakModule = std::move(weakModule), func = std::forward<TFun>(func)](
+          jsi::Runtime &rt, const jsi::Value &, const jsi::Value *args, size_t count) {
+        const auto strongModule = weakModule.lock();
+        if (!strongModule) {
+          return resultForDeadModule<TResult>();
+        }
+        auto arguments = std::tuple_cat(std::tie(*strongModule), readArguments<TArgs...>(rt, args, count));
+        return callWithArguments<TResult>(rt, func, std::move(arguments));
+      });
+}
+
+template <typename TModule, typename TFun>
+void addMethod(jsi::Runtime &rt, jsi::Object &obj, const char *name, std::weak_ptr<TModule> weakModule, TFun &&func) {
+  addTypedModuleMethod(
+      rt, obj, name, std::move(weakModule), std::forward<TFun>(func), &std::remove_cvref_t<TFun>::operator());
 }
 
 } // namespace reanimated::jsi_utils

@@ -60,7 +60,7 @@ See https://docs.swmansion.com/react-native-worklets/docs/guides/troubleshooting
   }
 
   createSerializableImport<TValue>(
-    from: string,
+    from: number,
     to: string
   ): SerializableRef<TValue> {
     return this.#workletsModuleProxy.createSerializableImport(from, to);

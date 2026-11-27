@@ -31,7 +31,7 @@ export interface ReanimatedModuleProxy {
   getViewProp<T>(
     viewTagOrShadowNodeWrapper: number | ShadowNodeWrapper,
     propName: string,
-    callback?: (result: T) => void
+    callback: (result: T) => void
   ): Promise<T>;
 
   isSensorAvailable(sensorType: number): boolean;
@@ -126,6 +126,6 @@ export interface IReanimatedModule extends Omit<
     viewTag: number,
     propName: string,
     component: InternalHostInstance | null,
-    callback?: (result: TValue) => void
+    callback: (result: TValue) => void
   ): Promise<TValue>;
 }

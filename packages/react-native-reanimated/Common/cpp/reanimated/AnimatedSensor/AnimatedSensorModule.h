@@ -30,15 +30,15 @@ class AnimatedSensorModule {
  public:
   explicit AnimatedSensorModule(const PlatformDepMethodsHolder &platformDepMethodsHolder);
 
-  jsi::Value isSensorAvailable(const jsi::Value &sensorType) const;
+  bool isSensorAvailable(double sensorType) const;
   jsi::Value registerSensor(
       jsi::Runtime &rnRuntime,
       const std::shared_ptr<WorkletRuntime> &uiRuntime,
-      const jsi::Value &sensorType,
-      const jsi::Value &interval,
-      const jsi::Value &iosReferenceFrame,
+      double sensorType,
+      double interval,
+      double iosReferenceFrame,
       const jsi::Value &sensorDataContainer);
-  void unregisterSensor(const jsi::Value &sensorId);
+  void unregisterSensor(double sensorId);
   void unregisterAllSensors();
 };
 
