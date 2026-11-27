@@ -28,6 +28,15 @@ using namespace worklets;
 
 namespace {
 
+struct WorkerAnimationFrameQueueHolder {
+  AnimationFrameQueue *const queue = [[AnimationFrameQueue alloc] initOnFrameThread];
+
+  ~WorkerAnimationFrameQueueHolder()
+  {
+    [queue invalidate];
+  }
+};
+
 BundleModeConfig makeBundleModeConfig(NSURL *bundleURL, NSURL *downloadedBundleFileURL)
 {
   return BundleModeConfig{
@@ -174,6 +183,12 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(toggleSlowAnimationsOnUIRuntime)
       .requestAnimationFrame = [animationFrameQueue =
                                     animationFrameQueue_](std::function<void(const double)> &&callback) -> void {
         [animationFrameQueue requestAnimationFrame:callback];
+      },
+      .createWorkerAnimationFrameSource = []() -> RuntimeBindings::RequestAnimationFrame {
+        const auto holder = std::make_shared<WorkerAnimationFrameQueueHolder>();
+        return [holder](std::function<void(const double)> &&callback) -> void {
+          [holder->queue requestAnimationFrame:callback];
+        };
       },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AppleNetworkingBackend>()});

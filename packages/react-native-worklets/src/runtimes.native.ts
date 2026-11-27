@@ -84,6 +84,7 @@ export function createWorkletRuntime(
   let initializerFn: (() => void) | undefined;
   let queue: 'default' | object | null = 'default';
   let animationQueuePollingRate: number;
+  let enableVSync = false;
   let enableEventLoop = true;
   let enableLocking = true;
   let enableNetworking = true;
@@ -103,6 +104,12 @@ export function createWorkletRuntime(
     animationQueuePollingRate = Math.round(
       nameOrConfig?.animationQueuePollingRate ?? 16
     );
+    enableVSync = nameOrConfig?.enableVSync ?? false;
+    if (enableVSync && nameOrConfig?.animationQueuePollingRate !== undefined) {
+      throw new Error(
+        '[Worklets] The `animationQueuePollingRate` option cannot be set on a runtime with `enableVSync` enabled.'
+      );
+    }
     enableLocking = nameOrConfig?.enableLocking ?? true;
     if (__DEV__ && !enableLocking && nameOrConfig?.enableEventLoop) {
       throw new Error(
@@ -120,6 +127,12 @@ export function createWorkletRuntime(
     enableNetworking =
       (nameOrConfig?.enableNetworking ?? true) && enableEventLoop;
     abortable = nameOrConfig?.abortable ?? false;
+  }
+
+  if (enableVSync && (queue !== 'default' || !enableEventLoop)) {
+    throw new Error(
+      '[Worklets] The `enableVSync` option requires the default queue and the Event Loop.'
+    );
   }
 
   const useDefaultQueue = queue === 'default';
@@ -146,7 +159,7 @@ export function createWorkletRuntime(
         installLazyBundleRegistrar(lazyBundleRegistrar);
       }
       if (enableEventLoop) {
-        setupRunLoop(animationQueuePollingRate);
+        setupRunLoop(animationQueuePollingRate, enableVSync);
       }
       initializerFn?.();
     }),

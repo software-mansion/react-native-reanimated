@@ -1,6 +1,9 @@
 'use strict';
 
-export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
+export function setupRequestAnimationFrame(
+  animationQueuePollingRate: number,
+  enableVSync: boolean
+) {
   'worklet';
   const timeoutInterval = animationQueuePollingRate;
 
@@ -14,9 +17,8 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
 
   let flushRequested = false;
 
-  function flushAnimationFrame() {
+  function flushAnimationFrame(timestamp: number) {
     flushRequested = false;
-    const timestamp = performance.now();
 
     flushedCallbacks = queuedCallbacks;
     queuedCallbacks = [];
@@ -33,6 +35,14 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     flushedCallbacksBegin = flushedCallbacksEnd;
   }
 
+  function flushAnimationFrameOnTimeout() {
+    flushAnimationFrame(performance.now());
+  }
+
+  if (enableVSync) {
+    globalThis.__runAnimationFrameCallback = flushAnimationFrame;
+  }
+
   globalThis.requestAnimationFrame = (
     callback: (timestamp: number) => void
   ): number => {
@@ -42,7 +52,11 @@ export function setupRequestAnimationFrame(animationQueuePollingRate: number) {
     if (!flushRequested) {
       flushRequested = true;
 
-      setTimeout(flushAnimationFrame, timeoutInterval);
+      if (enableVSync) {
+        globalThis._scheduleAnimationFrameCallback();
+      } else {
+        setTimeout(flushAnimationFrameOnTimeout, timeoutInterval);
+      }
     }
     return handle;
   };

@@ -104,6 +104,8 @@ declare global {
   ) => void;
   var _scheduleTimeoutCallback: (delay: number, handlerId: number) => void;
   var __runTimeoutCallback: (handlerId: number) => void;
+  var _scheduleAnimationFrameCallback: () => void;
+  var __runAnimationFrameCallback: (timestamp: number) => void;
   var _taskQueue: Queue;
   /** Only in Debug builds. */
   var __hasNativeState: (value: object) => boolean;

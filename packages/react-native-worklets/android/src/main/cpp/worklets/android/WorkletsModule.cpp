@@ -63,7 +63,11 @@ std::shared_ptr<RuntimeBindings> WorkletsModule::getRuntimeBindings(
     const jni::global_ref<jhybridobject> &javaPart,
     jni::global_ref<JNetworking::javaobject> networking) {
   return std::make_shared<RuntimeBindings>(RuntimeBindings{
-      .requestAnimationFrame = getRequestAnimationFrame(javaPart),
+      .requestAnimationFrame = getRequestAnimationFrame(javaPart, "requestAnimationFrame"),
+      .createWorkerAnimationFrameSource =
+          [requestWorkerAnimationFrame = getRequestAnimationFrame(javaPart, "requestWorkerAnimationFrame")] {
+            return requestWorkerAnimationFrame;
+          },
       .nativeLoggingHook = makeNativeLoggingHook(),
       .networkingBackend = std::make_shared<AndroidNetworkingBackend>(std::move(networking))});
 }
@@ -78,10 +82,11 @@ BundleModeConfig WorkletsModule::loadBundleModeConfig() {
 }
 
 RuntimeBindings::RequestAnimationFrame WorkletsModule::getRequestAnimationFrame(
-    const jni::global_ref<jhybridobject> &javaPart) {
-  return [javaPart](std::function<void(const double)> &&callback) -> void {
-    static const auto jRequestAnimationFrame =
-        javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>("requestAnimationFrame");
+    const jni::global_ref<jhybridobject> &javaPart,
+    const char *methodName) {
+  const auto jRequestAnimationFrame =
+      javaPart->getClass()->getMethod<void(AnimationFrameCallback::javaobject)>(methodName);
+  return [javaPart, jRequestAnimationFrame](std::function<void(const double)> &&callback) -> void {
     jRequestAnimationFrame(javaPart.get(), AnimationFrameCallback::newObjectCxxArgs(std::move(callback)).get());
   };
 }

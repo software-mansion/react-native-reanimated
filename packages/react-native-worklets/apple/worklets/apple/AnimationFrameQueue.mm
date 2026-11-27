@@ -29,6 +29,8 @@ const auto POOR = CAFrameRateRangeMake(10, 24, 24);
 @implementation AnimationFrameQueue {
   /* DisplayLink is thread safe. */
   WorkletsDisplayLink *displayLink_;
+  NSThread *frameThread_;
+  BOOL ownedByWorkerRuntime_;
   std::vector<std::function<void(double)>> frameCallbacks_;
   std::mutex callbacksMutex_;
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
@@ -45,7 +47,70 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   react_native_assert(
       (IsJavaScriptQueue() || RCTIsMainQueue()) &&
       "AnimationFrameQueue must be created on the JavaScript queue or the main queue");
-  if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
+  return [self initWithFrameThread:nil];
+}
+
+- (instancetype)initOnFrameThread
+{
+  ownedByWorkerRuntime_ = YES;
+#if TARGET_OS_OSX
+  return [self initWithFrameThread:nil];
+#else // TARGET_OS_OSX
+  return [self initWithFrameThread:[AnimationFrameQueue frameThread]];
+#endif // TARGET_OS_OSX
+}
+
+- (void)requestAnimationFrame:(std::function<void(double)>)callback
+{
+  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  frameCallbacks_.push_back(callback);
+  [self scheduleQueueExecution];
+}
+
+- (void)invalidate
+{
+  if (frameThread_ != nil) {
+    [displayLink_ performSelector:@selector(invalidate) onThread:frameThread_ withObject:nil waitUntilDone:NO];
+    return;
+  }
+  if (ownedByWorkerRuntime_) {
+    WorkletsDisplayLink *displayLink = displayLink_;
+    dispatch_async(dispatch_get_main_queue(), ^{ [displayLink invalidate]; });
+    return;
+  }
+  AssertTurboModuleManagerQueue();
+  [displayLink_ invalidate];
+}
+
+#pragma mark-- private
+
++ (NSThread *)frameThread
+{
+  static NSThread *frameThread;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    frameThread = [[NSThread alloc] initWithBlock:^{
+      NSRunLoop *runLoop = [NSRunLoop currentRunLoop];
+      [runLoop addPort:[NSMachPort port] forMode:NSDefaultRunLoopMode];
+      while (true) {
+        @autoreleasepool {
+          [runLoop runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+        }
+      }
+    }];
+    frameThread.name = @"WorkletsFrameSource";
+    frameThread.qualityOfService = NSQualityOfServiceUserInteractive;
+    [frameThread start];
+  });
+  return frameThread;
+}
+
+- (instancetype)initWithFrameThread:(NSThread *)frameThread
+{
+  frameThread_ = frameThread;
+  if (frameThread_ != nil) {
+    displayLink_ = [WorkletsDisplayLink displayLinkWithTarget:self selector:@selector(executeQueue:)];
+  } else if constexpr (worklets::StaticFeatureFlags::getFlag("IOS_DYNAMIC_FRAMERATE_ENABLED")) {
     bool supportsProMotion = false;
 #if !TARGET_OS_OSX
     supportsProMotion = [UIScreen mainScreen].maximumFramesPerSecond > 60;
@@ -64,26 +129,32 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   displayLink_.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif // TARGET_OS_OSX
   [displayLink_ setPaused:TRUE];
-  [displayLink_ addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  if (frameThread_ != nil) {
+    [self performSelector:@selector(attachDisplayLinkToFrameThread)
+                 onThread:frameThread_
+               withObject:nil
+            waitUntilDone:NO];
+  } else {
+    [displayLink_ addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  }
   return self;
 }
 
-- (void)requestAnimationFrame:(std::function<void(double)>)callback
+- (void)attachDisplayLinkToFrameThread
 {
-  {
-    std::lock_guard<std::mutex> lock(callbacksMutex_);
-    frameCallbacks_.push_back(callback);
+  [displayLink_ addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+}
+
+- (void)assertFrameThread
+{
+  if (frameThread_ == nil) {
+    RCTAssertMainQueue();
+  } else {
+    react_native_assert(
+        [NSThread currentThread] == frameThread_ &&
+        "AnimationFrameQueue must execute its callbacks on the frame thread");
   }
-  [self scheduleQueueExecution];
 }
-
-- (void)invalidate
-{
-  AssertTurboModuleManagerQueue();
-  [displayLink_ invalidate];
-}
-
-#pragma mark-- private
 
 - (void)scheduleQueueExecution
 {
@@ -92,10 +163,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)executeQueue:(WorkletsDisplayLink *)displayLink
 {
-  RCTAssertMainQueue();
+  [self assertFrameThread];
 
   auto frameCallbacks = [self pullCallbacks];
-  [displayLink_ setPaused:TRUE];
 
 #if TARGET_OS_OSX
   auto targetTimestamp = displayLink.timestamp + displayLink.duration;
@@ -145,8 +215,9 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (std::vector<std::function<void(double)>>)pullCallbacks
 {
-  RCTAssertMainQueue();
+  [self assertFrameThread];
   std::lock_guard<std::mutex> lock(callbacksMutex_);
+  [displayLink_ setPaused:TRUE];
   return std::move(frameCallbacks_);
 }
 
