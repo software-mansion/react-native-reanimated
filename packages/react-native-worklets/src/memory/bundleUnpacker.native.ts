@@ -39,11 +39,8 @@ function getWorklet(
 }
 
 function describeThrownValue(value: unknown): string {
-  if (value instanceof Error) {
-    return value.message;
-  }
   try {
-    return String(value);
+    return String(value instanceof Error ? value.message : value);
   } catch {
     return 'a value that cannot be converted to a string';
   }
