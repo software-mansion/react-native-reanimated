@@ -62,7 +62,7 @@ export class WorkletEventHandler<
     // noop
   }
 
-  unregisterFromEvents(_viewTag: number): void {
+  unregisterFromEvents(_viewTag: number, _fallbackEventName?: string): void {
     // noop
   }
 }

@@ -43,7 +43,7 @@ describe('NativeEventsManager', () => {
       animatedComponent as unknown as AnimatedComponent
     );
 
-    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
     expect(handler.registerForEvents).toHaveBeenLastCalledWith(2, 'onScroll');
   });
 
@@ -53,7 +53,7 @@ describe('NativeEventsManager', () => {
     component._componentRef = { __nativeTag: 2 };
     manager.updateEvents();
 
-    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
     expect(handler.registerForEvents).toHaveBeenLastCalledWith(2, 'onScroll');
   });
 
@@ -65,7 +65,7 @@ describe('NativeEventsManager', () => {
     component.props = { onScroll: { workletEventHandler: nextHandler } };
     manager.updateEvents();
 
-    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
     expect(nextHandler.registerForEvents).toHaveBeenCalledWith(2, 'onScroll');
   });
 
@@ -89,12 +89,15 @@ describe('NativeEventsManager', () => {
     component.props = { onScroll: { workletEventHandler: nextHandler } };
     manager.updateEvents();
 
-    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
-    expect(nextHandler.registerForEvents).toHaveBeenCalledWith(1);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
+    expect(nextHandler.registerForEvents).toHaveBeenCalledWith(1, 'onScroll');
 
     component.props = {};
     manager.updateEvents();
-    expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(
+      1,
+      'onScroll'
+    );
   });
 
   test.each([1, 2])(
@@ -111,19 +114,18 @@ describe('NativeEventsManager', () => {
       eventsManager.updateEvents();
 
       expect(handler.unregisterFromEvents).toHaveBeenCalledTimes(1);
-      expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+      expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
       expect(nextHandler.registerForEvents).toHaveBeenCalledTimes(1);
-      if (viewTag === 1) {
-        expect(nextHandler.registerForEvents).toHaveBeenCalledWith(viewTag);
-      } else {
-        expect(nextHandler.registerForEvents).toHaveBeenCalledWith(
-          viewTag,
-          'onScroll'
-        );
-      }
+      expect(nextHandler.registerForEvents).toHaveBeenCalledWith(
+        viewTag,
+        'onScroll'
+      );
 
       eventsManager.detachEvents();
-      expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(viewTag);
+      expect(nextHandler.unregisterFromEvents).toHaveBeenCalledWith(
+        viewTag,
+        'onScroll'
+      );
     }
   );
 
@@ -133,7 +135,7 @@ describe('NativeEventsManager', () => {
     component.props = {};
     manager.detachEvents();
 
-    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
   });
 
   test('waits for a valid host before attaching events', () => {
@@ -153,7 +155,7 @@ describe('NativeEventsManager', () => {
     component._componentRef = null;
     manager.updateEvents();
 
-    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1);
+    expect(handler.unregisterFromEvents).toHaveBeenCalledWith(1, 'onScroll');
     expect(handler.registerForEvents).toHaveBeenCalledTimes(1);
 
     const nextHandler = makeHandler();
@@ -179,8 +181,14 @@ describe('NativeEventsManager', () => {
       'onMomentumScrollEnd'
     );
     manager.detachEvents();
-    expect(nextHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
-    expect(addedHandler.unregisterFromEvents).toHaveBeenLastCalledWith(2);
+    expect(nextHandler.unregisterFromEvents).toHaveBeenLastCalledWith(
+      2,
+      'onScroll'
+    );
+    expect(addedHandler.unregisterFromEvents).toHaveBeenLastCalledWith(
+      2,
+      'onMomentumScrollEnd'
+    );
   });
 });
 
