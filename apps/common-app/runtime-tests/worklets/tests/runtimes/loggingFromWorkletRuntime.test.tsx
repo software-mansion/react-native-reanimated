@@ -340,7 +340,7 @@ describe('loggingFromWorkletRuntime', () => {
     return message;
   };
 
-  test('nativeLoggingHook is defined on worklets runtime in bundle mode', () => {
+  test('nativeLoggingHook is defined on worklets runtime', () => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const workletsNativeLoggingHook = runOnUISync(() => {
       'worklet';

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { isBundleModeEnabled, RuntimeKind } from 'react-native-worklets';
+import { RuntimeKind } from 'react-native-worklets';
 
 import {
   createTestValue,
@@ -19,9 +19,7 @@ const EXPECTED_TEXT = 'Zażółć gęślą jaźń — 中文字 — 🦄';
 
 const BASE_URL = deriveEchoServerUrl();
 
-const describeFn = isBundleModeEnabled() ? describe : describe.skip;
-
-describeFn('XMLHttpRequest (live)', () => {
+describe('XMLHttpRequest (live)', () => {
   test.each([RuntimeKind.UI, RuntimeKind.Worker])(
     'XMLHttpRequest reports readyState and progress, runtime: **%s**',
     async (runtimeKind) => {
