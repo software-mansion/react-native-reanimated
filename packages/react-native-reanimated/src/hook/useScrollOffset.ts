@@ -1,5 +1,5 @@
 'use strict';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect } from 'react';
 
 import type { Maybe } from '../common';
 import { logger } from '../common';
@@ -29,7 +29,7 @@ export function useScrollOffset<TRef extends InstanceOrElement>(
   providedOffset?: SharedValue<number>
 ): SharedValue<number> {
   const internalOffset = useSharedValue(0);
-  const offset = useRef(providedOffset ?? internalOffset).current;
+  const offset = providedOffset ?? internalOffset;
 
   const eventHandler = useCallback(() => {
     'worklet';
