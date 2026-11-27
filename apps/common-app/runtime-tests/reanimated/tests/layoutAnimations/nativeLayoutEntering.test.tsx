@@ -159,6 +159,9 @@ import {
   nativeCasesOf,
   testOfTracks,
   movingGeometryTest,
+  callbackFrameFaultOf,
+  declaredDurationOf,
+  firstFrameTimeAtOrAfter,
 } from './nativeLayoutTestKit';
 
 type AnimatedViewProps = React.ComponentProps<typeof Animated.View>;
@@ -701,17 +704,33 @@ function expectFramesOnTimeline(
   return expectFrameRecords({ frameChecks, tracks });
 }
 
+type FrameResiduals = ReturnType<typeof expectFrameRecords>;
+
 /** The computed start of the frame driver on a box, on the animation clock. */
-function frameStartOf(
-  residuals: ReturnType<typeof expectFrameRecords>,
-  box: string
-) {
-  for (const [{ record }, { startMs }] of residuals) {
-    if (record.box === box) {
-      return startMs;
-    }
+const frameStartOf = (residuals: FrameResiduals, box: string) =>
+  residualsOf(residuals, box)[0][1].startMs;
+
+/**
+ * The computed end of the frame driver on a box, on the animation clock: the
+ * latest end of its leaves. The end of a leaf is the computed start of its last
+ * phase plus the declared duration of that phase.
+ */
+const frameEndOf = (residuals: FrameResiduals, box: string) =>
+  Math.max(
+    ...residualsOf(residuals, box).map(
+      ([{ timeline }, { startMs, startsLateMs }]) =>
+        startMs +
+        declaredDurationOf(timeline) +
+        startsLateMs[startsLateMs.length - 1]
+    )
+  );
+
+function residualsOf(residuals: FrameResiduals, box: string) {
+  const ofBox = [...residuals].filter(([{ record }]) => record.box === box);
+  if (ofBox.length === 0) {
+    throw new Error(`The frame driver has no record of the box ${box}.`);
   }
-  throw new Error(`The frame driver has no record of the box ${box}.`);
+  return ofBox;
 }
 
 const startOf = (tracks: Track[]) =>
@@ -803,7 +822,7 @@ function expectPlayedToEnd(played: Played, tracks: Track[], totalMs: number) {
 /**
  * The callback of the native box comes no more than one display frame before
  * the declared end, from the origin of its command. The callback of the twin
- * has that bound from the computed start of its frame record.
+ * runs in the first frame at or after the computed end of its frame record.
  */
 function expectNoEarlyCallback(played: Played, totalMs: number) {
   const { tracks, clockOffset } = played;
@@ -817,14 +836,11 @@ function expectNoEarlyCallback(played: Played, totalMs: number) {
       ? ''
       : `no early callback: the callback of the native box was emitted ${nativeMs.toFixed(3)} ms after the origin of its command, not after ${earliestMs.toFixed(3)} ms`
   ).toBe('');
-  const frameMs =
-    callbackTimeOf('frame').emittedMs -
-    frameStartOf(expectFrameRecords(played), 'frame');
-  expect(
-    frameMs > earliestMs
-      ? ''
-      : `no early callback: the callback of the twin was emitted ${frameMs.toFixed(3)} ms after the computed start of its frame record, not after ${earliestMs.toFixed(3)} ms`
-  ).toBe('');
+  const twinEndMs = frameEndOf(expectFrameRecords(played), 'frame');
+  console.log(
+    `CALLBACK-FRAME | twin | callback frame minus the first frame at the computed end ${(callbackTimeOf('frame').frameTimeMs - firstFrameTimeAtOrAfter(twinEndMs)).toFixed(3)} ms`
+  );
+  expect(callbackFrameFaultOf('frame', twinEndMs)).toBe('');
 }
 
 /** The React Native runtime got no callback before a time from the first commit. */
