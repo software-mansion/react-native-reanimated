@@ -42,6 +42,10 @@ declare global {
     | undefined;
   /** Only in dev builds in Bundle Mode on Worklet Runtimes. */
   var __workletsLazyBundleRegistrar: LazyBundleRegistrar | undefined;
+  /** Only in dev builds in Bundle Mode on Worklet Runtimes. */
+  var __workletsEvaluateLazyBundle:
+    | ((bundlePathAndQuery: string, body: string) => void)
+    | undefined;
   var _WORKLETS_VERSION_CPP: string | undefined;
   var _WORKLETS_VERSION_JS: string | undefined;
   var _createSerializableString: (value: string) => FlatSerializableRef<string>;
