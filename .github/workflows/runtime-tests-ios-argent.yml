@@ -312,7 +312,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}-${{ matrix.bundleMode && 'bundle-mode' || 'legacy-eval' }}
+          name: ios-remote-crash-reports-${{ env.CONFIGURATION }}
           path: apps/fabric-example/crash-reports
           if-no-files-found: ignore
           retention-days: 14
