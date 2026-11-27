@@ -46,6 +46,7 @@ const LAYOUT_ANIMATION_SUPPORTED_PROPS = {
   transform: true,
   backgroundColor: true,
   contentOpacity: true,
+  fontSize: true,
   sharedTransitionGeometryProgress: true,
   sharedTransitionClipProgress: true,
   clipOriginX: true,
