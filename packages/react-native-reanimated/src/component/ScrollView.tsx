@@ -1,6 +1,6 @@
 'use strict';
-import type { ComponentProps, ComponentRef } from 'react';
-import React from 'react';
+import type { ComponentProps, ComponentRef, RefObject } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import { ScrollView } from 'react-native';
 
 import type { SharedValue } from '../commonTypes';
@@ -8,8 +8,8 @@ import {
   type AnimatedComponentType,
   createAnimatedComponent,
 } from '../createAnimatedComponent';
-import type { AnimatedRef } from '../hook';
 import { useAnimatedRef, useScrollOffset } from '../hook';
+import { mergeRefs } from '../reactUtils';
 
 // Since createAnimatedComponent return type is ComponentClass that has the props of the argument,
 // but not things like NativeMethods, etc. we need to add them manually by extending the type.
@@ -34,16 +34,7 @@ export function AnimatedScrollView({
   ref,
   ...restProps
 }: AnimatedScrollViewProps) {
-  const animatedRef =
-    ref === null
-      ? // eslint-disable-next-line react-hooks/rules-of-hooks
-        useAnimatedRef<ScrollView>()
-      : (ref as AnimatedRef<ScrollView>);
-
-  if (scrollViewOffset) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useScrollOffset(animatedRef, scrollViewOffset);
-  }
+  const scrollViewRef = useRef<ComponentRef<typeof ScrollView>>(null);
 
   // Set default scrollEventThrottle, because user expects
   // to have continuous scroll events.
@@ -53,7 +44,37 @@ export function AnimatedScrollView({
     restProps.scrollEventThrottle = 1;
   }
 
-  return <AnimatedScrollViewComponent ref={animatedRef} {...restProps} />;
+  return (
+    <>
+      <AnimatedScrollViewComponent
+        ref={mergeRefs(ref, scrollViewRef)}
+        {...restProps}
+      />
+      {scrollViewOffset ? (
+        <ScrollViewOffset
+          scrollViewRef={scrollViewRef}
+          offset={scrollViewOffset}
+        />
+      ) : null}
+    </>
+  );
+}
+
+function ScrollViewOffset({
+  scrollViewRef,
+  offset,
+}: {
+  scrollViewRef: RefObject<ComponentRef<typeof ScrollView> | null>;
+  offset: SharedValue<number>;
+}) {
+  const animatedRef = useAnimatedRef<ScrollView>();
+  useLayoutEffect(() => {
+    if (animatedRef.current !== scrollViewRef.current) {
+      animatedRef(scrollViewRef.current);
+    }
+  });
+  useScrollOffset(animatedRef, offset);
+  return null;
 }
 
 export type AnimatedScrollView = AnimatedScrollViewComplement &
