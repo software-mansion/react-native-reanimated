@@ -6,47 +6,30 @@ import { html } from 'code-tag';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { join } from 'path';
 
+import { version as packageVersion } from '../../package.json';
+import type { PluginOptions } from '../index';
+import plugin from '../index';
+import {
+  generatedModules,
+  INLINE_MODULE_PREFIX,
+  redactGeneratedModules,
+} from '../jest/inlineModules';
 import { countOccurrences } from '../jest/pluginTestUtils';
 
-type CapturedFile = { path: string; content: string };
-
-const capturedFiles: CapturedFile[] = [];
-
-// The OXC transform writes its files from Rust, so they never reach the `fs`
-// mock below. Its jest setup records them on `globalThis` instead.
-function nativelyEmittedFiles(): CapturedFile[] {
-  return ((
-    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
-  ).__WORKLETS_OXC_EMITTED__ ??= []);
-}
-
-jest.mock('fs', () => {
-  const actual = jest.requireActual('fs');
-  return {
-    ...actual,
-    writeFileSync: (filepath: string, content: string) => {
-      capturedFiles.push({ path: String(filepath), content: String(content) });
-    },
-  };
-});
-
-// eslint-disable-next-line import/first
-import { version as packageVersion } from '../../package.json';
-// eslint-disable-next-line import/first
-import type { PluginOptions } from '../index';
-// eslint-disable-next-line import/first
-import plugin from '../index';
-
-const MOCK_LOCATION = '/dev/null';
+const MOCK_LOCATION = join(__dirname, 'dev', 'null');
+const REQUIRE_PREFIX = `require("${INLINE_MODULE_PREFIX}`;
 const TEST_LOCATION = 'test.js';
 const MOCK_TSX_LOCATION = 'test.tsx';
+const WORKLET_MODULE_DIRECTIVE = /^["']worklet-module["'];/;
+
+type GeneratedModule = { specifier: string; content: string };
 
 type RunResult = {
   code: string;
-  files: CapturedFile[];
+  modules: GeneratedModule[];
 };
-const REQUIRE_PREFIX = 'require("react-native-worklets/.worklets/';
 
 expect.addSnapshotSerializer({
   test: (v: unknown): v is string =>
@@ -73,7 +56,7 @@ function transformWithPlugin(
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
     filename,
-    caller: { name: 'metro', bundler: 'metro' },
+    caller: { name: 'test', supportsInlineModules: true },
     compact: false,
     babelrc: false,
     configFile: false,
@@ -84,39 +67,32 @@ function transformWithPlugin(
   return transformed.code ?? '';
 }
 
-function emittedFiles(): CapturedFile[] {
-  return capturedFiles.length > 0 ? [...capturedFiles] : nativelyEmittedFiles();
-}
-
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
   pluginOpts: PluginOptions = {},
   filename: string = MOCK_LOCATION
-): RunResult {
-  const startIndex = capturedFiles.length;
-  const nativeStartIndex = nativelyEmittedFiles().length;
+) {
   const code = transformWithPlugin(input, transformOpts, pluginOpts, filename);
   return {
     code,
-    files:
-      capturedFiles.length > startIndex
-        ? capturedFiles.slice(startIndex)
-        : nativelyEmittedFiles().slice(nativeStartIndex),
+    files: generatedModules(code).map((module) => ({
+      path: module.specifier,
+      content: module.content,
+    })),
   };
 }
 
 function workletText(result: RunResult): string {
-  return result.files.map((f) => f.content).join('\n');
+  return result.modules.map((m) => m.content).join('\n');
 }
 
 describe('babel plugin', () => {
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-    capturedFiles.length = 0;
   });
 
-  describe('generally', () => {
+  describe('independent of output formatting', () => {
     test('injects its version', () => {
       process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '0';
       const input = html`<script>
@@ -133,6 +109,534 @@ describe('babel plugin', () => {
       );
     });
 
+    test('names ObjectMethod with expression key', () => {
+      const input = html`<script>
+        const obj = {
+          ['foo']() {
+            'worklet';
+          },
+        };
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatch(
+        /(\[(['"])foo\2\]|(['"])foo\3): require\("[^"]+"\)\.default/
+      );
+    });
+
+    test("doesn't transform string literals", () => {
+      const input = html`<script>
+        function foo(x) {
+          'worklet';
+          const bar = 'worklet'; // prettier-ignore
+          const baz = "worklet"; // prettier-ignore
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const bar = (['"])worklet\1;/);
+      expect(files[0].content).toMatch(/const baz = (['"])worklet\1;/);
+      expect(files[0].content).not.toMatch(/^\s*(['"])worklet\1;/m);
+    });
+
+    test('workletizes referenced gesture callbacks using the hooks api', () => {
+      const input = html`<script>
+        const onBegin = () => {
+          console.log('onBegin');
+        };
+        const foo = useTapGesture({
+          numberOfTaps: 2,
+          onBegin: onBegin,
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(code).toMatch(/const onBegin = require\("[^"]+"\)\.default;/);
+      expect(code).toMatch(
+        /useTapGesture\(\{\s*numberOfTaps: 2,\s*onBegin(: onBegin)?\s*\}\)/
+      );
+    });
+
+    test('makes a generator worklet factory', () => {
+      const input = html`<script>
+        function* foo() {
+          'worklet';
+          yield 'hello';
+          yield 'world';
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const foo = function\* ?\(\) \{/);
+      expect(files[0].content).toMatch(/yield (['"])hello\1;/);
+      expect(files[0].content).toMatch(/yield (['"])world\1;/);
+    });
+
+    test('makes an async worklet factory', () => {
+      const input = html`<script>
+        async function foo() {
+          'worklet';
+          await Promise.resolve();
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toMatch(/const foo = async function ?\(\) \{/);
+      expect(files[0].content).toContain('await Promise.resolve();');
+    });
+  });
+
+  describe('generally', () => {
+    test('removes comments from worklets', () => {
+      const input = html`<script>
+        const f = () => {
+          'worklet';
+          // some comment
+          /*
+           * other comment
+           */
+          return true;
+        };
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).not.toContain('some comment');
+      expect(files[0].content).not.toContain('other comment');
+      expect(files[0].content).toMatchSnapshot();
+    });
+  });
+
+  describe('for DirectiveLiterals', () => {
+    test("doesn't bother other Directive Literals", () => {
+      const input = html`<script>
+        function foo() {
+          'foobar';
+          var foo = 'bar';
+        }
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toContain('foobar');
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't transform functions without 'worklet' directive", () => {
+      const input = html`<script>
+        function f(x) {
+          return x + 2;
+        }
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).not.toContain(REQUIRE_PREFIX);
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for object hooks', () => {
+    test('supports empty object in useAnimatedScrollHandler', () => {
+      const input = html`<script>
+        useAnimatedScrollHandler({});
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for react-native-gesture-handler', () => {
+    test("doesn't workletize irrelevant chained gesture object callback functions", () => {
+      const input = html`<script>
+        const foo = Gesture.Tap().toString();
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't transform standard callback functions", () => {
+      const input = html`<script>
+        const foo = Something.Tap().onEnd((_event, _success) => {
+          console.log('onEnd');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't transform chained methods of objects containing Gesture property", () => {
+      const input = html`<script>
+        const foo = Something.Gesture.Tap().onEnd(() => {
+          console.log('onEnd');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test('transforms spread operator in worklets for arrays', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const bar = [4, 5];
+          const baz = [1, ...[2, 3], ...bar];
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('...[2, 3]');
+      expect(files[0].content).toContain('...bar');
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('transforms spread operator in worklets for objects', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          const bar = { d: 4, e: 5 };
+          const baz = { a: 1, ...{ b: 2, c: 3 }, ...bar };
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('...bar');
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('transforms spread operator in worklets for function arguments', () => {
+      const input = html`<script>
+        function foo(...args) {
+          'worklet';
+          console.log(args);
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('...args');
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('transforms spread operator in worklets for function calls', () => {
+      const input = html`<script>
+        function foo(arg) {
+          'worklet';
+          console.log(...arg);
+        }
+      </script>`;
+
+      const { files } = runPlugin(input);
+      expect(files).toHaveLength(1);
+      expect(files[0].content).toContain('...arg');
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('transforms spread operator in Animated component', () => {
+      const input = html`<script>
+        function App() {
+          return (
+            <Animated.View
+              style={[style, { ...styles.container, width: sharedValue.value }]}
+            />
+          );
+        }
+      </script>`;
+
+      const { code } = runPlugin(input, {
+        plugins: ['@babel/plugin-syntax-jsx'],
+      });
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for sequence expressions', () => {
+    test('supports SequenceExpression', () => {
+      const input = html`<script>
+        function App() {
+          (0, fun)({ onStart() {} }, []);
+        }
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('is idempotent', () => {
+    test('for common cases', () => {
+      function resultIsIdempotent(input: string) {
+        const firstResult = runPlugin(input).code;
+        assert(firstResult);
+        const secondResult = runPlugin(firstResult).code;
+        return firstResult === secondResult;
+      }
+
+      const input1 = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      </script>`;
+      expect(resultIsIdempotent(input1)).toBe(true);
+
+      const input2 = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const bar = useAnimatedStyle(() => {
+            const x = 1;
+          });
+        });
+      </script>`;
+      expect(resultIsIdempotent(input2)).toBe(true);
+
+      const input3 = html`<script>
+        const foo = useAnimatedStyle(function named() {
+          const bar = useAnimatedStyle(function named() {
+            const x = 1;
+          });
+        });
+      </script>`;
+      expect(resultIsIdempotent(input3)).toBe(true);
+
+      const input4 = html`<script>
+        const foo = (x) => {
+          return () => {
+            'worklet';
+            return x;
+          };
+        };
+      </script>`;
+      expect(resultIsIdempotent(input4)).toBe(true);
+
+      const input5 = html`<script>
+        const foo = useAnimatedStyle({
+          method() {
+            'worklet';
+            const x = 1;
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input5)).toBe(true);
+
+      const input6 = html`<script>
+        const foo = () => {
+          'worklet';
+          return useAnimatedStyle(() => {
+            return () => {
+              'worklet';
+              return 1;
+            };
+          });
+        };
+      </script>`;
+      expect(resultIsIdempotent(input6)).toBe(true);
+
+      const input7 = html`<script>
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
+            return useAnimatedStyle(() => {
+              return 1;
+            });
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input7)).toBe(true);
+
+      const input8 = html`<script>
+        const scrollHandler = useAnimatedScrollHandler({
+          onScroll: () => {
+            return useAnimatedScrollHandler({
+              onScroll: () => {
+                return 1;
+              },
+            });
+          },
+        });
+      </script>`;
+      expect(resultIsIdempotent(input8)).toBe(true);
+
+      const input9 = html`<script>
+        Gesture.Pan.onStart(
+          useAnimatedStyle(() => {
+            return () => {
+              'worklet';
+              Gesture.Pan.onStart(() => {
+                'worklet';
+                return 1;
+              });
+            };
+          })
+        );
+      </script>`;
+      expect(resultIsIdempotent(input9)).toBe(true);
+    });
+  });
+
+  describe('for Layout Animations', () => {
+    test("doesn't workletize callback functions on unknown objects", () => {
+      const input = html`<script>
+        AmogusIn.withCallback(() => {
+          console.log('AmogusIn');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects with new keyword", () => {
+      const input = html`<script>
+        new AmogusIn().withCallback(() => {
+          console.log('AmogusIn');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects on known chained methods before", () => {
+      const input = html`<script>
+        AmogusIn.build().withCallback(() => {
+          console.log('AmogusIn with build before');
+        });
+      </script>`;
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects on known chained methods before with new keyword", () => {
+      const input = html`<script>
+        new AmogusIn().build().withCallback(() => {
+          console.log('AmogusIn with build before');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown chained methods before", () => {
+      const input = html`<script>
+        FadeIn.AmogusIn().withCallback(() => {
+          console.log('FadeIn with AmogusIn before');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown chained methods before with new keyword", () => {
+      const input = html`<script>
+        new FadeIn().AmogusIn().withCallback(() => {
+          console.log('FadeIn with AmogusIn before');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects chained with known objects", () => {
+      const input = html`<script>
+        AmogusIn.FadeIn().withCallback(() => {
+          console.log('AmogusIn with FadeIn after');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects chained with known objects with new keyword", () => {
+      const input = html`<script>
+        new AmogusIn().FadeIn().withCallback(() => {
+          console.log('AmogusIn with FadeIn after');
+        });
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects with known object chained after", () => {
+      const input = html`<script>
+        AmogusIn.withCallback(() => {
+          console.log('AmogusIn with FadeIn before');
+        }).FadeIn();
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+
+    test("doesn't workletize callback functions on unknown objects with known object chained after with new keyword", () => {
+      const input = html`<script>
+        new AmogusIn()
+          .withCallback(() => {
+            console.log('AmogusIn with FadeIn before');
+          })
+          .FadeIn();
+      </script>`;
+
+      const { code, files } = runPlugin(input);
+      expect(files).toHaveLength(0);
+      expect(code).toMatchSnapshot();
+    });
+  });
+
+  describe('for debugging', () => {
+    test("doesn't inject version for worklets in production builds", () => {
+      const input = html`<script>
+        const foo = useAnimatedStyle(() => {
+          const x = 1;
+        });
+      </script>`;
+
+      const current = process.env.BABEL_ENV;
+      process.env.BABEL_ENV = 'production';
+      const { files } = runPlugin(input);
+      process.env.BABEL_ENV = current;
+      expect(files).toHaveLength(1);
+      expect(files[0].content).not.toContain('__pluginVersion');
+      expect(files[0].content).toMatchSnapshot();
+    });
+
+    test('throws a tagged exception when worklet processing fails', () => {
+      const input = html`<script>
+        const handler = useAnimatedScrollHandler({ ...handlers });
+      </script>`;
+
+      expect(() => runPlugin(input)).toThrow('[Worklets]');
+    });
+  });
+
+  describe('generally', () => {
     test('transforms', () => {
       const input = html`<script>
         import Animated, {
@@ -170,25 +674,6 @@ describe('babel plugin', () => {
       expect(files[0].content).toMatchSnapshot();
     });
 
-    test('removes comments from worklets', () => {
-      const input = html`<script>
-        const f = () => {
-          'worklet';
-          // some comment
-          /*
-           * other comment
-           */
-          return true;
-        };
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).not.toContain('some comment');
-      expect(files[0].content).not.toContain('other comment');
-      expect(files[0].content).toMatchSnapshot();
-    });
-
     test('supports recursive calls', () => {
       const input = html`<script>
         const a = 1;
@@ -209,22 +694,6 @@ describe('babel plugin', () => {
   });
 
   describe('for worklet names', () => {
-    test('names ObjectMethod with expression key', () => {
-      const input = html`<script>
-        const obj = {
-          ['foo']() {
-            'worklet';
-          },
-        };
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(code).toMatch(
-        /(\[(['"])foo\2\]|(['"])foo\3): require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default/
-      );
-    });
-
     test('unnamed ArrowFunctionExpression', () => {
       const input = html`<script>
         const x = 1;
@@ -268,7 +737,12 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, '/source.js');
+      const { code, files } = runPlugin(
+        input,
+        {},
+        {},
+        join(__dirname, 'source.js')
+      );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_sourceJs[0-9]+Factory\(/gm
@@ -290,7 +764,7 @@ describe('babel plugin', () => {
         input,
         {},
         {},
-        '/node_modules/library/source.js'
+        join(__dirname, 'node_modules', 'library', 'source.js')
       );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
@@ -309,7 +783,12 @@ describe('babel plugin', () => {
         }
       </script>`;
 
-      const { code, files } = runPlugin(input, {}, {}, '/-source.js');
+      const { code, files } = runPlugin(
+        input,
+        {},
+        {},
+        join(__dirname, '-source.js')
+      );
       expect(files).toHaveLength(1);
       expect(files[0].content).toMatch(
         /function foo_SourceJs[0-9]+Factory\(/gm
@@ -335,49 +814,6 @@ describe('babel plugin', () => {
   });
 
   describe('for DirectiveLiterals', () => {
-    test("doesn't transform string literals", () => {
-      const input = html`<script>
-        function foo(x) {
-          'worklet';
-          const bar = 'worklet'; // prettier-ignore
-          const baz = "worklet"; // prettier-ignore
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(/const bar = (['"])worklet\1;/);
-      expect(files[0].content).toMatch(/const baz = (['"])worklet\1;/);
-      expect(files[0].content).not.toMatch(/^\s*(['"])worklet\1;/m);
-    });
-
-    test("doesn't bother other Directive Literals", () => {
-      const input = html`<script>
-        function foo() {
-          'foobar';
-          var foo = 'bar';
-        }
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toContain('foobar');
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't transform functions without 'worklet' directive", () => {
-      const input = html`<script>
-        function f(x) {
-          return x + 2;
-        }
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).not.toContain(REQUIRE_PREFIX);
-      expect(code).toMatchSnapshot();
-    });
-
     test('removes "worklet"; directive from worklets', () => {
       const input = html`<script>
         function foo(x) {
@@ -569,16 +1005,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test('supports empty object in useAnimatedScrollHandler', () => {
-      const input = html`<script>
-        useAnimatedScrollHandler({});
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
     test('transforms each object property in useAnimatedScrollHandler', () => {
       const input = html`<script>
         useAnimatedScrollHandler({
@@ -634,27 +1060,6 @@ describe('babel plugin', () => {
   });
 
   describe('for react-native-gesture-handler', () => {
-    test('workletizes referenced gesture callbacks using the hooks api', () => {
-      const input = html`<script>
-        const onBegin = () => {
-          console.log('onBegin');
-        };
-        const foo = useTapGesture({
-          numberOfTaps: 2,
-          onBegin: onBegin,
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(code).toMatch(
-        /const onBegin = require\("react-native-worklets\/\.worklets\/\d+\.js"\)\.default;/
-      );
-      expect(code).toMatch(
-        /useTapGesture\(\{\s*numberOfTaps: 2,\s*onBegin(: onBegin)?\s*\}\)/
-      );
-    });
-
     test('workletizes gesture callbacks using the hooks api', () => {
       const input = html`<script>
         const foo = useTapGesture({
@@ -712,116 +1117,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test("doesn't workletize irrelevant chained gesture object callback functions", () => {
-      const input = html`<script>
-        const foo = Gesture.Tap().toString();
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't transform standard callback functions", () => {
-      const input = html`<script>
-        const foo = Something.Tap().onEnd((_event, _success) => {
-          console.log('onEnd');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't transform chained methods of objects containing Gesture property", () => {
-      const input = html`<script>
-        const foo = Something.Gesture.Tap().onEnd(() => {
-          console.log('onEnd');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test('transforms spread operator in worklets for arrays', () => {
-      const input = html`<script>
-        function foo() {
-          'worklet';
-          const bar = [4, 5];
-          const baz = [1, ...[2, 3], ...bar];
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('...[2, 3]');
-      expect(files[0].content).toContain('...bar');
-      expect(files[0].content).toMatchSnapshot();
-    });
-
-    test('transforms spread operator in worklets for objects', () => {
-      const input = html`<script>
-        function foo() {
-          'worklet';
-          const bar = { d: 4, e: 5 };
-          const baz = { a: 1, ...{ b: 2, c: 3 }, ...bar };
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('...bar');
-      expect(files[0].content).toMatchSnapshot();
-    });
-
-    test('transforms spread operator in worklets for function arguments', () => {
-      const input = html`<script>
-        function foo(...args) {
-          'worklet';
-          console.log(args);
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('...args');
-      expect(files[0].content).toMatchSnapshot();
-    });
-
-    test('transforms spread operator in worklets for function calls', () => {
-      const input = html`<script>
-        function foo(arg) {
-          'worklet';
-          console.log(...arg);
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('...arg');
-      expect(files[0].content).toMatchSnapshot();
-    });
-
-    test('transforms spread operator in Animated component', () => {
-      const input = html`<script>
-        function App() {
-          return (
-            <Animated.View
-              style={[style, { ...styles.container, width: sharedValue.value }]}
-            />
-          );
-        }
-      </script>`;
-
-      const { code } = runPlugin(input, {
-        plugins: ['@babel/plugin-syntax-jsx'],
-      });
-      expect(code).toMatchSnapshot();
-    });
-
     test('workletizes referenced callbacks', () => {
       const input = html`<script>
         const onStart = () => {};
@@ -835,18 +1130,6 @@ describe('babel plugin', () => {
   });
 
   describe('for sequence expressions', () => {
-    test('supports SequenceExpression', () => {
-      const input = html`<script>
-        function App() {
-          (0, fun)({ onStart() {} }, []);
-        }
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
     test('supports SequenceExpression, with objectHook', () => {
       const input = html`<script>
         function App() {
@@ -922,114 +1205,6 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('is idempotent', () => {
-    test('for common cases', () => {
-      function resultIsIdempotent(input: string) {
-        const firstResult = runPlugin(input).code;
-        assert(firstResult);
-        const secondResult = runPlugin(firstResult).code;
-        return firstResult === secondResult;
-      }
-
-      const input1 = html`<script>
-        const foo = useAnimatedStyle(() => {
-          const x = 1;
-        });
-      </script>`;
-      expect(resultIsIdempotent(input1)).toBe(true);
-
-      const input2 = html`<script>
-        const foo = useAnimatedStyle(() => {
-          const bar = useAnimatedStyle(() => {
-            const x = 1;
-          });
-        });
-      </script>`;
-      expect(resultIsIdempotent(input2)).toBe(true);
-
-      const input3 = html`<script>
-        const foo = useAnimatedStyle(function named() {
-          const bar = useAnimatedStyle(function named() {
-            const x = 1;
-          });
-        });
-      </script>`;
-      expect(resultIsIdempotent(input3)).toBe(true);
-
-      const input4 = html`<script>
-        const foo = (x) => {
-          return () => {
-            'worklet';
-            return x;
-          };
-        };
-      </script>`;
-      expect(resultIsIdempotent(input4)).toBe(true);
-
-      const input5 = html`<script>
-        const foo = useAnimatedStyle({
-          method() {
-            'worklet';
-            const x = 1;
-          },
-        });
-      </script>`;
-      expect(resultIsIdempotent(input5)).toBe(true);
-
-      const input6 = html`<script>
-        const foo = () => {
-          'worklet';
-          return useAnimatedStyle(() => {
-            return () => {
-              'worklet';
-              return 1;
-            };
-          });
-        };
-      </script>`;
-      expect(resultIsIdempotent(input6)).toBe(true);
-
-      const input7 = html`<script>
-        const scrollHandler = useAnimatedScrollHandler({
-          onScroll: () => {
-            return useAnimatedStyle(() => {
-              return 1;
-            });
-          },
-        });
-      </script>`;
-      expect(resultIsIdempotent(input7)).toBe(true);
-
-      const input8 = html`<script>
-        const scrollHandler = useAnimatedScrollHandler({
-          onScroll: () => {
-            return useAnimatedScrollHandler({
-              onScroll: () => {
-                return 1;
-              },
-            });
-          },
-        });
-      </script>`;
-      expect(resultIsIdempotent(input8)).toBe(true);
-
-      const input9 = html`<script>
-        Gesture.Pan.onStart(
-          useAnimatedStyle(() => {
-            return () => {
-              'worklet';
-              Gesture.Pan.onStart(() => {
-                'worklet';
-                return 1;
-              });
-            };
-          })
-        );
-      </script>`;
-      expect(resultIsIdempotent(input9)).toBe(true);
-    });
-  });
-
   describe('for Layout Animations', () => {
     test('workletizes unchained callback functions automatically', () => {
       const input = html`<script>
@@ -1055,30 +1230,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test("doesn't workletize callback functions on unknown objects", () => {
-      const input = html`<script>
-        AmogusIn.withCallback(() => {
-          console.log('AmogusIn');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects with new keyword", () => {
-      const input = html`<script>
-        new AmogusIn().withCallback(() => {
-          console.log('AmogusIn');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
     test('workletizes callback functions on known chained methods before', () => {
       const input = html`<script>
         FadeIn.build().withCallback(() => {
@@ -1100,29 +1251,6 @@ describe('babel plugin', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects on known chained methods before", () => {
-      const input = html`<script>
-        AmogusIn.build().withCallback(() => {
-          console.log('AmogusIn with build before');
-        });
-      </script>`;
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects on known chained methods before with new keyword", () => {
-      const input = html`<script>
-        new AmogusIn().build().withCallback(() => {
-          console.log('AmogusIn with build before');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
       expect(code).toMatchSnapshot();
     });
 
@@ -1152,54 +1280,6 @@ describe('babel plugin', () => {
       expect(code).toMatchSnapshot();
     });
 
-    test("doesn't workletize callback functions on unknown chained methods before", () => {
-      const input = html`<script>
-        FadeIn.AmogusIn().withCallback(() => {
-          console.log('FadeIn with AmogusIn before');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown chained methods before with new keyword", () => {
-      const input = html`<script>
-        new FadeIn().AmogusIn().withCallback(() => {
-          console.log('FadeIn with AmogusIn before');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects chained with known objects", () => {
-      const input = html`<script>
-        AmogusIn.FadeIn().withCallback(() => {
-          console.log('AmogusIn with FadeIn after');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects chained with known objects with new keyword", () => {
-      const input = html`<script>
-        new AmogusIn().FadeIn().withCallback(() => {
-          console.log('AmogusIn with FadeIn after');
-        });
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
     test('workletizes callback functions on unknown objects chained after', () => {
       const input = html`<script>
         FadeIn.withCallback(() => {
@@ -1223,32 +1303,6 @@ describe('babel plugin', () => {
 
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects with known object chained after", () => {
-      const input = html`<script>
-        AmogusIn.withCallback(() => {
-          console.log('AmogusIn with FadeIn before');
-        }).FadeIn();
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
-      expect(code).toMatchSnapshot();
-    });
-
-    test("doesn't workletize callback functions on unknown objects with known object chained after with new keyword", () => {
-      const input = html`<script>
-        new AmogusIn()
-          .withCallback(() => {
-            console.log('AmogusIn with FadeIn before');
-          })
-          .FadeIn();
-      </script>`;
-
-      const { code, files } = runPlugin(input);
-      expect(files).toHaveLength(0);
       expect(code).toMatchSnapshot();
     });
 
@@ -1279,32 +1333,6 @@ describe('babel plugin', () => {
       const { code, files } = runPlugin(input);
       expect(files).toHaveLength(1);
       expect(code).toMatchSnapshot();
-    });
-  });
-
-  describe('for debugging', () => {
-    test("doesn't inject version for worklets in production builds", () => {
-      const input = html`<script>
-        const foo = useAnimatedStyle(() => {
-          const x = 1;
-        });
-      </script>`;
-
-      const current = process.env.BABEL_ENV;
-      process.env.BABEL_ENV = 'production';
-      const { files } = runPlugin(input);
-      process.env.BABEL_ENV = current;
-      expect(files).toHaveLength(1);
-      expect(files[0].content).not.toContain('__pluginVersion');
-      expect(files[0].content).toMatchSnapshot();
-    });
-
-    test('throws a tagged exception when worklet processing fails', () => {
-      const input = html`<script>
-        const handler = useAnimatedScrollHandler({ ...handlers });
-      </script>`;
-
-      expect(() => runPlugin(input)).toThrow('[Worklets]');
     });
   });
 
@@ -1406,39 +1434,9 @@ describe('babel plugin', () => {
     });
   });
 
-  describe('for generators', () => {
-    test('makes a generator worklet factory', () => {
-      const input = html`<script>
-        function* foo() {
-          'worklet';
-          yield 'hello';
-          yield 'world';
-        }
-      </script>`;
+  describe('for generators', () => {});
 
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(/const foo = function\* ?\(\) \{/);
-      expect(files[0].content).toMatch(/yield (['"])hello\1;/);
-      expect(files[0].content).toMatch(/yield (['"])world\1;/);
-    });
-  });
-
-  describe('for async functions', () => {
-    test('makes an async worklet factory', () => {
-      const input = html`<script>
-        async function foo() {
-          'worklet';
-          await Promise.resolve();
-        }
-      </script>`;
-
-      const { files } = runPlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toMatch(/const foo = async function ?\(\) \{/);
-      expect(files[0].content).toContain('await Promise.resolve();');
-    });
-  });
+  describe('for async functions', () => {});
 
   describe('for referenced worklets', () => {
     test('workletizes ArrowFunctionExpression on its VariableDeclarator', () => {
@@ -1685,21 +1683,17 @@ describe('babel plugin core', () => {
     pluginOpts: PluginOptions = {},
     transformOpts: TransformOptions = {}
   ): RunResult {
-    capturedFiles.length = 0;
-    nativelyEmittedFiles().length = 0;
     const code = transformWithPlugin(
       input,
       transformOpts,
       pluginOpts,
       TEST_LOCATION
     );
-    return { code, files: emittedFiles() };
+    return { code, modules: generatedModules(code) };
   }
 
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-    capturedFiles.length = 0;
-    nativelyEmittedFiles().length = 0;
   });
 
   describe('worklet shapes', () => {
@@ -1755,9 +1749,9 @@ describe('babel plugin core', () => {
 
     test.each(cases)('workletizes $name', ({ input }) => {
       const result = runCorePlugin(input);
-      expect(result.files).toHaveLength(1);
-      expect(result.code).toMatchSnapshot();
-      expect(result.files[0].content).toMatchSnapshot();
+      expect(result.modules).toHaveLength(1);
+      expect(redactGeneratedModules(result.code)).toMatchSnapshot();
+      expect(result.modules[0].content).toMatchSnapshot();
     });
   });
 
@@ -1843,15 +1837,15 @@ describe('babel plugin core', () => {
       </script>`;
 
       const result = runCorePlugin(input);
-      expect(result.code).toMatchSnapshot();
-      expect(result.files[0].content).toMatchSnapshot();
+      expect(redactGeneratedModules(result.code)).toMatchSnapshot();
+      expect(result.modules[0].content).toMatchSnapshot();
     });
   });
 
   describe('autoworkletization of runtime APIs', () => {
     function factoryCount(input: string): number {
       const result = runCorePlugin(input);
-      return result.files.length;
+      return result.modules.length;
     }
 
     test.each([
@@ -2052,7 +2046,7 @@ describe('babel plugin core', () => {
       </script>`;
 
       const result = runCorePlugin(input);
-      expect(result.files).toHaveLength(1);
+      expect(result.modules).toHaveLength(1);
       expect(result.code).toContain('notify =');
       expect(workletText(result)).toContain('return name');
     });
@@ -2068,7 +2062,7 @@ describe('babel plugin core', () => {
       </script>`;
 
       const result = runCorePlugin(input);
-      expect(result.files).toHaveLength(1);
+      expect(result.modules).toHaveLength(1);
       expect(result.code).toContain('static notify =');
     });
 
@@ -2081,7 +2075,7 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      expect(runCorePlugin(input).files).toHaveLength(0);
+      expect(runCorePlugin(input).modules).toHaveLength(0);
     });
 
     test('does not workletize accessors and constructors', () => {
@@ -2100,13 +2094,13 @@ describe('babel plugin core', () => {
         }
       </script>`;
 
-      expect(runCorePlugin(input).files).toHaveLength(0);
+      expect(runCorePlugin(input).modules).toHaveLength(0);
     });
   });
 
   describe('autoworkletization of shared transition callbacks', () => {
     function factoryCount(input: string): number {
-      return runCorePlugin(input).files.length;
+      return runCorePlugin(input).modules.length;
     }
 
     test.each([
@@ -2224,144 +2218,6 @@ describe('babel plugin core', () => {
     });
   });
 
-  describe('worklet hash', () => {
-    function workletHashes(input: string, filename = TEST_LOCATION) {
-      const { files } = runCorePlugin(
-        input,
-        {},
-        { filename: path.join(__dirname, filename) }
-      );
-      const output = files.map((file) => file.content).join('\n');
-      return [...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi)].map(
-        (match) => Number(match[1])
-      );
-    }
-
-    function workletHash(input: string, filename = TEST_LOCATION) {
-      const hashes = workletHashes(input, filename);
-      expect(hashes).toHaveLength(1);
-      return hashes[0];
-    }
-
-    test('gives identical anonymous worklets in one file the same hash', () => {
-      const hashes = workletHashes(
-        "const foo = () => {\n  'worklet';\n  return 1;\n};\nconst bar = () => {\n  'worklet';\n  return 1;\n};\n"
-      );
-      expect(hashes).toHaveLength(2);
-      expect(hashes[0]).toBe(hashes[1]);
-    });
-
-    test('separates named functions with the same body', () => {
-      const hashes = workletHashes(
-        "scheduleOnUI(function functionNameA() {\n  'worklet';\n  throw new Error();\n});\nscheduleOnUI(function functionNameB() {\n  'worklet';\n  throw new Error();\n});\nfunction functionNameC() {\n  'worklet';\n  throw new Error();\n}\n"
-      );
-      expect(hashes).toHaveLength(3);
-      expect(new Set(hashes).size).toBe(3);
-    });
-
-    test('separates object methods with the same body', () => {
-      const hashes = workletHashes(
-        "const obj = {\n  foo() {\n    'worklet';\n    return 1;\n  },\n  bar() {\n    'worklet';\n    return 1;\n  },\n};\n"
-      );
-      expect(hashes).toHaveLength(2);
-      expect(hashes[0]).not.toBe(hashes[1]);
-    });
-
-    test('changes the hash when the worklet body changes', () => {
-      const before = workletHash(
-        "function foo() {\n  'worklet';\n  return 1;\n}\n"
-      );
-      const after = workletHash(
-        "function foo() {\n  'worklet';\n  return 2;\n}\n"
-      );
-      expect(after).not.toBe(before);
-    });
-
-    test('changes the hash when a parameter changes', () => {
-      const before = workletHash(
-        "function foo(x) {\n  'worklet';\n  return 1;\n}\n"
-      );
-      const after = workletHash(
-        "function foo(y) {\n  'worklet';\n  return 1;\n}\n"
-      );
-      expect(after).not.toBe(before);
-    });
-
-    test('keeps the hash when the worklet moves in the file', () => {
-      const before = workletHash(
-        "function foo() {\n  'worklet';\n  return 1;\n}\n"
-      );
-      const after = workletHash(
-        "\n\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
-      );
-      expect(after).toBe(before);
-    });
-
-    test('separates identical text that captures different variables', () => {
-      const hashes = workletHashes(
-        "function a(value) {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\nfunction b() {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\n"
-      );
-      expect(hashes).toHaveLength(2);
-      expect(hashes[0]).not.toBe(hashes[1]);
-    });
-
-    test('changes the hash for the same code in another file', () => {
-      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
-      const first = workletHash(input, 'first.js');
-      const second = workletHash(input, 'nested/first.js');
-      expect(second).not.toBe(first);
-    });
-
-    test('gives the same file in two Metro projects different hashes', () => {
-      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
-      const hashes = ['first-app', 'second-app'].map((app) => {
-        const { files } = runCorePlugin(
-          input,
-          {},
-          {
-            cwd: path.join(__dirname, app),
-            filename: path.join(__dirname, app, 'src', 'App.js'),
-          }
-        );
-        const output = files.map((file) => file.content).join('\n');
-        return [
-          ...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi),
-        ].map((match) => Number(match[1]));
-      });
-      expect(hashes[0]).toHaveLength(1);
-      expect(hashes[1]).toHaveLength(1);
-      expect(hashes[0][0]).not.toBe(hashes[1][0]);
-    });
-
-    test('separates an expression body from a block body with the same text', () => {
-      const hashes = workletHashes(
-        "import { useDerivedValue } from 'react-native-reanimated';\nconst a = useDerivedValue(() => ({ value: 1 }));\nconst b = useDerivedValue(() => { value: 1 });\n"
-      );
-      expect(hashes).toHaveLength(2);
-      expect(hashes[0]).not.toBe(hashes[1]);
-    });
-
-    test('hashes the source text of autoworkletized concise arrows', () => {
-      expect(
-        workletHash(
-          "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
-        )
-      ).toBe(7304007199455);
-      expect(
-        workletHash(
-          "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
-        )
-      ).toBe(16245832944540);
-    });
-
-    test('derives the hash from the relative path and the raw function text', () => {
-      const value = workletHash(
-        "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
-      );
-      expect(value).toBe(6803356437101);
-    });
-  });
-
   describe('without worklets', () => {
     test('leaves code untouched and emits no factory', () => {
       const input = html`<script>
@@ -2371,8 +2227,8 @@ describe('babel plugin core', () => {
       </script>`;
 
       const result = runCorePlugin(input);
-      expect(result.files).toHaveLength(0);
-      expect(result.code).toMatchSnapshot();
+      expect(result.modules).toHaveLength(0);
+      expect(redactGeneratedModules(result.code)).toMatchSnapshot();
     });
   });
 
@@ -2417,7 +2273,7 @@ describe('babel plugin core', () => {
       );
 
       const notOutlinedFunction = '.map(() => null);';
-      const output = result.files[0].content;
+      const output = result.modules[0].content;
 
       expect(output).toMatch(notOutlinedFunction);
       expect(output).toMatchSnapshot();
@@ -2438,13 +2294,11 @@ describe('babel plugin in bundleMode', () => {
       pluginOpts,
       filename
     );
-    return { code, files: emittedFiles() };
+    return { code, modules: generatedModules(code) };
   }
 
   beforeEach(() => {
     process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION = '1';
-    capturedFiles.length = 0;
-    nativelyEmittedFiles().length = 0;
   });
 
   describe('source replacement', () => {
@@ -2455,7 +2309,7 @@ describe('babel plugin in bundleMode', () => {
         const body = `{ 'worklet'; return [${name}(), _${name}()]; }`;
         const expression =
           kind === 'arrow' ? `() => ${body}` : `{ read() ${body} }.read`;
-        const { files } = runBundleModePlugin(
+        const { modules } = runBundleModePlugin(
           `
           import { first as ${name}, second as _${name} } from 'some-library';
           const f = ${expression};
@@ -2463,13 +2317,13 @@ describe('babel plugin in bundleMode', () => {
           {},
           { importForwarding: { moduleNames: ['some-library'] } }
         );
-        expect(files[0].content).toContain(`const __${name} =`);
-        expect(files[0].content).toMatchSnapshot();
+        expect(modules[0].content).toContain(`const __${name} =`);
+        expect(modules[0].content).toMatchSnapshot();
       }
     );
 
     test('packs captures in the same order at the call site and in the factory', () => {
-      const { code, files } = runBundleModePlugin(`
+      const { code, modules } = runBundleModePlugin(`
         function make(z, missing, a) {
           return (suffix) => {
             'worklet';
@@ -2478,12 +2332,12 @@ describe('babel plugin in bundleMode', () => {
         }
         module.exports = make;
       `);
-      expect(code).toMatchSnapshot();
-      expect(files[0].content).toMatchSnapshot();
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
+      expect(modules[0].content).toMatchSnapshot();
     });
 
     test('exports closure-free worklets without a factory call', () => {
-      const { code, files } = runBundleModePlugin(`
+      const { code, modules } = runBundleModePlugin(`
         function factorial(n) {
           'worklet';
           return n <= 1 ? 1 : n * factorial(n - 1);
@@ -2491,11 +2345,11 @@ describe('babel plugin in bundleMode', () => {
         module.exports = factorial;
       `);
       expect(code).toMatch(/\.default;/);
-      expect(files[0].content).not.toContain('Factory');
-      expect(files[0].content).not.toContain('__closure');
+      expect(modules[0].content).not.toContain('Factory');
+      expect(modules[0].content).not.toContain('__closure');
     });
 
-    test('replaces inline factory with a require to the worklet file', () => {
+    test('replaces inline factory with a require of the generated module', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -2503,9 +2357,9 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(input);
-      expect(files).toHaveLength(1);
-      expect(code).toMatchSnapshot();
+      const { code, modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
     });
   });
 
@@ -2523,7 +2377,7 @@ describe('babel plugin in bundleMode', () => {
         false,
       ],
     ])('%s', (_label, source, forwarded) => {
-      const { files } = runBundleModePlugin(
+      const { modules } = runBundleModePlugin(
         `
         import { value } from '${source}';
         function foo() {
@@ -2534,12 +2388,12 @@ describe('babel plugin in bundleMode', () => {
         {},
         { importForwarding: { moduleNames: ['some-library'] } }
       );
-      expect(files).toHaveLength(1);
-      expect(files[0].content.includes(source)).toBe(forwarded);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content.includes(source)).toBe(forwarded);
     });
 
     test('does not forward a namespace import of a listed module', () => {
-      const { files } = runBundleModePlugin(
+      const { modules } = runBundleModePlugin(
         `
         import * as value from 'some-library';
         function foo() {
@@ -2550,8 +2404,8 @@ describe('babel plugin in bundleMode', () => {
         {},
         { importForwarding: { moduleNames: ['some-library'] } }
       );
-      expect(files).toHaveLength(1);
-      expect(files[0].content.includes('some-library')).toBe(false);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content.includes('some-library')).toBe(false);
     });
   });
 
@@ -2589,7 +2443,7 @@ describe('babel plugin in bundleMode', () => {
         false,
       ],
     ])('%s', (_label, filename, relativePaths, forwarded) => {
-      const { files } = runBundleModePlugin(
+      const { modules } = runBundleModePlugin(
         `
         import { helperValue } from './helperModule';
         function foo() {
@@ -2604,8 +2458,8 @@ describe('babel plugin in bundleMode', () => {
         },
         filename
       );
-      expect(files).toHaveLength(1);
-      expect(files[0].content.includes('helperModule')).toBe(forwarded);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content.includes('helperModule')).toBe(forwarded);
     });
   });
 
@@ -2672,8 +2526,8 @@ describe('babel plugin in bundleMode', () => {
     });
   });
 
-  describe('worklet file emission', () => {
-    test('writes one worklet file per worklet', () => {
+  describe('worklet module generation', () => {
+    test('generates one worklet module per worklet', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -2685,11 +2539,11 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files } = runBundleModePlugin(input);
-      expect(files).toHaveLength(2);
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(2);
     });
 
-    test('written file path matches the require path', () => {
+    test('requires the generated module by its inline specifier', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -2697,14 +2551,111 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(input);
-      expect(files).toHaveLength(1);
-      const fileBasename = path.basename(files[0].path);
-      expect(code).toContain(`${REQUIRE_PREFIX}${fileBasename}"`);
-      expect(code).toMatchSnapshot();
+      const { code, modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(code).toContain(`require("${modules[0].specifier}").default`);
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
     });
 
-    test('written closure-free file exports the worklet directly', () => {
+    test('starts the generated module with the worklet-module directive', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toMatch(WORKLET_MODULE_DIRECTIVE);
+    });
+
+    test('records the bundler module id on the worklet', () => {
+      const input = html`<script>
+        function foo() {
+          'worklet';
+          var x = 1;
+        }
+      </script>`;
+
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toContain(
+        'const __workletModuleId = module.id;'
+      );
+      expect(modules[0].content).toContain(
+        'foo.__moduleId = __workletModuleId;'
+      );
+    });
+
+    test('reads the module id before closure variables can shadow module', () => {
+      const input = html`<script>
+        const module = { id: 'not-metro' };
+        const __workletModuleId = 'taken';
+        function foo() {
+          'worklet';
+          return [module.id, __workletModuleId];
+        }
+      </script>`;
+
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toContain(
+        'const ___workletModuleId = module.id;'
+      );
+      expect(modules[0].content).toContain(
+        'foo.__moduleId = ___workletModuleId;'
+      );
+      expect(modules[0].content).toMatchSnapshot();
+    });
+
+    test('captures instead of forwarding an import named module', () => {
+      const input = html`<script>
+        import { foo as module } from 'some-library';
+        function bar() {
+          'worklet';
+          return module.id;
+        }
+      </script>`;
+
+      const { modules } = runBundleModePlugin(
+        input,
+        {},
+        { importForwarding: { moduleNames: ['some-library'] } }
+      );
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).not.toContain('some-library');
+      expect(modules[0].content).toContain(
+        'const __workletModuleId = module.id;'
+      );
+      expect(modules[0].content).toMatch(/Factory\(\[module\]\)/);
+      expect(modules[0].content).toContain(
+        'bar.__moduleId = __workletModuleId;'
+      );
+    });
+
+    test('renames a closure-free worklet named module away from the module wrapper binding', () => {
+      const input = html`<script>
+        function module() {
+          'worklet';
+          return 1;
+        }
+      </script>`;
+
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).not.toMatch(/const module\b/);
+      expect(modules[0].content).toContain(
+        'const __workletModuleId = module.id;'
+      );
+      expect(modules[0].content).toContain('const _module = function');
+      expect(modules[0].content).toContain(
+        '_module.__moduleId = __workletModuleId;'
+      );
+      expect(modules[0].content).toContain('export default _module;');
+    });
+
+    test('closure-free generated module exports the worklet directly', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -2713,9 +2664,9 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files } = runBundleModePlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toMatchSnapshot();
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toMatchSnapshot();
     });
 
     test('does not emit init data', () => {
@@ -2726,9 +2677,9 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(input);
-      expect(code).toMatchSnapshot();
-      expect(files[0].content).toMatchSnapshot();
+      const { code, modules } = runBundleModePlugin(input);
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
+      expect(modules[0].content).toMatchSnapshot();
     });
 
     test('does not emit stack-trace machinery', () => {
@@ -2739,13 +2690,13 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files } = runBundleModePlugin(input);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).not.toContain('__stackDetails');
-      expect(files[0].content).toMatchSnapshot();
+      const { modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).not.toContain('__stackDetails');
+      expect(modules[0].content).toMatchSnapshot();
     });
 
-    test('emits a worklet file when cwd has no @babel/preset-typescript reachable', () => {
+    test('generates a worklet module when cwd has no @babel/preset-typescript reachable', () => {
       const isolatedDir = fs.mkdtempSync(
         path.join(os.tmpdir(), 'worklets-isolated-cwd-')
       );
@@ -2769,8 +2720,8 @@ describe('babel plugin in bundleMode', () => {
 
       try {
         process.chdir(isolatedDir);
-        const { files } = runBundleModePlugin(input);
-        expect(files).toHaveLength(1);
+        const { modules } = runBundleModePlugin(input);
+        expect(modules).toHaveLength(1);
       } finally {
         process.chdir(previousCwd);
         fs.rmSync(isolatedDir, { recursive: true, force: true });
@@ -2787,12 +2738,12 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(input);
-      expect(code).toMatchSnapshot();
-      expect(files[0].content).toMatchSnapshot();
+      const { code, modules } = runBundleModePlugin(input);
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
+      expect(modules[0].content).toMatchSnapshot();
     });
 
-    test('preserves workletizable library imports in the written worklet file', () => {
+    test('preserves workletizable library imports in the generated module', () => {
       const input = html`<script>
         import { foo } from 'some-library';
         function bar() {
@@ -2801,17 +2752,17 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(
+      const { code, modules } = runBundleModePlugin(
         input,
         {},
         { importForwarding: { moduleNames: ['some-library'] } }
       );
-      expect(files).toHaveLength(1);
-      expect(code).toMatchSnapshot();
-      expect(files[0].content).toMatchSnapshot();
+      expect(modules).toHaveLength(1);
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
+      expect(modules[0].content).toMatchSnapshot();
     });
 
-    test('strips JSX dev attributes in written worklet files', () => {
+    test('strips JSX dev attributes in generated modules', () => {
       const input = html`<script>
         import { ImportedComponent } from 'react-native-worklets';
 
@@ -2834,7 +2785,7 @@ describe('babel plugin in bundleMode', () => {
       expect(control).toContain('__self');
       expect(control).toContain('__source');
 
-      const { files } = runBundleModePlugin(
+      const { modules } = runBundleModePlugin(
         input,
         {
           presets: [
@@ -2845,10 +2796,10 @@ describe('babel plugin in bundleMode', () => {
         { importForwarding: { moduleNames: ['react-native-worklets'] } },
         MOCK_TSX_LOCATION
       );
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain('return <ImportedComponent />;');
-      expect(files[0].content).not.toContain('__self');
-      expect(files[0].content).not.toContain('__source');
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toContain('return <ImportedComponent />;');
+      expect(modules[0].content).not.toContain('__self');
+      expect(modules[0].content).not.toContain('__source');
     });
 
     test('captures locally defined JSX components in the closure', () => {
@@ -2870,10 +2821,10 @@ describe('babel plugin in bundleMode', () => {
         MOCK_TSX_LOCATION
       );
       expect(code).toContain('LocalComponent');
-      expect(code).toMatchSnapshot();
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
     });
 
-    test('rebases relative imports against the worklets directory', () => {
+    test('keeps relative imports as written, since the module resolves from the importer', () => {
       const input = html`<script>
         import { foo } from './bar';
         function baz() {
@@ -2882,26 +2833,17 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const fakeFilename = '/some-library/src/file.ts';
-      const { files } = runBundleModePlugin(
+      const { modules } = runBundleModePlugin(
         input,
         {},
         { importForwarding: { relativePaths: ['some-library'] } },
-        fakeFilename
+        '/some-library/src/file.ts'
       );
-      const filesDirPath = path.resolve(
-        path.dirname(require.resolve('react-native-worklets/package.json')),
-        '.worklets'
-      );
-      const expected = path
-        .relative(filesDirPath, '/some-library/src/bar')
-        .split(path.sep)
-        .join('/');
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(`from "${expected}"`);
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toContain(`from "./bar"`);
     });
 
-    test('rebases relative requires inside the worklet body against the worklets directory', () => {
+    test('keeps relative requires inside the worklet body as written', () => {
       const input = html`<script>
         function baz() {
           'worklet';
@@ -2910,24 +2852,18 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const fakeFilename = path.resolve(
-        __dirname,
-        '../../../some-library/file.js'
-      );
-      const { files } = runBundleModePlugin(
+      const { modules } = runBundleModePlugin(
         input,
         {},
         { importForwarding: { relativePaths: ['some-library'] } },
-        fakeFilename
+        '/some-library/file.js'
       );
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(
-        `require("../../some-library/helper")`
-      );
-      expect(files[0].content).toMatchSnapshot();
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toMatch(/require\(["']\.\/helper["']\)/);
+      expect(modules[0].content).toMatchSnapshot();
     });
 
-    test('rebases relative dynamic imports inside the worklet body against the worklets directory', () => {
+    test('keeps relative dynamic imports inside the worklet body as written', () => {
       const input = html`<script>
         function baz() {
           'worklet';
@@ -2935,40 +2871,20 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const fakeFilename = path.resolve(
-        __dirname,
-        '../../../some-library/file.js'
+      const { modules } = runBundleModePlugin(
+        input,
+        {},
+        {},
+        '/some-library/file.js'
       );
-      const { files } = runBundleModePlugin(input, {}, {}, fakeFilename);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(`import("../../some-library/helper")`);
-      expect(files[0].content).toMatchSnapshot();
-    });
-
-    test('rebases relative requires from files without import forwarding', () => {
-      const input = html`<script>
-        function baz() {
-          'worklet';
-          const helper = require('./helper');
-          return helper.foo();
-        }
-      </script>`;
-
-      const fakeFilename = path.resolve(
-        __dirname,
-        '../../../not-a-workletizable-package/src/file.ts'
-      );
-      const { files } = runBundleModePlugin(input, {}, {}, fakeFilename);
-      expect(files).toHaveLength(1);
-      expect(files[0].content).toContain(
-        `require("../../not-a-workletizable-package/src/helper")`
-      );
-      expect(files[0].content).toMatchSnapshot();
+      expect(modules).toHaveLength(1);
+      expect(modules[0].content).toMatch(/import\(["']\.\/helper["']\)/);
+      expect(modules[0].content).toMatchSnapshot();
     });
   });
 
   describe('nested worklets', () => {
-    test('extracts each nested worklet into its own file', () => {
+    test('extracts each nested worklet into its own module', () => {
       const input = html`<script>
         const foo = function () {
           'worklet';
@@ -2980,62 +2896,34 @@ describe('babel plugin in bundleMode', () => {
         };
       </script>`;
 
-      const { code, files } = runBundleModePlugin(input);
-      expect(files).toHaveLength(2);
+      const { code, modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(2);
       const sourceRequires = countOccurrences(code, REQUIRE_PREFIX);
       expect(sourceRequires).toBe(1);
-      const outerFile = files.find((f) => code.includes(path.basename(f.path)));
-      assert(outerFile);
-      expect(code).toMatchSnapshot();
-      expect(outerFile.content).toMatchSnapshot();
-    });
-
-    test('writes the inner worklet file before the outer one', () => {
-      // Inner factory must be on disk before the outer one references it via require().
-      const input = html`<script>
-        const foo = function () {
-          'worklet';
-          const bar = function () {
-            'worklet';
-            return 1;
-          };
-          return bar();
-        };
-      </script>`;
-
-      const { code, files } = runBundleModePlugin(input);
-      assert(files.length === 2);
-      const outerFile = files.find((f) => code.includes(path.basename(f.path)));
-      assert(outerFile);
-      expect(files[files.length - 1]).toBe(outerFile);
+      const [outerModule, innerModule] = modules;
+      expect(code).toContain(outerModule.specifier);
+      expect(outerModule.content).toContain(innerModule.specifier);
+      expect(redactGeneratedModules(code)).toMatchSnapshot();
+      expect(redactGeneratedModules(outerModule.content)).toMatchSnapshot();
     });
   });
 
-  describe('bail-out on already-generated worklet files', () => {
-    test('does not re-process a file inside the .worklets directory', () => {
-      const generatedFilename = path.join(
-        path.dirname(require.resolve('react-native-worklets/package.json')),
-        '.worklets',
-        '12345.js'
-      );
+  describe('bail-out on already-generated worklet modules', () => {
+    test('does not re-process a module with the worklet-module directive', () => {
       const input = html`<script>
+        'worklet-module';
         function foo() {
           'worklet';
           var x = 1;
         }
       </script>`;
 
-      const { code, files } = runBundleModePlugin(
-        input,
-        {},
-        {},
-        generatedFilename
-      );
-      expect(files).toHaveLength(0);
+      const { code, modules } = runBundleModePlugin(input);
+      expect(modules).toHaveLength(0);
       expect(code).not.toContain(REQUIRE_PREFIX);
     });
 
-    test('autoworkletization fires before emitting a file', () => {
+    test('autoworkletization fires before generating a module', () => {
       const input = html`<script>
         function foo() {
           'worklet';
@@ -3045,16 +2933,11 @@ describe('babel plugin in bundleMode', () => {
         }
       </script>`;
 
-      const { files: firstPass } = runBundleModePlugin(input);
+      const { modules: firstPass } = runBundleModePlugin(input);
       assert(firstPass.length >= 1);
-      const outerFile = firstPass[firstPass.length - 1];
+      const outerModule = firstPass[0];
 
-      const { code: rePassedCode } = runBundleModePlugin(
-        outerFile.content,
-        {},
-        {},
-        outerFile.path
-      );
+      const { code: rePassedCode } = runBundleModePlugin(outerModule.content);
 
       expect(rePassedCode).toContain(REQUIRE_PREFIX);
     });

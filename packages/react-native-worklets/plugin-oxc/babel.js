@@ -21,7 +21,7 @@ let cachedSyntaxTypescript;
  * @returns {import('@babel/core').PluginObj}
  */
 function workletsPluginOxcBabelShim(babelApi) {
-  const inPlace = !babelApi.caller(isMetroCaller);
+  const workletModules = babelApi.caller(workletModulesMode);
   return {
     name: 'worklets-oxc-plugin',
     visitor: {
@@ -35,12 +35,17 @@ function workletsPluginOxcBabelShim(babelApi) {
           const filename = state.filename;
           if (filename == null) {
             throw new Error(
-              '[Worklets] the Oxc transform needs a filename to name worklets ' +
-                'and to place their generated files, but Babel was given none.'
+              '[Worklets] the Oxc transform needs a filename to name worklets, ' +
+                'but Babel was given none.'
             );
           }
 
-          const result = transform(state.file.code, filename, state, inPlace);
+          const result = transform(
+            state.file.code,
+            filename,
+            state,
+            workletModules
+          );
           if (!result.changed) {
             return;
           }
@@ -61,14 +66,16 @@ function workletsPluginOxcBabelShim(babelApi) {
  * @param {import('@babel/core').PluginPass} state
  * @returns {import('./index').TransformResult}
  */
-function transform(sourceText, filename, state, inPlace) {
+function transform(sourceText, filename, state, workletModules) {
   warnAboutDangerousRelativePaths(state.opts);
   try {
     return oxc.transform(sourceText, filename, {
       ...state.opts,
       envName: state.file.opts.envName,
-      workletsPackageDir: inPlace ? undefined : resolveWorkletsPkgDir(),
-      inPlace,
+      inlineModules: workletModules === 'inline',
+      inPlace: workletModules === 'in-place',
+      workletsPackageDir:
+        workletModules === 'file' ? resolveWorkletsPkgDir() : undefined,
       hashRoot: resolveHashRoot(state),
     });
   } catch (error) {
@@ -87,11 +94,17 @@ function transform(sourceText, filename, state, inPlace) {
 }
 
 /**
- * @param {{ name?: string; bundler?: string } | undefined} caller
- * @returns {boolean}
+ * @param {{ name?: string; bundler?: string; supportsInlineModules?: boolean }
+ *   | undefined} caller
+ * @returns {'inline' | 'file' | 'in-place'}
  */
-function isMetroCaller(caller) {
-  return caller?.bundler === 'metro' || caller?.name === 'metro';
+function workletModulesMode(caller) {
+  if (caller?.supportsInlineModules === true) {
+    return 'inline';
+  }
+  return caller?.bundler === 'metro' || caller?.name === 'metro'
+    ? 'file'
+    : 'in-place';
 }
 
 const COMMON_FOLDER_NAMES = new Set([

@@ -17,7 +17,7 @@ import type { WorkletsModuleProxy } from './WorkletsModule/workletsModuleProxy';
 
 declare global {
   /** The only runtime-available require method is `__r` defined by Metro. */
-  var __r: ((moduleId: number) => Record<string, unknown>) &
+  var __r: ((moduleId: number | string) => Record<string, unknown>) &
     Record<string, unknown>;
 
   /**

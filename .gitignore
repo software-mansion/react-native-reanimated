@@ -99,3 +99,4 @@ playwright/.cache/
 !.agents/skills/
 .codex
 .tmp
+.jest-inline-modules/

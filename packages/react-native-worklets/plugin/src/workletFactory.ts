@@ -1,8 +1,8 @@
 import type { NodePath } from '@babel/core';
 import type {
   ArrayExpression,
-  ExpressionStatement,
   FunctionExpression,
+  ExpressionStatement,
   ReturnStatement,
   VariableDeclaration,
 } from '@babel/types';
@@ -32,9 +32,13 @@ import { strict as assert } from 'assert';
 import { basename, dirname, relative, sep } from 'path';
 
 import { getClosure } from './closure';
-import { generateWorkletFile } from './generate';
+import {
+  generateWorkletFile,
+  generateWorkletModuleSpecifier,
+} from './generate';
 import { updateRelativeRequires } from './imports';
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
+import { moduleScopeReservedNames } from './types';
 import { isRelease } from './utils';
 
 const REAL_VERSION = require('../../package.json').version;
@@ -48,6 +52,7 @@ export function makeWorkletFactory(
   factory: FunctionExpression;
   factoryCallParamPack: ArrayExpression;
   workletHash: number;
+  workletModuleSpecifier: string | undefined;
 } {
   // Returns a new FunctionExpression which is a workletized version of provided
   // FunctionDeclaration, FunctionExpression, ArrowFunctionExpression or ObjectMethod.
@@ -88,7 +93,10 @@ export function makeWorkletFactory(
   }
   if (closureVariables.length === 0) {
     // The worklet binding will share module scope with forwarded imports.
-    while (importedNames.has(reactName)) {
+    while (
+      importedNames.has(reactName) ||
+      moduleScopeReservedNames.has(reactName)
+    ) {
       reactName = `_${reactName}`;
     }
   }
@@ -180,9 +188,17 @@ export function makeWorkletFactory(
 
   const factoryCallParamPack = arrayExpression(factoryCallArgs);
 
-  if (state.workletModules === 'file') {
+  let workletModuleSpecifier: string | undefined;
+  if (state.workletModules === 'inline') {
+    workletModuleSpecifier = generateWorkletModuleSpecifier(
+      moduleBindingsToImport,
+      relativeBindingsToImport,
+      factory,
+      state
+    );
+  } else if (state.workletModules === 'file') {
     updateRelativeRequires(factory, state);
-    generateWorkletFile(
+    workletModuleSpecifier = generateWorkletFile(
       moduleBindingsToImport,
       relativeBindingsToImport,
       factory,
@@ -191,7 +207,7 @@ export function makeWorkletFactory(
     );
   }
 
-  return { factory, factoryCallParamPack, workletHash };
+  return { factory, factoryCallParamPack, workletHash, workletModuleSpecifier };
 }
 
 function stripWorkletDirectives(fun: NodePath<WorkletizableFunction>): void {

@@ -13,9 +13,17 @@ import { WorkletizableFunction } from './types';
 import { processIfWithWorkletDirective } from './workletSubstitution';
 
 module.exports = function WorkletsBabelPlugin(api: ConfigAPI): PluginItem {
-  const workletModules: WorkletModulesMode = api.caller((caller) =>
-    isMetroCaller(caller) ? 'file' : 'in-place'
-  );
+  const workletModules: WorkletModulesMode = api.caller((caller) => {
+    const info = caller as
+      | { name?: string; bundler?: string; supportsInlineModules?: boolean }
+      | undefined;
+    if (info?.supportsInlineModules === true) {
+      return 'inline';
+    }
+    return info?.bundler === 'metro' || info?.name === 'metro'
+      ? 'file'
+      : 'in-place';
+  });
 
   function runWithTaggedExceptions(state: WorkletsPluginPass, fun: () => void) {
     if (state.skipFile) {
@@ -86,10 +94,4 @@ export function getAutoworkletizationMicroPlugin(): Visitor<WorkletsPluginPass> 
       },
     },
   };
-}
-
-function isMetroCaller(
-  caller: { name?: string; bundler?: string } | undefined
-): boolean {
-  return caller?.bundler === 'metro' || caller?.name === 'metro';
 }

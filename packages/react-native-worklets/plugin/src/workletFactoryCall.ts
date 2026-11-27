@@ -1,28 +1,22 @@
 import type { NodePath } from '@babel/core';
-import type {
-  CallExpression,
-  Expression,
-  MemberExpression,
-} from '@babel/types';
+import type { CallExpression, MemberExpression } from '@babel/types';
 import {
   callExpression,
   identifier,
   memberExpression,
   stringLiteral,
 } from '@babel/types';
+import { strict as assert } from 'assert';
 
 import type { WorkletizableFunction, WorkletsPluginPass } from './types';
-import { generatedWorkletsDir } from './types';
 import { makeWorkletFactory } from './workletFactory';
 
 export function makeWorkletFactoryCall(
   path: NodePath<WorkletizableFunction>,
   state: WorkletsPluginPass
 ): CallExpression | MemberExpression {
-  const { factory, factoryCallParamPack, workletHash } = makeWorkletFactory(
-    path,
-    state
-  );
+  const { factory, factoryCallParamPack, workletModuleSpecifier } =
+    makeWorkletFactory(path, state);
 
   if (state.workletModules === 'in-place') {
     const inPlaceCall = callExpression(
@@ -32,12 +26,11 @@ export function makeWorkletFactoryCall(
     addStackTraceDataToWorkletFactory(path, inPlaceCall);
     return inPlaceCall;
   }
+  assert(workletModuleSpecifier, '`workletModuleSpecifier` is undefined.');
 
-  const workletModule: Expression = memberExpression(
+  const workletModule = memberExpression(
     callExpression(identifier('require'), [
-      stringLiteral(
-        `react-native-worklets/${generatedWorkletsDir}/${workletHash}.js`
-      ),
+      stringLiteral(workletModuleSpecifier),
     ]),
     identifier('default')
   );

@@ -6,7 +6,7 @@ const generate = require('@babel/generator').default;
 const HASH_NUMBER = String.raw`0x[0-9a-fA-F]+|\d+e\+?\d+|\d+`;
 
 const HASH = new RegExp(
-  String.raw`\.worklets\/(\d+)\.js|__workletHash = (${HASH_NUMBER})|_worklet_(\d+)_init_data`
+  String.raw`metro:inline;base64,|__workletHash = (${HASH_NUMBER})|_worklet_(\d+)_init_data`
 );
 
 let idByHash = new Map();
@@ -31,17 +31,44 @@ const workletHashSerializer = {
   },
 };
 
+const INLINE_MODULE = /(["'])metro:inline;base64,([A-Za-z0-9+/=]+)\1/g;
+
 function normalizeSnapshot(code) {
-  return reprint(renumber(code));
+  const modules = [];
+  const normalized = normalizeWithInlineModules(code, modules);
+  return modules.reduce(
+    (output, module, index) =>
+      `${output}\n\n/* inline module ${index + 1} */\n${module}`,
+    normalized
+  );
+}
+
+function normalizeWithInlineModules(code, modules) {
+  const outer = code.replace(INLINE_MODULE, (match, quote, base64) => {
+    const content = normalizeWithInlineModules(
+      Buffer.from(base64, 'base64').toString('utf8'),
+      modules
+    );
+    let index = modules.indexOf(content);
+    if (index === -1) {
+      modules.push(content);
+      index = modules.length - 1;
+    }
+    return `"inline-module-${index + 1}"`;
+  });
+  return reprint(renumber(outer));
 }
 
 function renumber(code) {
-  return code.replace(new RegExp(HASH, 'g'), (match, path, field, initData) => {
-    const hash = canonicalize(path ?? field ?? initData);
+  return code.replace(new RegExp(HASH, 'g'), (match, field, initData) => {
+    if (field === undefined && initData === undefined) {
+      return match;
+    }
+    const hash = canonicalize(field ?? initData);
     if (!idByHash.has(hash)) {
       idByHash.set(hash, idByHash.size + 1);
     }
-    return match.replace(path ?? field ?? initData, idByHash.get(hash));
+    return match.replace(field ?? initData, idByHash.get(hash));
   });
 }
 

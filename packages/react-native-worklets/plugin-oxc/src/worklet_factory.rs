@@ -13,8 +13,8 @@ use crate::factory_expression::{build_closure_array, build_factory_expression};
 use crate::imports::update_relative_requires;
 use crate::naming::make_worklet_name;
 use crate::naming::{worklet_hash, worklet_hash_key};
-use crate::types::State;
-use crate::worklet_file::{generate_worklet_file, write_worklet_file};
+use crate::types::{MODULE_SCOPE_RESERVED_NAMES, State};
+use crate::worklet_file::{RebaseTarget, generate_worklet_file, generate_worklet_module_specifier};
 
 pub struct WorkletInput<'a, 'b> {
     pub params: &'b FormalParameters<'a>,
@@ -77,10 +77,11 @@ pub fn make_worklet_factory<'a>(
 
     // Closure-free worklets share module scope with forwarded imports.
     if closure.closure_variables.is_empty() {
-        while closure
-            .imports
-            .iter()
-            .any(|import| import.local == names.react_name)
+        while MODULE_SCOPE_RESERVED_NAMES.contains(&names.react_name.as_str())
+            || closure
+                .imports
+                .iter()
+                .any(|import| import.local == names.react_name)
         {
             names.react_name.insert(0, '_');
         }
@@ -122,34 +123,49 @@ pub fn make_worklet_factory<'a>(
         };
     }
 
-    if let Expression::FunctionExpression(func) = &mut factory_expr
-        && let Some(body) = func.body.as_mut()
-    {
-        update_relative_requires(
-            body,
-            filename,
-            state.opts.worklets_package_dir.as_deref(),
+    let (specifier, module_content) = if state.opts.inline_modules == Some(true) {
+        generate_worklet_module_specifier(
             builder,
-        );
-    }
-    let file_content = generate_worklet_file(
-        builder,
-        factory_expr,
-        &closure.imports,
-        filename,
-        state.opts.worklets_package_dir.as_deref(),
-    );
-    let file_path = format!("react-native-worklets/.worklets/{hash}.js");
+            factory_expr,
+            &closure.imports,
+            &closure.closure_variables,
+            &names.react_name,
+        )
+    } else {
+        if let Expression::FunctionExpression(func) = &mut factory_expr
+            && let Some(body) = func.body.as_mut()
+        {
+            update_relative_requires(
+                body,
+                filename,
+                state.opts.worklets_package_dir.as_deref(),
+                builder,
+            );
+        }
+        match generate_worklet_file(
+            builder,
+            factory_expr,
+            &closure.imports,
+            &closure.closure_variables,
+            &names.react_name,
+            hash,
+            RebaseTarget {
+                filename,
+                worklets_package_dir: state.opts.worklets_package_dir.as_deref(),
+            },
+        ) {
+            Ok(generated) => generated,
+            Err(message) => {
+                if state.error.is_none() {
+                    state.error = Some(message);
+                }
+                (String::new(), String::new())
+            }
+        }
+    };
 
-    if let Some(package_dir) = state.opts.worklets_package_dir.as_deref()
-        && let Err(message) = write_worklet_file(package_dir, &file_path, &file_content)
-        && state.error.is_none()
-    {
-        state.error = Some(message);
-    }
-
-    let factory_call = make_worklet_factory_call(builder, &file_path, &bound_closure);
-    state.emitted_files.push((file_path, file_content));
+    let factory_call = make_worklet_factory_call(builder, &specifier, &bound_closure);
+    state.emitted_files.push((specifier, module_content));
 
     FactoryOutput {
         factory_call,
@@ -201,10 +217,10 @@ fn make_in_place_factory_call<'a>(
 
 fn make_worklet_factory_call<'a>(
     builder: AstBuilder<'a>,
-    file_path: &str,
+    specifier: &str,
     closure: &[(String, Option<ReferenceId>)],
 ) -> Expression<'a> {
-    let path_str = builder.str(file_path);
+    let path_str = builder.str(specifier);
     let require_call = builder.expression_call(
         SPAN,
         builder.expression_identifier(SPAN, "require"),

@@ -11,6 +11,8 @@ use oxc_ast_visit::{
 };
 use oxc_span::SPAN;
 
+const GENERATED_WORKLETS_DIR: &str = ".worklets";
+
 pub fn update_relative_requires<'a>(
     body: &mut FunctionBody<'a>,
     filename: &str,
@@ -79,7 +81,7 @@ pub fn create_import_path(
     let resolved = file_dir.join(original);
     let resolved = normalize_path(&resolved);
 
-    let worklets_dir = PathBuf::from(worklets_package_dir?).join(".worklets");
+    let worklets_dir = PathBuf::from(worklets_package_dir?).join(GENERATED_WORKLETS_DIR);
 
     let rel = pathdiff(&worklets_dir, &resolved)?;
     let mut out = to_posix(&rel.to_string_lossy());

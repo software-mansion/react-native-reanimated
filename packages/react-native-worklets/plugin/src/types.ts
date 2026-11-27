@@ -17,7 +17,7 @@ import {
 
 import type { PluginOptions } from './options';
 
-export type WorkletModulesMode = 'file' | 'in-place';
+export type WorkletModulesMode = 'inline' | 'file' | 'in-place';
 
 export interface WorkletsPluginPass {
   file: BabelFile;
@@ -79,6 +79,19 @@ export function isWorkletizableObjectNode(
 }
 
 export const generatedWorkletsDir = '.worklets';
+
+export const workletModuleDirective = 'worklet-module';
+
+export const inlineModuleSpecifierPrefix = 'metro:inline;base64,';
+
+export const workletModuleIdBinding = '__workletModuleId';
+
+export const moduleScopeReservedNames = new Set([
+  'module',
+  'exports',
+  'require',
+  'global',
+]);
 
 type InitializedImportForwarding = Required<
   NonNullable<PluginOptions['importForwarding']>

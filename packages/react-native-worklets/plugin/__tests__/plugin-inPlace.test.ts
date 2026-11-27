@@ -3,45 +3,25 @@ import { transformSync } from '@babel/core';
 import { beforeEach, describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import * as fs from 'fs';
+import * as path from 'path';
 
-type CapturedFile = { path: string; content: string };
-
-const capturedFiles: CapturedFile[] = [];
-
-function nativelyEmittedFiles(): CapturedFile[] {
-  return ((
-    globalThis as { __WORKLETS_OXC_EMITTED__?: CapturedFile[] }
-  ).__WORKLETS_OXC_EMITTED__ ??= []);
-}
-
-function emittedFiles(): CapturedFile[] {
-  return capturedFiles.length > 0 ? [...capturedFiles] : nativelyEmittedFiles();
-}
-
-jest.mock('fs', () => {
-  const actual: object = jest.requireActual('fs');
-  return {
-    ...actual,
-    writeFileSync: (filepath: string, content: string) => {
-      capturedFiles.push({ path: String(filepath), content: String(content) });
-    },
-  };
-});
-
-// eslint-disable-next-line import/first
 import type { PluginOptions } from '../index';
-// eslint-disable-next-line import/first
 import plugin from '../index';
 
 const MOCK_LOCATION = 'test.js';
+const WORKLETS_DIR = path.join(
+  path.dirname(require.resolve('react-native-worklets/package.json')),
+  '.worklets'
+);
+const FILE_REQUIRE_PATTERN =
+  /require\("react-native-worklets\/\.worklets\/(\d+)\.js"\)\.default/g;
 
 function runPlugin(
   input: string,
   transformOpts: TransformOptions = {},
   pluginOpts: PluginOptions = {}
-) {
-  capturedFiles.length = 0;
-  nativelyEmittedFiles().length = 0;
+): string {
   const strippedInput = input.replace(/<\/?script[^>]*>/g, '');
   const transformed = transformSync(strippedInput, {
     filename: MOCK_LOCATION,
@@ -52,7 +32,7 @@ function runPlugin(
     plugins: [...(transformOpts.plugins ?? []), [plugin, pluginOpts]],
   });
   assert(transformed);
-  return { code: transformed.code ?? '', files: emittedFiles() };
+  return transformed.code ?? '';
 }
 
 describe('babel plugin without a Metro caller', () => {
@@ -61,35 +41,31 @@ describe('babel plugin without a Metro caller', () => {
   });
 
   test('emits the worklet factory in place without a caller', () => {
-    const input = html`<script>
+    const code = runPlugin(html`<script>
       function foo(x) {
         'worklet';
         return x + 2;
       }
-    </script>`;
-
-    const { code, files } = runPlugin(input);
-    expect(files).toHaveLength(0);
+    </script>`);
     expect(code).not.toContain('require(');
     expect(code).not.toContain('.worklets');
+    expect(code).not.toContain('metro:inline');
     expect(code).toMatch(/const foo = function foo_\w+Factory\(\) \{/);
     expect(code).toContain('__workletHash');
     expect(code).toMatchSnapshot();
   });
 
   test('emits the worklet factory in place for a bundler that is not Metro', () => {
-    const input = html`<script>
-      const scale = 2;
-      function foo(x) {
-        'worklet';
-        return x * scale;
-      }
-    </script>`;
-
-    const { code, files } = runPlugin(input, {
-      caller: { name: 'babel-loader' },
-    });
-    expect(files).toHaveLength(0);
+    const code = runPlugin(
+      html`<script>
+        const scale = 2;
+        function foo(x) {
+          'worklet';
+          return x * scale;
+        }
+      </script>`,
+      { caller: { name: 'babel-loader' } }
+    );
     expect(code).not.toContain('require(');
     expect(code).toMatch(/Factory\(\[scale\]\) \{/);
     expect(code).toMatch(/\}\(\[scale\]\);/);
@@ -97,16 +73,13 @@ describe('babel plugin without a Metro caller', () => {
   });
 
   test('keeps a forwardable import as a plain reference in place', () => {
-    const input = html`<script>
+    const code = runPlugin(html`<script>
       import { helper } from 'react-native-worklets';
       function foo() {
         'worklet';
         return helper();
       }
-    </script>`;
-
-    const { code, files } = runPlugin(input);
-    expect(files).toHaveLength(0);
+    </script>`);
     expect(code).not.toContain('require(');
     expect(code).not.toContain('__closure');
     expect(code).toMatch(/import \{ helper \} from ["']react-native-worklets["'];/);
@@ -122,24 +95,168 @@ describe('babel plugin without a Metro caller', () => {
       }
     </script>`;
 
-    const { code, files } = runPlugin(input);
-    expect(files).toHaveLength(0);
+    const code = runPlugin(input);
+    expect(code).not.toContain('require(');
     expect(code).toContain('function _foo_testJs1Factory(');
     expect(code).toContain('return foo_testJs1Factory()');
   });
 
   test('writes worklet files for a Metro caller without inline module support', () => {
-    const input = html`<script>
-      function foo(x) {
-        'worklet';
-        return x + 2;
-      }
-    </script>`;
+    const code = runPlugin(
+      html`<script>
+        function foo(x) {
+          'worklet';
+          return x + 2;
+        }
+      </script>`,
+      { caller: { name: 'metro', bundler: 'metro' } }
+    );
+    const hashes = Array.from(code.matchAll(FILE_REQUIRE_PATTERN), ([, h]) => h);
+    expect(hashes).toHaveLength(1);
+    const file = path.join(WORKLETS_DIR, `${hashes[0]}.js`);
+    expect(fs.existsSync(file)).toBe(true);
+    fs.rmSync(file);
+  });
 
-    const { code, files } = runPlugin(input, {
-      caller: { name: 'metro', bundler: 'metro' },
+  test('emits inline modules when the caller supports them', () => {
+    const code = runPlugin(
+      html`<script>
+        function foo(x) {
+          'worklet';
+          return x + 2;
+        }
+      </script>`,
+      { caller: { name: 'test', supportsInlineModules: true } }
+    );
+    expect(code).toContain('require("metro:inline;base64,');
+    expect(code).not.toContain('.worklets');
+  });
+
+  describe('worklet hash', () => {
+    function workletHashes(input: string, filename = MOCK_LOCATION) {
+      const code = runPlugin(input, { filename: path.join(__dirname, filename) });
+      return [...code.matchAll(/__workletHash = (0x[\da-f]+|\d+)/gi)].map(
+        (match) => Number(match[1])
+      );
+    }
+
+    function workletHash(input: string, filename = MOCK_LOCATION) {
+      const hashes = workletHashes(input, filename);
+      expect(hashes).toHaveLength(1);
+      return hashes[0];
+    }
+
+    test('gives identical anonymous worklets in one file the same hash', () => {
+      const hashes = workletHashes(
+        "const foo = () => {\n  'worklet';\n  return 1;\n};\nconst bar = () => {\n  'worklet';\n  return 1;\n};\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).toBe(hashes[1]);
     });
-    expect(files).toHaveLength(1);
-    expect(code).toContain('require("react-native-worklets/.worklets/');
+
+    test('separates named functions with the same body', () => {
+      const hashes = workletHashes(
+        "scheduleOnUI(function functionNameA() {\n  'worklet';\n  throw new Error();\n});\nscheduleOnUI(function functionNameB() {\n  'worklet';\n  throw new Error();\n});\nfunction functionNameC() {\n  'worklet';\n  throw new Error();\n}\n"
+      );
+      expect(hashes).toHaveLength(3);
+      expect(new Set(hashes).size).toBe(3);
+    });
+
+    test('separates object methods with the same body', () => {
+      const hashes = workletHashes(
+        "const obj = {\n  foo() {\n    'worklet';\n    return 1;\n  },\n  bar() {\n    'worklet';\n    return 1;\n  },\n};\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('changes the hash when the worklet body changes', () => {
+      const before = workletHash(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "function foo() {\n  'worklet';\n  return 2;\n}\n"
+      );
+      expect(after).not.toBe(before);
+    });
+
+    test('changes the hash when a parameter changes', () => {
+      const before = workletHash(
+        "function foo(x) {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "function foo(y) {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).not.toBe(before);
+    });
+
+    test('keeps the hash when the worklet moves in the file', () => {
+      const before = workletHash(
+        "function foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      const after = workletHash(
+        "\n\nfunction foo() {\n  'worklet';\n  return 1;\n}\n"
+      );
+      expect(after).toBe(before);
+    });
+
+    test('separates identical text that captures different variables', () => {
+      const hashes = workletHashes(
+        "function a(value) {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\nfunction b() {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('changes the hash for the same code in another file', () => {
+      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+      const first = workletHash(input, 'first.js');
+      const second = workletHash(input, 'nested/first.js');
+      expect(second).not.toBe(first);
+    });
+
+    test('gives the same file in two Metro projects different hashes', () => {
+      const input = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+      const hashes = ['first-app', 'second-app'].map((app) => {
+        const code = runPlugin(input, {
+          cwd: path.join(__dirname, app),
+          filename: path.join(__dirname, app, 'src', 'App.js'),
+        });
+        return [...code.matchAll(/__workletHash = (0x[\da-f]+|\d+)/gi)].map(
+          (match) => Number(match[1])
+        );
+      });
+      expect(hashes[0]).toHaveLength(1);
+      expect(hashes[1]).toHaveLength(1);
+      expect(hashes[0][0]).not.toBe(hashes[1][0]);
+    });
+
+    test('separates an expression body from a block body with the same text', () => {
+      const hashes = workletHashes(
+        "import { useDerivedValue } from 'react-native-reanimated';\nconst a = useDerivedValue(() => ({ value: 1 }));\nconst b = useDerivedValue(() => { value: 1 });\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('hashes the source text of autoworkletized concise arrows', () => {
+      expect(
+        workletHash(
+          "import { useAnimatedStyle } from 'react-native-reanimated';\nconst style = useAnimatedStyle(() => ({ width: 1 }));\n"
+        )
+      ).toBe(7304007199455);
+      expect(
+        workletHash(
+          "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
+        )
+      ).toBe(16245832944540);
+    });
+
+    test('derives the hash from the relative path and the raw function text', () => {
+      const value = workletHash(
+        "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
+      );
+      expect(value).toBe(6803356437101);
+    });
   });
 });

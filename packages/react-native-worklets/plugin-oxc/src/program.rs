@@ -10,6 +10,7 @@ use oxc_syntax::symbol::SymbolId;
 
 use crate::plugin;
 use crate::types::{ImportInfo, ImportShape, State};
+use crate::worklet_file::WORKLET_MODULE_DIRECTIVE;
 use crate::{EmittedFile, PluginOptions, TransformResult};
 
 const PARSE_ERROR_CODE: &str = "WORKLETS_ERR_PARSE";
@@ -21,7 +22,11 @@ pub fn run(
     filename: &str,
     options: PluginOptions,
 ) -> Result<TransformResult, String> {
-    if is_generated_worklet_file(filename) {
+    let allocator = Allocator::default();
+    let source_type = source_type_of(filename);
+    let mut program = parse_program(&allocator, source_text, filename, source_type)?;
+
+    if is_generated_worklet_module(&program) {
         return Ok(TransformResult {
             code: source_text.to_string(),
             map: None,
@@ -29,10 +34,6 @@ pub fn run(
             changed: false,
         });
     }
-
-    let allocator = Allocator::default();
-    let source_type = source_type_of(filename);
-    let mut program = parse_program(&allocator, source_text, filename, source_type)?;
     let builder = oxc_ast::AstBuilder::new(&allocator);
 
     if source_type.is_typescript() {
@@ -194,8 +195,11 @@ fn build_imports_index<'a>(program: &Program<'a>) -> HashMap<SymbolId, ImportInf
     out
 }
 
-fn is_generated_worklet_file(filename: &str) -> bool {
-    filename.contains("react-native-worklets/.worklets")
+fn is_generated_worklet_module(program: &Program<'_>) -> bool {
+    program
+        .directives
+        .iter()
+        .any(|directive| directive.directive == WORKLET_MODULE_DIRECTIVE)
 }
 
 fn parse_error(filename: &str, first: &impl std::fmt::Display) -> String {

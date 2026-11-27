@@ -1,0 +1,1 @@
+Bundle Mode emits worklet modules as `metro:inline` virtual modules when Metro reports `supportsInlineModules` to Babel plugins (Metro 0.88.0 with React Native 0.89), so nothing is written to disk and no `metro` patch is needed; with an older Metro or React Native it keeps writing them to `.worklets`.

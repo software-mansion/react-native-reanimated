@@ -38,6 +38,15 @@ function bundleModeResolveRequest(
   );
 }
 
+function metroSupportsVirtualModules() {
+  try {
+    require.resolve('metro/private/lib/resolveInlineModule');
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Use in React Native Community projects. */
 const bundleModeMetroConfig = {
   serializer: {
@@ -45,6 +54,9 @@ const bundleModeMetroConfig = {
     polyfillModuleNames: [prepareBundleModePolyfillPath],
   },
   resolver: {
+    ...(metroSupportsVirtualModules()
+      ? { unstable_allowVirtualModules: true }
+      : {}),
     resolveRequest: (
       /** @type {any} */ context,
       /** @type {string} */ moduleName,
@@ -68,6 +80,9 @@ function getBundleModeMetroConfig(/** @type {any} */ config) {
     prepareBundleModePolyfillPath,
   ];
 
+  if (metroSupportsVirtualModules()) {
+    config.resolver.unstable_allowVirtualModules = true;
+  }
   const currentResolveRequest = config?.resolver?.resolveRequest;
   config.resolver.resolveRequest = (
     /** @type {any} */ context,
