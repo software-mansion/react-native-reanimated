@@ -61,7 +61,8 @@ std::optional<Float> textFontSizeAt(const ShadowView &start, const ShadowView &t
 std::optional<double> sizeProgress(const ShadowView &start, const ShadowView &target, const Frame &frame) {
   const auto &from = start.layoutMetrics.frame.size;
   const auto &to = target.layoutMetrics.frame.size;
-  const bool byWidth = std::abs(to.width - from.width) >= std::abs(to.height - from.height);
+  const bool byWidth =
+      frame.width && (!frame.height || std::abs(to.width - from.width) >= std::abs(to.height - from.height));
   const auto current = byWidth ? frame.width : frame.height;
   const auto startSize = byWidth ? from.width : from.height;
   const auto change = (byWidth ? to.width : to.height) - startSize;
