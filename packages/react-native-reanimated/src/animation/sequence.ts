@@ -8,6 +8,7 @@ import type {
   Timestamp,
 } from '../commonTypes';
 import type { NextAnimation, SequenceAnimation } from './commonTypes';
+import { joinNativeTimings } from './nativeTiming';
 import { defineAnimation, getReduceMotionForAnimation } from './util';
 
 /**
@@ -157,7 +158,7 @@ export function withSequence(
         );
       }
 
-      return {
+      const animation = {
         isHigherOrder: true,
         onFrame: sequence,
         onStart,
@@ -166,6 +167,11 @@ export function withSequence(
         callback,
         reduceMotion: getReduceMotionForAnimation(reduceMotion),
       } as SequenceAnimation;
+      const nativeTiming = joinNativeTimings(animations, reduceMotion);
+      if (nativeTiming) {
+        animation.__nativeTiming = nativeTiming;
+      }
+      return animation;
     }
   );
 }
