@@ -9,6 +9,8 @@ import type { WorkletRuntime } from '../types';
 
 /** Type of `__workletsModuleProxy` injected with JSI. */
 export interface WorkletsModuleProxy {
+  propagateModuleUpdate?(code: string, sourceURL: string): void;
+
   createSerializableImport<TValue>(
     source: string,
     imported: string

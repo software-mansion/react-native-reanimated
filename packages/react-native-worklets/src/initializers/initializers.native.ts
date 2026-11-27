@@ -6,6 +6,7 @@ import {
   makeLazyBundleRegistrar,
 } from '../bundleMode/lazyBundles';
 import { silenceHMRWarnings } from '../bundleMode/metroOverrides';
+import { forwardModuleUpdatesToWorkletRuntimes } from '../bundleMode/moduleUpdates';
 import { registerReportFatalRemoteError } from '../debug/errors';
 import { bundleValueUnpacker } from '../memory/bundleUnpacker';
 import { installCustomSerializableUnpacker } from '../memory/customSerializableUnpacker';
@@ -151,6 +152,12 @@ function initializeRNRuntime() {
 
   registerReportFatalRemoteError();
   setupSerializer();
+
+  if (__DEV__) {
+    forwardModuleUpdatesToWorkletRuntimes(
+      require('metro-runtime/src/modules/HMRClient')
+    );
+  }
 }
 
 /** A function that should be run only on Worklet runtimes. */

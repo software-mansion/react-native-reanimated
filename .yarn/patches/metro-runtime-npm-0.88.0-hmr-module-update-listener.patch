@@ -1,0 +1,38 @@
+diff --git a/src/modules/HMRClient.js b/src/modules/HMRClient.js
+--- a/src/modules/HMRClient.js
++++ b/src/modules/HMRClient.js
+@@ -2,7 +2,18 @@
+ 
+ const EventEmitter = require("./vendor/eventemitter3");
+ const HEARTBEAT_INTERVAL_MS = 20_000;
++const moduleUpdateListeners = new Set();
+ const inject = ({ module: [id, code], sourceURL }) => {
++  Array.from(moduleUpdateListeners).forEach(({ listener }) => {
++    try {
++      listener(code, sourceURL);
++    } catch (error) {
++      console.error(
++        `Error while calling a module update listener for module ${id}: `,
++        error,
++      );
++    }
++  });
+   if (global.globalEvalWithSourceUrl) {
+     global.globalEvalWithSourceUrl(code, sourceURL);
+   } else {
+@@ -14,6 +25,15 @@
+   update.modified.forEach(inject);
+ };
+ class HMRClient extends EventEmitter {
++  static addModuleUpdateListener(listener) {
++    const entry = { listener };
++    moduleUpdateListeners.add(entry);
++    return {
++      remove: () => {
++        moduleUpdateListeners.delete(entry);
++      },
++    };
++  }
+   _isEnabled = false;
+   _pendingUpdate = null;
+   _queue = [];
