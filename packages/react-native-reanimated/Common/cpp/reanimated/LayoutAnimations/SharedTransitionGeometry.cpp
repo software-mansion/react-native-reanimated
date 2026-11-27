@@ -197,7 +197,6 @@ Float fontSizeOf(const TextAttributes &attributes) {
   return std::isnan(attributes.fontSize) ? TextAttributes::defaultTextAttributes().fontSize : attributes.fontSize;
 }
 
-// The base attributes of the attributed string hold the font size of the paragraph.
 Float drawnFontSize(const ShadowView &text) {
   return fontSizeOf(static_cast<const ParagraphShadowNode::ConcreteState &>(*text.state)
                         .getData()

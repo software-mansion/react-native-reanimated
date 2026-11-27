@@ -70,7 +70,6 @@ struct LayoutAnimation {
   // The scroll of the target since this start. A frame is the value of the worklet plus this offset.
   react::Point pathOffset;
   std::optional<double> contentOpacity;
-  // The font size of a Text that the animation sets.
   std::optional<Float> fontSize;
   // A built-in timed shared transition interpolates the frame and the transform from startView to finalView.
   std::optional<double> geometryProgress;
