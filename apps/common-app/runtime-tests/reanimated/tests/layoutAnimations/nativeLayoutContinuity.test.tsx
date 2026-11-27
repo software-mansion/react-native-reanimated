@@ -30,12 +30,9 @@
  */
 import React from 'react';
 import type { ViewStyle } from 'react-native';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import type { LayoutAnimationFunction } from 'react-native-reanimated';
-import Animated, {
-  SharedTransition,
-  SharedTransitionBoundary,
-} from 'react-native-reanimated';
+import Animated, { SharedTransition } from 'react-native-reanimated';
 
 import {
   describe,
@@ -46,12 +43,14 @@ import {
   wait,
 } from '../../../ReJest/RuntimeTestsApi';
 import type {
+  SharedPair,
   Leaves,
   PairProps,
   TargetSample,
   TraceEvent,
 } from './nativeLayoutTestKit';
 import {
+  SharedScreens,
   BOX_REF,
   BOX_SIZE,
   callbacks,
@@ -75,6 +74,8 @@ import {
   takeTrace,
   takeTraceOf,
   movingGeometryTest,
+  readFrameRecords,
+  frameRecordedOf,
   resetFrameRecords,
 } from './nativeLayoutTestKit';
 import type { PairRead, TwinPair, TwinRest } from './nativeLayoutTwinTimeline';
@@ -84,6 +85,7 @@ import {
   positionReadsOf,
   twinPairOf,
   twinRestOf,
+  twinShiftAt,
 } from './nativeLayoutTwinTimeline';
 
 /** Mounts a pair scene at rest with no frame records, and reads its twin. */
@@ -123,7 +125,10 @@ function logModelBound(
 
 const SHARED_SOURCE_REF = 'NativeLayoutContinuitySharedSource';
 const SHARED_PARENT_REF = 'NativeLayoutContinuitySharedParent';
-const SHARED_TRANSITION = SharedTransition.duration(PAIR_DURATION / 3);
+const SHARED: SharedPair = {
+  sharedTag: 'native-layout-continuity',
+  transition: SharedTransition.duration(PAIR_DURATION / 3),
+};
 
 function SharedParent({
   left,
@@ -160,7 +165,7 @@ type SharedScreensProps = {
   transform?: ViewStyle['transform'];
 };
 
-function SharedScreens({
+function SharedLayoutScreens({
   left,
   width = BOX_SIZE,
   height = BOX_SIZE,
@@ -174,8 +179,8 @@ function SharedScreens({
   const source = (
     <Animated.View
       ref={sourceRef}
-      sharedTransitionTag="native-layout-continuity"
-      sharedTransitionStyle={SHARED_TRANSITION}
+      sharedTransitionTag={SHARED.sharedTag}
+      sharedTransitionStyle={SHARED.transition}
       layout={movesParent ? undefined : layout}
       style={[
         styles.sharedBox,
@@ -185,26 +190,21 @@ function SharedScreens({
     />
   );
   return (
-    <View style={styles.sharedScreens}>
-      <SharedTransitionBoundary isActive={!showTarget}>
-        {movesParent ? (
+    <SharedScreens
+      {...SHARED}
+      showsTarget={showTarget}
+      style={styles.sharedScreens}
+      targetStyle={styles.sharedTarget}
+      source={
+        movesParent ? (
           <SharedParent left={left} layout={layout} transform={transform}>
             {source}
           </SharedParent>
         ) : (
           source
-        )}
-      </SharedTransitionBoundary>
-      {showTarget && (
-        <SharedTransitionBoundary isActive>
-          <Animated.View
-            sharedTransitionTag="native-layout-continuity"
-            sharedTransitionStyle={SHARED_TRANSITION}
-            style={[styles.sharedBox, styles.sharedTarget]}
-          />
-        </SharedTransitionBoundary>
-      )}
-    </View>
+        )
+      }
+    />
   );
 }
 
@@ -287,6 +287,20 @@ describe('native layout continuity', () => {
         ...(exit ? [] : [opacityReadOf(opacity, rest)]),
       ])
     );
+    logModelBound(
+      caseName,
+      'Position',
+      distances.position,
+      parity.tolerance,
+      ONE_FRAME_TERMS
+    );
+    logModelBound(
+      caseName,
+      'Opacity',
+      distances.opacity,
+      OPACITY_TOLERANCE,
+      ONE_FRAME_TERMS
+    );
     expectKeptPair(distances.position < parity.tolerance);
     if (exit) {
       expect(distances.opacity < OPACITY_TOLERANCE).toBe(true);
@@ -329,26 +343,39 @@ describe('native layout continuity', () => {
     tags: ReturnType<typeof pairTags>,
     { checkpoints, intervalMs }: PairParity
   ) {
-    const reads: { position: TargetSample; opacity: TargetSample }[] = [];
-    const distances = { position: 0, opacity: 0 };
+    const samples: Awaited<ReturnType<typeof samplePair>>[] = [];
     // The presentation layer shows a change of the playback after the next display frame.
     await wait(2 * FRAME_MS);
     for (let checkpoint = 0; checkpoint < checkpoints; checkpoint++) {
-      const { native, x, y, opacity, frameX, frameY, frameOpacity } =
-        await samplePair(tags);
-      reads.push(native);
+      samples.push(await samplePair(tags));
+      await wait(intervalMs);
+    }
+    const records = readFrameRecords();
+    const distances = { position: 0, opacity: 0 };
+    for (const { native, x, y, opacity, ...frame } of samples) {
+      const shiftOf = (read: TargetSample, target: string, key: string) =>
+        read.playbacks.some((playback) => playback.target === target)
+          ? twinShiftAt(records, 'frame', key, read.monotonicTimeMs)
+          : 0;
       distances.position = Math.max(
         distances.position,
-        Math.abs(x - frameX),
-        Math.abs(y - frameY)
+        Math.abs(
+          x - frame.frameX - shiftOf(native.position, 'PositionX', 'originX')
+        ),
+        Math.abs(
+          y - frame.frameY - shiftOf(native.position, 'PositionY', 'originY')
+        )
       );
       distances.opacity = Math.max(
         distances.opacity,
-        Math.abs(opacity - frameOpacity)
+        Math.abs(
+          opacity -
+            frame.frameOpacity -
+            shiftOf(native.opacity, 'Opacity', 'opacity')
+        )
       );
-      await wait(intervalMs);
     }
-    return { reads, distances };
+    return { reads: samples.map(({ native }) => native), distances };
   }
 
   // The order of a stop that a pull decides, from the trace only. `FrameUpdateMounted` is in the first events
@@ -421,12 +448,15 @@ describe('native layout continuity', () => {
    * and of `extraLeaves`.
    */
   async function mountSharedSource(hasCallback: boolean, extraLeaves: Leaves) {
-    const layout = layoutOf(
-      { originX: { duration: PAIR_DURATION, hasCallback }, ...extraLeaves },
-      { name: 'hidden' }
+    const layout = frameRecordedOf(
+      'hidden',
+      layoutOf(
+        { originX: { duration: PAIR_DURATION, hasCallback }, ...extraLeaves },
+        { name: 'hidden' }
+      )
     );
     const screens = (left: number, opacity: number, showTarget: boolean) => (
-      <SharedScreens
+      <SharedLayoutScreens
         left={left}
         opacity={opacity}
         showTarget={showTarget}
@@ -438,6 +468,7 @@ describe('native layout continuity', () => {
     const tag = getTestComponent(SHARED_SOURCE_REF).getTag();
     await takeTrace();
     callbacks.length = 0;
+    resetFrameRecords();
     return { tag, screens };
   }
 
@@ -455,7 +486,6 @@ describe('native layout continuity', () => {
 
 const styles = StyleSheet.create({
   sharedScreens: {
-    width: 300,
     height: 300,
   },
   sharedParent: {

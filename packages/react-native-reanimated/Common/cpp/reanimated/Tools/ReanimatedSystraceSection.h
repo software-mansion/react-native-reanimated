@@ -16,6 +16,7 @@
 #elif defined(ANDROID)
 
 #include <android/trace.h>
+#include <sstream>
 
 #endif // defined(ANDROID)
 
@@ -25,15 +26,33 @@ namespace reanimated {
 
 #if defined(ANDROID) && defined(REANIMATED_PROFILING)
 
+/// The arguments are key and value pairs. While a trace records, they go into the section name in the form of
+/// the Apple signpost text: `name key=value;`.
 struct ReanimatedSystraceSection {
  public:
   template <typename... ConvertsToStringPiece>
   explicit ReanimatedSystraceSection(const char *name, ConvertsToStringPiece &&...args) {
+    if constexpr (sizeof...(args) > 0) {
+      if (ATrace_isEnabled()) {
+        ATrace_beginSection(nameWithArguments(name, args...).c_str());
+        return;
+      }
+    }
     ATrace_beginSection(name);
   }
 
   ~ReanimatedSystraceSection() {
     ATrace_endSection();
+  }
+
+ private:
+  template <typename... Arguments>
+  static std::string nameWithArguments(const char *name, const Arguments &...args) {
+    std::ostringstream text;
+    text << name << ' ';
+    size_t index = 0;
+    ((text << args << (index++ % 2 == 0 ? "=" : ";")), ...);
+    return text.str();
   }
 };
 

@@ -96,6 +96,11 @@ enum class LayoutAnimationPhase : std::uint8_t {
   ENDED,
 };
 
+/// The layout keys in which the current view of a frame-driven animation differs from its final view.
+struct AnimatedLayoutKeys {
+  bool originX{}, originY{}, width{}, height{};
+};
+
 struct ManagedLayoutAnimationStart {
   Tag tag;
   LayoutAnimationType type;
@@ -112,6 +117,8 @@ struct ManagedLayoutAnimationStart {
   std::optional<uint64_t> buildId;
   /// The leaves of the view that native tracks play at the build. A frame-driven start continues them.
   LiveLayoutLeaves liveLeaves;
+  /// The keys in which `before` differs from the final view of its frame-driven animation.
+  AnimatedLayoutKeys animatedKeys;
 };
 
 struct ProgressLayoutAnimationStart {
@@ -229,6 +236,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   /// The platform reports that the transactions of the pulls since the last report are on the host views.
   /// `reportedMount` is the number of the report when the platform numbers its reports. UI thread only.
   virtual void surfaceDidMount(std::optional<std::uint64_t> /*reportedMount*/) {}
+  virtual void viewDidUnmount(Tag /*tag*/, int /*reanimatedId*/) const {}
+  virtual void viewDidMountAgain(Tag /*tag*/) const {}
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
@@ -257,8 +266,13 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   /// The sizes of the containers of this class. The lock is held.
   ContainerSizes commonContainerSizes() const;
 #endif
+  /// The values that the builder of the layout animation gets for a view that shows `currentView`. The keys of
+  /// `start.liveLeaves` and `start.animatedKeys` have animated values in `currentView`.
   jsi::Object
   layoutAnimationValues(const ManagedLayoutAnimationStart &start, const ShadowView &currentView, Rect window) const;
+  /// The keys in which the current view of the frame-driven animation of a view, running or completed, differs
+  /// from its final view.
+  AnimatedLayoutKeys animatedLayoutKeysOf(Tag tag) const;
   void cancelLayoutAnimation(Tag tag) const;
   void cancelAllLayoutAnimations() const;
   bool hasPendingLayoutAnimation(Tag tag) const;

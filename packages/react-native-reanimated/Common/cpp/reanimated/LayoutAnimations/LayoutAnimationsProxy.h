@@ -4,7 +4,9 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationsManager.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsProxyCommon.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
+#include <reanimated/LayoutAnimations/LayoutRequestRates.h>
 #include <reanimated/LayoutAnimations/NativeLayoutGroups.h>
+#include <reanimated/LayoutAnimations/NativeLayoutRoute.h>
 #include <reanimated/LayoutAnimations/StaleSynchronousPropsTracker.h>
 #include <reanimated/Tools/PlatformDepMethodsHolder.h>
 
@@ -317,6 +319,8 @@ struct TransactionMeta {
 struct PullRecord {
   /// `NativeAnimationPlatform::mountReportOfPull` at the start of the pull.
   std::optional<std::uint64_t> mountReport;
+  /// The time of the start of the pull on a monotonic clock. Each layout request of the pull has this time.
+  double startTimeMs{0};
   std::vector<native_animation::MountedOperation> operations;
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   MountingTransaction::Number transactionNumber{0};
@@ -377,6 +381,12 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_set<Tag> unmappedContentFadeTags_;
   // removed components whose views are still shown; their shared transition configs are released when they unmap
   mutable std::unordered_set<Tag> deferredSharedTransitionConfigReleases_;
+  struct UnmountedView {
+    Tag tag;
+    int reanimatedId;
+  };
+  mutable std::mutex unmountedViewsMutex_;
+  mutable std::vector<UnmountedView> unmountedViews_;
   /// The nodes whose exiting animation ended. The next pull that can remove views removes those that still
   /// have the state `COMPLETED`.
   mutable std::vector<std::shared_ptr<LightNode>> completedExits_;
@@ -413,6 +423,7 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   const std::shared_ptr<native_animation::NativeAnimationHost> nativeAnimationHost_;
   /// Null when layout animations have no native route, and before the start of the surface.
   std::shared_ptr<NativeLayoutGroups> nativeLayoutGroups_;
+  mutable LayoutRequestRates layoutRequestRates_;
   /// The record of the pull that runs now.
   mutable PullRecord currentPull_;
   /// The records of the pulls whose mount report did not run yet, in pull order. A mount report takes all.
@@ -448,6 +459,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   /// of its exiting animation, so no later request starts on it. A view that a shared transition hides admits
   /// no start: a native opacity track shows the view.
   bool admitsNativeStart(const std::shared_ptr<LightNode> &node, LayoutAnimationType type) const;
+  /// Counts a layout request of the view before its route is chosen. The native route is on.
+  LayoutRequestRates::Route recordLayoutRequest(Tag tag) const;
+  /// The first rule of `admitsNativeStart` that the view does not meet. The native route is on.
+  std::optional<NativeStartRefusal> nativeStartRefusal(const std::shared_ptr<LightNode> &node, LayoutAnimationType type)
+      const;
   /// The mount report of the current pull. None when the pull is not on the UI thread in the mount of its
   /// transaction. UI thread only when it has a value.
   std::optional<std::uint64_t> mountReportOfPull() const;
@@ -671,11 +687,19 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   std::optional<SurfaceId> cancelUncommittedScreenPop() const;
   void shadowTreeWillCommit(bool isSurfaceRemoval) override;
   void surfaceDidMount(std::optional<std::uint64_t> reportedMount) override;
+  void viewDidUnmount(Tag tag, int reanimatedId) const override;
+  void viewDidMountAgain(Tag tag) const override;
+  std::vector<UnmountedView> takeUnmountedViews() const;
+  /// A view that React mounted and removed between two pulls has no `Create` and no `Delete`, so its layout
+  /// animation configs stay. A pull that starts after the unmount has a revision with no view or with the view.
+  void forgetViewsThatNeverMounted(const std::vector<UnmountedView> &views, const std::unordered_set<Tag> &deletedTags)
+      const;
 #if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
   /// Records the native tracks of the view whose target this frame-driven update changes first.
   void traceFirstFrameUpdates(const ShadowView &currentView, const ShadowView &newView) const;
-  /// The refusal of a native start of the view, with no build of the start.
-  void traceStartRefused(Tag tag, LayoutAnimationType type) const;
+  /// The refusal of a native start of the view before its build summary. `buildId` is 0 for a start with no
+  /// build.
+  void traceStartRefused(Tag tag, LayoutAnimationType type, NativeStartRefusal refusal, uint64_t buildId = 0) const;
   ContainerSizes containerSizes() const override;
 #endif
   void clearSurfaceState() const override;

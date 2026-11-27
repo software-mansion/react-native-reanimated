@@ -34,6 +34,13 @@ class MountedAnimation {
 
   /// Cannot fail. Removes `replacedTracks` and starts playback in one platform transaction.
   virtual void start(const std::vector<TrackKey> &replacedTracks) = 0;
+
+#if !defined(NDEBUG) || defined(REANIMATED_RUNTIME_TEST_HOOKS)
+  /// The time of the platform pass that writes the start values, where the platform has one.
+  virtual std::optional<double> passTimestampMs() const {
+    return std::nullopt;
+  }
+#endif
 };
 
 /// The reason is why the platform rejects the command.
@@ -66,19 +73,29 @@ struct TargetSample {
 };
 #endif
 
-/// The platform part of the host. All calls but `canRealize` are on the platform UI thread.
+/// The platform part of the host. All calls but `unsupportedTargetCause` and `playsSizeChange` are on the platform
+/// UI thread.
 class NativeAnimationPlatform {
  public:
-  using TrackEndListener = std::function<void(const TrackKey &track, bool finished)>;
+  /// `animationTimeMs` is the animation clock of the frame of the last update of the track, where the platform has it.
+  using TrackEndListener =
+      std::function<void(const TrackKey &track, bool finished, std::optional<double> animationTimeMs)>;
 
   virtual ~NativeAnimationPlatform() = default;
 
   virtual void setTrackEndListener(TrackEndListener listener) = 0;
 
-  /// False when the platform cannot play the track (for example its timing kind), or when the component and the
-  /// props of `view` show that it cannot play the track on the host view. Reads no mounted state, so a client
-  /// can ask before the mount.
-  virtual bool canRealize(const AnimationTrack &track, const facebook::react::ShadowView &view) = 0;
+  /// The first clause that keeps the platform from playing the track (for example its timing kind), or from
+  /// playing it on the host view of `view` (its component and props). None when the platform plays it. Reads no
+  /// mounted state, so a client can ask before the mount.
+  virtual std::optional<UnsupportedTargetCause> unsupportedTargetCause(
+      const AnimationTrack &track,
+      const facebook::react::ShadowView &view) = 0;
+  virtual bool movesOnlyPlanarTransforms() const = 0;
+
+  /// False when the platform cannot play a change of the frame size from `before` to `after`. Reads no mounted
+  /// state, so a client can ask before it builds the tracks.
+  virtual bool playsSizeChange(const facebook::react::ShadowView &before, const facebook::react::ShadowView &after) = 0;
 
   virtual bool isSurfaceRunning(SurfaceId surfaceId) = 0;
   /// True when the mounted view of the tag is in a window.

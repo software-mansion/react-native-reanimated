@@ -1,5 +1,9 @@
 import type { TurboModule } from 'react-native';
-import { TurboModuleRegistry } from 'react-native';
+import { Platform, TurboModuleRegistry } from 'react-native';
+import { runOnUISync, scheduleOnUI } from 'react-native-worklets';
+
+const UI_FRAME_CLOCK_ROWS = '__runtimeTestsFrameClockRows';
+const FRAME_CLOCK_ROWS = 1800;
 
 /**
  * The drawn values of view properties, read from the view at each draw of the
@@ -17,6 +21,8 @@ interface RuntimeTestsViewSamplerModule extends TurboModule {
   postsAnimatorEnd(): Promise<boolean | null>;
   failNextViewLookup(tag: number): Promise<void>;
   takeViewLookupFailure(): Promise<number[] | null>;
+  startFrameClock(): void;
+  frameClockRows(): number[][];
 }
 
 export type SampledProperty =
@@ -26,8 +32,15 @@ export type SampledProperty =
   | 'borderRadius'
   | 'shadowColor';
 
-/** A property of one value, or a geometry read of `GEOMETRY_VALUE_COUNTS`. */
-export type RecordedProperty = SampledProperty | GeometryProperty;
+/**
+ * A property of one value, a geometry read of `GEOMETRY_VALUE_COUNTS`, or
+ * `animationTime`: the animation clock of the frame of the draw
+ * (`ClockFrame`).
+ */
+export type RecordedProperty =
+  | SampledProperty
+  | GeometryProperty
+  | 'animationTime';
 
 /**
  * Each in dp, with this number of values: `frame` (left, top, width, height in
@@ -84,6 +97,76 @@ const LOG_MARKER = 'RuntimeTestsViewSampler';
 const DECIMALS = 1e4;
 
 const MODULE_NAME = 'RuntimeTestsViewSampler';
+
+/**
+ * A frame of the UI thread, in ms: the frame time that a frame callback gets,
+ * the animation clock of the animators, and the run of the frame callback of
+ * the sampler. Android: each on the monotonic clock of the samples; the frame
+ * time and the animation clock differ in the buffer stuffing recovery of
+ * Android 16. iOS: the frame time and the run are on the clock of the samples,
+ * and the animation clock time is the frame time that the frame callbacks get.
+ */
+export type ClockFrame = {
+  frameTimeMs: number;
+  animationTimeMs: number;
+  ranMs: number;
+};
+
+/**
+ * Starts the frame clock: of the sampler on Android, of the frames of the UI
+ * runtime on iOS. It runs until the app ends.
+ */
+export function startFrameClock() {
+  if (Platform.OS === 'ios') {
+    scheduleOnUI(startUIFrameClock);
+    return;
+  }
+  getEnforcedSamplerModule().startFrameClock();
+}
+
+/** The frames of the frame clock, the oldest first. */
+export function readFrameClock(): ClockFrame[] {
+  if (Platform.OS === 'ios') {
+    return runOnUISync(uiFrameClockRows);
+  }
+  return getEnforcedSamplerModule()
+    .frameClockRows()
+    .map(([frameTimeMs, animationTimeMs, ranMs]) => ({
+      frameTimeMs,
+      animationTimeMs,
+      ranMs,
+    }));
+}
+
+/**
+ * A frame of the UI runtime on iOS gets the time of its display refresh on the
+ * animation clock. The row puts it on the sample clock from the run of the
+ * frame.
+ */
+function startUIFrameClock() {
+  'worklet';
+  const rows: ClockFrame[] = [];
+  (globalThis as Record<string, unknown>)[UI_FRAME_CLOCK_ROWS] = rows;
+  const onFrame = (timestampMs: number) => {
+    const ranMs = performance.now();
+    const frameTimeMs = ranMs + timestampMs - global._getAnimationTimestamp();
+    rows.push({ frameTimeMs, animationTimeMs: timestampMs, ranMs });
+    if (rows.length > FRAME_CLOCK_ROWS) {
+      rows.shift();
+    }
+    requestAnimationFrame(onFrame);
+  };
+  requestAnimationFrame(onFrame);
+}
+
+function uiFrameClockRows(): ClockFrame[] {
+  'worklet';
+  return [
+    ...((globalThis as Record<string, unknown>)[
+      UI_FRAME_CLOCK_ROWS
+    ] as ClockFrame[]),
+  ];
+}
 
 export function isViewSamplerAvailable(): boolean {
   return getSamplerModule() !== null;
@@ -151,6 +234,14 @@ export function logDrawnValues(
 /** The uptime in ms: the clock of the samples. */
 export function uptimeMs(): Promise<number> {
   return getEnforcedSamplerModule().now();
+}
+
+/**
+ * A garbage collection: the next read of a weak map has no entry of a freed
+ * view.
+ */
+export function collectGarbage(): Promise<void> {
+  return getEnforcedSamplerModule().collectGarbage();
 }
 
 function getEnforcedSamplerModule(): RuntimeTestsViewSamplerModule {

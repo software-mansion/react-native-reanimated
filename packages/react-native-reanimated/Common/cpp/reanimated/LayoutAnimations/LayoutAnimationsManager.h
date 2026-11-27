@@ -6,6 +6,7 @@
 #include <reanimated/LayoutAnimations/LayoutAnimationType.h>
 #include <reanimated/LayoutAnimations/LiveLayoutLeaf.h>
 #include <reanimated/LayoutAnimations/NativeLayoutLimits.h>
+#include <reanimated/LayoutAnimations/NativeLayoutPlatformRules.h>
 #include <reanimated/Tools/ContainerSizes.h>
 
 #include <jsi/jsi.h>
@@ -140,6 +141,7 @@ class LayoutAnimationsManager {
       const jsi::Object &values,
       const std::shared_ptr<Serializable> &config,
       const NativeLayoutLimits &limits,
+      const NativeLayoutPlatformRules &platformRules,
       const LiveLayoutLeaves &liveLeaves);
   /// Starts the frame-driven animation of the build. It continues the `liveLeaves` of the view.
   bool startBuiltLayoutAnimation(
@@ -171,6 +173,7 @@ class LayoutAnimationsManager {
       const std::function<void(jsi::Runtime &, const jsi::Function &)> &call);
   std::unordered_map<int, std::shared_ptr<Serializable>> &getConfigsForType(const LayoutAnimationType type);
   static jsi::Object toJSValue(jsi::Runtime &rt, const NativeLayoutLimits &limits);
+  static jsi::Object toJSValue(jsi::Runtime &rt, const NativeLayoutPlatformRules &platformRules);
   static jsi::Array toJSValue(jsi::Runtime &rt, const LiveLayoutLeaves &liveLeaves);
 
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
