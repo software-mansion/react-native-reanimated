@@ -1,6 +1,5 @@
 'use strict';
 
-import { logger } from '../debug/logger';
 import type { WorkletFactory, WorkletFunction } from '../types';
 
 export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
@@ -23,20 +22,21 @@ export function bundleValueUnpacker(objectToUnpack: ObjectToUnpack): unknown {
 function getWorklet(
   moduleId: number | string,
   closureVariables: unknown[] | undefined
-): WorkletFunction | undefined {
-  let worklet;
+): WorkletFunction {
   if (__DEV__) {
     try {
-      worklet = getWorkletFromMetroRequire(moduleId, closureVariables);
+      return getWorkletFromMetroRequire(moduleId, closureVariables);
     } catch (e) {
-      logger.error(
-        `Unable to resolve worklet from module ${moduleId}. Try reloading the app. Original error: ${(e as Error).message}`
-      );
+      const originalMessage = (e as Error).message;
+      return (() => {
+        throw new Error(
+          `[Worklets] Unable to resolve worklet from module ${moduleId}. Try reloading the app. Original error: ${originalMessage}`
+        );
+      }) as unknown as WorkletFunction;
     }
   } else {
-    worklet = getWorkletFromMetroRequire(moduleId, closureVariables);
+    return getWorkletFromMetroRequire(moduleId, closureVariables);
   }
-  return worklet;
 }
 
 const metroRequire = globalThis.__r;
