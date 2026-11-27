@@ -11,6 +11,66 @@ pub fn worklet_hash(s: &str) -> u64 {
     (h1 as u32 as u64) * 4096 + (h2 as u32 as u64)
 }
 
+pub fn worklet_hash_key(filename: &str, hash_root: Option<&str>, raw_function: &str) -> String {
+    let root = hash_root.map(str::to_owned).unwrap_or_else(|| {
+        std::env::current_dir()
+            .map(|dir| dir.to_string_lossy().into_owned())
+            .unwrap_or_default()
+    });
+    let source = relative_path(&root.replace('\\', "/"), filename);
+    format!("{source}:{raw_function}")
+}
+
+fn relative_path(from: &str, to: &str) -> String {
+    let is_absolute = to.starts_with('/') || to.as_bytes().get(1) == Some(&b':');
+    let to = if is_absolute {
+        to.to_owned()
+    } else {
+        format!("{from}/{to}")
+    };
+    let from_parts = normalized_segments(from);
+    let to_parts = normalized_segments(&to);
+    if let (Some(from_drive), Some(to_drive)) = (drive_of(&from_parts), drive_of(&to_parts))
+        && !from_drive.eq_ignore_ascii_case(to_drive)
+    {
+        return to_parts.join("/");
+    }
+    let common = from_parts
+        .iter()
+        .zip(to_parts.iter())
+        .take_while(|(a, b)| same_segment(a, b))
+        .count();
+    let mut parts: Vec<&str> = std::iter::repeat_n("..", from_parts.len() - common).collect();
+    parts.extend_from_slice(&to_parts[common..]);
+    parts.join("/")
+}
+
+fn drive_of<'p>(parts: &[&'p str]) -> Option<&'p str> {
+    parts.first().filter(|part| part.ends_with(':')).copied()
+}
+
+fn same_segment(a: &str, b: &str) -> bool {
+    if cfg!(windows) {
+        a.eq_ignore_ascii_case(b)
+    } else {
+        a == b
+    }
+}
+
+fn normalized_segments(path: &str) -> Vec<&str> {
+    let mut segments: Vec<&str> = Vec::new();
+    for segment in path.split('/') {
+        match segment {
+            "" | "." => {}
+            ".." => {
+                segments.pop();
+            }
+            _ => segments.push(segment),
+        }
+    }
+    segments
+}
+
 pub struct WorkletNames {
     pub worklet_name: String,
     pub react_name: String,
@@ -43,6 +103,34 @@ pub fn make_worklet_name(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn worklet_hash_key_uses_relative_path_and_raw_function_text() {
+        assert_eq!(
+            worklet_hash_key("/project/src/test.js", Some("/project"), "(x){return x;}"),
+            "src/test.js:(x){return x;}"
+        );
+    }
+
+    #[test]
+    fn worklet_hash_key_resolves_relative_filenames_and_parent_directories() {
+        assert_eq!(
+            worklet_hash_key("test.js", Some("/project"), ""),
+            "test.js:"
+        );
+        assert_eq!(
+            worklet_hash_key("/node_modules/lib/index.js", Some("/project"), ""),
+            "../node_modules/lib/index.js:"
+        );
+        assert_eq!(
+            worklet_hash_key("C:/project/src/a.js", Some("C:\\project"), ""),
+            "src/a.js:"
+        );
+        assert_eq!(
+            worklet_hash_key("D:/lib/a.js", Some("C:/project"), ""),
+            "D:/lib/a.js:"
+        );
+    }
+
     use super::*;
 
     #[test]

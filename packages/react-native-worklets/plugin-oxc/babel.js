@@ -69,6 +69,7 @@ function transform(sourceText, filename, state) {
       ...state.opts,
       envName: state.file.opts.envName,
       workletsPackageDir: resolveWorkletsPkgDir(),
+      hashRoot: resolveHashRoot(state),
     });
   } catch (error) {
     const message = (error && error.message) || '';
@@ -180,6 +181,18 @@ function getDangerousRelativePathWarning(relativePath) {
 }
 
 /** @returns {string} */
+/**
+ * @param {import('@babel/core').PluginPass} state
+ * @returns {string}
+ */
+function resolveHashRoot(state) {
+  try {
+    return resolveWorkletsPkgDir();
+  } catch {
+    return state.file.opts.cwd ?? process.cwd();
+  }
+}
+
 function resolveWorkletsPkgDir() {
   if (cachedWorkletsPkgDir === undefined) {
     try {

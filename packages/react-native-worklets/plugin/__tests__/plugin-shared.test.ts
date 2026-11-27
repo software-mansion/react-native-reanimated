@@ -5,6 +5,7 @@ import { transformSync } from '@babel/core';
 import { describe, expect, test } from '@jest/globals';
 import { strict as assert } from 'assert';
 import { html } from 'code-tag';
+import * as path from 'path';
 
 import { countOccurrences } from '../jest/pluginTestUtils';
 
@@ -561,6 +562,108 @@ describe.each([
       },
     ])('does not workletize $name', ({ input }) => {
       expect(factoryCount(input)).toBe(0);
+    });
+  });
+
+  describe('worklet hash', () => {
+    function workletHashes(
+      input: string,
+      filename = 'test.js',
+      pluginOpts: PluginOptions = {}
+    ) {
+      const { code, files } = runPlugin(input, pluginOpts, {
+        filename: path.join(__dirname, filename),
+      });
+      const output = [code, ...files.map((file) => file.content)].join('\n');
+      return [
+        ...output.matchAll(/__workletHash\s*=\s*(0x[\da-f]+|\d+)/gi),
+      ].map((match) => Number(match[1]));
+    }
+
+    function workletHash(input: string, filename = 'test.js') {
+      const hashes = workletHashes(input, filename);
+      expect(hashes).toHaveLength(1);
+      return hashes[0];
+    }
+
+    const worklet = "function foo() {\n  'worklet';\n  return 1;\n}\n";
+
+    test('gives identical anonymous worklets in one file the same hash', () => {
+      const hashes = workletHashes(
+        "const foo = () => {\n  'worklet';\n  return 1;\n};\nconst bar = () => {\n  'worklet';\n  return 1;\n};\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).toBe(hashes[1]);
+    });
+
+    test('separates named functions with the same body', () => {
+      const hashes = workletHashes(
+        "scheduleOnUI(function functionNameA() {\n  'worklet';\n  throw new Error();\n});\nscheduleOnUI(function functionNameB() {\n  'worklet';\n  throw new Error();\n});\nfunction functionNameC() {\n  'worklet';\n  throw new Error();\n}\n"
+      );
+      expect(hashes).toHaveLength(3);
+      expect(new Set(hashes).size).toBe(3);
+    });
+
+    test('separates object methods with the same body', () => {
+      const hashes = workletHashes(
+        "const obj = {\n  foo() {\n    'worklet';\n    return 1;\n  },\n  bar() {\n    'worklet';\n    return 1;\n  },\n};\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('changes the hash when the body or a parameter changes', () => {
+      const before = workletHash(worklet);
+      expect(
+        workletHash("function foo() {\n  'worklet';\n  return 2;\n}\n")
+      ).not.toBe(before);
+      expect(
+        workletHash("function foo(x) {\n  'worklet';\n  return 1;\n}\n")
+      ).not.toBe(before);
+    });
+
+    test('keeps the hash when the worklet moves in the file', () => {
+      expect(workletHash('\n\n' + worklet)).toBe(workletHash(worklet));
+    });
+
+    test('changes the hash for the same code in another file', () => {
+      expect(workletHash(worklet, 'nested/test.js')).not.toBe(
+        workletHash(worklet)
+      );
+    });
+
+    test('separates identical text that captures different variables', () => {
+      const hashes = workletHashes(
+        "function a(value) {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\nfunction b() {\n  return () => {\n    'worklet';\n    return value;\n  };\n}\n",
+        'test.js',
+        { strictGlobal: true }
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('separates an expression body from a block body with the same text', () => {
+      const hashes = workletHashes(
+        "import { useDerivedValue } from 'react-native-reanimated';\nconst a = useDerivedValue(() => ({ value: 1 }));\nconst b = useDerivedValue(() => { value: 1 });\n"
+      );
+      expect(hashes).toHaveLength(2);
+      expect(hashes[0]).not.toBe(hashes[1]);
+    });
+
+    test('hashes the source text of autoworkletized concise arrows', () => {
+      expect(
+        workletHash(
+          "import { useDerivedValue } from 'react-native-reanimated';\nconst value = useDerivedValue(() => 1 + 2);\n"
+        )
+      ).toBe(16245832944540);
+    });
+
+    test('derives the hash from the relative path and the raw function text', () => {
+      expect(
+        workletHash(
+          "const text = 'zażółć';\nconst foo = () => {\n  'worklet';\n  return text;\n};\n"
+        )
+      ).toBe(6803356437101);
     });
   });
 

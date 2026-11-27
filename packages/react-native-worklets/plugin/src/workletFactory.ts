@@ -35,7 +35,7 @@ import {
   variableDeclarator,
 } from '@babel/types';
 import { strict as assert } from 'assert';
-import { basename, relative, sep } from 'path';
+import { basename, dirname, relative, sep } from 'path';
 
 import { getClosure } from './closure';
 import { generateWorkletFile } from './generate';
@@ -154,7 +154,13 @@ export function makeWorkletFactory(
     codeObject.map
   );
   assert(funString, '`funString` is undefined.');
-  const workletHash = hash(funString);
+  const workletHash = hash(
+    makeWorkletHashKey(
+      fun,
+      state,
+      closureVariables.map((variable) => variable.name)
+    )
+  );
 
   let lineOffset = 1;
   if (closureVariables.length > 0) {
@@ -460,6 +466,66 @@ function shouldMockVersion(): boolean {
   // We don't want to pollute tests with current version number so we mock it
   // for all tests (except one)
   return process.env.WORKLETS_JEST_SHOULD_MOCK_VERSION === '1';
+}
+
+function makeWorkletHashKey(
+  fun: NodePath<WorkletizableFunction>,
+  state: WorkletsPluginPass,
+  closureNames: string[]
+): string {
+  const filename = state.file.opts.filename;
+  const root =
+    resolveWorkletsPackageDir() ?? state.file.opts.cwd ?? process.cwd();
+  const source = filename
+    ? relative(root, filename).split(sep).join('/')
+    : 'unknownFile';
+  const code = state.file.code;
+  const parts = [...fun.node.params, fun.node.body].map((node) =>
+    node.start === null ||
+    node.start === undefined ||
+    node.end === null ||
+    node.end === undefined
+      ? null
+      : code.slice(node.start, node.end)
+  );
+  if (parts.some((part) => part === null)) {
+    return `${source}#${state.workletNumber}`;
+  }
+  const body = parts.pop();
+  const prefix = `${fun.node.async ? 'async ' : ''}${fun.node.generator ? '*' : ''}`;
+  const isExpressionBody =
+    !isBlockStatement(fun.node.body) ||
+    fun.node.body.extra?.workletsExpressionBody === true;
+  const arrow = isExpressionBody ? '=>' : '';
+  return `${source}:${workletSelfName(fun)}[${closureNames.join(',')}]${prefix}(${parts.join(',')})${arrow}${body}`;
+}
+
+function workletSelfName(fun: NodePath<WorkletizableFunction>): string {
+  if (isObjectMethod(fun.node) && isIdentifier(fun.node.key)) {
+    return fun.node.key.name;
+  }
+  if (
+    (isFunctionDeclaration(fun.node) || isFunctionExpression(fun.node)) &&
+    isIdentifier(fun.node.id)
+  ) {
+    return fun.node.id.name;
+  }
+  return '';
+}
+
+let cachedWorkletsPackageDir: string | null | undefined;
+
+function resolveWorkletsPackageDir(): string | null {
+  if (cachedWorkletsPackageDir === undefined) {
+    try {
+      cachedWorkletsPackageDir = dirname(
+        require.resolve('react-native-worklets/package.json')
+      );
+    } catch {
+      cachedWorkletsPackageDir = null;
+    }
+  }
+  return cachedWorkletsPackageDir;
 }
 
 function hash(str: string): number {
