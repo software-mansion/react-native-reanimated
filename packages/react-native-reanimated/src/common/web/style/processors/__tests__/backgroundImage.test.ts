@@ -116,6 +116,25 @@ describe(processBackgroundImageWeb, () => {
     ).toBe('radial-gradient(ellipse 50% 20px at top 50% left 50%, red, blue)');
   });
 
+  test('converts a conic gradient with an angle, position and color hint', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'conic-gradient',
+          from: '45deg',
+          position: { bottom: 10, right: '5%' },
+          colorStops: [
+            { color: 'red', positions: ['0deg'] },
+            { positions: ['90deg'] },
+            { color: 'blue', positions: ['180deg'] },
+          ],
+        },
+      ])
+    ).toBe(
+      'conic-gradient(from 45deg at bottom 10px right 5%, red 0deg, 90deg, blue 180deg)'
+    );
+  });
+
   test('adds px to numeric stop positions', () => {
     expect(
       processBackgroundImageWeb([

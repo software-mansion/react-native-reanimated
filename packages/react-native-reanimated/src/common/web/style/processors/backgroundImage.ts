@@ -17,7 +17,24 @@ type RadialGradientValue = Extract<
   { type: 'radial-gradient' }
 >;
 
-const processColorStops = (colorStops: BackgroundImageValue['colorStops']) =>
+type GradientColorStops = ReadonlyArray<
+  | BackgroundImageValue['colorStops'][number]
+  | {
+      color?: null;
+      positions: readonly [string];
+    }
+>;
+
+type ConicGradientValue = {
+  type: 'conic-gradient';
+  from?: string;
+  position?: RadialGradientValue['position'];
+  colorStops: GradientColorStops;
+};
+
+const DEFAULT_POSITION = { top: '50%', left: '50%' } as const;
+
+const processColorStops = (colorStops: GradientColorStops) =>
   colorStops
     .map(({ color, positions }) => {
       const positionsString =
@@ -45,13 +62,13 @@ const processRadialShapeAndSize = (
   return `ellipse ${maybeAddSuffix(size.x, 'px')} ${maybeAddSuffix(size.y, 'px')}`;
 };
 
-const processRadialPosition = (position: RadialGradientValue['position']) =>
+const processGradientPosition = (position: RadialGradientValue['position']) =>
   Object.entries(position)
     .map(([edge, offset]) => `${edge} ${maybeAddSuffix(offset, 'px')}`)
     .join(' ');
 
 export const processBackgroundImageWeb: ValueProcessor<
-  BackgroundImageStyleValue
+  string | readonly (BackgroundImageValue | ConicGradientValue)[]
 > = (value) => {
   if (typeof value === 'string') {
     return value;
@@ -63,12 +80,16 @@ export const processBackgroundImageWeb: ValueProcessor<
       if (backgroundImage.type === 'linear-gradient') {
         return `linear-gradient(${backgroundImage.direction ?? 'to bottom'}, ${colorStops})`;
       }
+      if (backgroundImage.type === 'conic-gradient') {
+        const { from = '0deg', position = DEFAULT_POSITION } = backgroundImage;
+        return `conic-gradient(from ${from} at ${processGradientPosition(position)}, ${colorStops})`;
+      }
       const {
         shape = 'ellipse',
         size = 'farthest-corner',
-        position = { top: '50%', left: '50%' },
+        position = DEFAULT_POSITION,
       } = backgroundImage;
-      return `radial-gradient(${processRadialShapeAndSize(shape, size)} at ${processRadialPosition(position)}, ${colorStops})`;
+      return `radial-gradient(${processRadialShapeAndSize(shape, size)} at ${processGradientPosition(position)}, ${colorStops})`;
     })
     .join(', ');
 };

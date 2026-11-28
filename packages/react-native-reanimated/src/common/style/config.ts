@@ -18,6 +18,7 @@ import {
   processVerticalAlign,
 } from './processors';
 import type { AllStyleProps, PropsBuilderConfig } from './types';
+import { UNSUPPORTED_LOGICAL_BORDER_PROPS } from './unsupportedLogicalBorderProps';
 
 const colorAttributes = { process: processColor };
 
@@ -144,6 +145,7 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   boxShadow: { process: processBoxShadow },
 
   // BORDERS
+  ...UNSUPPORTED_LOGICAL_BORDER_PROPS,
   // Radius
   borderRadius: true,
   // top-left
