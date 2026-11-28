@@ -26,11 +26,12 @@ class Keyboard {
             if (isNavigationBarTranslucent) 0 else insets.getInsets(SYSTEM_BAR_TYPE_MASK).bottom
         val keyboardHeightDip = contentBottomInset - systemBarBottomInset
         val keyboardHeight = PixelUtil.toDIPFromPixel(Math.max(0, keyboardHeightDip).toFloat()).toInt()
-        if (keyboardHeight <= 0 && mState == KeyboardState.OPEN) {
+        if (keyboardHeight <= 0 && mState == KeyboardState.OPEN && insets.isVisible(CONTENT_TYPE_MASK)) {
       /*
       When the keyboard is being canceling, for one frame the insets show a keyboard height of 0,
       causing a jump of the keyboard. We can avoid it by ignoring that frame and calling
-      the listeners on the following frame.
+      the listeners on the following frame. If the IME is no longer visible, accept the zero
+      height even when no closing animation was dispatched.
        */
             return
         }
