@@ -205,7 +205,7 @@ Even though changes of this property are calculated properly during the animatio
 
 ### Logical border properties
 
-On Android and iOS, the `borderBlock*Width`, `borderInline*Width` and `borderInline*Color` properties need React Native 0.90 or newer. React Native resolves the logical and physical border properties. For example, `borderLeftWidth` has precedence over `borderInlineStartWidth`. On the web, the browser resolves the logical properties from the writing direction.
+On Android and iOS, the `borderBlock*Width`, `borderInline*Width` and `borderInline*Color` properties need React Native 0.90 or newer. Reanimated sends these properties to React Native unchanged. React Native resolves them from the layout direction and decides which property applies when a logical and a physical property set the same edge. On the web, the browser resolves them from the writing direction, and the last declaration applies.
 
 ### Animating text shadow styles
 

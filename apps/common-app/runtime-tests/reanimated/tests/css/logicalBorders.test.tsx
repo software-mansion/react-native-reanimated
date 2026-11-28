@@ -176,10 +176,10 @@ async function getBorderEdges(): Promise<Edges> {
 
     test.each([
       {
-        description: 'borderLeftWidth over borderInlineStartWidth',
+        description: 'borderInlineStartWidth over borderLeftWidth',
         animatedProp: 'borderInlineStartWidth',
         staticStyle: { borderLeftWidth: STATIC_WIDTH },
-        expected: edges({ left: STATIC_WIDTH }),
+        expected: edges({ left: HALFWAY_WIDTH }),
       },
       {
         description: 'borderInlineStartWidth over borderStartWidth',
