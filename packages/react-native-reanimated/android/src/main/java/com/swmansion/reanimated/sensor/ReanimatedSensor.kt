@@ -4,6 +4,8 @@ import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import android.hardware.display.DisplayManager
+import android.os.Handler
+import android.os.Looper
 import android.view.Display
 import com.facebook.react.bridge.ReactApplicationContext
 import com.swmansion.reanimated.nativeProxy.SensorSetter
@@ -18,16 +20,14 @@ internal class ReanimatedSensor(
     var listener: ReanimatedSensorListener? = null
     val sensorManager: SensorManager
     var sensor: Sensor? = null
-    val interval: Int
-
-    companion object {
-        private const val DEFAULT_INTERVAL = 8
-    }
+    private var displayManager: DisplayManager? = null
+    private var displayListener: DisplayManager.DisplayListener? = null
+    private var samplingPeriodUs = 0
+    private var isCancelled = false
 
     init {
         sensorManager =
             reactContext.get()!!.getSystemService(Context.SENSOR_SERVICE) as SensorManager
-        this.interval = if (listenerInterval == -1) DEFAULT_INTERVAL else listenerInterval
     }
 
     fun initialize(): Boolean {
@@ -35,11 +35,69 @@ internal class ReanimatedSensor(
         val display = displayManager.getDisplay(Display.DEFAULT_DISPLAY) ?: return false
         sensor = sensorManager.getDefaultSensor(sensorType.getType()) ?: return false
         listener = ReanimatedSensorListener(setter, listenerInterval.toDouble(), display, sensorType)
-        sensorManager.registerListener(listener, sensor, interval * 1000)
+        // Subscribe to display changes before reading the period, so no change is missed. The lock
+        // keeps a change delivered meanwhile from being overwritten by the older period.
+        synchronized(this) {
+            if (listenerInterval == -1) {
+                this.displayManager = displayManager
+                registerDisplayListener(displayManager, display)
+            }
+            samplingPeriodUs = getSamplingPeriodUs(display)
+            sensorManager.registerListener(listener, sensor, samplingPeriodUs)
+        }
         return true
     }
 
+    // The refresh rate can change while the sensor is registered, for example when the system
+    // switches between 60 Hz and 120 Hz, so `auto` re-registers with the new period.
+    private fun registerDisplayListener(
+        displayManager: DisplayManager,
+        display: Display,
+    ) {
+        val displayListener =
+            object : DisplayManager.DisplayListener {
+                override fun onDisplayChanged(displayId: Int) {
+                    if (displayId != Display.DEFAULT_DISPLAY) {
+                        return
+                    }
+                    synchronized(this@ReanimatedSensor) {
+                        val newSamplingPeriodUs = getSamplingPeriodUs(display)
+                        if (isCancelled || newSamplingPeriodUs == samplingPeriodUs) {
+                            return
+                        }
+                        samplingPeriodUs = newSamplingPeriodUs
+                        sensorManager.unregisterListener(listener, sensor)
+                        sensorManager.registerListener(listener, sensor, samplingPeriodUs)
+                    }
+                }
+
+                override fun onDisplayAdded(displayId: Int) {}
+
+                override fun onDisplayRemoved(displayId: Int) {}
+            }
+        this.displayListener = displayListener
+        displayManager.registerDisplayListener(displayListener, Handler(Looper.getMainLooper()))
+    }
+
+    // `interval: 'auto'` (-1) matches the refresh rate of the display, as on iOS. Sampling faster
+    // only wakes the UI thread for readings that no frame will show.
+    private fun getSamplingPeriodUs(display: Display): Int {
+        if (listenerInterval != -1) {
+            return listenerInterval * 1000
+        }
+        val refreshRate = display.refreshRate.takeIf { it > 0 } ?: DEFAULT_REFRESH_RATE
+        return (1_000_000 / refreshRate).toInt()
+    }
+
+    companion object {
+        private const val DEFAULT_REFRESH_RATE = 60f
+    }
+
     fun cancel() {
-        sensorManager.unregisterListener(listener, sensor)
+        synchronized(this) {
+            isCancelled = true
+            displayListener?.let { displayManager?.unregisterDisplayListener(it) }
+            sensorManager.unregisterListener(listener, sensor)
+        }
     }
 }
