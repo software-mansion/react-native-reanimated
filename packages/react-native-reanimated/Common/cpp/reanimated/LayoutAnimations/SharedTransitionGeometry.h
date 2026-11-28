@@ -2,6 +2,7 @@
 
 #include <folly/dynamic.h>
 #include <react/renderer/mounting/ShadowView.h>
+#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/LayoutAnimations/LayoutAnimationsUtils.h>
 
 #include <optional>
@@ -21,6 +22,7 @@ SharedTransitionGeometry interpolateSharedTransitionGeometry(
     double progress,
     Float baseOpacity);
 
+#if REACT_NATIVE_VERSION_MINOR >= 89
 // The font size between the one that the start draws and the one in the props of the target. Null for other views.
 std::optional<Float> textFontSizeAt(const ShadowView &start, const ShadowView &target, double progress);
 
@@ -42,5 +44,6 @@ std::optional<double> fontSizeProgress(const ShadowView &start, const ShadowView
 // The state of a Text whose runs draw sizes between their sizes in the start and in the target, which have the same
 // runs. Null when the sizes are the same.
 State::Shared textStateBetween(const ShadowView &start, const ShadowView &target, double progress);
+#endif
 
 } // namespace reanimated

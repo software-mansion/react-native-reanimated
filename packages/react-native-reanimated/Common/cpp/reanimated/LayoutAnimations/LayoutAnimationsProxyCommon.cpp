@@ -86,6 +86,7 @@ bool isCarrierKey(const std::string &name) {
 // shared transition, or the change of the size of a layout transition. When a layout transition keeps the runs of a
 // Text, each run moves between its own sizes.
 State::Shared textStateOf(const LayoutAnimation &animation, const Frame &frame) {
+#if REACT_NATIVE_VERSION_MINOR >= 89
   const auto &start = animation.startView;
   const auto &target = animation.finalView;
   if (animation.type == LayoutAnimationType::LAYOUT && haveSameRuns(start, target)) {
@@ -105,6 +106,9 @@ State::Shared textStateOf(const LayoutAnimation &animation, const Frame &frame) 
     }
   }
   return fontSize ? textStateWithFontSize(target, *fontSize) : nullptr;
+#else
+  return nullptr;
+#endif
 }
 
 SharedTransitionGeometry interpolateGeometryOf(const LayoutAnimation &animation) {

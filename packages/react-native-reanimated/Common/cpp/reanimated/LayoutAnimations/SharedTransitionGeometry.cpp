@@ -1,8 +1,10 @@
-#include <react/renderer/components/text/ParagraphShadowNode.h>
 #include <reanimated/CSS/common/transforms/TransformMatrix3D.h>
-#include <reanimated/Compat/ReactNativeVersionCompat.h>
 #include <reanimated/Compat/ReactNativeView.h>
 #include <reanimated/LayoutAnimations/SharedTransitionGeometry.h>
+
+#if REACT_NATIVE_VERSION_MINOR >= 89
+#include <react/renderer/components/text/ParagraphShadowNode.h>
+#endif
 
 #include <algorithm>
 #include <array>
@@ -21,10 +23,12 @@ TransformMatrix3D interpolateMatrix(
     double progress);
 std::array<double, 3> transformOriginInPoints(const ShadowView &view);
 double interpolate(double from, double to, double progress);
+#if REACT_NATIVE_VERSION_MINOR >= 89
 bool isText(const ShadowView &view);
 const ParagraphState &paragraphDataOf(const ShadowView &text);
 Float fontSizeOf(const TextAttributes &attributes);
 Float drawnFontSize(const ShadowView &text);
+#endif
 } // namespace
 
 SharedTransitionGeometry interpolateSharedTransitionGeometry(
@@ -50,6 +54,7 @@ SharedTransitionGeometry interpolateSharedTransitionGeometry(
   return {.frame = interpolateFrame(start, target, progress), .props = std::move(props)};
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 89
 std::optional<Float> textFontSizeAt(const ShadowView &start, const ShadowView &target, const double progress) {
   if (!isText(target)) {
     return std::nullopt;
@@ -74,11 +79,6 @@ std::optional<double> sizeProgress(const ShadowView &start, const ShadowView &ta
 }
 
 State::Shared textStateWithFontSize(const ShadowView &text, const Float fontSize) {
-#if REACT_NATIVE_VERSION_MINOR < 89
-  // Before React Native 0.89, the paragraph state has no layout size on iOS and its prepared layout has no point
-  // scale factor on Android.
-  return nullptr;
-#else
   if (!isText(text)) {
     return nullptr;
   }
@@ -122,7 +122,6 @@ State::Shared textStateWithFontSize(const ShadowView &text, const Float fontSize
 #endif
   return std::make_shared<const ParagraphShadowNode::ConcreteState>(
       std::make_shared<const ParagraphState>(std::move(data)), state);
-#endif
 }
 
 bool haveSameRuns(const ShadowView &start, const ShadowView &target) {
@@ -145,9 +144,6 @@ std::optional<double> fontSizeProgress(const ShadowView &start, const ShadowView
 }
 
 State::Shared textStateBetween(const ShadowView &start, const ShadowView &target, const double progress) {
-#if REACT_NATIVE_VERSION_MINOR < 89
-  return nullptr;
-#else
   const auto &startData = paragraphDataOf(start);
   const auto &targetState = static_cast<const ParagraphShadowNode::ConcreteState &>(*target.state);
   auto data = targetState.getData();
@@ -198,8 +194,8 @@ State::Shared textStateBetween(const ShadowView &start, const ShadowView &target
 #endif
   return std::make_shared<const ParagraphShadowNode::ConcreteState>(
       std::make_shared<const ParagraphState>(std::move(data)), targetState);
-#endif
 }
+#endif
 
 namespace {
 Frame interpolateFrame(const ShadowView &start, const ShadowView &target, const double progress) {
@@ -266,6 +262,7 @@ double interpolate(const double from, const double to, const double progress) {
   return from + progress * (to - from);
 }
 
+#if REACT_NATIVE_VERSION_MINOR >= 89
 bool isText(const ShadowView &view) {
   return view.componentHandle == ParagraphShadowNode::Handle() && view.state;
 }
@@ -281,6 +278,7 @@ const ParagraphState &paragraphDataOf(const ShadowView &text) {
 Float drawnFontSize(const ShadowView &text) {
   return fontSizeOf(paragraphDataOf(text).attributedString.getBaseTextAttributes());
 }
+#endif
 } // namespace
 
 } // namespace reanimated
