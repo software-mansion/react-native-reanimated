@@ -135,6 +135,20 @@ describe(processBackgroundImageWeb, () => {
     );
   });
 
+  test('preserves unitless zero in a conic gradient stop', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'conic-gradient',
+          colorStops: [
+            { color: 'red', positions: ['0'] },
+            { color: 'blue', positions: ['180deg'] },
+          ],
+        },
+      ])
+    ).toBe('conic-gradient(from 0deg at top 50% left 50%, red 0, blue 180deg)');
+  });
+
   test('defaults a conic gradient to zero degrees at the center', () => {
     expect(
       processBackgroundImageWeb([

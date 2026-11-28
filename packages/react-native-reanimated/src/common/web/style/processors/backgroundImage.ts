@@ -29,17 +29,18 @@ type ConicGradientValue = {
 
 const DEFAULT_POSITION = { top: '50%', left: '50%' } as const;
 
-const processColorStops = (
-  colorStops:
-    | BackgroundImageValue['colorStops']
-    | ConicGradientValue['colorStops']
-) =>
+const processColorStops = ({
+  colorStops,
+  type,
+}: BackgroundImageValue | ConicGradientValue) =>
   colorStops
     .map(({ color, positions }) => {
       const positionsString =
-        positions
-          ?.map((position) => maybeAddSuffix(position, 'px'))
-          .join(' ') ?? '';
+        (type === 'conic-gradient'
+          ? positions?.join(' ')
+          : positions
+              ?.map((position) => maybeAddSuffix(position, 'px'))
+              .join(' ')) ?? '';
       if (color == null) {
         return positionsString;
       }
@@ -75,7 +76,7 @@ export const processBackgroundImageWeb: ValueProcessor<
 
   return value
     .map((backgroundImage) => {
-      const colorStops = processColorStops(backgroundImage.colorStops);
+      const colorStops = processColorStops(backgroundImage);
       if (backgroundImage.type === 'linear-gradient') {
         return `linear-gradient(${backgroundImage.direction ?? 'to bottom'}, ${colorStops})`;
       }
