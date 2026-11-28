@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import type { ViewStyle } from 'react-native';
 import { Platform, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -6,11 +5,13 @@ import Animated from 'react-native-reanimated';
 import {
   describe,
   expect,
+  expectEventually,
   getTestComponent,
   render,
   test,
   useTestRef,
   wait,
+  waitForFrames,
 } from '../../../ReJest/RuntimeTestsApi';
 
 const CONTENT_REF = 'LogicalBordersContent';
@@ -18,7 +19,7 @@ const BOX_SIZE = 100;
 const STATIC_WIDTH = 4;
 const ANIMATED_WIDTH = 20;
 const HALFWAY_WIDTH = ANIMATED_WIDTH / 2;
-const TRANSITION_MS = 1000;
+const TRANSITION_MS = 2000;
 
 const SUPPORTS_LOGICAL_BORDERS =
   Platform.constants.reactNativeVersion.minor >= 90;
@@ -32,7 +33,7 @@ function edges(values: Partial<Edges>): Edges {
 
 function Content() {
   const ref = useTestRef(CONTENT_REF);
-  return <View ref={ref} style={styles.content} />;
+  return <View ref={ref} collapsable={false} style={styles.content} />;
 }
 
 function PausedAnimation({
@@ -71,17 +72,13 @@ function PausedAnimation({
 function Transition({
   transitionProp,
   direction,
+  width,
 }: {
   transitionProp: string;
   direction: Direction;
+  width: number;
 }) {
-  const [width, setWidth] = useState(0);
   const transitionedStyle = { [transitionProp]: width };
-
-  useEffect(() => {
-    const id = setTimeout(() => setWidth(ANIMATED_WIDTH), 100);
-    return () => clearTimeout(id);
-  }, []);
 
   return (
     <View style={styles.container}>
@@ -238,16 +235,24 @@ async function getBorderEdges(): Promise<Edges> {
     ] as const)(
       'Transitions ${transitionProp} in ${direction}',
       async ({ transitionProp, direction, edge }) => {
-        await render(
-          <Transition transitionProp={transitionProp} direction={direction} />
+        const renderWidth = (width: number) =>
+          render(
+            <Transition
+              transitionProp={transitionProp}
+              direction={direction}
+              width={width}
+            />
+          );
+        await renderWidth(0);
+        await waitForFrames();
+        await renderWidth(ANIMATED_WIDTH);
+        await expectEventually(
+          async () => (await getBorderEdges())[edge],
+          TRANSITION_MS
+        ).toBeWithinRange(2, ANIMATED_WIDTH - 2);
+        await expectEventually(getBorderEdges, 2 * TRANSITION_MS).toBe(
+          edges({ [edge]: ANIMATED_WIDTH })
         );
-        await wait(100 + TRANSITION_MS / 2);
-        expect((await getBorderEdges())[edge]).toBeWithinRange(
-          2,
-          ANIMATED_WIDTH - 2
-        );
-        await wait(TRANSITION_MS);
-        expect(await getBorderEdges()).toBe(edges({ [edge]: ANIMATED_WIDTH }));
       }
     );
   }
