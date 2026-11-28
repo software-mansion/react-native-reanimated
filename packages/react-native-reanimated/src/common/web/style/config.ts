@@ -1,5 +1,6 @@
 'use strict';
 import type { AllStyleProps } from '../../style/types';
+import { UNIMPLEMENTED_LOGICAL_BORDER_PROPS } from '../../style/unimplementedLogicalBorderProps';
 import {
   boxShadowBuilder,
   processTransform,
@@ -144,6 +145,7 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   boxShadow: { process: processBoxShadowWeb },
 
   // BORDERS
+  ...UNIMPLEMENTED_LOGICAL_BORDER_PROPS,
   // Radius
   borderRadius: 'px',
   // top-left
