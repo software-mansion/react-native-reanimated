@@ -20,7 +20,10 @@ For animating `react-native-svg` components, see [Animating SVG](./animating-svg
   | backgroundImage         | <Yes since="4.8"/> | <Yes since="4.8"/> | <Yes since="4.8"/> |
   | borderBlockColor        | <Yes/>             | <Yes/>             | <Yes/> |
   | borderBlockEndColor     | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBlockEndWidth     | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
   | borderBlockStartColor   | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderBlockStartWidth   | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
+  | borderBlockWidth        | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
   | borderBottomColor       | <Yes/>             | <Yes/>             | <Yes/> |
   | borderBottomEndRadius   | <Yes/>             | <Yes/>             | <Yes/> |
   | borderBottomLeftRadius  | <Yes/>             | <Yes/>             | <Yes/> |
@@ -33,6 +36,12 @@ For animating `react-native-svg` components, see [Animating SVG](./animating-svg
   | borderEndEndRadius      | <Yes/>             | <Yes/>             | <Yes/> |
   | borderEndStartRadius    | <Yes/>             | <Yes/>             | <Yes/> |
   | borderEndWidth          | <Yes/>             | <Yes/>             | <Yes/> |
+  | borderInlineColor       | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
+  | borderInlineEndColor    | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
+  | borderInlineEndWidth    | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
+  | borderInlineStartColor  | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
+  | borderInlineStartWidth  | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
+  | borderInlineWidth       | <Yes since="4.9"/> | <Yes since="4.9"/> | <Yes since="4.9"/> |
   | borderLeftColor         | <Yes/>             | <Yes/>             | <Yes/> |
   | borderLeftWidth         | <Yes/>             | <Yes/>             | <Yes/> |
   | borderRadius            | <Yes/>             | <Yes/>             | <Yes/> |
@@ -193,6 +202,10 @@ Yoga calculates borders in different ways for numeric values and relative (%) va
 ### flexBasis
 
 Even though changes of this property are calculated properly during the animation, they aren't applied to the view. Other flex properties, such as `flexGrow` and `flexShrink` work fine, so they could be used for animations.
+
+### Logical border properties
+
+On Android and iOS, the `borderBlock*Width`, `borderInline*Width` and `borderInline*Color` properties need React Native 0.90 or newer. Reanimated sends these properties to React Native unchanged. React Native resolves them from the layout direction and decides which property applies when a logical and a physical property set the same edge. On the web, React Native Web changes `borderInlineStart*` and `borderInlineEnd*` into physical properties from the app direction, not from the `direction` style. If these two directions are different, a transition of these properties can change the wrong edge.
 
 ### Animating text shadow styles
 

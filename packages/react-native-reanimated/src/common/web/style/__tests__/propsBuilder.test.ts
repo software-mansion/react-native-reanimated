@@ -1,5 +1,5 @@
 'use strict';
-import { createWebPropsBuilder } from '../propsBuilder';
+import { createWebPropsBuilder, webPropsBuilder } from '../propsBuilder';
 import { createWebRuleBuilder } from '../ruleBuilder';
 
 describe(createWebPropsBuilder, () => {
@@ -315,5 +315,37 @@ describe(createWebPropsBuilder, () => {
         expect(result).toContain(prop);
       });
     });
+  });
+});
+
+describe('webPropsBuilder', () => {
+  test('emits logical border props as logical CSS properties', () => {
+    const borders = {
+      borderLeftWidth: 1,
+      borderBlockWidth: 2,
+      borderBlockStartWidth: 3,
+      borderBlockEndWidth: 4,
+      borderInlineWidth: 5,
+      borderInlineStartWidth: 6,
+      borderInlineEndWidth: 7,
+      borderInlineColor: 'blue',
+      borderInlineStartColor: 'red',
+      borderInlineEndColor: 'blue',
+    };
+
+    expect(webPropsBuilder.build(borders)).toBe(
+      [
+        'border-left-width: 1px',
+        'border-block-width: 2px',
+        'border-block-start-width: 3px',
+        'border-block-end-width: 4px',
+        'border-inline-width: 5px',
+        'border-inline-start-width: 6px',
+        'border-inline-end-width: 7px',
+        'border-inline-color: blue',
+        'border-inline-start-color: red',
+        'border-inline-end-color: blue',
+      ].join('; ')
+    );
   });
 });

@@ -1,6 +1,5 @@
 'use strict';
 import type { AllStyleProps } from '../../style/types';
-import { UNIMPLEMENTED_LOGICAL_BORDER_PROPS } from '../../style/unimplementedLogicalBorderProps';
 import {
   boxShadowBuilder,
   processTransform,
@@ -128,6 +127,12 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   borderLeftColor: colorAttributes,
   borderStartColor: { as: 'borderLeftColor' },
   borderBlockColor: colorAttributes,
+  // @ts-ignore Available since RN 0.90
+  borderInlineColor: colorAttributes,
+  // @ts-ignore Available since RN 0.90
+  borderInlineStartColor: colorAttributes,
+  // @ts-ignore Available since RN 0.90
+  borderInlineEndColor: colorAttributes,
   // Other
   outlineColor: colorAttributes,
   shadowColor: boxShadowBuilder,
@@ -145,7 +150,6 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   boxShadow: { process: processBoxShadowWeb },
 
   // BORDERS
-  ...UNIMPLEMENTED_LOGICAL_BORDER_PROPS,
   // Radius
   borderRadius: 'px',
   // top-left
@@ -169,14 +173,27 @@ export const PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   borderWidth: 'px',
   // top
   borderTopWidth: 'px',
-  borderStartWidth: { as: 'borderLeftWidth' },
+  // @ts-ignore Available since RN 0.90
+  borderBlockStartWidth: 'px',
   // bottom
   borderBottomWidth: 'px',
-  borderEndWidth: { as: 'borderRightWidth' },
+  // @ts-ignore Available since RN 0.90
+  borderBlockEndWidth: 'px',
   // left
   borderLeftWidth: 'px',
   // right
   borderRightWidth: 'px',
+  // logical
+  borderStartWidth: { as: 'borderLeftWidth' },
+  borderEndWidth: { as: 'borderRightWidth' },
+  // @ts-ignore Available since RN 0.90
+  borderBlockWidth: 'px',
+  // @ts-ignore Available since RN 0.90
+  borderInlineWidth: 'px',
+  // @ts-ignore Available since RN 0.90
+  borderInlineStartWidth: 'px',
+  // @ts-ignore Available since RN 0.90
+  borderInlineEndWidth: 'px',
 
   // Decoration
   borderCurve: true,
