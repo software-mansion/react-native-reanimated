@@ -118,7 +118,7 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     auto lock = updatesRegistryManager_->lock();
 
     propsMap = updatesRegistryManager_->collectProps();
-    updatesRegistryManager_->cancelCommitAfterPause();
+    updatesRegistryManager_->cancelCommitAfterPause(shadowTree.getSurfaceId());
 
     // Must share the registry lock with `collectProps`, or a write can get the epoch of a snapshot that lacks it.
     trackWillCommit(rootNode, true);
@@ -130,7 +130,9 @@ RootShadowNode::Unshared ReanimatedCommitHook::shadowTreeWillCommit(
     // it could lead to RN commits being delayed until the animation is finished
     // (very bad). We don't pause Reanimated commits for state updates coming
     // from React Native as this would break sticky header animations.
-    updatesRegistryManager_->pauseReanimatedCommits();
+    // Only this surface is paused: the trees of other surfaces are not part of
+    // this commit, and its mount may never be reported if the surface stops.
+    updatesRegistryManager_->pauseReanimatedCommits(shadowTree.getSurfaceId());
 
     if constexpr (cloneInsideRegistryLock) {
       rootNode = cloneShadowTreeWithNewProps(*rootNode, propsMap);
