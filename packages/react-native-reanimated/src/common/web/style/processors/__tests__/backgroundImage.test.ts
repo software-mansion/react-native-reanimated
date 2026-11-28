@@ -135,6 +135,17 @@ describe(processBackgroundImageWeb, () => {
     );
   });
 
+  test('defaults a conic gradient to zero degrees at the center', () => {
+    expect(
+      processBackgroundImageWeb([
+        {
+          type: 'conic-gradient',
+          colorStops: [{ color: 'red' }, { color: 'blue' }],
+        },
+      ])
+    ).toBe('conic-gradient(from 0deg at top 50% left 50%, red, blue)');
+  });
+
   test('adds px to numeric stop positions', () => {
     expect(
       processBackgroundImageWeb([

@@ -1,5 +1,5 @@
 'use strict';
-import type { ViewStyle } from 'react-native';
+import type { ColorValue, ViewStyle } from 'react-native';
 
 import { isNumber, maybeAddSuffix } from '../../../utils';
 import type { ValueProcessor } from '../types';
@@ -17,24 +17,23 @@ type RadialGradientValue = Extract<
   { type: 'radial-gradient' }
 >;
 
-type GradientColorStops = ReadonlyArray<
-  | BackgroundImageValue['colorStops'][number]
-  | {
-      color?: null;
-      positions: readonly [string];
-    }
->;
-
 type ConicGradientValue = {
   type: 'conic-gradient';
   from?: string;
   position?: RadialGradientValue['position'];
-  colorStops: GradientColorStops;
+  colorStops: ReadonlyArray<
+    | { color: ColorValue; positions?: readonly string[] }
+    | { color?: null; positions: readonly [string] }
+  >;
 };
 
 const DEFAULT_POSITION = { top: '50%', left: '50%' } as const;
 
-const processColorStops = (colorStops: GradientColorStops) =>
+const processColorStops = (
+  colorStops:
+    | BackgroundImageValue['colorStops']
+    | ConicGradientValue['colorStops']
+) =>
   colorStops
     .map(({ color, positions }) => {
       const positionsString =

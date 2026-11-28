@@ -1,6 +1,6 @@
 'use strict';
 
-export const UNSUPPORTED_LOGICAL_BORDER_PROPS = {
+export const UNIMPLEMENTED_LOGICAL_BORDER_PROPS = {
   borderInlineColor: false,
   borderInlineEndColor: false,
   borderInlineStartColor: false,
