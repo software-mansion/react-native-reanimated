@@ -44,6 +44,12 @@ struct PendingNodeAnimation {
   std::shared_ptr<Serializable> config;
 };
 
+// An opacity that the animation backend wrote to a view, and the family that the backend writes it to.
+struct HeldBackendOpacity {
+  std::shared_ptr<const ShadowNodeFamily> family;
+  double opacity;
+};
+
 // The faded view that a pull mounted, and the values that it comes from. The next pull uses it as the old view.
 struct MountedFade {
   ShadowView source;
@@ -335,6 +341,11 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   mutable std::unordered_map<std::shared_ptr<LightNode>, ShadowView> carrierLayers_;
   // Entering animations of target children that wait until their run lands.
   mutable std::vector<PendingNodeAnimation> heldEnterings_;
+  // The newest opacity that the animation backend wrote to a hidden view and that the proxy dropped. The restore
+  // shows the view with it.
+  mutable std::unordered_map<Tag, HeldBackendOpacity> heldBackendOpacities_;
+  // The opacities that the next backend frame writes to restored views.
+  mutable std::unordered_map<Tag, HeldBackendOpacity> backendOpacityRestores_;
   std::shared_ptr<SharedTransitionManager> sharedTransitionManager_;
   std::weak_ptr<WorkletRuntime> uiRuntimeWeak_;
   std::function<void(std::function<void()>)> scheduleOnNextUIFrame_;
@@ -513,6 +524,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
 
   void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const override;
   void composeSynchronousProps(UpdatesBatch &updatesBatch) const override;
+  void composeAnimationMutations(AnimationMutations &mutations, std::vector<Tag> &hiddenViewTags) const override;
+  std::unordered_map<Tag, double> contentFadeFactors(const std::unordered_set<Tag> &hiddenTags) const;
 
   void reconcileContradictedRemovals(
       ShadowViewMutationList &mutations,
@@ -854,6 +867,8 @@ struct LayoutAnimationsProxy : public LayoutAnimationsProxyCommon {
   bool showHiddenView(const RestoreRequest &request) const;
   void deferRestore(const RestoreRequest &request) const;
   void forgetHiddenView(Tag tag) const;
+  void restoreBackendOpacity(Tag tag, std::optional<double> opacity) const;
+  void forgetBackendOpacity(Tag tag) const;
   std::unordered_set<Tag> hiddenViewTags() const;
   std::unordered_set<Tag> viewTagsKeptHidden() const;
   void queuePendingRestores(TransactionMeta &transaction) const;

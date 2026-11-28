@@ -305,6 +305,19 @@ void serializeSynchronousPropsToBuffers(
   }
 }
 
+void serializeOpacityToBuffers(
+    const std::vector<Tag> &viewTags,
+    const double opacity,
+    std::vector<int> &intBuffer,
+    std::vector<double> &doubleBuffer) {
+  intBuffer.clear();
+  doubleBuffer.clear();
+  for (const auto tag : viewTags) {
+    intBuffer.insert(intBuffer.end(), {CMD_START_OF_VIEW, tag, CMD_OPACITY, CMD_END_OF_VIEW});
+    doubleBuffer.push_back(opacity);
+  }
+}
+
 } // namespace reanimated
 
 #endif // ANDROID

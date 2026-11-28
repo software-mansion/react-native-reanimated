@@ -1071,6 +1071,29 @@ AnimationMutations ReanimatedModuleProxy::runGrandCallback(
     const GrandCallbackSource source) {
   ReanimatedSystraceSection s("ReanimatedModuleProxy::runGrandCallback");
 
+  auto mutations = collectGrandCallbackMutations(timestamp, source);
+  // The backend writes these props directly to the views, so the views that a shared transition hides must not get
+  // their opacity. The proxies lock the updates registry, so this runs outside its lock.
+  if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
+    if (layoutAnimationsProxyRegistry_) {
+      std::vector<Tag> hiddenViewTags;
+      layoutAnimationsProxyRegistry_->composeAnimationMutations(mutations, hiddenViewTags);
+#ifdef ANDROID
+      // Android applies the earlier backend writes of a view over each later mount, also over the mount that hides
+      // the view. This write skips them.
+      if (!hiddenViewTags.empty()) {
+        serializeOpacityToBuffers(hiddenViewTags, 0, synchronousPropsIntBuffer_, synchronousPropsDoubleBuffer_);
+        synchronouslyUpdateUIPropsFunction_(synchronousPropsIntBuffer_, synchronousPropsDoubleBuffer_);
+      }
+#endif // ANDROID
+    }
+  }
+  return mutations;
+}
+
+AnimationMutations ReanimatedModuleProxy::collectGrandCallbackMutations(
+    const AnimationTimestamp timestamp,
+    const GrandCallbackSource source) {
   switch (source) {
     case GrandCallbackSource::AnimationLoop: {
       // Worklet callbacks and layout animation flushes run outside the manager

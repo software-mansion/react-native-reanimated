@@ -207,6 +207,8 @@ class LayoutAnimationsProxyCommon : public facebook::react::MountingOverrideDele
   virtual void surfaceDidUnmount();
   virtual void applySynchronousProps(const UpdatesBatch &updatesBatch, bool trackInLightTree) const;
   virtual void composeSynchronousProps(UpdatesBatch & /*updatesBatch*/) const {}
+  virtual void composeAnimationMutations(AnimationMutations & /*mutations*/, std::vector<Tag> & /*hiddenViewTags*/)
+      const {}
   ~LayoutAnimationsProxyCommon() override = default;
 
   void flushLayoutAnimationOperations() const;

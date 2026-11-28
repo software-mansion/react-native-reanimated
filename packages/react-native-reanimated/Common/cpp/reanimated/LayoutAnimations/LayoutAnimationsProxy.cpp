@@ -412,6 +412,7 @@ void LayoutAnimationsProxy::unmapLightNode(const std::shared_ptr<LightNode> &nod
     }
   }
   forgetHiddenView(node->current.tag);
+  forgetBackendOpacity(node->current.tag);
   coveredTopBoundaries_.erase(node->current.tag);
   snapshottedScreens_.erase(node->current.tag);
   visibleScreens_.erase(node->current.tag);
@@ -712,6 +713,7 @@ void LayoutAnimationsProxy::updateLightTree(
 
         if constexpr (StaticFeatureFlags::getFlag("ENABLE_SHARED_ELEMENT_TRANSITIONS")) {
           forgetHiddenView(mutation.newChildShadowView.tag);
+          forgetBackendOpacity(mutation.newChildShadowView.tag);
           if (isSETBoundary(node)) {
             boundaries_.insert(node);
           }
