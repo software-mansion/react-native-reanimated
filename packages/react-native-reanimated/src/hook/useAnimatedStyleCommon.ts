@@ -13,7 +13,7 @@ import type {
 import { updateProps } from '../updateProps';
 import type { ViewDescriptorsSet } from '../ViewDescriptorsSet';
 import type { Descriptor } from './commonTypes';
-import { isAnimated, shallowEqual } from './utils';
+import { countKeys, isAnimated, isStyleValueEqual } from './utils';
 
 export function createAnimatedStyleHandle<THandle extends object>(
   handle: THandle,
@@ -213,7 +213,10 @@ export function styleUpdater(
   let hasAnimations = false;
   let frameTimestamp: number | undefined;
   let hasNonAnimatedValues = false;
+  let hasNonAnimatedChanges = false;
+  let newKeyCount = 0;
   for (const key in newValues) {
+    newKeyCount++;
     const value = newValues[key];
     if (isAnimated(value)) {
       frameTimestamp =
@@ -225,6 +228,9 @@ export function styleUpdater(
       hasNonAnimatedValues = true;
       nonAnimatedNewValues[key] = value;
       delete animations[key];
+      if (!hasNonAnimatedChanges && !isStyleValueEqual(oldValues[key], value)) {
+        hasNonAnimatedChanges = true;
+      }
     }
   }
 
@@ -291,14 +297,18 @@ export function styleUpdater(
       frame(frameTimestamp!);
     }
 
-    if (hasNonAnimatedValues) {
+    if (hasNonAnimatedValues && (hasNonAnimatedChanges || forceUpdate)) {
       updateProps(viewDescriptors, nonAnimatedNewValues, isAnimatedProps);
     }
   } else {
     state.isAnimationCancelled = true;
     state.animations = [];
 
-    if (!shallowEqual(oldValues, newValues) || forceUpdate) {
+    if (
+      hasNonAnimatedChanges ||
+      forceUpdate ||
+      countKeys(oldValues) !== newKeyCount
+    ) {
       updateProps(viewDescriptors, newValues, isAnimatedProps);
     }
   }
