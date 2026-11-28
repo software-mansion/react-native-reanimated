@@ -34,6 +34,7 @@ const auto POOR = CAFrameRateRangeMake(10, 24, 24);
   std::chrono::duration<double, std::milli> timeDeltas_[TIME_SAMPLES_AMOUNT];
   int timeDeltaIndex_;
   CAFrameRateRange currentFrameRate_;
+  bool isPaused_;
 }
 
 typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
@@ -64,16 +65,15 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   displayLink_.preferredFramesPerSecond = 120; // will fallback to 60 fps for devices without Pro Motion display
 #endif // TARGET_OS_OSX
   [displayLink_ setPaused:TRUE];
+  isPaused_ = true;
   [displayLink_ addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   return self;
 }
 
 - (void)requestAnimationFrame:(std::function<void(double)>)callback
 {
-  {
-    std::lock_guard<std::mutex> lock(callbacksMutex_);
-    frameCallbacks_.push_back(callback);
-  }
+  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  frameCallbacks_.push_back(callback);
   [self scheduleQueueExecution];
 }
 
@@ -87,7 +87,21 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
 
 - (void)scheduleQueueExecution
 {
+  if (!isPaused_) {
+    return;
+  }
+  isPaused_ = false;
   [displayLink_ setPaused:FALSE];
+}
+
+- (void)pauseIfIdle
+{
+  std::lock_guard<std::mutex> lock(callbacksMutex_);
+  if (isPaused_ || !frameCallbacks_.empty()) {
+    return;
+  }
+  isPaused_ = true;
+  [displayLink_ setPaused:TRUE];
 }
 
 - (void)executeQueue:(WorkletsDisplayLink *)displayLink
@@ -95,7 +109,6 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   RCTAssertMainQueue();
 
   auto frameCallbacks = [self pullCallbacks];
-  [displayLink_ setPaused:TRUE];
 
 #if TARGET_OS_OSX
   auto targetTimestamp = displayLink.timestamp + displayLink.duration;
@@ -106,6 +119,8 @@ typedef void (^AnimationFrameCallback)(WorkletsDisplayLink *displayLink);
   for (const auto &callback : frameCallbacks) {
     callback(targetTimestamp);
   }
+
+  [self pauseIfIdle];
 }
 
 - (void)executeQueueForProMotion:(WorkletsDisplayLink *)displayLink
