@@ -21,6 +21,7 @@ type RadialGradientValue = Extract<
   { type: 'radial-gradient' }
 >;
 
+// TODO: Use Extract when all supported React Native versions include conic gradients.
 type ConicGradientValue = {
   type: 'conic-gradient';
   from?: string;
