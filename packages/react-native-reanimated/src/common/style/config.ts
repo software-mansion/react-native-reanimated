@@ -18,7 +18,6 @@ import {
   processVerticalAlign,
 } from './processors';
 import type { AllStyleProps, PropsBuilderConfig } from './types';
-import { UNIMPLEMENTED_LOGICAL_BORDER_PROPS } from './unimplementedLogicalBorderProps';
 
 const colorAttributes = { process: processColor };
 
@@ -128,6 +127,12 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   borderLeftColor: colorAttributes,
   borderStartColor: colorAttributes,
   borderBlockColor: colorAttributes,
+  // @ts-ignore Available since RN 0.90
+  borderInlineColor: colorAttributes,
+  // @ts-ignore Available since RN 0.90
+  borderInlineStartColor: colorAttributes,
+  // @ts-ignore Available since RN 0.90
+  borderInlineEndColor: colorAttributes,
   // Other
   outlineColor: colorAttributes,
   shadowColor: colorAttributes,
@@ -145,7 +150,6 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   boxShadow: { process: processBoxShadow },
 
   // BORDERS
-  ...UNIMPLEMENTED_LOGICAL_BORDER_PROPS,
   // Radius
   borderRadius: true,
   // top-left
@@ -169,14 +173,27 @@ export const STYLE_PROPERTIES_CONFIG: PropsBuilderConfig<AllStyleProps> = {
   borderWidth: true,
   // top
   borderTopWidth: true,
-  borderStartWidth: true,
+  // @ts-ignore Available since RN 0.90
+  borderBlockStartWidth: true,
   // bottom
   borderBottomWidth: true,
-  borderEndWidth: true,
+  // @ts-ignore Available since RN 0.90
+  borderBlockEndWidth: true,
   // left
   borderLeftWidth: true,
   // right
   borderRightWidth: true,
+  // logical
+  borderStartWidth: true,
+  borderEndWidth: true,
+  // @ts-ignore Available since RN 0.90
+  borderBlockWidth: true,
+  // @ts-ignore Available since RN 0.90
+  borderInlineWidth: true,
+  // @ts-ignore Available since RN 0.90
+  borderInlineStartWidth: true,
+  // @ts-ignore Available since RN 0.90
+  borderInlineEndWidth: true,
 
   // Decoration
   borderCurve: true,

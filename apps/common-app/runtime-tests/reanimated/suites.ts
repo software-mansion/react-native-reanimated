@@ -114,6 +114,7 @@ const SUITES: RuntimeTestSuite[] = [
     importTest: () => {
       require('./tests/css/animationCancellation.test');
       require('./tests/css/backgroundImage.test');
+      require('./tests/css/logicalBorders.test');
       require('./tests/css/platformColor.test');
       require('./tests/css/transformNone.test');
       require('./tests/css/transitionOnRecycledView.test');

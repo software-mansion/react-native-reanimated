@@ -269,6 +269,36 @@ describe('stylePropsBuilder', () => {
     });
   });
 
+  test('keeps logical border props next to physical ones', () => {
+    expect(
+      stylePropsBuilder.build({
+        borderLeftWidth: 1,
+        borderLeftColor: 'red',
+        borderBlockWidth: 2,
+        borderBlockStartWidth: 3,
+        borderBlockEndWidth: 4,
+        borderInlineWidth: 5,
+        borderInlineStartWidth: 6,
+        borderInlineEndWidth: 7,
+        borderInlineColor: 'blue',
+        borderInlineStartColor: 'red',
+        borderInlineEndColor: 'blue',
+      })
+    ).toEqual({
+      borderLeftWidth: 1,
+      borderLeftColor: 4294901760,
+      borderBlockWidth: 2,
+      borderBlockStartWidth: 3,
+      borderBlockEndWidth: 4,
+      borderInlineWidth: 5,
+      borderInlineStartWidth: 6,
+      borderInlineEndWidth: 7,
+      borderInlineColor: 4278190335,
+      borderInlineStartColor: 4294901760,
+      borderInlineEndColor: 4278190335,
+    });
+  });
+
   test.each([
     ['drop-shadow(0 0 4px notacolor)', 'notacolor'],
     ['drop-shadow(2em 4em)', '4em'],
