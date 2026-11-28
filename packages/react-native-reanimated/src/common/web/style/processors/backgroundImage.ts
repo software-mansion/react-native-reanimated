@@ -77,7 +77,7 @@ function processConicGradient({
   from = '0deg',
   position = DEFAULT_POSITION,
   colorStops,
-}: ConicGradientValue) {
+}: Extract<GradientValue, { type: 'conic-gradient' }>) {
   const stops = processColorStops(colorStops, (positions) =>
     positions.join(' ')
   );
