@@ -3000,7 +3000,10 @@ void LayoutAnimationsProxy::composeAnimationMutations(AnimationMutations &mutati
       hiddenViewTags.push_back(tag);
       continue;
     }
-    auto opacity = std::make_unique<AnimatedProp<Float>>(OPACITY, static_cast<Float>(restore.opacity));
+    // A restored child of a fading carrier gets the content opacity, like the other backend writes.
+    const auto factor = factors.find(tag);
+    const double restoredOpacity = restore.opacity * (factor != factors.end() ? factor->second : 1.0);
+    auto opacity = std::make_unique<AnimatedProp<Float>>(OPACITY, static_cast<Float>(restoredOpacity));
     // Older animation backends apply only the last mutation of a view, so the restore joins the mutation that the
     // view already has.
     const auto existing = std::find_if(
