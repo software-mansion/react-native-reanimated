@@ -263,6 +263,7 @@ function createWorkDir() {
     'runtime-tests-server.mts',
     'android-device.mts',
     'runtime-tests-suites.mts',
+    'runtime-tests-metro.mts',
   ]) {
     fs.copyFileSync(
       path.join(SCRIPTS, script),
