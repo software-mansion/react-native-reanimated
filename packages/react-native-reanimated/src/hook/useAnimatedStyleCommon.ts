@@ -98,8 +98,18 @@ export function prepareAnimation(
     animation.callStart = (timestamp: Timestamp) => {
       animation.onStart(animation, value, timestamp, lastAnimation);
     };
-    animation.callStart(frameTimestamp);
-    animation.callStart = null;
+    if (global.__frameTimestamp !== undefined) {
+      // Already inside a frame flush — start on this frame's clock.
+      animation.callStart(frameTimestamp);
+      animation.callStart = null;
+    } else {
+      // Outside a frame (typical on web, or a gesture/event on native).
+      // Defer onStart until the first requestAnimationFrame callback so
+      // startTime/lastTimestamp share that callback's clock. Seeding
+      // `current` avoids flashing the animation's toValue before then.
+      // See https://github.com/software-mansion/react-native-reanimated/issues/10752
+      animation.current = value;
+    }
   } else if (typeof animatedProp === 'object') {
     // it is an object
     Object.keys(animatedProp).forEach((key) =>
@@ -288,7 +298,13 @@ export function styleUpdater(
     if (!state.isAnimationRunning) {
       state.isAnimationCancelled = false;
       state.isAnimationRunning = true;
-      frame(frameTimestamp!);
+      if (global.__frameTimestamp !== undefined) {
+        frame(global.__frameTimestamp);
+      } else {
+        // Wait for a vsync timestamp so the first onFrame is not earlier
+        // than a performance.now() start stamp (#10752).
+        requestAnimationFrame(frame);
+      }
     }
 
     if (hasNonAnimatedValues) {

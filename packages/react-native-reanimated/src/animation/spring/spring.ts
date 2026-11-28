@@ -103,7 +103,15 @@ export const withSpring = ((
       }
       const { lastTimestamp, velocity } = animation;
 
-      const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
+      // A frame timestamp can arrive earlier than a start stamp taken with
+      // performance.now() outside a flush (web rAF vs wall clock). Ignore that
+      // frame so we neither step with a negative delta nor rewind
+      // lastTimestamp and inflate the next frame. See #10752 / #10720.
+      if (now < lastTimestamp) {
+        return false;
+      }
+
+      const deltaTime = Math.min(now - lastTimestamp, 64);
       animation.lastTimestamp = now;
 
       const t = deltaTime / 1000;
