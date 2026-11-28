@@ -2994,8 +2994,23 @@ void LayoutAnimationsProxy::composeAnimationMutations(AnimationMutations &mutati
     });
   }
   for (auto &[tag, restore] : backendOpacityRestores_) {
+    // A view that a transition hides again keeps the opacity for its next restore.
+    if (hiddenTags.contains(tag)) {
+      heldBackendOpacities_.insert_or_assign(tag, std::move(restore));
+      hiddenViewTags.push_back(tag);
+      continue;
+    }
+    auto opacity = std::make_unique<AnimatedProp<Float>>(OPACITY, static_cast<Float>(restore.opacity));
+    // Older animation backends apply only the last mutation of a view, so the restore joins the mutation that the
+    // view already has.
+    const auto existing = std::find_if(
+        mutations.batch.begin(), mutations.batch.end(), [tag](const auto &mutation) { return mutation.tag == tag; });
+    if (existing != mutations.batch.end()) {
+      existing->props.props.push_back(std::move(opacity));
+      continue;
+    }
     AnimatedProps props;
-    props.props.push_back(std::make_unique<AnimatedProp<Float>>(OPACITY, static_cast<Float>(restore.opacity)));
+    props.props.push_back(std::move(opacity));
     mutations.batch.push_back(AnimationMutation{tag, std::move(restore.family), std::move(props), false});
   }
   backendOpacityRestores_.clear();
